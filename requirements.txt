@@ -1,0 +1,12 @@
+# YouTube collection
+google-api-python-client>=2.0.0
+pandas>=2.0.0
+yt-dlp[default]>=2025.1.0
+numpy>=1.26.0
+torch>=2.4.0
+transformers>=4.47.0
+accelerate>=1.2.0
+python-dotenv>=1.0.0
+
+# Fashion sentence splitting / chunking
+kiwipiepy>=0.21.0
