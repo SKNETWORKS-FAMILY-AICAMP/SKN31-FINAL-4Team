@@ -1,0 +1,698 @@
+{% extends "base.html" %}
+
+{% block title %}
+FEEDIT | {{ crawler.name }} Crawler
+{% endblock %}
+
+{% block content %}
+
+<!-- ======================================================
+     HEADER
+====================================================== -->
+
+<header class="page-header">
+
+    <div>
+
+        <a
+            href="{% url 'crawler:dashboard' %}"
+            class="back-link"
+        >
+            ← Crawler Dashboard
+        </a>
+
+        <p class="eyebrow">
+            {{ crawler.code }}
+        </p>
+
+        <h1>
+            {{ crawler.name }} Crawler
+        </h1>
+
+        <p class="description">
+            {{ crawler.description }}
+        </p>
+
+    </div>
+
+</header>
+
+
+<!-- ======================================================
+     COLLECTION OVERVIEW
+====================================================== -->
+
+<section class="status-section">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Collection Overview
+            </h2>
+
+            <p>
+                현재까지 축적된 지그재그 상품 및 랭킹 데이터입니다.
+            </p>
+
+        </div>
+
+
+        <div style="display:flex; align-items:center; gap:12px;">
+
+            {% if crawler_status == "ACTIVE" %}
+
+                <span class="badge success-badge">
+                    ACTIVE
+                </span>
+
+            {% elif crawler_status == "INACTIVE" %}
+
+                <span class="badge failed-badge">
+                    INACTIVE
+                </span>
+
+            {% else %}
+
+                <span class="badge">
+                    {{ crawler_status|default:"-" }}
+                </span>
+
+            {% endif %}
+
+
+            {% if last_job %}
+
+                <span class="crawler-meta-text">
+                    Last collection
+                    {{ last_job.created_at|date:"Y-m-d H:i" }}
+                </span>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <div class="status-grid overview-grid">
+
+        <!-- Products -->
+        <article class="status-card">
+
+            <div class="card-title">
+                Collected Products
+            </div>
+
+            <div class="status">
+                {{ zigzag_stats.total_products|default:"0" }}
+            </div>
+
+            <p class="desc">
+                누적 고유 상품
+            </p>
+
+        </article>
+
+
+        <!-- Snapshots -->
+        <article class="status-card">
+
+            <div class="card-title">
+                Snapshots
+            </div>
+
+            <div class="status">
+                {{ zigzag_stats.total_snapshots|default:"0" }}
+            </div>
+
+            <p class="desc">
+                누적 랭킹 관측 데이터
+            </p>
+
+        </article>
+
+
+        <!-- Average -->
+        <article class="status-card">
+
+            <div class="card-title">
+                Avg. Snapshots
+            </div>
+
+            <div class="status">
+                {{ zigzag_stats.avg_snapshots_per_product|default:"0" }}
+            </div>
+
+            <p class="desc">
+                상품당 평균 관측 횟수
+            </p>
+
+        </article>
+
+
+        <!-- Stores -->
+        <article class="status-card">
+
+            <div class="card-title">
+                Stores
+            </div>
+
+            <div class="status">
+                {{ zigzag_stats.total_stores|default:"0" }}
+            </div>
+
+            <p class="desc">
+                수집된 스토어
+            </p>
+
+        </article>
+
+    </div>
+
+
+    <!-- Store Detail -->
+
+    <div
+        class="crawler-control-card"
+        style="margin-top:16px;"
+    >
+
+        <div>
+
+            <strong>
+                Store Coverage
+            </strong>
+
+            <p class="desc">
+                상품 데이터와 함께 수집된 지그재그 스토어 범위입니다.
+            </p>
+
+        </div>
+
+
+        <div
+            style="
+                display:flex;
+                gap:32px;
+                align-items:center;
+            "
+        >
+
+            <div>
+
+                <span class="crawler-meta-text">
+                    TOTAL STORES
+                </span>
+
+                <strong
+                    style="
+                        display:block;
+                        margin-top:4px;
+                        font-size:20px;
+                    "
+                >
+                    {{ zigzag_stats.total_stores|default:"0" }}
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span class="crawler-meta-text">
+                    BRAND STORES
+                </span>
+
+                <strong
+                    style="
+                        display:block;
+                        margin-top:4px;
+                        font-size:20px;
+                    "
+                >
+                    {{ zigzag_stats.brand_stores|default:"0" }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ======================================================
+     COLLECTION HISTORY
+====================================================== -->
+
+<section class="status-section">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Collection History
+            </h2>
+
+            <p>
+                첫 수집 실행부터 현재까지의 지그재그 크롤링 실행 기록입니다.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="chart-card">
+
+        <div class="chart-card-head">
+
+            <div>
+
+                <h3>
+                    ZIGZAG 실행 추이
+                </h3>
+
+                <p class="crawler-meta-text">
+                    전체 실행과 성공 실행의 일별 추이
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="chart-wrap">
+
+            <canvas id="trendChart"></canvas>
+
+        </div>
+
+    </div>
+
+
+    {{ crawler_trend_data|json_script:"trend-data" }}
+
+</section>
+
+
+<!-- ======================================================
+     COLLECTION TARGETS
+====================================================== -->
+
+<section class="crawler-section">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Collection Targets
+            </h2>
+
+            <p>
+                지속적으로 추적할 지그재그 카테고리 랭킹입니다.
+            </p>
+
+        </div>
+
+
+        <form
+            method="post"
+            action="{% url 'crawler:zigzag_run_all_targets' %}"
+        >
+
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="button"
+            >
+                활성 Target 전체 실행
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <div class="crawler-target-list">
+
+        {% for target in crawl_targets %}
+
+            <article class="target-card">
+
+                <div>
+
+                    <strong>
+                        {{ target.display_name|default:"이름 없음" }}
+                    </strong>
+
+                    <p>
+                        {{ target.target_value }}
+                    </p>
+
+                </div>
+
+
+                <div
+                    style="
+                        display:flex;
+                        align-items:center;
+                        gap:10px;
+                    "
+                >
+
+                    <span class="badge">
+                        {{ target.target_type }}
+                    </span>
+
+
+                    <form
+                        method="post"
+                        action="{% url 'crawler:zigzag_run_target' target.id %}"
+                    >
+
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            class="button"
+                            {% if not target.is_active %}disabled{% endif %}
+                        >
+                            실행
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </article>
+
+
+        {% empty %}
+
+            <div class="empty-card">
+
+                <strong>
+                    등록된 활성 Crawl Target이 없습니다.
+                </strong>
+
+                <p>
+                    Django Admin에서 ZIGZAG CATEGORY Target을 등록해주세요.
+                </p>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<!-- ======================================================
+     RECENT CRAWLS
+====================================================== -->
+
+<section class="jobs-section">
+
+    <div class="section-header">
+
+        <div>
+
+            <h2>
+                Recent Crawls
+            </h2>
+
+            <p>
+                최근 지그재그 카테고리 수집 결과입니다.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- Filter -->
+
+    <div class="filter-bar">
+
+        <input
+            type="text"
+            class="search-input"
+            id="jobSearch"
+            placeholder="Target, ID로 검색…"
+        >
+
+
+        <select
+            class="select-input"
+            id="filterStatus"
+        >
+
+            <option value="">
+                전체 상태
+            </option>
+
+            <option value="SUCCESS">
+                SUCCESS
+            </option>
+
+            <option value="FAILED">
+                FAILED
+            </option>
+
+            <option value="RUNNING">
+                RUNNING
+            </option>
+
+            <option value="PENDING">
+                PENDING
+            </option>
+
+        </select>
+
+
+        <button
+            type="button"
+            class="button"
+            id="filterReset"
+        >
+            필터 초기화
+        </button>
+
+    </div>
+
+
+    <p
+        class="crawler-meta-text"
+        id="jobCount"
+        style="margin:0 0 10px;"
+    >
+        전체 {{ recent_jobs|length }}건
+    </p>
+
+
+    <div
+        class="table-wrapper"
+        id="jobsTable"
+    >
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        ID
+                    </th>
+
+                    <th>
+                        Target
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Found
+                    </th>
+
+                    <th>
+                        Created
+                    </th>
+
+                    <th>
+                        Updated
+                    </th>
+
+                    <th>
+                        Trigger
+                    </th>
+
+                    <th>
+                        실행 시간
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for job in recent_jobs %}
+
+                    <tr
+                        class="clickable-row"
+                        data-job-id="{{ job.id }}"
+                        data-target="{% if job.crawl_target %}{{ job.crawl_target.display_name|default:'' }}{% endif %}"
+                        data-status="{{ job.status }}"
+                        tabindex="0"
+                        role="link"
+                        onclick="window.location.href='{% url 'crawler:job' job.id %}'"
+                        onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); window.location.href='{% url 'crawler:job' job.id %}'; }"
+                    >
+
+                        <!-- ID -->
+                        <td>
+                            #{{ job.id }}
+                        </td>
+
+
+                        <!-- Target -->
+                        <td>
+
+                            {% if job.crawl_target %}
+
+                                <strong>
+                                    {{ job.crawl_target.display_name|default:job.crawl_target.target_value }}
+                                </strong>
+
+                            {% else %}
+
+                                -
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- Status -->
+                        <td>
+
+                            {% if job.status == "SUCCESS" %}
+
+                                <span class="badge success-badge">
+                                    SUCCESS
+                                </span>
+
+                            {% elif job.status == "FAILED" %}
+
+                                <span class="badge failed-badge">
+                                    FAILED
+                                </span>
+
+                            {% elif job.status == "RUNNING" %}
+
+                                <span class="badge running-badge">
+                                    RUNNING
+                                </span>
+
+                            {% elif job.status == "PENDING" %}
+
+                                <span class="badge pending-badge">
+                                    PENDING
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge">
+                                    {{ job.status }}
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- Found -->
+                        <td>
+                            {{ job.items_found|default:"0" }}
+                        </td>
+
+
+                        <!-- Created -->
+                        <td>
+                            {{ job.items_created|default:"0" }}
+                        </td>
+
+
+                        <!-- Updated -->
+                        <td>
+                            {{ job.items_updated|default:"0" }}
+                        </td>
+
+
+                        <!-- Trigger -->
+                        <td>
+                            {{ job.trigger_type|default:"-" }}
+                        </td>
+
+
+                        <!-- Time -->
+                        <td>
+
+                            {% if job.started_at and job.finished_at %}
+
+                                {{ job.started_at|date:"H:i:s" }}
+                                ~
+                                {{ job.finished_at|date:"H:i:s" }}
+
+                            {% elif job.started_at %}
+
+                                {{ job.started_at|date:"H:i:s" }}
+                                ~
+
+                            {% else %}
+
+                                -
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+
+                {% empty %}
+
+                    <tr class="empty-job-row">
+
+                        <td
+                            colspan="8"
+                            class="empty"
+                        >
+                            아직 지그재그 크롤링 기록이 없습니다.
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+{% endblock %}

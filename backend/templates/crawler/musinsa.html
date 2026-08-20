@@ -1,14 +1,20 @@
 {% extends "base.html" %}
 
 {% block title %}
-FEEDIT | {{ crawler.name }} Crawler
+FEEDIT | MUSINSA Crawler
 {% endblock %}
+
 
 {% block content %}
 
 <header class="page-header">
+
     <div>
-        <a href="{% url 'crawler:dashboard' %}" class="back-link">
+
+        <a
+            href="{% url 'crawler:dashboard' %}"
+            class="back-link"
+        >
             ← Crawler Dashboard
         </a>
 
@@ -24,648 +30,554 @@ FEEDIT | {{ crawler.name }} Crawler
             {{ crawler.description }}
         </p>
 
-        <div style="margin-top: 18px;">
-            <a
-                href="{% url 'crawler:backfill' %}"
-                class="button"
-            >
-                Historical Backfill →
-            </a>
-        </div>
     </div>
+
 </header>
 
 
-<!-- ======================================================
-     Crawler Status
-====================================================== -->
+<!-- ============================================================
+     KPI
+============================================================ -->
 
-<section class="status-section">
-    <h2>
-        Crawler Status
-    </h2>
+<section class="musinsa-kpi-section">
 
-    <div class="status-grid">
+    <div class="musinsa-kpi-grid">
 
-        <!-- Source 상태 -->
-        <article class="status-card">
-            <div class="card-title">
-                Status
+
+        <!-- 브랜드 -->
+
+        <article class="musinsa-kpi-card">
+
+            <div class="musinsa-kpi-label">
+                수집 브랜드
             </div>
 
-            {% if crawler_status == "ACTIVE" %}
-                <div class="status success">
-                    <span class="status-dot"></span>
-                    ACTIVE
-                </div>
+            <div class="musinsa-kpi-value">
+                {{ brand_count|default:"0" }}
+                <small>개</small>
+            </div>
 
-            {% elif crawler_status == "INACTIVE" %}
-                <div class="status failed">
-                    <span class="status-dot"></span>
-                    INACTIVE
-                </div>
+            <p class="musinsa-kpi-description">
+                현재 DB에 저장된 MUSINSA 브랜드
+            </p>
 
-            {% elif crawler_status == "REVIEW" %}
-                <div class="status running">
-                    <span class="status-dot"></span>
-                    REVIEW
-                </div>
-
-            {% elif crawler_status == "BLOCKED" %}
-                <div class="status failed">
-                    <span class="status-dot"></span>
-                    BLOCKED
-                </div>
-
-            {% else %}
-                <div class="status">
-                    {{ crawler_status|default:"-" }}
-                </div>
-            {% endif %}
         </article>
 
 
-        <!-- 최근 실행 -->
-        <article class="status-card">
-            <div class="card-title">
-                Last Run
+        <!-- 상품 -->
+
+        <article class="musinsa-kpi-card">
+
+            <div class="musinsa-kpi-label">
+                수집 상품
             </div>
 
-            <div class="status">
-                {% if last_job %}
-                    {{ last_job.created_at|date:"Y-m-d H:i:s" }}
-                {% else %}
-                    -
-                {% endif %}
+            <div class="musinsa-kpi-value">
+                {{ product_count|default:"0" }}
+                <small>개</small>
             </div>
+
+            <p class="musinsa-kpi-description">
+                현재 DB에 저장된 실제 상품
+            </p>
+
         </article>
 
 
-        <!-- 최근 발견 상품 수 -->
-        <article class="status-card">
-            <div class="card-title">
-                Items Found
+        <!-- Target -->
+
+        <article class="musinsa-kpi-card">
+
+            <div class="musinsa-kpi-label">
+                활성 Target
             </div>
 
-            <div class="status">
-                {% if last_job %}
-                    {{ last_job.items_found }}
-                {% else %}
-                    0
-                {% endif %}
+            <div class="musinsa-kpi-value">
+                {{ target_count|default:"0" }}
+                <small>개</small>
             </div>
+
+            <p class="musinsa-kpi-description">
+                현재 수집 대상에 등록된 Target
+            </p>
+
         </article>
 
     </div>
+
 </section>
 
 
-<!-- ======================================================
-     7-Day Trend
-====================================================== -->
+<!-- ============================================================
+     TARGET MONITORING
+============================================================ -->
 
-<section class="status-section">
-    <h2>
-        7-Day Trend
-    </h2>
-
-    <div class="stat-row">
-
-        <article class="status-card">
-            <div class="card-title">
-                성공률
-            </div>
-
-            <div class="status">
-                {{ crawler_stats.success_rate|default:"0" }}%
-            </div>
-        </article>
+<section class="musinsa-target-section">
 
 
-        <article class="status-card">
-            <div class="card-title">
-                실행 횟수
-            </div>
+    <!-- Header -->
 
-            <div class="status">
-                {{ crawler_stats.total_jobs|default:"0" }}회
-            </div>
-        </article>
-
-
-        <article class="status-card">
-            <div class="card-title">
-                수집 아이템
-            </div>
-
-            <div class="status">
-                {{ crawler_stats.total_items|default:"0" }}개
-            </div>
-        </article>
-
-    </div>
-
-
-    <div class="chart-card" style="margin-top: 16px;">
-        <div class="chart-card-head">
-            <h3>
-                {{ crawler.name }} 실행 추이
-            </h3>
-        </div>
-
-        <div class="chart-wrap">
-            <canvas id="trendChart"></canvas>
-        </div>
-    </div>
-
-    {{ crawler_trend_data|json_script:"trend-data" }}
-</section>
-
-
-<!-- ======================================================
-     Crawl Targets
-====================================================== -->
-
-<section class="crawler-section">
     <div class="section-header">
+
         <div>
+
             <h2>
                 Crawl Targets
             </h2>
 
             <p>
-                {{ crawler.name }}에 등록된 활성 크롤링 대상입니다.
+                {{ today|date:"Y년 m월 d일" }} 기준
+                Target별 최근 수집 결과를 확인합니다.
             </p>
+
         </div>
+
 
         <form
             method="post"
             action="{% url 'crawler:run_all_targets' %}"
         >
-            {% csrf_token %}
-            <button type="submit" class="button">
-                활성 Target 전체 실행
-            </button>
-        </form>
-    </div>
 
-
-    <div class="crawler-target-list">
-
-        {% for target in crawl_targets %}
-
-            <article class="target-card">
-                <div>
-                    <strong>
-                        {{ target.display_name|default:"이름 없음" }}
-                    </strong>
-
-                    <p>
-                        {{ target.target_value }}
-                    </p>
-                </div>
-
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span class="badge">
-                        {{ target.target_type }}
-                    </span>
-
-                    <form
-                        method="post"
-                        action="{% url 'crawler:run_target' target.id %}"
-                    >
-                        {% csrf_token %}
-                        <button
-                            type="submit"
-                            class="button"
-                            {% if not target.is_active %}disabled{% endif %}
-                        >
-                            실행
-                        </button>
-                    </form>
-                </div>
-            </article>
-
-        {% empty %}
-
-            <div class="empty-card">
-                등록된 활성 크롤링 대상이 없습니다.
-            </div>
-
-        {% endfor %}
-
-    </div>
-</section>
-
-
-<!-- ======================================================
-     Crawl Control
-====================================================== -->
-
-<section class="crawler-control-section">
-    <div class="section-header">
-        <div>
-            <h2>
-                Crawl Control
-            </h2>
-
-            <p>
-                크롤러 운영 설정을 관리합니다.
-            </p>
-        </div>
-    </div>
-
-
-    <!-- 활성화 / 비활성화 -->
-    <div class="settings-row">
-        <div>
-            <div class="label">
-                크롤러 활성화
-            </div>
-
-            <p class="desc">
-                비활성화하면 자동 크롤링 대상에서 제외됩니다.
-            </p>
-        </div>
-
-        <form
-            method="post"
-            action="{% url 'crawler:toggle_active' %}"
-        >
             {% csrf_token %}
 
             <button
                 type="submit"
-                class="switch {% if crawler.is_active %}on{% endif %}"
-                aria-pressed="{{ crawler.is_active|yesno:'true,false' }}"
-                aria-label="크롤러 활성화 상태 변경"
-            ></button>
-        </form>
-    </div>
-
-
-    <!-- 실행 주기 -->
-    <div class="settings-row">
-        <div>
-            <div class="label">
-                실행 주기
-            </div>
-
-            <p class="desc">
-                자동 크롤링에 사용할 수집 주기입니다.
-            </p>
-        </div>
-
-        <form
-            method="post"
-            action="{% url 'crawler:update_cycle' %}"
-            class="field"
-        >
-            {% csrf_token %}
-
-            <select
-                name="cycle_hours"
-                class="select-input"
-                onchange="this.form.submit()"
+                class="primary-button"
             >
-                <option
-                    value="1"
-                    {% if crawler.cycle_hours == 1 %}selected{% endif %}
-                >
-                    1시간마다
-                </option>
+                전체 Target 실행
+            </button>
 
-                <option
-                    value="6"
-                    {% if crawler.cycle_hours == 6 %}selected{% endif %}
-                >
-                    6시간마다
-                </option>
-
-                <option
-                    value="12"
-                    {% if crawler.cycle_hours == 12 %}selected{% endif %}
-                >
-                    12시간마다
-                </option>
-
-                <option
-                    value="24"
-                    {% if crawler.cycle_hours == 24 %}selected{% endif %}
-                >
-                    24시간마다
-                </option>
-            </select>
         </form>
+
     </div>
 
 
-    <!-- 현재 크롤러 상태 -->
-    <div class="crawler-control-card">
+    <!-- ========================================================
+         TODAY SUMMARY
+    ========================================================= -->
 
-        {% if source == "musinsa" %}
+    <div class="musinsa-status-summary">
 
-            <div>
-                <strong>
-                    무신사 자동 크롤러
-                </strong>
+        <div class="musinsa-status-summary-left">
 
-                <p class="desc">
-                    활성 Crawl Target을 기준으로 Celery Worker가 크롤링 작업을 수행합니다.
-                </p>
-            </div>
-
-            {% if crawler.is_active %}
-                <span class="badge success-badge">
-                    ACTIVE
-                </span>
-            {% else %}
-                <span class="badge failed-badge">
-                    INACTIVE
-                </span>
-            {% endif %}
-
-        {% else %}
-
-            <span class="coming-soon">
-                크롤러 기능 준비 중
+            <span class="summary-label">
+                오늘 실행
             </span>
 
-        {% endif %}
+            <strong>
+                {{ success_count }}
+            </strong>
 
-    </div>
-</section>
+            <span>
+                / {{ target_count }}
+            </span>
 
-
-<!-- ======================================================
-     Recent Crawls
-====================================================== -->
-
-<section class="jobs-section">
-    <div class="section-header">
-        <div>
-            <h2>
-                Recent Crawls
-            </h2>
-
-            <p>
-                {{ crawler.name }}의 최근 크롤링 작업입니다.
-            </p>
         </div>
-    </div>
 
 
-    <!-- Filter -->
-    <div class="filter-bar">
+        <div class="musinsa-status-summary-items">
 
-        <input
-            type="text"
-            class="search-input"
-            id="jobSearch"
-            placeholder="Target, ID로 검색…"
-        >
+            <span class="summary-status success">
+                완료 {{ success_count }}
+            </span>
 
-        <select
-            class="select-input"
-            id="filterStatus"
-        >
-            <option value="">
-                전체 상태
-            </option>
+            <span class="summary-status running">
+                진행중 {{ running_count }}
+            </span>
 
-            <option value="SUCCESS">
-                SUCCESS
-            </option>
+            <span class="summary-status failed">
+                실패 {{ failed_count }}
+            </span>
 
-            <option value="FAILED">
-                FAILED
-            </option>
+            <span class="summary-status pending">
+                대기 {{ pending_count }}
+            </span>
 
-            <option value="RUNNING">
-                RUNNING
-            </option>
+            <span class="summary-status not-run">
+                미실행 {{ not_run_count }}
+            </span>
 
-            <option value="PENDING">
-                PENDING
-            </option>
-        </select>
-
-        <button
-            type="button"
-            class="button"
-            id="filterReset"
-        >
-            필터 초기화
-        </button>
+        </div>
 
     </div>
 
 
-    <p
-        class="crawler-meta-text"
-        id="jobCount"
-        style="margin: 0 0 10px;"
-    >
-        전체 {{ recent_jobs|length }}건
-    </p>
+    <!-- ========================================================
+         TARGET TABLE
+    ========================================================= -->
 
+    <div class="musinsa-target-table-wrapper">
 
-    <div
-        class="table-wrapper"
-        id="jobsTable"
-    >
-        <table>
+        <table class="musinsa-target-table">
+
             <thead>
+
                 <tr>
-                    <th>ID</th>
-                    <th>Target</th>
-                    <th>Status</th>
-                    <th>Found</th>
-                    <th>Created</th>
-                    <th>Updated</th>
-                    <th>실행 시간</th>
+
+                    <th>
+                        Target
+                    </th>
+
+                    <th>
+                        유형
+                    </th>
+
+                    <th>
+                        오늘 상태
+                    </th>
+
+                    <th class="align-right">
+                        수집
+                    </th>
+
+                    <th class="align-right">
+                        신규
+                    </th>
+
+                    <th class="align-right">
+                        업데이트
+                    </th>
+
+                    <th>
+                        변동
+                    </th>
+
+                    <th>
+                        실행 시간
+                    </th>
+
+                    <th>
+                        상세
+                    </th>
+
+                    <th>
+                        실행
+                    </th>
+
                 </tr>
+
             </thead>
+
 
             <tbody>
 
-                {% for job in recent_jobs %}
 
-                    <tr
-                        class="clickable-row"
-                        data-job-id="{{ job.id }}"
-                        data-target="{{ job.crawl_target.display_name|default:'' }}"
-                        data-status="{{ job.status }}"
-                        tabindex="0"
-                        role="link"
-                        onclick="window.location.href='{% url 'crawler:job' job.id %}'"
-                        onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); window.location.href='{% url 'crawler:job' job.id %}'; }"
-                    >
+                {% for target in crawl_targets %}
+
+                    {% with job=target.today_job %}
+
+                    <tr class="musinsa-target-row">
+
+
+                        <!-- ==================================================
+                             TARGET
+                        ================================================== -->
 
                         <td>
-                            #{{ job.id }}
+
+                            <div class="target-name-wrapper">
+
+                                <strong class="target-name">
+                                    {{ target.display_name|default:"이름 없음" }}
+                                </strong>
+
+                            </div>
+
                         </td>
 
+
+                        <!-- ==================================================
+                             TYPE
+                        ================================================== -->
+
                         <td>
-                            {{ job.crawl_target.display_name|default:"-" }}
+
+                            <span class="target-type-badge">
+                                {{ target.get_target_type_display|default:target.target_type }}
+                            </span>
+
                         </td>
 
+
+                        <!-- ==================================================
+                             STATUS
+                        ================================================== -->
+
                         <td>
-                            {% if job.status == "SUCCESS" %}
-                                <span class="badge success-badge">
-                                    SUCCESS
+
+                            {% if job %}
+
+                                {% if job.status == "SUCCESS" %}
+
+                                    <span class="job-status success">
+                                        <span class="status-dot"></span>
+                                        SUCCESS
+                                    </span>
+
+                                {% elif job.status == "FAILED" %}
+
+                                    <span class="job-status failed">
+                                        <span class="status-dot"></span>
+                                        FAILED
+                                    </span>
+
+                                {% elif job.status == "RUNNING" %}
+
+                                    <span class="job-status running">
+                                        <span class="status-dot"></span>
+                                        RUNNING
+                                    </span>
+
+                                {% elif job.status == "PENDING" %}
+
+                                    <span class="job-status pending">
+                                        <span class="status-dot"></span>
+                                        PENDING
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="job-status">
+                                        {{ job.status }}
+                                    </span>
+
+                                {% endif %}
+
+                            {% else %}
+
+                                <span class="job-status not-run">
+                                    <span class="status-dot"></span>
+                                    미실행
                                 </span>
 
-                            {% elif job.status == "FAILED" %}
-                                <span class="badge failed-badge">
-                                    FAILED
-                                </span>
+                            {% endif %}
 
-                            {% elif job.status == "RUNNING" %}
-                                <span class="badge running-badge">
-                                    RUNNING
-                                </span>
+                        </td>
 
-                            {% elif job.status == "PENDING" %}
-                                <span class="badge pending-badge">
-                                    PENDING
+
+                        <!-- ==================================================
+                             FOUND
+                        ================================================== -->
+
+                        <td class="align-right">
+
+                            {% if job %}
+
+                                <span class="metric-number">
+                                    {{ job.items_found|default:"0" }}
                                 </span>
 
                             {% else %}
-                                <span class="badge">
-                                    {{ job.status }}
+
+                                <span class="empty-value">
+                                    -
                                 </span>
+
                             {% endif %}
+
                         </td>
 
-                        <td>
-                            {{ job.items_found }}
-                        </td>
 
-                        <td>
-                            {{ job.items_created }}
-                        </td>
+                        <!-- ==================================================
+                             CREATED
+                        ================================================== -->
 
-                        <td>
-                            {{ job.items_updated }}
-                        </td>
+                        <td class="align-right">
 
-                        <td>
-                            {% if job.started_at and job.finished_at %}
-                                {{ job.started_at|date:"H:i:s" }}
-                                ~
-                                {{ job.finished_at|date:"H:i:s" }}
+                            {% if job %}
 
-                            {% elif job.started_at %}
-                                {{ job.started_at|date:"H:i:s" }}
-                                ~
+                                <span class="metric-number created">
+                                    {{ job.items_created|default:"0" }}
+                                </span>
 
                             {% else %}
-                                -
+
+                                <span class="empty-value">
+                                    -
+                                </span>
+
                             {% endif %}
+
                         </td>
+
+
+                        <!-- ==================================================
+                             UPDATED
+                        ================================================== -->
+
+                        <td class="align-right">
+
+                            {% if job %}
+
+                                <span class="metric-number updated">
+                                    {{ job.items_updated|default:"0" }}
+                                </span>
+
+                            {% else %}
+
+                                <span class="empty-value">
+                                    -
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ==================================================
+                             CHANGE
+                        ================================================== -->
+
+                        <td>
+
+                            {% if job %}
+
+                                {% if job.items_created or job.items_updated %}
+
+                                    <span class="change-status changed">
+                                        변동 있음
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="change-status unchanged">
+                                        변동 없음
+                                    </span>
+
+                                {% endif %}
+
+                            {% else %}
+
+                                <span class="empty-value">
+                                    -
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ==================================================
+                             EXECUTION TIME
+                        ================================================== -->
+
+                        <td>
+
+                            {% if job %}
+
+                                <div class="execution-time">
+
+                                    {% if job.started_at %}
+
+                                        <span>
+                                            {{ job.started_at|date:"H:i:s" }}
+                                        </span>
+
+                                    {% endif %}
+
+                                    {% if job.finished_at %}
+
+                                        <span class="execution-arrow">
+                                            →
+                                        </span>
+
+                                        <span>
+                                            {{ job.finished_at|date:"H:i:s" }}
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            {% else %}
+
+                                <span class="empty-value">
+                                    -
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ==================================================
+                             DETAIL
+                        ================================================== -->
+
+                        <td>
+
+                            {% if job %}
+
+                                <a
+                                    href="{% url 'crawler:job' job.id %}"
+                                    class="detail-button"
+                                >
+                                    상세 보기
+                                    <span>→</span>
+                                </a>
+
+                            {% else %}
+
+                                <span class="empty-value">
+                                    -
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- ==================================================
+                             RUN
+                        ================================================== -->
+
+                        <td>
+
+                            <form
+                                method="post"
+                                action="{% url 'crawler:run_target' target.id %}"
+                            >
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="target-run-button"
+                                >
+                                    실행
+                                </button>
+
+                            </form>
+
+                        </td>
+
 
                     </tr>
 
+                    {% endwith %}
+
                 {% empty %}
 
-                    <tr class="empty-job-row">
+                    <tr>
+
                         <td
-                            colspan="7"
-                            class="empty"
+                            colspan="10"
+                            class="empty-target-row"
                         >
-                            아직 크롤링 기록이 없습니다.
+                            등록된 활성 MUSINSA Target이 없습니다.
                         </td>
+
                     </tr>
 
                 {% endfor %}
 
+
             </tbody>
+
         </table>
-    </div>
-</section>
-
-
-<!-- ======================================================
-     Error Log
-====================================================== -->
-
-<section class="jobs-section">
-    <div class="section-header">
-        <div>
-            <h2>
-                알림 / 에러 로그
-            </h2>
-
-            <p>
-                {{ crawler.name }}의 최근 실패 기록입니다.
-            </p>
-        </div>
-    </div>
-
-
-    <div class="alerts-list">
-
-        {% for alert in crawler_alerts %}
-
-            <article
-                class="alert-row severity-{{ alert.severity|default:'danger' }}"
-            >
-                <div class="alert-icon">
-                    {% if alert.severity == "danger" %}
-                        ⛔
-                    {% elif alert.severity == "warning" %}
-                        ⚠
-                    {% else %}
-                        ↺
-                    {% endif %}
-                </div>
-
-
-                <div class="alert-body">
-
-                    <div class="alert-top">
-                        <span class="msg">
-                            {{ alert.message }}
-                        </span>
-
-                        <span class="time">
-                            {{ alert.created_at|date:"Y-m-d H:i:s" }}
-                        </span>
-                    </div>
-
-
-                    {% if alert.detail %}
-                        <p class="alert-desc">
-                            {{ alert.detail }}
-                        </p>
-                    {% endif %}
-
-
-                    {% if alert.tags %}
-                        <div class="alert-tags">
-
-                            {% for tag in alert.tags %}
-                                <span class="alert-tag">
-                                    {{ tag }}
-                                </span>
-                            {% endfor %}
-
-                        </div>
-                    {% endif %}
-
-                </div>
-            </article>
-
-        {% empty %}
-
-            <div class="empty-card">
-                최근 에러가 없습니다.
-            </div>
-
-        {% endfor %}
 
     </div>
+
 </section>
 
 

@@ -376,7 +376,11 @@ class BackfillBatch(models.Model):
         related_name="backfill_batches",
     )
 
-    status = models.CharField(...)
+    status = models.CharField(
+        max_length=30,
+        default="PENDING",
+        db_index=True,
+    )
 
     start_date = models.DateField()
     end_date = models.DateField()
@@ -409,9 +413,10 @@ class BackfillItem(models.Model):
         blank=True,
         related_name="backfill_item",
     )
-
     target_key = models.CharField(
-        max_length=255,
+        max_length=225,
+        null=True,
+        blank=True,
     )
 
     params = models.JSONField(
@@ -424,7 +429,11 @@ class BackfillItem(models.Model):
         null=True,
     )
 
-    status = models.CharField(...)
+    status = models.CharField(
+        max_length=30,
+        default="PENDING",
+        db_index=True,
+    )
 
     items_found = models.PositiveIntegerField(default=0)
     items_created = models.PositiveIntegerField(default=0)

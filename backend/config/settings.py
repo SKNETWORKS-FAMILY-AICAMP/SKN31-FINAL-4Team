@@ -16,10 +16,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
-    "corsheaders",
-    "apps.crawler",
-    "apps.users",
+    # FEEDIT
+    "apps.crawler.apps.CrawlerConfig",
+    # Celery Beat
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [

@@ -175,6 +175,14 @@ class MusinsaProductSnapshot(models.Model):
         help_text="랭킹 성별 기준 (ex. A, M, F)",
     )
 
+    ranking_age_band = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="랭킹 연령대 기준 (ex. AGE_BAND_ALL, AGE_BAND_MINOR)",
+    )
+
     ranking_category_depth1_code = models.CharField(
         max_length=30,
         blank=True,

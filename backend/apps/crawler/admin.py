@@ -14,6 +14,7 @@ from apps.crawler.models import (
     AblyProductSnapshot,
     ZigzagProduct,
     ZigzagProductSnapshot,
+    ZigzagStore,
     YoutubeCreator,
     YoutubeContent,
     YoutubeContentMetric,
@@ -349,6 +350,22 @@ class AblyProductSnapshotAdmin(admin.ModelAdmin):
 # ============================================================
 # ZIGZAG
 # ============================================================
+@admin.register(ZigzagStore)
+class ZigzagStoreAdmin(admin.ModelAdmin):
+    list_display = (
+        "source_store_id",
+        "store_name",
+        "is_brand",
+        "first_seen_at",
+        "last_seen_at",
+    )
+
+    list_filter = ("is_brand",)
+
+    search_fields = (
+        "source_store_id",
+        "store_name",
+    )
 
 
 @admin.register(ZigzagProduct)
@@ -357,26 +374,43 @@ class ZigzagProductAdmin(admin.ModelAdmin):
         "source_product_id",
         "product_name",
         "store_name",
-        "brand_name",
+        "is_brand",
         "category_name",
-        "first_seen_at",
         "last_seen_at",
     )
 
     list_filter = (
-        "store_name",
-        "brand_name",
+        "store__is_brand",
         "category_name",
     )
 
     search_fields = (
         "source_product_id",
         "product_name",
-        "store_name",
-        "brand_name",
+        "store__store_name",
+        "category_name",
     )
 
-    ordering = ("-last_seen_at",)
+    list_select_related = ("store",)
+
+    @admin.display(
+        description="스토어",
+        ordering="store__store_name",
+    )
+    def store_name(self, obj):
+        if obj.store:
+            return obj.store.store_name
+        return "-"
+
+    @admin.display(
+        description="브랜드 여부",
+        boolean=True,
+        ordering="store__is_brand",
+    )
+    def is_brand(self, obj):
+        if obj.store:
+            return obj.store.is_brand
+        return False
 
 
 @admin.register(ZigzagProductSnapshot)

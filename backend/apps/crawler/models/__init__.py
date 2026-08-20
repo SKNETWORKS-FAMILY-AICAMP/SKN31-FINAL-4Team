@@ -21,6 +21,7 @@ from .ably import (
 from .zigzag import (
     ZigzagProduct,
     ZigzagProductSnapshot,
+    ZigzagStore,
 )
 
 from .youtube import (

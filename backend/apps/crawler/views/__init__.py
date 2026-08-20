@@ -5,8 +5,12 @@ from .musinsa import (
     musinsa,
     run_all_targets,
     run_target,
-    toggle_active,
-    update_cycle,
+)
+
+from .zigzag import (
+    zigzag,
+    zigzag_run_all_targets,
+    zigzag_run_target,
 )
 
 from .youtube import (

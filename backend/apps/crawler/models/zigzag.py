@@ -1,6 +1,52 @@
 from django.db import models
 
 
+class ZigzagStore(models.Model):
+    """
+    지그재그 스토어(=사실상 브랜드) 정보.
+
+    지그재그 API에는 별도 '브랜드' 개체가 없고, 상품 카드가 내려주는
+    shop_id/shop_name/is_brand가 그 역할을 겸함. 상품마다 이름을 중복
+    저장하지 않도록 여기서 한 번만 저장하고 ZigzagProduct는 FK로 참조.
+    """
+
+    source_store_id = models.CharField(
+        max_length=200,
+        unique=True,
+    )
+
+    store_name = models.CharField(
+        max_length=300,
+        db_index=True,
+    )
+
+    # 지그재그 API의 is_brand 플래그 — 셀러형 스토어와 브랜드관을 구분
+    is_brand = models.BooleanField(
+        default=False,
+    )
+
+    first_seen_at = models.DateTimeField()
+
+    last_seen_at = models.DateTimeField()
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["store_name"]),
+            models.Index(fields=["is_brand"]),
+        ]
+
+    def __str__(self):
+        return self.store_name
+
+
 class ZigzagProduct(models.Model):
 
     source_product_id = models.CharField(
@@ -10,21 +56,10 @@ class ZigzagProduct(models.Model):
 
     product_name = models.TextField()
 
-    store_id = models.CharField(
-        max_length=200,
-        blank=True,
-        null=True,
-    )
-
-    store_name = models.CharField(
-        max_length=300,
-        blank=True,
-        null=True,
-        db_index=True,
-    )
-
-    brand_name = models.CharField(
-        max_length=300,
+    store = models.ForeignKey(
+        ZigzagStore,
+        on_delete=models.SET_NULL,
+        related_name="products",
         blank=True,
         null=True,
     )
@@ -61,9 +96,7 @@ class ZigzagProduct(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["store_id"]),
-            models.Index(fields=["store_name"]),
-            models.Index(fields=["brand_name"]),
+            models.Index(fields=["store"]),
             models.Index(fields=["category_id"]),
             models.Index(fields=["last_seen_at"]),
         ]
@@ -155,3 +188,6 @@ class ZigzagProductSnapshot(models.Model):
             models.Index(fields=["product", "observed_at"]),
             models.Index(fields=["crawl_target", "observed_at"]),
         ]
+
+    def __str__(self):
+        return f"{self.product_id} @ {self.observed_at:%Y-%m-%d %H:%M}"

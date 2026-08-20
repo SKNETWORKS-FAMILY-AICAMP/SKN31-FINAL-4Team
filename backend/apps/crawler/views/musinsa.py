@@ -1,120 +1,318 @@
-from datetime import timedelta
-
 from django.contrib import messages
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
-from apps.crawler.models import CrawlJob, CrawlTarget, Source
+from apps.crawler.models import (
+    CrawlJob,
+    CrawlTarget,
+    MusinsaBrand,
+    MusinsaProduct,
+    Source,
+)
 
+from apps.crawler.tasks.musinsa import (
+    run_all_musinsa_targets,
+    run_musinsa_target,
+)
+
+# ============================================================
+# MUSINSA META
+# ============================================================
 
 MUSINSA_META = {
     "code": "MUSINSA",
     "name": "MUSINSA",
-    "description": "무신사 상품, 랭킹, 가격 및 반응 스냅샷 수집 상태를 관리합니다.",
+    "description": ("무신사 상품, 랭킹, 가격 및 반응 데이터를 수집합니다."),
 }
 
 
-def _get_source():
-    return Source.objects.filter(code="MUSINSA").first()
+# ============================================================
+# SOURCE
+# ============================================================
 
 
-def _trend(source):
-    today = timezone.localdate()
-    labels, totals, successes = [], [], []
-    for offset in range(6, -1, -1):
-        day = today - timedelta(days=offset)
-        qs = CrawlJob.objects.filter(source=source, created_at__date=day) if source else CrawlJob.objects.none()
-        labels.append(day.strftime("%m-%d"))
-        totals.append(qs.count())
-        successes.append(qs.filter(status=CrawlJob.Status.SUCCESS).count())
-    return {"labels": labels, "totals": totals, "successes": successes}
+def _get_musinsa_source():
+    """
+    MUSINSA Source 조회.
+
+    Source가 존재하지 않는 경우 None을 반환한다.
+    """
+
+    return Source.objects.filter(
+        code="MUSINSA",
+    ).first()
+
+
+# ============================================================
+# TODAY JOB
+# ============================================================
+
+
+def _get_today_jobs(source, today):
+    """
+    오늘 생성된 MUSINSA CrawlJob 중
+    Target별 가장 최근 Job을 가져오기 위한 QuerySet.
+
+    Target마다 여러 번 실행될 수 있기 때문에
+    created_at DESC 기준으로 정렬한다.
+    """
+
+    return (
+        CrawlJob.objects.filter(
+            source=source,
+            created_at__date=today,
+        )
+        .select_related(
+            "crawl_target",
+        )
+        .order_by(
+            "-created_at",
+        )
+    )
+
+
+# ============================================================
+# TARGETS
+# ============================================================
+
+
+def _get_musinsa_targets(source, today):
+    """
+    활성 MUSINSA Target 목록.
+
+    각 Target 객체에 다음 값을 동적으로 추가한다.
+
+        target.today_job
+
+    오늘 실행된 Job 중 가장 최근 Job.
+    """
+
+    if source is None:
+        return CrawlTarget.objects.none()
+
+    today_jobs = _get_today_jobs(
+        source=source,
+        today=today,
+    )
+
+    targets = list(
+        CrawlTarget.objects.filter(
+            source=source,
+            is_active=True,
+        )
+        .prefetch_related(
+            Prefetch(
+                "crawl_jobs",
+                queryset=today_jobs,
+                to_attr="today_jobs",
+            )
+        )
+        .order_by(
+            "display_name",
+        )
+    )
+
+    for target in targets:
+
+        jobs = getattr(
+            target,
+            "today_jobs",
+            [],
+        )
+
+        target.today_job = jobs[0] if jobs else None
+
+    return targets
+
+
+# ============================================================
+# PAGE
+# ============================================================
 
 
 def musinsa(request):
-    source = _get_source()
-    jobs = CrawlJob.objects.none()
-    targets = CrawlTarget.objects.none()
+    """
+    MUSINSA Crawler Dashboard.
 
-    if source:
-        jobs = CrawlJob.objects.filter(source=source).select_related("source", "crawl_target")
-        targets = CrawlTarget.objects.filter(source=source, is_active=True).order_by("display_name")
+    이 페이지는 CrawlJob 자체를 나열하는 것이 아니라
+    CrawlTarget을 기준으로 오늘의 수집 상태를 보여준다.
 
-    last_job = jobs.order_by("-created_at").first()
-    last_7d = jobs.filter(created_at__gte=timezone.now() - timedelta(days=7))
-    total_jobs = last_7d.count()
-    success_jobs = last_7d.filter(status=CrawlJob.Status.SUCCESS).count()
+    Target
+        ↓
+    오늘 가장 최근 CrawlJob
+        ↓
+    Job 상세 페이지
+    """
 
-    crawler = {
-        **MUSINSA_META,
-        "is_active": bool(source and source.status == Source.Status.ACTIVE),
-        "cycle_hours": int((source.crawl_interval_minutes or 1440) / 60) if source else 24,
-    }
+    source = _get_musinsa_source()
+
+    today = timezone.localdate()
+
+    # --------------------------------------------------------
+    # 실제 수집 데이터
+    # --------------------------------------------------------
+
+    brand_count = MusinsaBrand.objects.count()
+
+    product_count = MusinsaProduct.objects.count()
+
+    # --------------------------------------------------------
+    # Targets
+    # --------------------------------------------------------
+
+    crawl_targets = _get_musinsa_targets(
+        source=source,
+        today=today,
+    )
+
+    target_count = len(crawl_targets)
+
+    # --------------------------------------------------------
+    # 오늘 상태 집계
+    # --------------------------------------------------------
+
+    success_count = 0
+    failed_count = 0
+    running_count = 0
+    pending_count = 0
+    not_run_count = 0
+
+    for target in crawl_targets:
+
+        job = target.today_job
+
+        if job is None:
+
+            not_run_count += 1
+
+            continue
+
+        if job.status == CrawlJob.Status.SUCCESS:
+
+            success_count += 1
+
+        elif job.status == CrawlJob.Status.FAILED:
+
+            failed_count += 1
+
+        elif job.status == CrawlJob.Status.RUNNING:
+
+            running_count += 1
+
+        elif job.status == CrawlJob.Status.PENDING:
+
+            pending_count += 1
+
+    # --------------------------------------------------------
+    # Context
+    # --------------------------------------------------------
 
     context = {
         "source": "musinsa",
-        "crawler": crawler,
-        "crawler_status": source.status if source else "NOT REGISTERED",
-        "last_job": last_job,
-        "crawler_stats": {
-            "success_rate": round(success_jobs / total_jobs * 100, 1) if total_jobs else 0,
-            "total_jobs": total_jobs,
-            "total_items": sum(last_7d.values_list("items_found", flat=True)),
-        },
-        "crawler_trend_data": _trend(source),
-        "crawl_targets": targets,
-        "recent_jobs": jobs.order_by("-created_at")[:50],
-        "alerts": [],
+        "crawler": MUSINSA_META,
+        "today": today,
+        # KPI
+        "brand_count": brand_count,
+        "product_count": product_count,
+        "target_count": target_count,
+        # Target
+        "crawl_targets": crawl_targets,
+        # Today's status
+        "success_count": success_count,
+        "failed_count": failed_count,
+        "running_count": running_count,
+        "pending_count": pending_count,
+        "not_run_count": not_run_count,
     }
-    return render(request, "crawler/musinsa.html", context)
+
+    return render(
+        request,
+        "crawler/musinsa.html",
+        context,
+    )
 
 
+# ============================================================
+# RUN ONE TARGET
+# ============================================================
+
+
+@require_POST
 def run_target(request, target_id):
-    target = get_object_or_404(CrawlTarget, pk=target_id)
-    if request.method == "POST":
-        CrawlJob.objects.create(
-            source=target.source,
-            crawl_target=target,
-            status=CrawlJob.Status.PENDING,
-            trigger_type=CrawlJob.TriggerType.MANUAL,
-            scheduled_at=timezone.now(),
-        )
-        messages.success(request, f"{target.display_name or target.target_value} Job을 PENDING으로 생성했습니다.")
-    return redirect("crawler:musinsa")
+    """
+    특정 MUSINSA Target 즉시 실행.
+    """
+
+    target = get_object_or_404(
+        CrawlTarget,
+        id=target_id,
+        source__code="MUSINSA",
+        is_active=True,
+    )
+
+    run_musinsa_target.delay(
+        target.id,
+    )
+
+    messages.success(
+        request,
+        f"'{target.display_name}' 크롤링을 시작했습니다.",
+    )
+
+    return redirect(
+        "crawler:musinsa",
+    )
 
 
+# ============================================================
+# RUN ALL TARGETS
+# ============================================================
+
+
+@require_POST
 def run_all_targets(request):
-    source = _get_source()
-    if request.method == "POST" and source:
-        targets = CrawlTarget.objects.filter(source=source, is_active=True)
-        for target in targets:
-            CrawlJob.objects.create(
-                source=source,
-                crawl_target=target,
-                status=CrawlJob.Status.PENDING,
-                trigger_type=CrawlJob.TriggerType.MANUAL,
-                scheduled_at=timezone.now(),
-            )
-        messages.success(request, f"활성 Target {targets.count()}개의 Job을 생성했습니다.")
-    return redirect("crawler:musinsa")
+    """
+    활성화된 MUSINSA Target 전체 실행.
+    """
 
+    source = _get_musinsa_source()
 
-def toggle_active(request):
-    source = _get_source()
-    if request.method == "POST" and source:
-        source.status = Source.Status.INACTIVE if source.status == Source.Status.ACTIVE else Source.Status.ACTIVE
-        source.save(update_fields=["status", "updated_at"])
-        messages.success(request, f"MUSINSA 상태를 {source.status}로 변경했습니다.")
-    return redirect("crawler:musinsa")
+    if source is None:
 
+        messages.error(
+            request,
+            "MUSINSA Source가 등록되어 있지 않습니다.",
+        )
 
-def update_cycle(request):
-    source = _get_source()
-    if request.method == "POST" and source:
-        try:
-            hours = max(1, int(request.POST.get("cycle_hours", "24")))
-        except ValueError:
-            hours = 24
-        source.crawl_interval_minutes = hours * 60
-        source.save(update_fields=["crawl_interval_minutes", "updated_at"])
-        messages.success(request, f"수집 주기를 {hours}시간으로 변경했습니다.")
-    return redirect("crawler:musinsa")
+        return redirect(
+            "crawler:musinsa",
+        )
+
+    target_count = CrawlTarget.objects.filter(
+        source=source,
+        is_active=True,
+    ).count()
+
+    if target_count == 0:
+
+        messages.warning(
+            request,
+            "실행할 MUSINSA Target이 없습니다.",
+        )
+
+        return redirect(
+            "crawler:musinsa",
+        )
+
+    run_all_musinsa_targets.delay()
+
+    messages.success(
+        request,
+        f"활성 Target {target_count}개의 크롤링을 시작했습니다.",
+    )
+
+    return redirect(
+        "crawler:musinsa",
+    )
