@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block title %}
+FEEDIT | MUSINSA Historical Backfill
+{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <a href="{% url 'crawler:musinsa' %}" class="back-link">
+            ← MUSINSA Crawler
+        </a>
+
+        <p class="eyebrow">
+            MUSINSA · HISTORICAL
+        </p>
+
+        <h1>
+            MUSINSA 과거 월간 랭킹 데이터 수집
+        </h1>
+
+        <p class="description">
+            과거 월간 랭킹을 기간 · 성별 · 카테고리 조합으로 수집합니다.
+        </p>
+    </div>
+</header>
+
+
+<section class="crawler-section">
+
+    <div class="section-header">
+        <div>
+            <h2>
+                New Backfill Batch
+            </h2>
+
+            <p>
+                먼저 작은 기간으로 검증한 뒤 전체 기간으로 확장합니다.
+            </p>
+        </div>
+    </div>
+
+
+    <form
+        method="post"
+        action="{% url 'crawler:backfill_create' %}"
+        class="crawler-control-card"
+        style="display:block;"
+    >
+        {% csrf_token %}
+
+        <div
+            style="
+                display:grid;
+                grid-template-columns:repeat(2,minmax(0,1fr));
+                gap:16px;
+                margin-bottom:24px;
+            "
+        >
+            <label class="field">
+                <span class="label">시작 월</span>
+                <input
+                    type="month"
+                    name="start_month"
+                    class="search-input"
+                    value="2024-01"
+                    required
+                >
+            </label>
+
+            <label class="field">
+                <span class="label">종료 월</span>
+                <input
+                    type="month"
+                    name="end_month"
+                    class="search-input"
+                    required
+                >
+            </label>
+        </div>
+
+
+        <div style="margin-bottom:24px;">
+            <div class="label" style="margin-bottom:10px;">
+                성별
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; gap:10px;">
+
+                <label class="target-card" style="cursor:pointer;">
+                    <input
+                        type="checkbox"
+                        name="gender_codes"
+                        value="F"
+                        checked
+                    >
+                    <strong>여성</strong>
+                    <span class="badge">F</span>
+                </label>
+
+                <label class="target-card" style="cursor:pointer;">
+                    <input
+                        type="checkbox"
+                        name="gender_codes"
+                        value="M"
+                        checked
+                    >
+                    <strong>남성</strong>
+                    <span class="badge">M</span>
+                </label>
+
+                <label class="target-card" style="cursor:pointer;">
+                    <input
+                        type="checkbox"
+                        name="gender_codes"
+                        value="A"
+                    >
+                    <strong>공용</strong>
+                    <span class="badge">A</span>
+                </label>
+
+            </div>
+        </div>
+
+
+        <div style="margin-bottom:24px;">
+            <div class="label" style="margin-bottom:10px;">
+                카테고리
+            </div>
+
+            <div class="crawler-target-list">
+
+                {% for code, label in category_options.items %}
+
+                    <label class="target-card" style="cursor:pointer;">
+                        <div>
+                            <strong>
+                                {{ label }}
+                            </strong>
+
+                            <p>
+                                categoryCode={{ code }}
+                            </p>
+                        </div>
+
+                        <input
+                            type="checkbox"
+                            name="category_codes"
+                            value="{{ code }}"
+                            checked
+                        >
+                    </label>
+
+                {% empty %}
+
+                    <label class="target-card" style="cursor:pointer;">
+                        <div>
+                            <strong>
+                                상의
+                            </strong>
+
+                            <p>
+                                categoryCode=001
+                            </p>
+                        </div>
+
+                        <input
+                            type="checkbox"
+                            name="category_codes"
+                            value="001"
+                            checked
+                        >
+                    </label>
+
+                {% endfor %}
+
+            </div>
+        </div>
+
+
+        <button
+            type="submit"
+            class="button"
+        >
+            Backfill Batch 생성
+        </button>
+
+    </form>
+
+</section>
+
+
+<!-- ======================================================
+     Backfill History
+====================================================== -->
+
+<section class="jobs-section">
+
+    <div class="section-header">
+        <div>
+            <h2>
+                Backfill Batches
+            </h2>
+
+            <p>
+                생성된 과거 수집 작업의 진행 상태입니다.
+            </p>
+        </div>
+    </div>
+
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>기간</th>
+                    <th>성별</th>
+                    <th>카테고리</th>
+                    <th>Status</th>
+                    <th>Progress</th>
+                    <th>Success</th>
+                    <th>Failed</th>
+                    <th>실행</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for batch in batches %}
+
+                    <tr>
+                        <td>
+                            #{{ batch.id }}
+                        </td>
+
+                        <td>
+                            {{ batch.start_month|date:"Y-m" }}
+                            ~
+                            {{ batch.end_month|date:"Y-m" }}
+                        </td>
+
+                        <td>
+                            {{ batch.gender_codes|join:", " }}
+                        </td>
+
+                        <td>
+                            {{ batch.category_codes|join:", " }}
+                        </td>
+
+                        <td>
+                            {% if batch.status == "SUCCESS" %}
+                                <span class="badge success-badge">
+                                    SUCCESS
+                                </span>
+
+                            {% elif batch.status == "FAILED" %}
+                                <span class="badge failed-badge">
+                                    FAILED
+                                </span>
+
+                            {% elif batch.status == "RUNNING" %}
+                                <span class="badge running-badge">
+                                    RUNNING
+                                </span>
+
+                            {% else %}
+                                <span class="badge pending-badge">
+                                    {{ batch.status|default:"DRAFT" }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ batch.completed_items|default:"0" }}
+                            /
+                            {{ batch.total_items|default:"0" }}
+                        </td>
+
+                        <td>
+                            {{ batch.success_items|default:"0" }}
+                        </td>
+
+                        <td>
+                            {{ batch.failed_items|default:"0" }}
+                        </td>
+
+                        <td>
+                            {% if batch.status == "PENDING" or batch.status == "DRAFT" %}
+                                <form
+                                    method="post"
+                                    action="{% url 'crawler:backfill_run' batch.id %}"
+                                    style="margin:0;"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="button"
+                                        style="
+                                            padding:8px 14px;
+                                            white-space:nowrap;
+                                        "
+                                    >
+                                        실행하기
+                                    </button>
+                                </form>
+
+                            {% elif batch.status == "RUNNING" %}
+                                <button
+                                    type="button"
+                                    class="button"
+                                    disabled
+                                    style="
+                                        padding:8px 14px;
+                                        white-space:nowrap;
+                                        opacity:.55;
+                                        cursor:not-allowed;
+                                    "
+                                >
+                                    실행 중
+                                </button>
+
+                            {% elif batch.status == "SUCCESS" %}
+                                <span class="badge success-badge">
+                                    완료
+                                </span>
+
+                            {% elif batch.status == "FAILED" %}
+                                <span
+                                    class="badge failed-badge"
+                                    title="Admin에서 FAILED Item을 PENDING으로 초기화한 뒤 다시 실행할 수 있습니다."
+                                >
+                                    초기화 필요
+                                </span>
+
+                            {% else %}
+                                <span class="badge">
+                                    {{ batch.status }}
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="9" class="empty">
+                            아직 생성된 Backfill Batch가 없습니다.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+{% endblock %}

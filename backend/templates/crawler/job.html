@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+
+{% block title %}
+FEEDIT | Crawl Job #{{ job.id }}
+{% endblock %}
+
+{% block content %}
+
+<div class="job-detail-page">
+
+    <header class="job-detail-header">
+
+        <a
+            href="{% if is_musinsa %}{% url 'crawler:musinsa' %}{% else %}{% url 'crawler:monitoring' %}{% endif %}"
+            class="back-link"
+        >
+            ← {{ job.source.code }} Crawler
+        </a>
+
+        <p class="eyebrow">
+            CRAWL JOB #{{ job.id }}
+        </p>
+
+        <div class="job-title-row">
+
+            <h1>
+                {% if job.crawl_target %}
+                    {{ job.crawl_target.display_name|default:job.source.code }}
+                {% else %}
+                    {{ job.source.code }} Crawl
+                {% endif %}
+            </h1>
+
+            {% if job.status == "SUCCESS" %}
+                <span class="job-status success">
+                    SUCCESS
+                </span>
+
+            {% elif job.status == "FAILED" %}
+                <span class="job-status failed">
+                    FAILED
+                </span>
+
+            {% elif job.status == "RUNNING" %}
+                <span class="job-status running">
+                    RUNNING
+                </span>
+
+            {% elif job.status == "PENDING" %}
+                <span class="job-status pending">
+                    PENDING
+                </span>
+
+            {% else %}
+                <span class="job-status">
+                    {{ job.status }}
+                </span>
+            {% endif %}
+
+        </div>
+
+    </header>
+
+
+    <!-- ======================================================
+         실행 결과
+    ====================================================== -->
+
+    <section class="job-section">
+
+        <div class="job-section-head">
+            <h2>
+                실행 결과
+            </h2>
+
+            <p>
+                해당 크롤링 Job의 데이터 처리 결과입니다.
+            </p>
+        </div>
+
+        <div class="job-stat-grid">
+
+            <article class="job-stat-card">
+                <span class="label">FOUND</span>
+                <strong>{{ job.items_found|default:"0" }}</strong>
+                <span class="desc">발견 데이터</span>
+            </article>
+
+            <article class="job-stat-card">
+                <span class="label">CREATED</span>
+                <strong>{{ job.items_created|default:"0" }}</strong>
+                <span class="desc">신규 저장</span>
+            </article>
+
+            <article class="job-stat-card">
+                <span class="label">UPDATED</span>
+                <strong>{{ job.items_updated|default:"0" }}</strong>
+                <span class="desc">기존 데이터 업데이트</span>
+            </article>
+
+            <article class="job-stat-card">
+                <span class="label">ATTEMPT</span>
+                <strong>{{ job.attempt|default:"1" }}</strong>
+                <span class="desc">실행 시도 횟수</span>
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================================================
+         실행 정보
+    ====================================================== -->
+
+    <section class="job-section">
+
+        <div class="job-section-head">
+            <h2>
+                실행 정보
+            </h2>
+
+            <p>
+                크롤링 대상과 실행 시점을 확인합니다.
+            </p>
+        </div>
+
+        <div class="detail-card">
+
+            <div class="detail-row">
+                <span>Job ID</span>
+                <strong>#{{ job.id }}</strong>
+            </div>
+
+            <div class="detail-row">
+                <span>Source</span>
+                <strong>{{ job.source.code }}</strong>
+            </div>
+
+            <div class="detail-row">
+                <span>Target</span>
+                <strong>
+                    {% if job.crawl_target %}
+                        {{ job.crawl_target.display_name|default:"-" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="detail-row">
+                <span>Target Type</span>
+                <strong>
+                    {% if job.crawl_target %}
+                        {{ job.crawl_target.target_type|default:"-" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="detail-row">
+                <span>Target Value</span>
+                <strong>
+                    {% if job.crawl_target %}
+                        {{ job.crawl_target.target_value|default:"-" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="detail-row">
+                <span>Trigger</span>
+                <strong>{{ job.trigger_type|default:"-" }}</strong>
+            </div>
+
+            <div class="detail-row">
+                <span>시작 시간</span>
+                <strong>
+                    {% if job.started_at %}
+                        {{ job.started_at|date:"Y-m-d H:i:s" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="detail-row">
+                <span>종료 시간</span>
+                <strong>
+                    {% if job.finished_at %}
+                        {{ job.finished_at|date:"Y-m-d H:i:s" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="detail-row">
+                <span>Scheduled At</span>
+                <strong>
+                    {% if job.scheduled_at %}
+                        {{ job.scheduled_at|date:"Y-m-d H:i:s" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </strong>
+            </div>
+
+            <div class="detail-row">
+                <span>Celery Task ID</span>
+                <strong class="mono">
+                    {{ job.celery_task_id|default:"-" }}
+                </strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================================================
+         오류 정보
+    ====================================================== -->
+
+    {% if job.status == "FAILED" %}
+
+        <section class="job-section">
+
+            <div class="job-section-head">
+                <h2>
+                    오류 정보
+                </h2>
+
+                <p>
+                    크롤링 실패 원인을 확인합니다.
+                </p>
+            </div>
+
+            <div class="error-card">
+
+                <div class="error-title">
+                    {{ job.error_type|default:"Crawler Error" }}
+                </div>
+
+                <pre class="error-message">{{ job.error_message|default:"오류 메시지가 기록되지 않았습니다." }}</pre>
+
+            </div>
+
+        </section>
+
+    {% endif %}
+
+
+    <!-- ======================================================
+         실제 크롤링 결과 (MUSINSA 전용)
+    ====================================================== -->
+
+    {% if is_musinsa %}
+
+    <section class="job-section">
+
+        <div class="job-section-head">
+            <h2>
+                Crawled Ranking Data
+            </h2>
+
+            <p>
+                해당 Job에서 실제 저장된 무신사 랭킹 Snapshot 데이터입니다.
+            </p>
+        </div>
+
+        <div class="result-meta">
+            저장된 Snapshot {{ ranking_results|length }}건
+        </div>
+
+        <div class="raw-table-wrapper">
+
+            <table class="raw-table">
+
+                <thead>
+                    <tr>
+                        <th>순위</th>
+                        <th>상품번호</th>
+                        <th>브랜드</th>
+                        <th>상품명</th>
+                        <th>카테고리</th>
+                        <th>정상가</th>
+                        <th>판매가</th>
+                        <th>할인율</th>
+                        <th>평점</th>
+                        <th>리뷰</th>
+                        <th>상태</th>
+                        <th>수집시간</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for snapshot in ranking_results %}
+
+                        <tr>
+
+                            <td class="rank-cell">
+                                {{ snapshot.rank|default:"-" }}
+                            </td>
+
+                            <td>
+                                {{ snapshot.product.goods_no|default:"-" }}
+                            </td>
+
+                            <td>
+                                {% if snapshot.product.brand %}
+                                    {{ snapshot.product.brand.name_ko|default:"-" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td class="product-name-cell">
+                                {{ snapshot.product.name|default:"-" }}
+                            </td>
+
+                            <td>
+                                {% if snapshot.ranking_category_depth2_name %}
+                                    {{ snapshot.ranking_category_depth2_name }}
+                                {% elif snapshot.ranking_category_depth1_name %}
+                                    {{ snapshot.ranking_category_depth1_name }}
+                                {% elif snapshot.product.category_depth2 %}
+                                    {{ snapshot.product.category_depth2 }}
+                                {% elif snapshot.product.category_depth1 %}
+                                    {{ snapshot.product.category_depth1 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td class="price-cell">
+                                {{ snapshot.regular_price|default:"-" }}
+                            </td>
+
+                            <td class="price-cell">
+                                {{ snapshot.sale_price|default:"-" }}
+                            </td>
+
+                            <td>
+                                {% if snapshot.discount_rate != None %}
+                                    {{ snapshot.discount_rate }}%
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ snapshot.satisfaction_score|default:"-" }}
+                            </td>
+
+                            <td>
+                                {{ snapshot.review_count|default:"0" }}
+                            </td>
+
+                            <td>
+                                {% if snapshot.is_out_of_stock %}
+                                    <span class="table-badge soldout">
+                                        SOLD OUT
+                                    </span>
+                                {% else %}
+                                    <span class="table-badge sale">
+                                        판매중
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if snapshot.observed_at %}
+                                    {{ snapshot.observed_at|date:"Y-m-d H:i:s" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="12" class="empty">
+                                이 Job에 저장된 랭킹 Snapshot 데이터가 없습니다.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+    {% endif %}
+
+
+    <!-- ======================================================
+         Raw Data
+    ====================================================== -->
+
+    <section class="job-section">
+
+        <div class="job-section-head">
+            <h2>
+                Raw Data
+            </h2>
+
+            <p>
+                해당 Job에서 수집한 원본 데이터 요청 기록입니다.
+            </p>
+        </div>
+
+        <div class="raw-table-wrapper">
+
+            <table class="raw-table">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>HTTP</th>
+                        <th>Content Type</th>
+                        <th>URL</th>
+                        <th>Collected At</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for raw in raw_objects %}
+
+                        <tr>
+
+                            <td>
+                                #{{ raw.id }}
+                            </td>
+
+                            <td>
+                                {% if raw.http_status == 200 %}
+                                    <span class="http-success">
+                                        {{ raw.http_status }}
+                                    </span>
+                                {% else %}
+                                    {{ raw.http_status|default:"-" }}
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ raw.content_type|default:"-" }}
+                            </td>
+
+                            <td class="raw-url">
+
+                                {% if raw.request_url %}
+
+                                    <a
+                                        href="{{ raw.request_url }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title="{{ raw.request_url }}"
+                                    >
+                                        {{ raw.request_url }}
+                                    </a>
+
+                                {% else %}
+                                    -
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                {% if raw.collected_at %}
+                                    {{ raw.collected_at|date:"Y-m-d H:i:s" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="5" class="empty">
+                                이 크롤링 실행에 연결된 Raw Data가 없습니다.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</div>
+
+{% endblock %}

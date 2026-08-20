@@ -1,0 +1,53 @@
+<nav class="top-nav">
+
+    <div class="nav-inner">
+
+        <a
+            href="{% url 'crawler:dashboard' %}"
+            class="nav-brand"
+        >
+            FEEDIT
+        </a>
+
+        <div class="nav-menu">
+
+            <a
+                href="{% url 'crawler:dashboard' %}"
+                class="nav-link"
+            >
+                Dashboard
+            </a>
+
+            <a
+                href="{% url 'crawler:musinsa' %}"
+                class="nav-link"
+            >
+                Musinsa
+            </a>
+
+            <a
+                href="{% url 'crawler:youtube' %}"
+                class="nav-link"
+            >
+                YouTube
+            </a>
+
+            <a
+                href="{% url 'crawler:monitoring' %}"
+                class="nav-link"
+            >
+                Monitoring
+            </a>
+
+            <a
+                href="/admin/"
+                class="nav-link"
+            >
+                Admin
+            </a>
+
+        </div>
+
+    </div>
+
+</nav>

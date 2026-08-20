@@ -1,0 +1,672 @@
+{% extends "base.html" %}
+
+{% block title %}
+FEEDIT | {{ crawler.name }} Crawler
+{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <a href="{% url 'crawler:dashboard' %}" class="back-link">
+            ← Crawler Dashboard
+        </a>
+
+        <p class="eyebrow">
+            {{ crawler.code }}
+        </p>
+
+        <h1>
+            {{ crawler.name }} Crawler
+        </h1>
+
+        <p class="description">
+            {{ crawler.description }}
+        </p>
+
+        <div style="margin-top: 18px;">
+            <a
+                href="{% url 'crawler:backfill' %}"
+                class="button"
+            >
+                Historical Backfill →
+            </a>
+        </div>
+    </div>
+</header>
+
+
+<!-- ======================================================
+     Crawler Status
+====================================================== -->
+
+<section class="status-section">
+    <h2>
+        Crawler Status
+    </h2>
+
+    <div class="status-grid">
+
+        <!-- Source 상태 -->
+        <article class="status-card">
+            <div class="card-title">
+                Status
+            </div>
+
+            {% if crawler_status == "ACTIVE" %}
+                <div class="status success">
+                    <span class="status-dot"></span>
+                    ACTIVE
+                </div>
+
+            {% elif crawler_status == "INACTIVE" %}
+                <div class="status failed">
+                    <span class="status-dot"></span>
+                    INACTIVE
+                </div>
+
+            {% elif crawler_status == "REVIEW" %}
+                <div class="status running">
+                    <span class="status-dot"></span>
+                    REVIEW
+                </div>
+
+            {% elif crawler_status == "BLOCKED" %}
+                <div class="status failed">
+                    <span class="status-dot"></span>
+                    BLOCKED
+                </div>
+
+            {% else %}
+                <div class="status">
+                    {{ crawler_status|default:"-" }}
+                </div>
+            {% endif %}
+        </article>
+
+
+        <!-- 최근 실행 -->
+        <article class="status-card">
+            <div class="card-title">
+                Last Run
+            </div>
+
+            <div class="status">
+                {% if last_job %}
+                    {{ last_job.created_at|date:"Y-m-d H:i:s" }}
+                {% else %}
+                    -
+                {% endif %}
+            </div>
+        </article>
+
+
+        <!-- 최근 발견 상품 수 -->
+        <article class="status-card">
+            <div class="card-title">
+                Items Found
+            </div>
+
+            <div class="status">
+                {% if last_job %}
+                    {{ last_job.items_found }}
+                {% else %}
+                    0
+                {% endif %}
+            </div>
+        </article>
+
+    </div>
+</section>
+
+
+<!-- ======================================================
+     7-Day Trend
+====================================================== -->
+
+<section class="status-section">
+    <h2>
+        7-Day Trend
+    </h2>
+
+    <div class="stat-row">
+
+        <article class="status-card">
+            <div class="card-title">
+                성공률
+            </div>
+
+            <div class="status">
+                {{ crawler_stats.success_rate|default:"0" }}%
+            </div>
+        </article>
+
+
+        <article class="status-card">
+            <div class="card-title">
+                실행 횟수
+            </div>
+
+            <div class="status">
+                {{ crawler_stats.total_jobs|default:"0" }}회
+            </div>
+        </article>
+
+
+        <article class="status-card">
+            <div class="card-title">
+                수집 아이템
+            </div>
+
+            <div class="status">
+                {{ crawler_stats.total_items|default:"0" }}개
+            </div>
+        </article>
+
+    </div>
+
+
+    <div class="chart-card" style="margin-top: 16px;">
+        <div class="chart-card-head">
+            <h3>
+                {{ crawler.name }} 실행 추이
+            </h3>
+        </div>
+
+        <div class="chart-wrap">
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+
+    {{ crawler_trend_data|json_script:"trend-data" }}
+</section>
+
+
+<!-- ======================================================
+     Crawl Targets
+====================================================== -->
+
+<section class="crawler-section">
+    <div class="section-header">
+        <div>
+            <h2>
+                Crawl Targets
+            </h2>
+
+            <p>
+                {{ crawler.name }}에 등록된 활성 크롤링 대상입니다.
+            </p>
+        </div>
+
+        <form
+            method="post"
+            action="{% url 'crawler:run_all_targets' %}"
+        >
+            {% csrf_token %}
+            <button type="submit" class="button">
+                활성 Target 전체 실행
+            </button>
+        </form>
+    </div>
+
+
+    <div class="crawler-target-list">
+
+        {% for target in crawl_targets %}
+
+            <article class="target-card">
+                <div>
+                    <strong>
+                        {{ target.display_name|default:"이름 없음" }}
+                    </strong>
+
+                    <p>
+                        {{ target.target_value }}
+                    </p>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="badge">
+                        {{ target.target_type }}
+                    </span>
+
+                    <form
+                        method="post"
+                        action="{% url 'crawler:run_target' target.id %}"
+                    >
+                        {% csrf_token %}
+                        <button
+                            type="submit"
+                            class="button"
+                            {% if not target.is_active %}disabled{% endif %}
+                        >
+                            실행
+                        </button>
+                    </form>
+                </div>
+            </article>
+
+        {% empty %}
+
+            <div class="empty-card">
+                등록된 활성 크롤링 대상이 없습니다.
+            </div>
+
+        {% endfor %}
+
+    </div>
+</section>
+
+
+<!-- ======================================================
+     Crawl Control
+====================================================== -->
+
+<section class="crawler-control-section">
+    <div class="section-header">
+        <div>
+            <h2>
+                Crawl Control
+            </h2>
+
+            <p>
+                크롤러 운영 설정을 관리합니다.
+            </p>
+        </div>
+    </div>
+
+
+    <!-- 활성화 / 비활성화 -->
+    <div class="settings-row">
+        <div>
+            <div class="label">
+                크롤러 활성화
+            </div>
+
+            <p class="desc">
+                비활성화하면 자동 크롤링 대상에서 제외됩니다.
+            </p>
+        </div>
+
+        <form
+            method="post"
+            action="{% url 'crawler:toggle_active' %}"
+        >
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="switch {% if crawler.is_active %}on{% endif %}"
+                aria-pressed="{{ crawler.is_active|yesno:'true,false' }}"
+                aria-label="크롤러 활성화 상태 변경"
+            ></button>
+        </form>
+    </div>
+
+
+    <!-- 실행 주기 -->
+    <div class="settings-row">
+        <div>
+            <div class="label">
+                실행 주기
+            </div>
+
+            <p class="desc">
+                자동 크롤링에 사용할 수집 주기입니다.
+            </p>
+        </div>
+
+        <form
+            method="post"
+            action="{% url 'crawler:update_cycle' %}"
+            class="field"
+        >
+            {% csrf_token %}
+
+            <select
+                name="cycle_hours"
+                class="select-input"
+                onchange="this.form.submit()"
+            >
+                <option
+                    value="1"
+                    {% if crawler.cycle_hours == 1 %}selected{% endif %}
+                >
+                    1시간마다
+                </option>
+
+                <option
+                    value="6"
+                    {% if crawler.cycle_hours == 6 %}selected{% endif %}
+                >
+                    6시간마다
+                </option>
+
+                <option
+                    value="12"
+                    {% if crawler.cycle_hours == 12 %}selected{% endif %}
+                >
+                    12시간마다
+                </option>
+
+                <option
+                    value="24"
+                    {% if crawler.cycle_hours == 24 %}selected{% endif %}
+                >
+                    24시간마다
+                </option>
+            </select>
+        </form>
+    </div>
+
+
+    <!-- 현재 크롤러 상태 -->
+    <div class="crawler-control-card">
+
+        {% if source == "musinsa" %}
+
+            <div>
+                <strong>
+                    무신사 자동 크롤러
+                </strong>
+
+                <p class="desc">
+                    활성 Crawl Target을 기준으로 Celery Worker가 크롤링 작업을 수행합니다.
+                </p>
+            </div>
+
+            {% if crawler.is_active %}
+                <span class="badge success-badge">
+                    ACTIVE
+                </span>
+            {% else %}
+                <span class="badge failed-badge">
+                    INACTIVE
+                </span>
+            {% endif %}
+
+        {% else %}
+
+            <span class="coming-soon">
+                크롤러 기능 준비 중
+            </span>
+
+        {% endif %}
+
+    </div>
+</section>
+
+
+<!-- ======================================================
+     Recent Crawls
+====================================================== -->
+
+<section class="jobs-section">
+    <div class="section-header">
+        <div>
+            <h2>
+                Recent Crawls
+            </h2>
+
+            <p>
+                {{ crawler.name }}의 최근 크롤링 작업입니다.
+            </p>
+        </div>
+    </div>
+
+
+    <!-- Filter -->
+    <div class="filter-bar">
+
+        <input
+            type="text"
+            class="search-input"
+            id="jobSearch"
+            placeholder="Target, ID로 검색…"
+        >
+
+        <select
+            class="select-input"
+            id="filterStatus"
+        >
+            <option value="">
+                전체 상태
+            </option>
+
+            <option value="SUCCESS">
+                SUCCESS
+            </option>
+
+            <option value="FAILED">
+                FAILED
+            </option>
+
+            <option value="RUNNING">
+                RUNNING
+            </option>
+
+            <option value="PENDING">
+                PENDING
+            </option>
+        </select>
+
+        <button
+            type="button"
+            class="button"
+            id="filterReset"
+        >
+            필터 초기화
+        </button>
+
+    </div>
+
+
+    <p
+        class="crawler-meta-text"
+        id="jobCount"
+        style="margin: 0 0 10px;"
+    >
+        전체 {{ recent_jobs|length }}건
+    </p>
+
+
+    <div
+        class="table-wrapper"
+        id="jobsTable"
+    >
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Target</th>
+                    <th>Status</th>
+                    <th>Found</th>
+                    <th>Created</th>
+                    <th>Updated</th>
+                    <th>실행 시간</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for job in recent_jobs %}
+
+                    <tr
+                        class="clickable-row"
+                        data-job-id="{{ job.id }}"
+                        data-target="{{ job.crawl_target.display_name|default:'' }}"
+                        data-status="{{ job.status }}"
+                        tabindex="0"
+                        role="link"
+                        onclick="window.location.href='{% url 'crawler:job' job.id %}'"
+                        onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); window.location.href='{% url 'crawler:job' job.id %}'; }"
+                    >
+
+                        <td>
+                            #{{ job.id }}
+                        </td>
+
+                        <td>
+                            {{ job.crawl_target.display_name|default:"-" }}
+                        </td>
+
+                        <td>
+                            {% if job.status == "SUCCESS" %}
+                                <span class="badge success-badge">
+                                    SUCCESS
+                                </span>
+
+                            {% elif job.status == "FAILED" %}
+                                <span class="badge failed-badge">
+                                    FAILED
+                                </span>
+
+                            {% elif job.status == "RUNNING" %}
+                                <span class="badge running-badge">
+                                    RUNNING
+                                </span>
+
+                            {% elif job.status == "PENDING" %}
+                                <span class="badge pending-badge">
+                                    PENDING
+                                </span>
+
+                            {% else %}
+                                <span class="badge">
+                                    {{ job.status }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ job.items_found }}
+                        </td>
+
+                        <td>
+                            {{ job.items_created }}
+                        </td>
+
+                        <td>
+                            {{ job.items_updated }}
+                        </td>
+
+                        <td>
+                            {% if job.started_at and job.finished_at %}
+                                {{ job.started_at|date:"H:i:s" }}
+                                ~
+                                {{ job.finished_at|date:"H:i:s" }}
+
+                            {% elif job.started_at %}
+                                {{ job.started_at|date:"H:i:s" }}
+                                ~
+
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr class="empty-job-row">
+                        <td
+                            colspan="7"
+                            class="empty"
+                        >
+                            아직 크롤링 기록이 없습니다.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+</section>
+
+
+<!-- ======================================================
+     Error Log
+====================================================== -->
+
+<section class="jobs-section">
+    <div class="section-header">
+        <div>
+            <h2>
+                알림 / 에러 로그
+            </h2>
+
+            <p>
+                {{ crawler.name }}의 최근 실패 기록입니다.
+            </p>
+        </div>
+    </div>
+
+
+    <div class="alerts-list">
+
+        {% for alert in crawler_alerts %}
+
+            <article
+                class="alert-row severity-{{ alert.severity|default:'danger' }}"
+            >
+                <div class="alert-icon">
+                    {% if alert.severity == "danger" %}
+                        ⛔
+                    {% elif alert.severity == "warning" %}
+                        ⚠
+                    {% else %}
+                        ↺
+                    {% endif %}
+                </div>
+
+
+                <div class="alert-body">
+
+                    <div class="alert-top">
+                        <span class="msg">
+                            {{ alert.message }}
+                        </span>
+
+                        <span class="time">
+                            {{ alert.created_at|date:"Y-m-d H:i:s" }}
+                        </span>
+                    </div>
+
+
+                    {% if alert.detail %}
+                        <p class="alert-desc">
+                            {{ alert.detail }}
+                        </p>
+                    {% endif %}
+
+
+                    {% if alert.tags %}
+                        <div class="alert-tags">
+
+                            {% for tag in alert.tags %}
+                                <span class="alert-tag">
+                                    {{ tag }}
+                                </span>
+                            {% endfor %}
+
+                        </div>
+                    {% endif %}
+
+                </div>
+            </article>
+
+        {% empty %}
+
+            <div class="empty-card">
+                최근 에러가 없습니다.
+            </div>
+
+        {% endfor %}
+
+    </div>
+</section>
+
+
+{% endblock %}
