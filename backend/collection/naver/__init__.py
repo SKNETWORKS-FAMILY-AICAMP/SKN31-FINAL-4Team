@@ -1,0 +1,1 @@
+"""NAVER API HUB collectors."""
