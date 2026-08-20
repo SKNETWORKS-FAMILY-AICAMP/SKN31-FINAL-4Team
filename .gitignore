@@ -1,6 +1,21 @@
-.env
+# Virtual environments
+venv/
 .venv/
-data/
-dist/
+env/
+ENV/
+*/venv/
+*/.venv/
+
+# === Python / Django ===
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key

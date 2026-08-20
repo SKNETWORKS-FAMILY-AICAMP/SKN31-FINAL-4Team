@@ -1,11 +1,9 @@
 import os
-from pathlib import Path
 from dotenv import load_dotenv
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-PROJECT_ROOT = BASE_DIR.parent
-load_dotenv(PROJECT_ROOT / ".env")
+load_dotenv(BASE_DIR.parent / ".env")
 
 SECRET_KEY = "django-insecure-!8i#l0h=v(918zvp*!-^v%+cy74gyumb_$%uu1^h+h)n7)_gx7"
 DEBUG = True
@@ -57,17 +55,13 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ["POSTGRES_DB"],
-        "USER": os.environ["POSTGRES_USER"],
-        "PASSWORD": os.environ["POSTGRES_PASSWORD"],
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
+        "NAME": os.getenv("DB_NAME", "feedit"),
+        "USER": os.getenv("DB_USER", "feedit"),
+        "PASSWORD": os.getenv("DB_PASSWORD", ""),
+        "HOST": os.getenv("DB_HOST", "192.168.0.14"),
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
-
-
-# Password validation
-# https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -91,9 +85,20 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
+REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
+
+CELERY_BROKER_URL = (
+    f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0"
+    if REDIS_PASSWORD
+    else f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
+)
+
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
