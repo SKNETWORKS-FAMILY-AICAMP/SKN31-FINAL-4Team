@@ -1,7 +1,7 @@
 from django.db import transaction
 from django.utils import timezone
 
-from crawler.models import (
+from apps.crawler.models import (
     YoutubeContent,
     YoutubeContentMetric,
 )

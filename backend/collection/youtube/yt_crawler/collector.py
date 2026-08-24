@@ -469,7 +469,7 @@ class YouTubeCollector:
         creator_name: str,
         gender: str,
         days_back: int,
-        max_videos: int,
+        max_videos: int | None,
     ) -> List[Dict[str, Any]]:
         rows: List[Dict[str, Any]] = []
         if not playlist_id:
@@ -478,7 +478,7 @@ class YouTubeCollector:
         page_token: Optional[str] = None
         stop_due_to_age = False
 
-        while len(rows) < max_videos and not stop_due_to_age:
+        while (max_videos is None or len(rows) < max_videos) and not stop_due_to_age:
             if not self.quota.can_general(1):
                 break
             self.quota.use_general(1)
@@ -486,7 +486,11 @@ class YouTubeCollector:
                 resp = self.youtube.playlistItems().list(
                     part="snippet,contentDetails",
                     playlistId=playlist_id,
-                    maxResults=min(50, max_videos - len(rows)),
+                    maxResults=(
+                        50
+                        if max_videos is None
+                        else min(50, max_videos - len(rows))
+                    ),
                     pageToken=page_token,
                 ).execute()
             except HttpError as e:
@@ -517,7 +521,7 @@ class YouTubeCollector:
                         "collected_at": utc_now_iso(),
                     }
                 )
-                if len(rows) >= max_videos:
+                if max_videos is not None and len(rows) >= max_videos:
                     break
 
             page_token = resp.get("nextPageToken")
@@ -1080,13 +1084,14 @@ def collect_all(
 
     # 5) 선택된 모든 영상 댓글 1페이지(기본 최대 100 top-level thread) 수집
     comment_rows: List[Dict[str, Any]] = []
-    for i, row in enumerate(videos_df.itertuples(index=False), start=1):
-        if not quota.can_general(1):
-            print("[STOP] general quota hard limit before comments")
-            break
-        print(f"[COMMENTS] {i}/{len(videos_df)} {row.video_id}")
-        comment_rows.extend(yt.comment_threads(row.video_id, pages=comment_pages, include_authors=include_comment_authors))
-        time.sleep(0.02)
+    if comment_pages > 0:
+        for i, row in enumerate(videos_df.itertuples(index=False), start=1):
+            if not quota.can_general(1):
+                print("[STOP] general quota hard limit before comments")
+                break
+            print(f"[COMMENTS] {i}/{len(videos_df)} {row.video_id}")
+            comment_rows.extend(yt.comment_threads(row.video_id, pages=comment_pages, include_authors=include_comment_authors))
+            time.sleep(0.02)
     comments_df = pd.DataFrame(comment_rows)
     merge_json_records(
         dataframe_records(comments_df), COMMENTS_JSON, ("video_id", "comment_id")
@@ -1264,7 +1269,12 @@ def sync_database_if_available(data_dir: Path, db_path: Path) -> Optional[Path]:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="FEEDIT YouTube creator collector v5")
     p.add_argument("--days", type=int, default=DEFAULT_DAYS_BACK, help="최근 N일 이내 업로드 영상")
-    p.add_argument("--videos-per-creator", type=int, default=DEFAULT_VIDEOS_PER_CREATOR, help="크리에이터당 최대 영상 수")
+    p.add_argument(
+        "--videos-per-creator",
+        type=int,
+        default=DEFAULT_VIDEOS_PER_CREATOR,
+        help="크리에이터당 최대 영상 수 (0이면 기간 내 전체)",
+    )
     p.add_argument("--comment-pages", type=int, default=DEFAULT_COMMENT_PAGES_PER_VIDEO, help="영상당 댓글 페이지 수(페이지당 최대 100 thread)")
     p.add_argument("--include-comment-authors", action="store_true", help="댓글 작성자 표시명/채널 ID도 저장")
     p.add_argument("--include-nonfashion", action="store_true", help="패션 키워드가 없는 채널 영상도 포함")
@@ -1287,8 +1297,10 @@ def main() -> None:
 
     collect_all(
         days_back=max(1, args.days),
-        videos_per_creator=max(1, min(50, args.videos_per_creator)),
-        comment_pages=max(1, args.comment_pages),
+        videos_per_creator=(
+            None if args.videos_per_creator == 0 else max(1, args.videos_per_creator)
+        ),
+        comment_pages=max(0, args.comment_pages),
         include_comment_authors=args.include_comment_authors,
         include_nonfashion=args.include_nonfashion,
         force_resolve=args.force_resolve,
