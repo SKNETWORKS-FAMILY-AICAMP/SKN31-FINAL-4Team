@@ -111,6 +111,8 @@ class Command(BaseCommand):
         creator_by_channel_id: dict[str, YoutubeCreator] = {}
         creators_created = 0
         contents_created = 0
+        contents_skipped = 0
+        metric_rows: list[YoutubeContentMetric] = []
 
         with transaction.atomic():
             for row in creators:
@@ -138,7 +140,7 @@ class Command(BaseCommand):
                 creator = creator_by_channel_id.get(channel_id)
                 if creator is None:
                     continue
-                content, created = YoutubeContent.objects.update_or_create(
+                content, created = YoutubeContent.objects.get_or_create(
                     video_id=str(row["video_id"]),
                     defaults={
                         "creator": creator,
@@ -155,19 +157,29 @@ class Command(BaseCommand):
                     content.first_seen_at = observed_at
                     content.save(update_fields=["first_seen_at"])
                     contents_created += 1
-                YoutubeContentMetric.objects.get_or_create(
-                    content=content,
-                    observed_at=observed_at,
-                    defaults={
-                        "view_count": row.get("view_count"),
-                        "like_count": row.get("like_count"),
-                        "comment_count": row.get("comment_count"),
-                    },
+                else:
+                    contents_skipped += 1
+                    continue
+
+                metric_rows.append(
+                    YoutubeContentMetric(
+                        content=content,
+                        observed_at=observed_at,
+                        view_count=row.get("view_count"),
+                        like_count=row.get("like_count"),
+                        comment_count=row.get("comment_count"),
+                    )
                 )
+
+            # A metric is created only with a newly inserted content. Existing
+            # video IDs are skipped, so repeated imports cannot add duplicates.
+            if metric_rows:
+                YoutubeContentMetric.objects.bulk_create(metric_rows, batch_size=500)
 
         self.stdout.write(
             self.style.SUCCESS(
                 f"Imported creators={len(creator_by_channel_id)} (new={creators_created}), "
-                f"videos={len(valid_videos)} (new={contents_created})."
+                f"videos={len(valid_videos)} "
+                f"(new={contents_created}, skipped={contents_skipped})."
             )
         )

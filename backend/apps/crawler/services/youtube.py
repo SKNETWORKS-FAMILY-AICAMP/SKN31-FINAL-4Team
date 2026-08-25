@@ -28,7 +28,7 @@ class YoutubeService:
         # YoutubeContent
         # ====================================================
 
-        content, created = YoutubeContent.objects.update_or_create(
+        content, created = YoutubeContent.objects.get_or_create(
             video_id=video_id,
             defaults={
                 "creator": creator,
@@ -54,20 +54,26 @@ class YoutubeService:
         # YoutubeContentMetric
         # ====================================================
 
-        metric, metric_created = YoutubeContentMetric.objects.get_or_create(
+        if not created:
+            return {
+                "content": content,
+                "created": False,
+                "metric": None,
+                "metric_created": False,
+            }
+
+        metric = YoutubeContentMetric.objects.create(
             content=content,
+            crawl_job=crawl_job,
             observed_at=observed_at,
-            defaults={
-                "crawl_job": crawl_job,
-                "view_count": video_data.get("view_count"),
-                "like_count": video_data.get("like_count"),
-                "comment_count": video_data.get("comment_count"),
-            },
+            view_count=video_data.get("view_count"),
+            like_count=video_data.get("like_count"),
+            comment_count=video_data.get("comment_count"),
         )
 
         return {
             "content": content,
             "created": created,
             "metric": metric,
-            "metric_created": metric_created,
+            "metric_created": True,
         }
