@@ -9,7 +9,15 @@
         <h1>Crawler Dashboard</h1>
         <p class="description">플랫폼별 수집 상태, 최근 실행 결과, 실패 여부를 한 화면에서 확인합니다.</p>
     </div>
-    <a href="{% url 'crawler:monitoring' %}" class="button">전체 모니터링 →</a>
+
+    <button
+        type="button"
+        class="button button-secondary"
+        onclick="window.location.reload();"
+    >
+        새로고침
+    </button>
+
 </header>
 
 <section class="status-section">

@@ -399,12 +399,6 @@ http://127.0.0.1:8000/admin/
 
 ```bash
 cd backend
-celery -A config worker -l info
-```
-
-Windows에서 Worker 실행 문제가 있는 경우:
-
-```bash
 celery -A config worker -l info -P solo
 ```
 

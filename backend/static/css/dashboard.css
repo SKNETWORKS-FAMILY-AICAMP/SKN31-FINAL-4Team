@@ -1,0 +1,180 @@
+/* ============================================================
+   FEEDIT DATA ADMIN · DASHBOARD
+   Extracted from the previous all-in-one main.css
+============================================================ */
+
+.dashboard-alert-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dashboard-alert-preview .view-all-link {
+  align-self: flex-start;
+  margin-top: 4px;
+
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.dashboard-alert-preview .view-all-link:hover {
+  color: var(--text);
+}
+
+.dashboard-hero {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 34px;
+  padding: 38px 40px;
+  background: linear-gradient(135deg, #111 0%, #1d1d1d 76%, #292929 100%);
+  border-radius: 22px;
+  color: #fff;
+}
+
+.dashboard-hero::after {
+  content: "";
+  position: absolute;
+  right: -70px;
+  bottom: -100px;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.dashboard-hero .eyebrow {
+  color: #bdbdbd;
+}
+
+.dashboard-hero h1 {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  font-size: clamp(38px, 5vw, 58px);
+  letter-spacing: -0.055em;
+}
+
+.dashboard-hero .description {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  color: #c6c6c6;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.platform-card {
+  position: relative;
+  display: flex;
+  min-height: 210px;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.platform-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: #171717;
+  opacity: 0;
+  transform: scaleX(0.45);
+  transform-origin: left;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.platform-card:hover {
+  transform: translateY(-2px);
+  border-color: #d4d4d8;
+  box-shadow: var(--shadow);
+}
+
+.platform-card:hover::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.platform-card-top,
+.platform-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.platform-code {
+  color: var(--subtle);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.platform-card h3 {
+  margin: 34px 0 8px;
+  font-size: 27px;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+
+.platform-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.platform-meta {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .platform-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .dashboard-hero {
+    padding: 28px 24px;
+  }
+}
+
+@media (max-width: 560px) {
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+}

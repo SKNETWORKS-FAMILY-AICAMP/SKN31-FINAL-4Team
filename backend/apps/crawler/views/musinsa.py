@@ -316,3 +316,32 @@ def run_all_targets(request):
     return redirect(
         "crawler:musinsa",
     )
+
+
+from django.shortcuts import render
+
+
+def overview(request):
+    context = {
+        "active_menu": "musinsa",
+        "active_tab": "overview",
+    }
+
+    return render(
+        request,
+        "crawler/musinsa/overview.html",
+        context,
+    )
+
+
+def targets(request):
+    context = {
+        "active_menu": "musinsa",
+        "active_tab": "targets",
+    }
+
+    return render(
+        request,
+        "crawler/musinsa/targets.html",
+        context,
+    )
