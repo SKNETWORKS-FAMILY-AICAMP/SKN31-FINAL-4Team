@@ -1,21 +1,61 @@
-# Virtual environments
-venv/
-.venv/
-env/
-ENV/
-*/venv/
-*/.venv/
-
-# === Python / Django ===
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-
-# Environment variables / secrets
+# Environment
 .env
 .env.*
 !.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Django
+*.log
+db.sqlite3
+media/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test / Cache
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Secrets
+credentials.json
+service-account.json
 *.pem
 *.key
+
+# AWS
+.aws/
+
+# Local files
+local/
+tmp/
+temp/
+.env
+*.pem
+.venv/
+__pycache__/
+*.pyc
+db.sqlite3
