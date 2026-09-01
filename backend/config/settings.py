@@ -11,8 +11,11 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")
 
 DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = ['feedit-official.duckdns.org', '15.164.151.62', 'localhost']
-
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "feedit-official.duckdns.org",
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -83,14 +86,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
+LLANGUAGE_CODE = "ko-kr"
+TIME_ZONE = "Asia/Seoul"
 USE_I18N = True
-
 USE_TZ = True
 
 

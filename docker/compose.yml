@@ -3,60 +3,73 @@ services:
     build:
       context: .
       dockerfile: ssm.Dockerfile
+
     container_name: feedit-ssm-tunnel
+
     env_file:
       - ../.env
-    environment:
-      AWS_PROFILE: ${AWS_PROFILE:-default}
-      AWS_REGION: ${AWS_REGION:-ap-northeast-2}
-      EC2_INSTANCE_ID: ${EC2_INSTANCE_ID}
-      RDS_HOST: ${RDS_HOST}
-      RDS_PORT: ${RDS_PORT:-5432}
-    volumes:
-      - type: bind
-        source: ${USERPROFILE}/.aws
-        target: /root/.aws
-        read_only: true
+
     ports:
       - "5433:5433"
+
     command: >
       sh -c "
       socat TCP-LISTEN:5433,fork,reuseaddr TCP:127.0.0.1:15433 &
       aws ssm start-session
       --target $$EC2_INSTANCE_ID
       --document-name AWS-StartPortForwardingSessionToRemoteHost
-      --parameters host=$$RDS_HOST,portNumber=$${RDS_PORT:-5432},localPortNumber=15433
-      --region $${AWS_REGION:-ap-northeast-2}
-      --profile $${AWS_PROFILE:-default}
+      --parameters host=$$RDS_HOST,portNumber=$$RDS_PORT,localPortNumber=15433
+      --region $$AWS_REGION
       "
+
+    healthcheck:
+      test: ["CMD-SHELL", "socat - TCP:127.0.0.1:15433,connect-timeout=2 </dev/null >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
     restart: unless-stopped
+
 
   redis:
     image: redis:7-alpine
     container_name: feedit-redis
+
     ports:
       - "6379:6379"
+
     restart: unless-stopped
+
 
   web:
     build:
       context: ..
       dockerfile: docker/web.Dockerfile
+
     container_name: feedit-web
+
     env_file:
       - ../.env
+
     environment:
       DB_HOST: ssm-tunnel
       DB_PORT: 5433
       REDIS_HOST: redis
       REDIS_PORT: 6379
+
     ports:
       - "8000:8000"
+
     volumes:
       - ../backend:/app
+
     depends_on:
-      - ssm-tunnel
-      - redis
+      ssm-tunnel:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
     command: >
       sh -c "
       python manage.py migrate --noinput &&

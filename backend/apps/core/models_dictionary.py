@@ -17,47 +17,80 @@ class DictionaryTerm(models.Model):
         INACTIVE = "INACTIVE", "비활성"
         MERGED = "MERGED", "병합됨"
 
+    term_code = models.CharField(
+        max_length=150,
+        unique=True,
+        db_index=True,
+        null=True,
+        blank=True,
+        verbose_name="용어 코드",
+    )
+
     term_type = models.CharField(
         max_length=30,
         choices=TermType.choices,
         verbose_name="용어 유형",
     )
 
-    canonical_name = models.CharField(max_length=255)
-    normalized_name = models.CharField(max_length=255)
+    canonical_name = models.CharField(
+        max_length=255,
+        verbose_name="표준 용어명",
+    )
+
+    normalized_name = models.CharField(
+        max_length=255,
+        verbose_name="정규화 용어명",
+    )
 
     english_name = models.CharField(
         max_length=255,
         null=True,
         blank=True,
+        verbose_name="영문명",
     )
 
     description = models.TextField(
         null=True,
         blank=True,
+        verbose_name="설명",
     )
 
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
         default=Status.ACTIVE,
+        db_index=True,
+        verbose_name="상태",
     )
 
     first_seen_at = models.DateTimeField(
         null=True,
         blank=True,
+        verbose_name="최초 관측일",
     )
 
     last_seen_at = models.DateTimeField(
         null=True,
         blank=True,
+        verbose_name="최근 관측일",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="생성일시",
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="수정일시",
+    )
 
     class Meta:
         db_table = '"dictionary"."dictionary_term"'
+        verbose_name = "사전 용어"
+        verbose_name_plural = "사전 용어"
+
+        ordering = ["term_type", "term_code"]
 
         constraints = [
             models.UniqueConstraint(
@@ -82,7 +115,6 @@ class DictionaryTerm(models.Model):
                     status__in=[
                         "ACTIVE",
                         "INACTIVE",
-
                         "MERGED",
                     ]
                 ),
@@ -99,7 +131,7 @@ class DictionaryTerm(models.Model):
         ]
 
     def __str__(self):
-        return f"[{self.get_term_type_display()}] {self.canonical_name}"
+        return f"[{self.term_type}] {self.canonical_name}"
 
 class TermAlias(models.Model):
 
@@ -154,8 +186,11 @@ class TermAlias(models.Model):
     def __str__(self):
         return self.alias
 
-
 class Category(models.Model):
+
+    class CategoryType(models.TextChoices):
+        PRODUCT = "PRODUCT", "상품 카테고리"
+        BRAND = "BRAND", "브랜드 카테고리"
 
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", "활성"
@@ -170,9 +205,18 @@ class Category(models.Model):
         verbose_name="상위 카테고리",
     )
 
+    category_type = models.CharField(
+        max_length=20,
+        choices=CategoryType.choices,
+        default=CategoryType.PRODUCT,
+        db_index=True,
+        verbose_name="카테고리 유형",
+    )
+
     code = models.CharField(
         max_length=100,
         unique=True,
+        db_index=True,
         verbose_name="카테고리 코드",
     )
 
@@ -181,40 +225,45 @@ class Category(models.Model):
         verbose_name="카테고리명",
     )
 
-    level = models.IntegerField(
+    level = models.PositiveSmallIntegerField(
         default=1,
-        verbose_name="계층레벨",
+        verbose_name="계층 레벨",
+    )
+
+    sort_order = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="정렬 순서",
     )
 
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
         default=Status.ACTIVE,
+        db_index=True,
         verbose_name="상태",
     )
 
-    sort_order = models.IntegerField(
-        null=True,
-        blank=True,
-        verbose_name="정렬 순서",
-    )
-
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="생성일시",
-    )
-
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name="수정일시",
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = '"dictionary"."category"'
-        verbose_name = "카테고리"
-        verbose_name_plural = "카테고리"
+
+        ordering = [
+            "category_type",
+            "level",
+            "sort_order",
+            "code",
+        ]
 
         constraints = [
+            models.CheckConstraint(
+                condition=models.Q(
+                    category_type__in=["PRODUCT", "BRAND"]
+                ),
+                name="ck_category_type",
+            ),
             models.CheckConstraint(
                 condition=models.Q(level__gte=1),
                 name="ck_category_level",
@@ -227,7 +276,9 @@ class Category(models.Model):
                 name="ck_category_sort",
             ),
             models.CheckConstraint(
-                condition=models.Q(status__in=["ACTIVE", "INACTIVE"]),
+                condition=models.Q(
+                    status__in=["ACTIVE", "INACTIVE"]
+                ),
                 name="ck_category_status",
             ),
             models.CheckConstraint(
@@ -240,8 +291,7 @@ class Category(models.Model):
         ]
 
     def __str__(self):
-        return self.name
-
+        return f"[{self.category_type}] {self.name}"
 
 class Style(models.Model):
     term = models.OneToOneField(
@@ -411,9 +461,10 @@ class Color(models.Model):
     )
 
     color_family = models.CharField(
-        max_length=100,
+        max_length=50,
         null=True,
         blank=True,
+        db_index=True,
         verbose_name="색상 계열",
     )
 
@@ -423,29 +474,33 @@ class Color(models.Model):
         null=True,
         blank=True,
         related_name="derived_colors",
-        verbose_name="기본 색상",
-    )
-
-    hex_code = models.CharField(
-        max_length=7,
-        null=True,
-        blank=True,
-        verbose_name="HEX 코드",
+        verbose_name="기준 색상",
     )
 
     note = models.TextField(
         null=True,
         blank=True,
-        verbose_name="메모",
+        verbose_name="설명",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="생성일시",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="수정일시",
+    )
 
     class Meta:
         db_table = '"dictionary"."color"'
         verbose_name = "색상"
         verbose_name_plural = "색상"
+
+        ordering = [
+            "color_family",
+            "term__canonical_name",
+        ]
 
         constraints = [
             models.CheckConstraint(
@@ -453,17 +508,17 @@ class Color(models.Model):
                     models.Q(base_color__isnull=True)
                     | ~models.Q(base_color=models.F("term"))
                 ),
-                name="ck_color_self",
+                name="ck_color_self_base",
             ),
         ]
 
     def __str__(self):
         return self.term.canonical_name
 
-
 class TPO(models.Model):
+
     term = models.OneToOneField(
-        DictionaryTerm,
+        "DictionaryTerm",
         on_delete=models.CASCADE,
         primary_key=True,
         related_name="tpo",
@@ -471,25 +526,38 @@ class TPO(models.Model):
     )
 
     tpo_type = models.CharField(
-        max_length=100,
+        max_length=50,
         null=True,
         blank=True,
+        db_index=True,
         verbose_name="TPO 유형",
     )
 
     note = models.TextField(
         null=True,
         blank=True,
-        verbose_name="메모",
+        verbose_name="설명",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="생성일시",
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="수정일시",
+    )
 
     class Meta:
         db_table = '"dictionary"."tpo"'
         verbose_name = "TPO"
         verbose_name_plural = "TPO"
+
+        ordering = [
+            "tpo_type",
+            "term__canonical_name",
+        ]
 
     def __str__(self):
         return self.term.canonical_name
@@ -666,21 +734,23 @@ class TermCandidate(models.Model):
     def __str__(self):
         return self.raw_term
 
-
 class Brand(models.Model):
+
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", "활성"
         INACTIVE = "INACTIVE", "비활성"
 
-    canonical_name = models.CharField(
-        max_length=255,
-        verbose_name="표준 브랜드명",
+    brand_code = models.CharField(
+        max_length=150,
+        unique=True,
+        null=True,
+        blank=True,
     )
 
-    normalized_name = models.CharField(
+    name = models.CharField(
         max_length=255,
-        unique=True,
-        verbose_name="정규화 브랜드명",
+        null=True,
+        blank=True,
     )
 
     english_name = models.CharField(
@@ -697,6 +767,16 @@ class Brand(models.Model):
         verbose_name="국가 코드",
     )
 
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="brands",
+        limit_choices_to={"category_type": "BRAND"},
+        verbose_name="브랜드 카테고리",
+    )
+
     description = models.TextField(
         null=True,
         blank=True,
@@ -707,6 +787,7 @@ class Brand(models.Model):
         max_length=20,
         choices=Status.choices,
         default=Status.ACTIVE,
+        db_index=True,
         verbose_name="상태",
     )
 
@@ -715,12 +796,10 @@ class Brand(models.Model):
 
     class Meta:
         db_table = '"dictionary"."brand"'
-        verbose_name = "브랜드"
-        verbose_name_plural = "브랜드"
+        ordering = ["name"]
 
     def __str__(self):
-        return self.canonical_name
-
+        return self.name
 
 class BrandAlias(models.Model):
     brand = models.ForeignKey(
