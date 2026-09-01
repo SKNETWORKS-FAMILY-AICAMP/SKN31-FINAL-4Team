@@ -1,0 +1,199 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}
+수집 | FEEDiT 관리자
+{% endblock %}
+
+{% block content %}
+
+<h2>수집</h2>
+
+<p class="sub">
+    플랫폼별 수집 상태와 최근 실행 기록을 확인합니다.
+</p>
+
+<!-- 자동 실행 상태 -->
+<div class="card" style="margin-bottom:14px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <div>
+            <b>자동 수집</b>
+            <div class="hint">
+                설정된 주기에 따라 수집 작업이 실행됩니다.
+            </div>
+        </div>
+
+        <div style="margin-left:auto;">
+            <span class="pill ready">
+                정상
+            </span>
+        </div>
+    </div>
+</div>
+
+
+<!-- 통계 -->
+<div class="grid g4">
+
+    <div class="card stat">
+        <div class="k">TODAY</div>
+        <div class="v">-</div>
+        <div class="d">오늘 수집</div>
+    </div>
+
+    <div class="card stat">
+        <div class="k">SUCCESS</div>
+        <div class="v">-</div>
+        <div class="d">수집 성공</div>
+    </div>
+
+    <div class="card stat">
+        <div class="k">FAILED</div>
+        <div class="v">-</div>
+        <div class="d">수집 실패</div>
+    </div>
+
+    <div class="card stat">
+        <div class="k">SOURCE</div>
+        <div class="v">-</div>
+        <div class="d">활성 플랫폼</div>
+    </div>
+
+</div>
+
+
+<div class="sp"></div>
+
+
+<!-- 플랫폼 -->
+<div class="grid g2">
+
+    <div class="site">
+
+        <div class="siteH">
+            <b>무신사</b>
+            <span class="pill ready">정상</span>
+        </div>
+
+        <div class="siteUrl">
+            COMMERCE · JSON
+        </div>
+
+        <div class="bar done">
+            <i style="width:100%"></i>
+        </div>
+
+        <div class="meta">
+            <span>
+                최근 수집
+                <b>-</b>
+            </span>
+
+            <span>
+                성공
+                <b>-</b>
+            </span>
+
+            <span>
+                실패
+                <b>-</b>
+            </span>
+        </div>
+
+        <div class="acts">
+            <button class="btn pri">
+                지금 수집
+            </button>
+
+            <button class="btn">
+                기록 보기
+            </button>
+        </div>
+
+    </div>
+
+
+    <div class="site">
+
+        <div class="siteH">
+            <b>YouTube</b>
+            <span class="pill ready">정상</span>
+        </div>
+
+        <div class="siteUrl">
+            CONTENT · API
+        </div>
+
+        <div class="bar done">
+            <i style="width:100%"></i>
+        </div>
+
+        <div class="meta">
+            <span>
+                최근 수집
+                <b>-</b>
+            </span>
+
+            <span>
+                영상
+                <b>-</b>
+            </span>
+
+            <span>
+                실패
+                <b>-</b>
+            </span>
+        </div>
+
+        <div class="acts">
+            <button class="btn pri">
+                지금 수집
+            </button>
+
+            <button class="btn">
+                기록 보기
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="sp"></div>
+
+
+<!-- 로그 -->
+<div class="card">
+
+    <div
+        style="
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom:12px;
+        "
+    >
+        <b>최근 실행 기록</b>
+
+        <span class="hint" style="margin:0;">
+            최근 수집 작업 로그
+        </span>
+
+        <button
+            class="btn"
+            style="margin-left:auto;"
+        >
+            새로고침
+        </button>
+    </div>
+
+    <div class="log">
+        <div>
+            <span class="t">19:00:01</span>
+            수집 기록이 여기에 표시됩니다.
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

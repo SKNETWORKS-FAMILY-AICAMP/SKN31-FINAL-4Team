@@ -11,10 +11,8 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")
 
 DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['feedit-official.duckdns.org', '15.164.151.62', 'localhost']
 
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -24,6 +22,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "apps.core",
+    "apps.dashboard.apps.DashboardConfig",
+    "apps.api.apps.ApiConfig",
 ]
 
 MIDDLEWARE = [

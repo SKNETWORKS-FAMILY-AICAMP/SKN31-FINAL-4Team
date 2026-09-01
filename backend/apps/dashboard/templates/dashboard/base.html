@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+        {% block title %}FEEDiT 관리자{% endblock %}
+    </title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'dashboard/css/dashboard.css' %}"
+    >
+
+    {% block extra_css %}
+    {% endblock %}
+</head>
+
+<body>
+
+<header class="top">
+    <div class="topIn">
+
+        <a
+            href="{% url 'dashboard:home' %}"
+            class="logo"
+        >
+            <svg viewBox="29 27 64 64">
+                <path
+                    d="M88 32V80C88 84.4183 84.4183 88 80 88H32V32H88Z"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="4"
+                />
+                <path
+                    d="M49.8546 77V42.92H71.9826V47.672H52.3026L55.0386 44.84V60.488L52.3026 58.04H71.1186V62.648H52.3026L55.0386 60.2V77H49.8546Z"
+                    fill="currentColor"
+                />
+                <path
+                    d="M91 29V39H81V29H91Z"
+                    fill="#ff6b4a"
+                />
+            </svg>
+
+            <b>FEEDiT</b>
+            <span>관리자</span>
+        </a>
+
+
+        <nav class="tabs">
+
+            <a href="{% url 'dashboard:home' %}">
+                대시보드
+            </a>
+
+            <a href="{% url 'dashboard:collection' %}">
+                수집
+            </a>
+
+            <a href="{% url 'dashboard:data' %}">
+                데이터
+            </a>
+
+            <a href="{% url 'dashboard:content' %}">
+                콘텐츠
+            </a>
+
+            <a href="{% url 'dashboard:analysis' %}">
+                분석
+            </a>
+
+            <a href="{% url 'dashboard:quality' %}">
+                품질
+            </a>
+
+            <span class="tabDiv"></span>
+
+            <a href="{% url 'dashboard:import' %}">
+                가져오기
+            </a>
+
+            <a href="{% url 'dashboard:export' %}">
+                내보내기
+            </a>
+
+            <a href="{% url 'dashboard:probe' %}">
+                탐색기
+            </a>
+
+            <span class="tabDiv"></span>
+
+            <a href="{% url 'dashboard:api_settings' %}">
+                API
+            </a>
+
+            <a href="{% url 'dashboard:collection_settings' %}">
+                설정
+            </a>
+
+        </nav>
+
+
+        <div class="live">
+            <span class="dot on"></span>
+            <span>RDS</span>
+        </div>
+
+    </div>
+</header>
+
+
+<main class="wrap">
+    {% block content %}
+    {% endblock %}
+</main>
+
+
+<script src="{% static 'dashboard/js/dashboard.js' %}"></script>
+
+{% block extra_js %}
+{% endblock %}
+
+</body>
+</html>

@@ -1,36 +1,19 @@
-# FEEDIT Backend
+# FEEDIT Backend 실행법
 
-FEEDIT의 Django 기반 백엔드 프로젝트입니다.
+## 1. Docker Desktop 실행
 
-현재 단계에서는 프론트엔드 연동 없이 Django, AWS RDS, S3, Git 기반의 백엔드 및 데이터 인프라를 구성합니다.
+Docker Desktop을 먼저 켭니다.
 
-## Tech Stack
+## 2. 프로젝트 루트에서 실행
 
-- Python
-- Django
-- PostgreSQL
-- AWS RDS
-- AWS EC2
-- AWS S3
-- DBeaver
-- psycopg
-- python-dotenv
-- boto3
+```powershell
+docker compose --env-file .env -f docker/compose.yml up --build
+```
+http://localhost:8000/dashboard/
 
-## Project Structure
+## 종료 
+```powershell
+docker compose --env-file .env -f docker/compose.yml down
+```
 
-```text
-SKN31-FINAL-4Team/
-├─ .venv/
-├─ Backend/
-│  ├─ config/
-│  │  ├─ settings.py
-│  │  ├─ urls.py
-│  │  ├─ asgi.py
-│  │  └─ wsgi.py
-│  └─ manage.py
-├─ .env
-├─ .gitignore
-├─ requirements.txt
-└─ README.md
-
+Docker가 Django + Redis + SSM Tunnel을 실행하고, DB는 AWS RDS를 사용함
