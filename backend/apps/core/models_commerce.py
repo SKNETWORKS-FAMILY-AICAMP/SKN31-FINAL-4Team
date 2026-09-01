@@ -463,3 +463,40 @@ class ResaleSnapshot(models.Model):
 
     def __str__(self):
         return f"{self.product_source} / {self.observed_at}"
+
+
+
+class ProductTerm(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="product_terms",
+        verbose_name="상품",
+    )
+
+    term = models.ForeignKey(
+        "core.DictionaryTerm",
+        on_delete=models.CASCADE,
+        related_name="product_terms",
+        verbose_name="상품 특성",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="생성일시",
+    )
+
+    class Meta:
+        db_table = '"commerce"."product_term"'
+        verbose_name = "상품 특성"
+        verbose_name_plural = "상품 특성"
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product", "term"],
+                name="uq_product_term",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.product_id} / {self.term.term_code}"

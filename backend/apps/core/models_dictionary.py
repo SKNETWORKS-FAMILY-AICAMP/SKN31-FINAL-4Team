@@ -341,6 +341,7 @@ class Item(models.Model):
         null=True,
         blank=True,
         related_name="items",
+        limit_choices_to={"category_type": "PRODUCT"},
         verbose_name="카테고리",
     )
 
@@ -382,6 +383,7 @@ class Detail(models.Model):
         max_length=100,
         null=True,
         blank=True,
+        db_index=True,
         verbose_name="속성 유형",
     )
 
@@ -409,7 +411,6 @@ class Detail(models.Model):
     def __str__(self):
         return self.term.canonical_name
 
-
 class Material(models.Model):
     term = models.OneToOneField(
         DictionaryTerm,
@@ -423,14 +424,16 @@ class Material(models.Model):
         max_length=100,
         null=True,
         blank=True,
+        db_index=True,
         verbose_name="소재 유형",
     )
 
     process_type = models.CharField(
-        max_length=100,
+        max_length=150,
         null=True,
         blank=True,
-        verbose_name="가공 방식",
+        db_index=True,
+        verbose_name="조직/가공 유형",
     )
 
     note = models.TextField(
