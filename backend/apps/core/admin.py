@@ -1,10 +1,13 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from apps.core.models import CrawlTarget
+from apps.core.tasks import run_live_target
 
 from .models import (
     # collection
-    Source,
     CrawlRun,
+    CrawlTarget,
     RawDocument,
+    Source,
     # dictionary
     DictionaryTerm,
     TermAlias,
@@ -498,3 +501,64 @@ class ChatMessageAdmin(admin.ModelAdmin):
     search_fields = ("content", "session__title")
     autocomplete_fields = ("session",)
     date_hierarchy = "created_at"
+@admin.register(CrawlTarget)
+class CrawlTargetAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "source",
+        "target_type",
+        "collection_mode",
+        "is_active",
+        "priority",
+        "last_crawled_at",
+        "next_crawl_at",
+    )
+
+    list_filter = (
+        "source",
+        "target_type",
+        "collection_mode",
+        "is_active",
+    )
+
+    search_fields = (
+        "source__code",
+        "source__name",
+        "target_url",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "last_crawled_at",
+    )
+
+    actions = [
+        "run_selected_targets",
+    ]
+
+    @admin.action(
+        description="선택한 수집 대상 실행"
+    )
+    def run_selected_targets(
+        self,
+        request,
+        queryset,
+    ):
+        count = 0
+
+        for target in queryset:
+            if not target.is_active:
+                continue
+
+            run_live_target.delay(
+                target.id
+            )
+
+            count += 1
+
+        self.message_user(
+            request,
+            f"{count}개 수집 작업을 큐에 등록했습니다.",
+            level=messages.SUCCESS,
+        )

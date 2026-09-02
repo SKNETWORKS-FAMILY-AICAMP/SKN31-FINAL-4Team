@@ -61,3 +61,32 @@ __pycache__/
 db.sqlite3
 staticfiles/
 media/
+
+celerybeat-schedule
+celerybeat.pid
+celerybeat-schedule.*
+*.pid
+
+db.sqlite3
+db.sqlite3-journal
+
+media/
+staticfiles/
+.env
+.env.*
+!.env.example
+
+# ============================================================
+# Python
+# ============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.so
+
+tmp/
+temp/
+cache/
+outputs/
+output/
