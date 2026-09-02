@@ -66,18 +66,47 @@ class SourceAdmin(admin.ModelAdmin):
 
 @admin.register(CrawlRun)
 class CrawlRunAdmin(admin.ModelAdmin):
+
     list_display = (
-        "id", "source", "run_type", "status",
-        "started_at", "finished_at", "success_count", "failure_count", "error_code",
+        "id",
+        "target_name",
+        "source",
+        "run_type",
+        "status",
+        "discovered_count",
+        "success_count",
+        "failure_count",
+        "started_at",
+        "finished_at",
     )
-    list_filter = ("status", "run_type", "source")
-    search_fields = ("target", "error_code", "error_message")
-    autocomplete_fields = ("source",)
-    date_hierarchy = "started_at"
-    list_select_related = ("source",)
-    readonly_fields = ("created_at",)
 
+    list_filter = (
+        "source",
+        "run_type",
+        "status",
+    )
 
+    search_fields = (
+        "crawl_target__name",
+        "target",
+        "source__code",
+        "error_message",
+    )
+
+    @admin.display(
+        description="Target name",
+        ordering="crawl_target__name",
+    )
+    def target_name(self, obj):
+        if obj.crawl_target:
+            return (
+                obj.crawl_target.name
+                or str(obj.crawl_target)
+            )
+
+        return "-"
+
+    
 @admin.register(RawDocument)
 class RawDocumentAdmin(admin.ModelAdmin):
     list_display = (
@@ -334,11 +363,34 @@ class ProductTermAdmin(admin.ModelAdmin):
 
 @admin.register(ContentProfile)
 class ContentProfileAdmin(admin.ModelAdmin):
-    list_display = ("name", "handle", "source", "profile_type", "status", "last_seen_at")
-    list_filter = ("source", "profile_type", "status")
-    search_fields = ("name", "handle", "external_profile_id")
-    autocomplete_fields = ("source",)
-    list_select_related = ("source",)
+    list_display = (
+        "name",
+        "handle",
+        "source_code",
+        "profile_type",
+        "status",
+        "last_seen_at",
+    )
+
+    list_filter = (
+        "source",
+        "profile_type",
+        "status",
+        "gender",
+    )
+
+    search_fields = (
+        "name",
+        "handle",
+        "external_profile_id",
+    )
+
+    @admin.display(
+        description="플랫폼",
+        ordering="source__code",
+    )
+    def source_code(self, obj):
+        return obj.source.code
 
 
 @admin.register(ContentItem)
@@ -501,10 +553,13 @@ class ChatMessageAdmin(admin.ModelAdmin):
     search_fields = ("content", "session__title")
     autocomplete_fields = ("session",)
     date_hierarchy = "created_at"
+
 @admin.register(CrawlTarget)
 class CrawlTargetAdmin(admin.ModelAdmin):
+
     list_display = (
         "id",
+        "name",
         "source",
         "target_type",
         "collection_mode",
@@ -522,43 +577,8 @@ class CrawlTargetAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
+        "name",
+        "target_url",
         "source__code",
         "source__name",
-        "target_url",
     )
-
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-        "last_crawled_at",
-    )
-
-    actions = [
-        "run_selected_targets",
-    ]
-
-    @admin.action(
-        description="선택한 수집 대상 실행"
-    )
-    def run_selected_targets(
-        self,
-        request,
-        queryset,
-    ):
-        count = 0
-
-        for target in queryset:
-            if not target.is_active:
-                continue
-
-            run_live_target.delay(
-                target.id
-            )
-
-            count += 1
-
-        self.message_user(
-            request,
-            f"{count}개 수집 작업을 큐에 등록했습니다.",
-            level=messages.SUCCESS,
-        )

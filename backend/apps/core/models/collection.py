@@ -95,33 +95,7 @@ class Source(models.Model):
     def __str__(self):
         return f"{self.code} - {self.name}"
 
-
-# ============================================================
-# CRAWL TARGET
-# ============================================================
-
-
 class CrawlTarget(models.Model):
-    """
-    무엇을 수집할지 정의하는 실행 대상 설정.
-
-    CrawlTarget
-        ↓
-    Celery Task
-        ↓
-    Platform Pipeline
-        ↓
-    Collector / Parser
-        ↓
-    S3 RAW
-
-    LIVE:
-        등록된 target 기준 주기 수집
-
-    BACKFILL:
-        params에 year_month / gender / category 등을 넣어
-        과거 데이터 수집 가능
-    """
 
     class TargetType(models.TextChoices):
         PRODUCT = "PRODUCT", "Product"
@@ -141,6 +115,16 @@ class CrawlTarget(models.Model):
         related_name="crawl_targets",
     )
 
+    name = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text=(
+            "사람이 알아보기 쉬운 타깃 이름. "
+            "예: 남성 상의 전체연령 DAILY"
+        ),
+    )
+
     target_type = models.CharField(
         max_length=30,
         choices=TargetType.choices,
@@ -157,20 +141,6 @@ class CrawlTarget(models.Model):
         default=CollectionMode.LIVE,
     )
 
-    # 플랫폼별 가변 파라미터
-    #
-    # MUSINSA:
-    # {
-    #     "category_code": "002",
-    #     "gender": "F",
-    #     "age_band": "AGE_BAND_20"
-    # }
-    #
-    # BACKFILL:
-    # {
-    #     "year_month": "2025-01",
-    #     "category_code": "002"
-    # }
     params = models.JSONField(
         default=dict,
         blank=True,
@@ -234,12 +204,17 @@ class CrawlTarget(models.Model):
         ]
 
     def __str__(self):
+        if self.name:
+            return (
+                f"{self.name} "
+                f"[{self.source.code}]"
+            )
+
         return (
             f"{self.source.code} | "
             f"{self.target_type} | "
             f"{self.collection_mode}"
         )
-
 
 # ============================================================
 # CRAWL RUN

@@ -121,3 +121,7 @@ AWS_REGION = os.getenv(
     "AWS_REGION",
     "ap-northeast-2",
 )
+
+YOUTUBE_API_KEY = os.getenv(
+    "YOUTUBE_API_KEY"
+)

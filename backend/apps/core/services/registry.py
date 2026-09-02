@@ -4,6 +4,7 @@ from importlib import import_module
 PIPELINE_REGISTRY = {
     "KREAM": "collection.kream.pipeline.KreamPipeline",
     "MUSINSA": "collection.musinsa.pipeline.MusinsaPipeline",
+    "YOUTUBE": "collection.youtube.pipeline.""YoutubePipeline",
     # "ZIGZAG": "collection.zigzag.pipeline.ZigzagPipeline",
     # "ABLY": "collection.ably.pipeline.AblyPipeline",
 }

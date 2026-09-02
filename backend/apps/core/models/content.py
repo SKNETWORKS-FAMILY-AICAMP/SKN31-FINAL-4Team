@@ -1,11 +1,12 @@
 from django.db import models
 
-
 class ContentProfile(models.Model):
-    """
-    유튜브 채널, 인스타 계정 등
-    콘텐츠를 발행하는 플랫폼 프로필.
-    """
+
+    class Gender(models.TextChoices):
+        MALE = "MALE", "남성"
+        FEMALE = "FEMALE", "여성"
+        MIXED = "MIXED", "혼성"
+        UNKNOWN = "UNKNOWN", "미상"
 
     source = models.ForeignKey(
         "core.Source",
@@ -27,6 +28,13 @@ class ContentProfile(models.Model):
     name = models.CharField(
         max_length=300,
         verbose_name="프로필명",
+    )
+
+    gender = models.CharField(
+        max_length=20,
+        choices=Gender.choices,
+        default=Gender.UNKNOWN,
+        verbose_name="크리에이터 성별",
     )
 
     handle = models.CharField(
@@ -95,19 +103,33 @@ class ContentProfile(models.Model):
 
         constraints = [
             models.UniqueConstraint(
-                fields=["source", "external_profile_id"],
+                fields=[
+                    "source",
+                    "external_profile_id",
+                ],
                 name="uq_content_profile",
             ),
         ]
 
         indexes = [
             models.Index(
-                fields=["source", "name"],
+                fields=[
+                    "source",
+                    "name",
+                ],
                 name="idx_content_prof_src",
             ),
             models.Index(
-                fields=["profile_type"],
+                fields=[
+                    "profile_type",
+                ],
                 name="idx_content_prof_type",
+            ),
+            models.Index(
+                fields=[
+                    "gender",
+                ],
+                name="idx_content_prof_gender",
             ),
         ]
 

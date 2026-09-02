@@ -905,3 +905,207 @@ class CategoryAlias(models.Model):
 
     def __str__(self):
         return self.source_category_name or self.source_category_id
+
+class MappingCandidate(models.Model):
+
+    class MappingType(models.TextChoices):
+        BRAND = "BRAND", "브랜드"
+        CATEGORY = "CATEGORY", "카테고리"
+        DETAIL = "DETAIL", "디테일"
+        MATERIAL = "MATERIAL", "소재"
+        COLOR = "COLOR", "색상"
+        ITEM = "ITEM", "아이템"
+        STYLE = "STYLE", "스타일"
+        TAG = "TAG", "태그"
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "검토 대기"
+        APPROVED = "APPROVED", "승인"
+        CREATE = "CREATE", "신규 생성"
+        REJECTED = "REJECTED", "제외"
+
+    source = models.ForeignKey(
+        "core.Source",
+        on_delete=models.PROTECT,
+        related_name="mapping_candidates",
+        verbose_name="출처",
+    )
+
+    mapping_type = models.CharField(
+        max_length=30,
+        choices=MappingType.choices,
+        db_index=True,
+        verbose_name="매핑 유형",
+    )
+
+    source_key = models.CharField(
+        max_length=255,
+        db_index=True,
+        verbose_name="원본 키",
+    )
+
+    source_name = models.CharField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name="원본명",
+    )
+
+    source_detail = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="원본 상세 정보",
+    )
+
+    suggested_target_type = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="추천 대상 유형",
+    )
+
+    suggested_target_id = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="추천 대상 ID",
+    )
+
+    suggested_target_name = models.CharField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name="추천 대상명",
+    )
+
+    selected_target_type = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="선택 대상 유형",
+    )
+
+    selected_target_id = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="선택 대상 ID",
+    )
+
+    selected_target_name = models.CharField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name="선택 대상명",
+    )
+
+    match_method = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="매칭 방식",
+    )
+
+    confidence = models.DecimalField(
+        max_digits=6,
+        decimal_places=5,
+        null=True,
+        blank=True,
+        verbose_name="신뢰도",
+    )
+
+    detected_count = models.BigIntegerField(
+        default=1,
+        verbose_name="발견 횟수",
+    )
+
+    sample_entity_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="예시 엔터티 ID",
+    )
+
+    sample_entity_name = models.CharField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name="예시 엔터티명",
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+        verbose_name="상태",
+    )
+
+    note = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="검토 메모",
+    )
+
+    first_seen_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="최초 발견일시",
+    )
+
+    last_seen_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="최근 발견일시",
+    )
+
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="검토일시",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        db_table = '"dictionary"."mapping_candidate"'
+        verbose_name = "매핑 후보"
+        verbose_name_plural = "매핑 후보"
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "source",
+                    "mapping_type",
+                    "source_key",
+                ],
+                name="uq_mapping_candidate",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "mapping_type",
+                    "status",
+                ],
+                name="idx_mapping_type_status",
+            ),
+            models.Index(
+                fields=[
+                    "source",
+                    "status",
+                ],
+                name="idx_mapping_source_status",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"[{self.mapping_type}] "
+            f"{self.source_name or self.source_key}"
+        )

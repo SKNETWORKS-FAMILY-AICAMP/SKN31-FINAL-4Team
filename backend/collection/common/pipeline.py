@@ -57,24 +57,11 @@ class BasePlatformPipeline(ABC):
 
         return {
             "source": self.SOURCE,
-
             "entity_type": entity_type,
-
-            "source_entity_id": (
-                source_entity_id
-            ),
-
-            "source_url": collected.get(
-                "source_url"
-            ),
-
+            "source_entity_id": source_entity_id,
+            "source_url": collected.get("source_url"),
             "collected_at": collected_at,
-
-            "http_status": collected.get(
-                "http_status"
-            ),
-
-            # S3에 저장되는 실제 파일은 JSON
+            "http_status": collected.get("http_status"),
             "content_type": "application/json",
 
             "s3": {
@@ -84,28 +71,28 @@ class BasePlatformPipeline(ABC):
                 "verified": verified,
             },
 
-            "discovered_count": (
-                collected.get(
-                    "discovered_count",
-                    0,
-                )
+            "discovered_count": collected.get(
+                "discovered_count",
+                0,
             ),
 
-            "success_count": (
-                collected.get(
-                    "success_count",
-                    0,
-                )
+            "success_count": collected.get(
+                "success_count",
+                0,
             ),
 
-            "failure_count": (
-                collected.get(
-                    "failure_count",
-                    0,
-                )
+            "failure_count": collected.get(
+                "failure_count",
+                0,
+            ),
+
+            # 작은 후처리 데이터만 전달
+            "platform_data": collected.get(
+                "platform_data"
             ),
         }
 
+    
     @abstractmethod
     def collect(
         self,
