@@ -14,6 +14,7 @@ DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
+    "15.164.151.62",
     "feedit-official.duckdns.org",
 ]
 
@@ -93,6 +94,8 @@ USE_TZ = True
 
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]        # 원본 (이미 있는 폴더)
+STATIC_ROOT = BASE_DIR / "staticfiles"    
 
 MAILERS = {
     'default': {
