@@ -107,6 +107,12 @@ def create_raw_document(
 def mark_target_crawled(
     target: CrawlTarget,
 ) -> None:
+    """
+    CrawlTarget의 실제 마지막 크롤링 완료 시각만 갱신한다.
+
+    next_crawl_at은 dispatcher가 관리한다.
+    """
+
     target.last_crawled_at = timezone.now()
 
     target.save(

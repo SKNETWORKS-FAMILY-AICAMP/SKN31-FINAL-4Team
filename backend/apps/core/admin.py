@@ -1,53 +1,9 @@
 from django.contrib import admin, messages
 from apps.core.models import CrawlTarget
 from apps.core.tasks import run_live_target
+from apps.core.models import MappingCandidate
 
-from .models import (
-    # collection
-    CrawlRun,
-    CrawlTarget,
-    RawDocument,
-    Source,
-    # dictionary
-    DictionaryTerm,
-    TermAlias,
-    Category,
-    Style,
-    Item,
-    Detail,
-    Material,
-    Color,
-    TPO,
-    TermRelation,
-    TermCandidate,
-    Brand,
-    BrandAlias,
-    CategoryAlias,
-    # commerce
-    Product,
-    ProductSource,
-    ProductSourceSnapshot,
-    ResaleSnapshot,
-    ProductTerm,
-    # content
-    ContentProfile,
-    ContentItem,
-    ContentSnapshot,
-    # analysis
-    TextDocument,
-    TermMetricDaily,
-    TermAssocDaily,
-    # app
-    AppUser,
-    UserTaste,
-    UserEvent,
-    UserSavedItem,
-    VoteCard,
-    VoteBallot,
-    ChatSession,
-    ChatMessage,
-)
-
+from .models import *
 
 # =====================================================================
 # collection: 크롤링 소스 / 실행 / 원본 데이터
@@ -62,7 +18,6 @@ class SourceAdmin(admin.ModelAdmin):
     list_filter = ("source_type", "collection_method", "status")
     search_fields = ("code", "name", "base_url")
     ordering = ("code",)
-
 
 @admin.register(CrawlRun)
 class CrawlRunAdmin(admin.ModelAdmin):
@@ -87,9 +42,11 @@ class CrawlRunAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
+        "id",
         "crawl_target__name",
         "target",
         "source__code",
+        "celery_task_id",
         "error_message",
     )
 
@@ -105,7 +62,6 @@ class CrawlRunAdmin(admin.ModelAdmin):
             )
 
         return "-"
-
     
 @admin.register(RawDocument)
 class RawDocumentAdmin(admin.ModelAdmin):
@@ -146,10 +102,38 @@ class DictionaryTermAdmin(admin.ModelAdmin):
 
 @admin.register(TermAlias)
 class TermAliasAdmin(admin.ModelAdmin):
-    list_display = ("alias", "term", "alias_type", "source", "created_at")
-    list_filter = ("alias_type", "source")
-    search_fields = ("alias", "normalized_alias")
-    autocomplete_fields = ("term", "source")
+    list_display = (
+        "id",
+        "alias",
+        "normalized_alias",
+        "term",
+        "term_type",
+        "alias_type",
+        "source",
+    )
+
+    list_filter = (
+        "term__term_type",
+        "alias_type",
+        "source",
+    )
+
+    search_fields = (
+        "alias",
+        "normalized_alias",
+        "term__canonical_name",
+        "term__normalized_name",
+    )
+
+    autocomplete_fields = (
+        "term",
+        "source",
+    )
+
+    def term_type(self, obj):
+        return obj.term.term_type
+
+    term_type.short_description = "용어 유형"
 
 
 @admin.register(Category)
@@ -245,13 +229,39 @@ class TermCandidateAdmin(admin.ModelAdmin):
         updated = queryset.update(status=TermCandidate.Status.REJECTED)
         self.message_user(request, f"{updated}건을 제외 처리했습니다.")
 
+@admin.register(BrandSource)
+class BrandSourceAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "brand",
+        "source",
+        "source_brand_id",
+        "source_brand_name",
+        "is_official",
+        "last_seen_at",
+    )
 
-class BrandAliasInline(admin.TabularInline):
-    model = BrandAlias
-    extra = 0
-    fields = ("alias", "normalized_alias", "language", "source")
-    autocomplete_fields = ("source",)
+    list_filter = (
+        "source",
+        "is_official",
+    )
 
+    search_fields = (
+        "brand__name",
+        "brand__english_name",
+        "source_brand_id",
+        "source_brand_name",
+    )
+
+    autocomplete_fields = (
+        "brand",
+        "source",
+    )
+
+    ordering = (
+        "source",
+        "source_brand_name",
+    )
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
@@ -262,16 +272,7 @@ class BrandAdmin(admin.ModelAdmin):
     list_filter = ("status", "country_code", "category")
     search_fields = ("brand_code", "name", "english_name")
     autocomplete_fields = ("category",)
-    inlines = [BrandAliasInline]
     ordering = ("name",)
-
-
-@admin.register(BrandAlias)
-class BrandAliasAdmin(admin.ModelAdmin):
-    list_display = ("alias", "brand", "language", "source", "created_at")
-    list_filter = ("language", "source")
-    search_fields = ("alias", "normalized_alias")
-    autocomplete_fields = ("brand", "source")
 
 
 @admin.register(CategoryAlias)
@@ -582,3 +583,48 @@ class CrawlTargetAdmin(admin.ModelAdmin):
         "source__code",
         "source__name",
     )
+
+
+@admin.register(MappingCandidate)
+class MappingCandidateAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "id",
+        "mapping_type",
+        "source_code",
+        "source_name",
+        "detected_count",
+        "suggested_target_name",
+        "match_method",
+        "confidence",
+        "status",
+        "last_seen_at",
+    )
+
+    list_filter = (
+        "mapping_type",
+        "status",
+        "source",
+    )
+
+    search_fields = (
+        "source_key",
+        "source_name",
+        "suggested_target_name",
+        "sample_entity_name",
+    )
+
+    readonly_fields = (
+        "source_detail",
+        "first_seen_at",
+        "last_seen_at",
+    )
+
+    @admin.display(
+        description="Source"
+    )
+    def source_code(
+        self,
+        obj,
+    ):
+        return obj.source.code

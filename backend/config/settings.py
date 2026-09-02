@@ -113,6 +113,15 @@ CELERY_RESULT_BACKEND = os.getenv(
     "redis://127.0.0.1:6379/1",
 )
 
+CELERY_BEAT_SCHEDULE = {
+    "dispatch-due-crawl-targets": {
+        "task": "core.dispatch_due_targets",
+
+        # 60초마다 CrawlTarget 확인
+        "schedule": 60.0,
+    },
+}
+
 AWS_STORAGE_BUCKET_NAME = os.getenv(
     "AWS_STORAGE_BUCKET_NAME"
 )

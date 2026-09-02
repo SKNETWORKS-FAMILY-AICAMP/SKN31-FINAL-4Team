@@ -5,7 +5,24 @@ from .collection import (
     Source,
 )
 
-from .dictionary import *
+from .dictionary import (
+    DictionaryTerm,
+    TermAlias,
+    Category,
+    Style,
+    Item,
+    Detail,
+    Material,
+    Color,
+    TPO,
+    TermRelation,
+    TermCandidate,
+    Brand,
+    BrandSource,
+    CategoryAlias,
+    MappingCandidate,
+)
+
 from .commerce import *
 from .content import *
 from .analysis import *

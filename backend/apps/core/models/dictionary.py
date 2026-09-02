@@ -5,6 +5,7 @@ from django.db.models import Q
 class DictionaryTerm(models.Model):
 
     class TermType(models.TextChoices):
+        BRAND = "BRAND", "브랜드"
         STYLE = "STYLE", "스타일"
         ITEM = "ITEM", "아이템"
         DETAIL = "DETAIL", "디테일"
@@ -55,6 +56,16 @@ class DictionaryTerm(models.Model):
         verbose_name="설명",
     )
 
+    # BRAND 타입 용어일 때 실제 FEEDIT 표준 브랜드와 연결
+    brand = models.OneToOneField(
+        "Brand",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="dictionary_term",
+        verbose_name="표준 브랜드",
+    )
+
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
@@ -100,6 +111,7 @@ class DictionaryTerm(models.Model):
             models.CheckConstraint(
                 condition=Q(
                     term_type__in=[
+                        "BRAND",
                         "STYLE",
                         "ITEM",
                         "DETAIL",
@@ -147,6 +159,8 @@ class TermAlias(models.Model):
         verbose_name="표준 용어",
     )
 
+    # NULL이면 모든 소스에서 공통으로 사용하는 alias
+    # 값이 있으면 특정 플랫폼/소스에서만 사용하는 alias
     source = models.ForeignKey(
         "core.Source",
         on_delete=models.SET_NULL,
@@ -158,11 +172,13 @@ class TermAlias(models.Model):
 
     alias = models.CharField(
         max_length=255,
+        db_index=True,
         verbose_name="별칭",
     )
 
     normalized_alias = models.CharField(
         max_length=255,
+        db_index=True,
         verbose_name="정규화 별칭",
     )
 
@@ -170,6 +186,7 @@ class TermAlias(models.Model):
         max_length=30,
         choices=AliasType.choices,
         default=AliasType.SYNONYM,
+        db_index=True,
         verbose_name="유형",
     )
 
@@ -178,13 +195,48 @@ class TermAlias(models.Model):
         verbose_name="생성일시",
     )
 
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="수정일시",
+    )
+
     class Meta:
         db_table = '"dictionary"."term_alias"'
         verbose_name = "용어 별칭"
         verbose_name_plural = "용어 별칭"
 
+        constraints = [
+            # 공통 alias(source=NULL) 중복 방지
+            models.UniqueConstraint(
+                fields=["term", "normalized_alias"],
+                condition=Q(source__isnull=True),
+                name="uq_term_alias_global",
+            ),
+            # 특정 source alias 중복 방지
+            models.UniqueConstraint(
+                fields=["term", "normalized_alias", "source"],
+                condition=Q(source__isnull=False),
+                name="uq_term_alias_source",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["normalized_alias"],
+                name="idx_term_alias_norm",
+            ),
+            models.Index(
+                fields=["source", "normalized_alias"],
+                name="idx_term_alias_src_norm",
+            ),
+            models.Index(
+                fields=["term", "normalized_alias"],
+                name="idx_term_alias_term_norm",
+            ),
+        ]
+
     def __str__(self):
-        return self.alias
+        return f"{self.alias} -> {self.term.canonical_name}"
 
 class Category(models.Model):
 
@@ -803,65 +855,7 @@ class Brand(models.Model):
 
     def __str__(self):
         return self.name
-
-class BrandAlias(models.Model):
-    brand = models.ForeignKey(
-        Brand,
-        on_delete=models.CASCADE,
-        related_name="aliases",
-        verbose_name="브랜드",
-    )
-
-    source = models.ForeignKey(
-        "core.Source",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="brand_aliases",
-        verbose_name="출처",
-    )
-
-    alias = models.CharField(
-        max_length=255,
-        verbose_name="별칭",
-    )
-
-    normalized_alias = models.CharField(
-        max_length=255,
-        verbose_name="정규화 별칭",
-    )
-
-    language = models.CharField(
-        max_length=10,
-        default="ko",
-        verbose_name="언어",
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = '"dictionary"."brand_alias"'
-        verbose_name = "브랜드 별칭"
-        verbose_name_plural = "브랜드 별칭"
-
-        constraints = [
-            models.UniqueConstraint(
-                fields=["brand", "normalized_alias", "language"],
-                name="uq_brand_alias",
-            ),
-        ]
-
-        indexes = [
-            models.Index(
-                fields=["source", "normalized_alias"],
-                name="idx_brand_alias_src",
-            ),
-        ]
-
-    def __str__(self):
-        return self.alias
-
-
+    
 class CategoryAlias(models.Model):
     category = models.ForeignKey(
         Category,
@@ -905,6 +899,115 @@ class CategoryAlias(models.Model):
 
     def __str__(self):
         return self.source_category_name or self.source_category_id
+
+    
+class BrandSource(models.Model):
+    """
+    외부 플랫폼의 브랜드 엔터티와 FEEDIT 표준 Brand를 연결한다.
+
+    예)
+    MUSINSA / source_brand_id=1234 / "나이키" -> Brand(Nike)
+    KREAM   / source_brand_id=5678 / "Nike"   -> Brand(Nike)
+
+    문자열 alias는 TermAlias가 담당하고,
+    플랫폼 고유 ID 기반 매핑은 이 테이블이 담당한다.
+    """
+
+    brand = models.ForeignKey(
+        Brand,
+        on_delete=models.CASCADE,
+        related_name="source_mappings",
+        verbose_name="표준 브랜드",
+    )
+
+    source = models.ForeignKey(
+        "core.Source",
+        on_delete=models.CASCADE,
+        related_name="brand_sources",
+        verbose_name="출처",
+    )
+
+    source_brand_id = models.CharField(
+        max_length=255,
+        verbose_name="플랫폼 브랜드 ID",
+    )
+
+    source_brand_name = models.CharField(
+        max_length=255,
+        db_index=True,
+        verbose_name="플랫폼 브랜드명",
+    )
+
+    source_brand_url = models.URLField(
+        max_length=1000,
+        null=True,
+        blank=True,
+        verbose_name="플랫폼 브랜드 URL",
+    )
+
+    is_official = models.BooleanField(
+        default=False,
+        verbose_name="공식 입점 여부",
+    )
+
+    first_seen_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="최초 관측일",
+    )
+
+    last_seen_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="최근 관측일",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="생성일시",
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="수정일시",
+    )
+
+    class Meta:
+        db_table = '"dictionary"."brand_source"'
+        verbose_name = "플랫폼 브랜드 매핑"
+        verbose_name_plural = "플랫폼 브랜드 매핑"
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source", "source_brand_id"],
+                name="uq_brand_source_src_id",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(last_seen_at__isnull=True)
+                    | Q(first_seen_at__isnull=True)
+                    | Q(last_seen_at__gte=models.F("first_seen_at"))
+                ),
+                name="ck_brand_source_seen",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=["brand"],
+                name="idx_brand_source_brand",
+            ),
+            models.Index(
+                fields=["source", "source_brand_name"],
+                name="idx_brand_source_src_name",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"[{self.source.code}] "
+            f"{self.source_brand_name} -> {self.brand.name}"
+        )
 
 class MappingCandidate(models.Model):
 
