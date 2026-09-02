@@ -1,0 +1,20 @@
+/* 자동 생성된 진입점 — 각 app 스타일을 원본 순서 그대로 불러온다. */
+@import './core/static/css/tokens.css';
+@import './intro/static/css/loader.css';
+@import './intro/static/css/deck.css';
+@import './intro/static/css/logo_mark.css';
+@import './intro/static/css/visuals.css';
+@import './app_shell/static/css/layout.css';
+@import './home/static/css/chat.css';
+@import './trend/static/css/dispatch.css';
+@import './account/static/css/rank.css';
+@import './trend/static/css/my_feed.css';
+@import './trend/static/css/weekly_report.css';
+@import './salmal/static/css/nav_widget.css';
+@import './style/static/css/style_page.css';
+@import './pricing/static/css/pricing.css';
+@import './home/static/css/chat_mode.css';
+@import './salmal/static/css/vote_app.css';
+@import './trend/static/css/saved_keywords.css';
+@import './account/static/css/profile.css';
+@import './home/static/css/chat_popup.css';

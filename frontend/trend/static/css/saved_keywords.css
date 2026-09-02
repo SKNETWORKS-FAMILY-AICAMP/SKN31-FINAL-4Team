@@ -1,0 +1,237 @@
+/* ══════════════════════════════════════════════════════════════
+   찜한 키워드
+   --------------------------------------------------------------
+   목록을 먼저 늘어놓지 않는다. 오늘 벌어진 일 하나를 크게 세우고,
+   그 아래에 나머지를 촘촘히 깐다. 시선이 한 번 크게 열렸다가
+   좁아지는 리듬 — 살!말? 진입 화면에서 가져온 구성.
+   ══════════════════════════════════════════════════════════════ */
+/* 이 페이지의 다른 블록은 전부 종이 지면 위의 흰 카드다.
+   히어로만 지면에 그냥 얹혀 있으면 혼자 떠 보인다 — 같은 흰 카드로 맞춘다. */
+.svHero{
+  display:grid;grid-template-columns:minmax(0,.84fr) minmax(0,1.16fr);
+  gap:clamp(26px,3.6vw,58px);align-items:stretch;
+  background:#fff;border:1px solid var(--pink-3);border-radius:12px;
+  padding:clamp(18px,2vw,26px);margin-bottom:14px;
+}
+/* 사진이 높이를 정하지 않는다. 오른쪽 문구가 정한 높이에 사진이 맞춰 잘린다.
+   ── img 를 absolute 로 띄우는 이유 ──
+   흐름 안에 두면 height:100% 가 참조할 높이가 없어(부모 높이가 곧 이미지 높이라 순환)
+   원본 비율 그대로 늘어나 카드를 뚫는다. 띄워야 .svShot 이 min-height 만큼만 차지한다. */
+.svShot{
+  position:relative;border-radius:10px;overflow:hidden;
+  min-height:clamp(280px,31vh,350px);
+  background:#e8e5df;will-change:transform,opacity;
+}
+.svShot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.svCap{
+  position:absolute;left:14px;bottom:14px;z-index:2;
+  background:#fff;border-radius:999px;padding:7px 14px;
+  font-size:11.5px;letter-spacing:-.015em;color:var(--pink-0);
+  box-shadow:0 8px 24px -14px rgba(10,10,10,.6);
+}
+.svSide{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.svTop{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.svKicker{
+  font-size:10.5px;letter-spacing:.08em;color:var(--pink-2);
+}
+/* 살아 있다는 표시 — 한 점이 조용히 번진다 */
+.svMark{
+  position:relative;width:34px;height:34px;border-radius:50%;flex:0 0 auto;
+  border:1px solid var(--pink-3);display:grid;place-items:center;
+}
+.svMark::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--k)}
+.svMark::before{
+  content:"";position:absolute;inset:-1px;border-radius:50%;
+  border:1px solid var(--k);opacity:.45;
+  animation:svPulse 2.9s var(--ease) infinite;
+}
+@keyframes svPulse{0%{transform:scale(1);opacity:.45}70%,100%{transform:scale(2.1);opacity:0}}
+
+.svTitle{
+  margin-top:clamp(7px,.9vh,11px);
+  font-size:clamp(28px,3.1vw,45px);font-weight:600;
+  letter-spacing:-.045em;line-height:1.02;
+}
+.svLead{
+  margin-top:10px;max-width:48ch;
+  font-size:14px;line-height:1.72;color:var(--pink-1);letter-spacing:-.015em;
+}
+.svLead b{font-weight:600;color:var(--pink-0)}
+
+/* 지표 바 — 코랄이 지금, 잉크가 남은 자리. 눈금 하나가 지난주를 가리킨다 */
+.svGauge{margin-top:clamp(13px,1.6vh,18px)}
+.svBar{
+  position:relative;height:42px;border-radius:8px;
+  background:var(--pink-0);display:flex;align-items:center;
+}
+.svFill{
+  position:absolute;left:0;top:0;bottom:0;width:0;
+  background:var(--k);border-radius:8px 0 0 8px;
+  display:flex;align-items:center;padding-left:16px;overflow:hidden;
+}
+.svFill b{
+  font-family:var(--num);font-weight:500;font-size:13px;
+  color:#fff;white-space:nowrap;letter-spacing:.005em;
+  font-feature-settings:'tnum' 1,'zero' 0;
+}
+.svRest{
+  position:absolute;right:16px;
+  font-family:var(--num);font-size:12.5px;
+  color:rgba(255,255,255,.66);font-feature-settings:'tnum' 1,'zero' 0;
+}
+.svTick{position:absolute;top:-8px;bottom:-8px;width:1px;background:var(--pink-2);z-index:3;opacity:0}
+.svTick em{
+  position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);
+  font-style:normal;font-family:var(--num);font-size:9.5px;letter-spacing:.06em;
+  color:var(--pink-2);white-space:nowrap;
+}
+
+.svActs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.svBtn{
+  height:48px;border-radius:8px;background:var(--paper);cursor:none;
+  border:1px solid var(--pink-3);color:var(--pink-0);
+  font-family:inherit;font-size:13.5px;letter-spacing:-.02em;
+  transition:background-color .34s var(--ease),border-color .34s var(--ease),
+              color .34s var(--ease),transform .34s var(--ease);
+}
+.svBtn:hover{background:#fff;border-color:var(--coral);color:var(--coral);transform:translateY(-2px)}
+.svMeta{
+  margin-top:11px;font-family:var(--num);font-size:11px;letter-spacing:.05em;
+  color:var(--pink-2);font-feature-settings:'tnum' 1,'zero' 0;
+}
+
+/* ── 오늘 더 있었던 일 ── */
+.svAlsoH{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:11px}
+.svAlsoH h3{font-size:14px;font-weight:500;letter-spacing:-.025em}
+.svAlsoH em{font-style:normal;font-family:var(--num);font-size:9.5px;letter-spacing:.16em;color:var(--pink-2)}
+.svAlsoGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.svAlsoCard{
+  background:#fff;border:1px solid var(--pink-3);border-radius:9px;padding:15px 17px 17px;
+  transition:transform .5s var(--ease),box-shadow .5s var(--ease),border-color .34s;
+}
+.svAlsoCard:hover{transform:translateY(-3px);box-shadow:0 26px 46px -34px rgba(10,10,10,.5);
+  border-color:var(--pink-2)}
+.svAlsoTop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.svTag{
+  font-size:10.5px;padding:4px 10px;border-radius:999px;letter-spacing:-.01em;
+  color:var(--k);background:color-mix(in srgb,var(--k) 11%,#fff);
+}
+.svAlsoTop u{width:34px;height:34px;border-radius:7px;overflow:hidden;flex:0 0 auto;display:block}
+.svAlsoTop u img{width:100%;height:100%;object-fit:cover;display:block}
+.svAlsoCard>b{display:block;margin-top:13px;font-size:13.5px;font-weight:600;letter-spacing:-.03em}
+.svAlsoB{display:block;margin-top:3px;font-family:var(--num);font-size:9.5px;
+  letter-spacing:.12em;color:var(--pink-2)}
+.svAlsoCard p{margin-top:9px;font-size:11.5px;line-height:1.72;color:var(--pink-1)}
+
+/* ── 전체 목록 ── */
+.svFilter{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px}
+.svChip{
+  display:inline-flex;align-items:center;gap:6px;cursor:none;
+  padding:7px 13px;border-radius:999px;background:#fff;
+  border:1px solid var(--pink-3);color:var(--pink-1);
+  font-family:inherit;font-size:12px;letter-spacing:-.015em;
+  transition:.32s var(--ease);
+}
+.svChip i{font-style:normal;font-family:var(--num);font-size:10px;color:var(--pink-2)}
+.svChip:hover{border-color:var(--pink-2)}
+.svChip.on{background:var(--pink-0);border-color:var(--pink-0);color:#fff}
+.svChip.on i{color:rgba(255,255,255,.5)}
+
+.svRow{
+  display:grid;grid-template-columns:44px minmax(0,1fr) 58px 128px 112px 74px;
+  gap:14px;align-items:center;padding:12px 2px;border-top:1px solid var(--pink-3);
+}
+.svRows .svRow:first-child{border-top:0}
+.svTh{display:block;width:44px;height:44px;border-radius:7px;overflow:hidden}
+.svTh img{width:100%;height:100%;object-fit:cover;display:block}
+.svName{min-width:0}
+.svName b{display:block;font-size:13.5px;font-weight:500;letter-spacing:-.025em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.svName span{display:block;margin-top:3px;font-size:11px;color:var(--pink-2)}
+.svAge{font-family:var(--num);font-size:11px;color:var(--pink-2);text-align:right;
+  font-feature-settings:'tnum' 1,'zero' 0}
+.svIdx{display:flex;align-items:center;gap:9px}
+.svMini{flex:1;min-width:0;height:4px;border-radius:2px;background:var(--pink-3);overflow:hidden}
+.svMini i{display:block;height:100%;width:0;border-radius:2px;background:var(--k)}
+.svIdx b{font-family:var(--num);font-weight:500;font-size:13px;
+  font-feature-settings:'tnum' 1,'zero' 0}
+.svIdx em{font-style:normal;font-family:var(--num);font-size:11px;width:30px;
+  text-align:right;color:var(--pink-2);font-feature-settings:'tnum' 1,'zero' 0}
+.svIdx em.up{color:var(--coral)}
+.svIdx em.dn{color:#3d7fd6}
+.svPrice{text-align:right}
+.svPrice b{display:block;font-family:var(--num);font-weight:500;font-size:13px;
+  font-feature-settings:'tnum' 1,'zero' 0}
+.svPrice span{display:block;margin-top:3px;font-size:10.5px;color:var(--pink-2)}
+.svBadge{
+  justify-self:end;white-space:nowrap;
+  font-size:10.5px;padding:4px 10px;border-radius:999px;letter-spacing:-.01em;
+  color:var(--k);border:1px solid color-mix(in srgb,var(--k) 32%,transparent);
+}
+.svEmpty{padding:28px 0;text-align:center;font-size:12.5px;color:var(--pink-2)}
+
+/* 좁아지면 히어로가 한 줄로 서고, 목록은 덜 중요한 칸부터 접는다 */
+@media(max-width:1160px){
+  .svRow{grid-template-columns:44px minmax(0,1fr) 116px 104px 70px}
+  .svAge{display:none}
+}
+@media(max-width:980px){
+  .svHero{grid-template-columns:1fr;gap:26px}
+  .svShot{min-height:0;aspect-ratio:16/10}
+  .svAlsoGrid{grid-template-columns:1fr}
+  .svRow{grid-template-columns:44px minmax(0,1fr) 96px 70px}
+  .svPrice{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .svMark::before{animation:none}
+}
+
+/* ── 프로필 소개글 — 그 자리에서 고친다 ──────────────────────
+   비어 있을 땐 예시가 흐리게 서 있다가, 쓰기 시작하면 사라진다.
+   연필은 평소엔 거의 보이지 않고 프로필에 다가가야 또렷해진다. */
+/* 연필은 글자가 끝나는 자리 바로 옆에 선다.
+   그래서 문단을 늘리지 않고(inline-block) 글자 폭만큼만 차지하게 둔다.
+   빈 문단이 접히는 문제는 안내 문구를 ::after 로 흐름 안에 넣어 해결한다. */
+.trBioRow{display:flex;align-items:center;gap:8px;margin-top:12px;
+  max-width:min(560px,80vw)}
+.trProfInfo .trBioRow p{
+  position:relative;margin:0;font-size:15px;color:var(--pink-1);letter-spacing:-.02em;
+  outline:none;min-width:1px;line-height:1.6;
+  /* 글자를 다 지워도 줄 상자가 무너지지 않게 — 안 그러면 밑줄이 아래로 내려앉는다 */
+  min-height:24px;display:inline-block;vertical-align:top;
+  border-bottom:1px solid transparent;transition:border-color .3s var(--ease),color .3s;
+}
+/* 아직 안 썼으면 안내 문구가 그 자리에 흐리게 선다. 글자 흐름 안에 있어서
+   문단이 그만큼 폭을 갖고, 연필이 문구 바로 뒤에 붙는다. */
+#trProfBio.isEmpty::after{
+  content:"나만의 특별한 키워드나 한 줄 소개를 남겨주세요.";
+  color:var(--pink-2);pointer-events:none;
+}
+/* 쓰는 중에는 커서가 맨 앞에 오도록 안내 문구를 띄운다 */
+#trProfBio[contenteditable].isEmpty::after{
+  position:absolute;left:0;top:0;white-space:nowrap;opacity:.55;
+}
+#trProfBio[contenteditable]{
+  color:var(--pink-0);border-bottom-color:var(--coral);cursor:text;
+  min-width:min(420px,52vw);
+}
+
+.bioEdit{
+  width:26px;height:26px;border-radius:7px;flex:0 0 auto;cursor:none;
+  display:grid;place-items:center;background:none;border:0;padding:0;
+  color:var(--pink-2);opacity:0;
+  transition:opacity .32s var(--ease),color .3s var(--ease),background-color .3s var(--ease);
+}
+.trBioRow:hover .bioEdit,.bioEdit:focus-visible,.bioEdit.on{opacity:1;color:var(--pink-1)}
+.bioEdit:hover{color:var(--coral);background:rgba(255,107,74,.09)}
+.bioEdit.on{color:var(--coral)}
+.bioEdit svg{width:15px;height:15px;fill:none;stroke:currentColor;
+  stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+/* 고치는 동안엔 연필이 체크로 바뀐다 */
+.bioEdit .beOk{
+  stroke-dasharray:20;stroke-dashoffset:20;opacity:0;
+  transition:stroke-dashoffset .42s var(--ease) .06s,opacity .2s}
+.bioEdit .bePen{opacity:1;transition:opacity .2s}
+.bioEdit.on .bePen{opacity:0}
+.bioEdit.on .beOk{opacity:1;stroke-dashoffset:0}
+

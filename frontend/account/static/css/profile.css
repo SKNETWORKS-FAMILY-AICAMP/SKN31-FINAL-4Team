@@ -1,0 +1,457 @@
+/* ══════════════════════════════════════════════════════════════
+   계정 화면 — 로그인 · 회원가입 · 마이페이지
+   --------------------------------------------------------------
+   보내주신 세 페이지의 스타일을 그대로 옮기되, 클래스 이름이
+   기존 화면(.chip, .panel 등)과 겹치므로 .acct 안으로 가둔다.
+   모달만 화면 전체를 덮어야 해서 .acctModal 로 따로 뺐다.
+   ══════════════════════════════════════════════════════════════ */
+.acct .cField{display:flex;flex-direction:column;gap:7px}
+.acct .cField.grow{flex:1}
+.acct .cRow2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.acct .cLabel{font-size:11.5px;font-weight:600;color:var(--pink-1)}
+.acct .cLabel span{color:var(--pink-2);font-weight:400;margin-left:5px}
+.acct .cInput{
+  width:100%;padding:14px;border-radius:10px;font-family:inherit;font-size:13.5px;
+  background:#fff;border:none;box-shadow:inset 0 0 0 1px var(--pink-3);outline:none;color:var(--pink-0);
+  transition:box-shadow .25s var(--ease);
+}
+.acct .cInput:focus{box-shadow:inset 0 0 0 1.5px var(--pink-0)}
+.acct .cInput.err{box-shadow:inset 0 0 0 1.5px #c73a24}
+.acct select.cInput{
+  appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:34px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23999' stroke-width='1.6'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;background-size:16px;
+}
+.acct .fieldMsg{font-size:11.5px;color:var(--pink-2);margin-top:1px}
+.acct .fieldMsg.err{color:#c73a24}
+.acct .fieldMsg.ok{color:#1f9d64}
+.acct .chipRow{display:flex;flex-wrap:wrap;gap:8px}
+.acct .chip{
+  padding:10px 17px;border-radius:999px;font-size:12.5px;color:var(--pink-1);
+  box-shadow:inset 0 0 0 1px var(--pink-3);transition:all .25s var(--ease);white-space:nowrap;
+}
+.acct .chip:hover{color:var(--pink-0);box-shadow:inset 0 0 0 1px var(--pink-0)}
+.acct .chip.on{background:var(--pink-0);color:var(--paper);box-shadow:none}
+.acct .chip.on:hover{color:var(--paper)}
+.acct .authWrap{
+  min-height:calc(100vh - 140px);display:flex;align-items:center;justify-content:center;
+  padding:clamp(40px,7vh,80px) 20px;
+}
+.acct .authCard{
+  width:min(440px,100%);background:#fff;border:1px solid var(--pink-3);border-radius:20px;
+  padding:clamp(32px,4vw,44px) clamp(26px,4vw,40px);
+  box-shadow:0 50px 100px -60px rgba(10,10,10,.4);
+}
+.acct .authEyebrow{
+  font-family:var(--num);font-size:10.5px;letter-spacing:.18em;color:var(--coral);
+  text-transform:uppercase;margin-bottom:10px;
+}
+.acct .authTitle{font-size:clamp(22px,3vw,27px);font-weight:600;letter-spacing:-.03em;margin-bottom:8px}
+.acct .authSub{font-size:13px;color:var(--pink-1);line-height:1.65;margin-bottom:28px}
+.acct .googleBtn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;height:50px;
+  border-radius:11px;box-shadow:inset 0 0 0 1px var(--pink-3);background:#fff;
+  font-size:13.5px;font-weight:500;color:var(--pink-0);transition:all .3s var(--ease);
+}
+.acct .googleBtn:hover{box-shadow:inset 0 0 0 1px var(--pink-0);transform:translateY(-2px)}
+.acct .googleBtn svg{width:18px;height:18px;flex-shrink:0}
+.acct .divider{
+  display:flex;align-items:center;gap:14px;margin:24px 0;
+  color:var(--pink-2);font-size:11.5px;letter-spacing:.02em;
+}
+.acct .divider::before, .acct .divider::after{content:"";flex:1;height:1px;background:var(--pink-3)}
+.acct .authForm .cField{margin-bottom:16px}
+.acct .authSubmit{
+  width:100%;justify-content:center;margin-top:6px;padding:15px;font-size:14px;
+}
+.acct .authFoot{text-align:center;font-size:12.5px;color:var(--pink-1);margin-top:22px;line-height:1.8}
+.acct .authFoot a{color:var(--coral);font-weight:600}
+.acct .authFoot a:hover{text-decoration:underline}
+.acct .miniLink{font-size:12px;color:var(--pink-2);text-align:right;display:block;margin:-8px 0 18px}
+.acct .miniLink:hover{color:var(--pink-0)}
+@media(max-width:480px){
+  .acct .authCard{border-radius:16px}
+}
+.acct .authCard.wide{width:min(560px,100%)}
+.acct .styleHint{font-size:11px;color:var(--pink-2);margin-top:8px}
+.acct .myWrap{padding:clamp(28px,4vh,44px) min(5vw,60px) clamp(60px,8vh,90px)}
+.acct .pageHead{margin-bottom:clamp(24px,3.4vh,34px)}
+.acct .pageHead h1{font-size:clamp(24px,3vw,30px);font-weight:600;letter-spacing:-.035em;margin-bottom:8px}
+.acct .pageHead p{font-size:13.5px;color:var(--pink-1);line-height:1.6}
+.acct .myGrid{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}
+.acct .myCol{display:flex;flex-direction:column;gap:18px}
+.acct .panel{background:#fff;border:1px solid var(--pink-3);border-radius:16px;padding:24px}
+.acct .panelHead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:20px}
+.acct .panelHead h3{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.acct .panelHead .sub{font-size:11.5px;color:var(--pink-2)}
+.acct .avatarCircle{
+  width:78px;height:78px;border-radius:50%;margin:0 auto 14px;
+  background:linear-gradient(135deg,var(--coral),#ffb199);
+  display:grid;place-items:center;font-size:25px;font-weight:600;color:#fff;
+}
+.acct .profileName{font-size:18px;font-weight:600;letter-spacing:-.02em}
+.acct .profileEmail{font-size:12px;color:var(--pink-2);margin-top:4px;margin-bottom:16px}
+.acct .editProfileBtn{
+  display:block;width:100%;background:#fff;box-shadow:inset 0 0 0 1px var(--pink-3);
+  border-radius:12px;padding:12px;font-size:12.5px;font-weight:600;color:var(--pink-1);
+  margin-bottom:14px;transition:all .25s var(--ease);
+}
+.acct .editProfileBtn:hover{box-shadow:inset 0 0 0 1px var(--pink-0);color:var(--pink-0)}
+.acctModal{
+  position:fixed;inset:0;background:rgba(10,10,10,.45);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;z-index:50;padding:20px;
+}
+.acctModal.show{display:flex}
+.modalCard{
+  width:min(420px,100%);background:#fff;border-radius:20px;
+  padding:clamp(24px,4vw,30px) clamp(22px,4vw,28px);
+  box-shadow:0 60px 120px -60px rgba(10,10,10,.55);
+}
+.acctModal .modalHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.acctModal .modalHead h3{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.acctModal .modalClose{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--pink-2);transition:all .25s var(--ease)}
+.acctModal .modalClose svg{width:16px;height:16px}
+.acctModal .modalClose:hover{background:var(--pink-3);color:var(--pink-0)}
+.acctModal .modalBtns{display:flex;gap:10px;margin-top:24px}
+.acctModal .modalBtns .pill{flex:1;justify-content:center}
+.modalCard.wide{width:min(680px,100%)}
+.acct .modalNote{
+  display:flex;gap:9px;align-items:flex-start;background:var(--paper);
+  border:1px solid var(--pink-3);border-radius:12px;padding:12px 14px;
+  font-size:12px;color:var(--pink-1);line-height:1.6;margin-bottom:18px;
+}
+.acct .modalNote svg{width:15px;height:15px;flex-shrink:0;margin-top:1px;color:var(--pink-2)}
+.acct .itemGrid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  max-height:56vh;overflow-y:auto;padding-right:2px;
+}
+.acct .itemCard{background:var(--paper);border:1px solid var(--pink-3);border-radius:12px;overflow:hidden}
+@media(max-width:560px){
+  .acct .itemGrid{grid-template-columns:repeat(2,1fr)}
+}
+.acct .statRow{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--pink-3);border:1px solid var(--pink-3);border-radius:12px;overflow:hidden}
+.acct .statCell{background:var(--paper);padding:14px 6px;width:100%;cursor:pointer;transition:background .25s var(--ease)}
+.acct .statCell:hover{background:#fff}
+.acct .statCell .n{font-family:var(--num);font-size:17px;font-weight:600;color:var(--pink-0);font-feature-settings:'tnum' 1,'zero' 0}
+.acct .statCell .l{font-size:10.5px;color:var(--pink-2);margin-top:3px}
+.acct .formRow{margin-bottom:22px}
+.acct .formRow:last-child{margin-bottom:0}
+.acct .formRow>label{display:block;font-size:12.5px;font-weight:600;color:var(--pink-1);margin-bottom:11px}
+.acct .formRow>label span{color:var(--pink-2);font-weight:400;margin-left:6px}
+.acct .rangeSlider{width:100%;-webkit-appearance:none;appearance:none;height:5px;border-radius:999px;background:var(--pink-3);outline:none}
+.acct .rangeSlider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--coral);cursor:pointer;box-shadow:0 2px 10px rgba(255,107,74,.45)}
+.acct .rangeSlider::-moz-range-thumb{width:18px;height:18px;border:none;border-radius:50%;background:var(--coral);cursor:pointer}
+.acct .rangeLab{display:flex;justify-content:space-between;font-size:10.5px;color:var(--pink-2);margin-top:9px}
+.acct .recGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.acct .recCard{
+  background:var(--paper);border:1px solid var(--pink-3);border-radius:12px;overflow:hidden;
+  cursor:pointer;transition:transform .35s var(--ease),border-color .3s;
+}
+.acct .recCard:hover{transform:translateY(-4px);border-color:var(--pink-2)}
+@media(max-width:980px){
+  .acct .myGrid{grid-template-columns:1fr}
+  .acct .recGrid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:520px){
+  .acct .recGrid{grid-template-columns:1fr}
+  .acct .statRow{grid-template-columns:repeat(3,1fr)}
+}
+
+/* 앱 안에 얹으면서 손본 것 — 세 화면 공통 지면과 헤더 여백 */
+.acct{padding-top:clamp(30px,4vh,54px);padding-bottom:clamp(48px,8vh,96px)}
+.acct .wrap,.acct .authWrap{width:min(1180px,90vw);margin:0 auto}
+.acct .authWrap{display:grid;place-items:center;min-height:calc(100vh - 200px)}
+/* 계정 화면의 칩은 우리 챗 칩과 다른 물건이다 — 여기서만 쓰는 모양 */
+.acct .chip{cursor:none}
+.acctModal{
+  position:fixed;inset:0;z-index:60;display:none;place-items:center;
+  background:rgba(10,10,10,.42);backdrop-filter:blur(3px);padding:24px;
+}
+.acctModal.on{display:grid}
+.acctModal .modalCard{background:#fff;border-radius:14px;padding:26px 28px;
+  width:min(520px,92vw);max-height:86vh;overflow:auto;box-shadow:0 40px 90px -40px rgba(10,10,10,.5)}
+.acctModal .modalCard.wide{width:min(880px,94vw)}
+/* 모달 안 글자색을 못 박는다. body 는 덱 팔레트라 color 가 흰색인데,
+   모달 카드는 흰 지면이라 그대로 상속받으면 제목이 통째로 안 보인다. */
+.acctModal .modalCard{color:var(--pink-0)}
+.acctModal .modalHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.acctModal .modalHead h3{font-size:16px;font-weight:600;letter-spacing:-.03em;color:var(--pink-0)}
+/* 살!말? 상세 모달의 .modalClose 는 카드 바깥(left:100%+16px)에 떠 있는 원형 버튼이다.
+   같은 클래스명이라 계정 모달까지 그 절대배치를 물려받아 닫기 버튼이 화면 밖으로 밀려나 있었다.
+   여기서는 헤더 안에 그냥 놓이는 버튼이니 배치를 원위치시킨다. */
+.acctModal .modalClose{position:static;width:30px;height:30px;border-radius:8px;
+  display:grid;place-items:center;flex:0 0 auto;box-shadow:none;background:none;
+  color:var(--pink-2);cursor:none;transition:.3s var(--ease)}
+.acctModal .modalClose:hover{transform:none}
+.acctModal .modalClose:hover{background:rgba(10,10,10,.05);color:var(--pink-0)}
+.acctModal .modalClose svg{width:16px;height:16px}
+.acctModal .modalBtns{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
+.acctModal .itemGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+/* 헤더 우측 — 로그인 전에는 [로그인] 알약, 로그인 뒤에는 알약을 벗고
+   아이콘과 이름만 남는다. 이름 옆 화살표만 눌리는 자리임을 알려 준다. */
+.mAuth .pill.me{
+  display:inline-flex;align-items:center;gap:9px;
+  background:none;border:0;box-shadow:none;padding:4px 2px 4px 0;
+  color:var(--pink-0);font-size:13px;font-weight:500;letter-spacing:-.02em;
+  transition:color .3s var(--ease);
+}
+.mAuth .pill.me:hover{background:none;color:var(--pink-0);transform:none}
+.mAuth .meAv{width:26px;height:26px;border-radius:50%;background:var(--pink-0);color:var(--paper);
+  display:grid;place-items:center;font-size:11px;font-weight:600;flex:0 0 auto}
+/* 이름 뒤 작은 갈매기 — 메뉴가 열리면 뒤집힌다 */
+.mAuth .meCaret{
+  width:9px;height:9px;flex:0 0 auto;opacity:.42;margin-left:-2px;
+  transition:transform .34s var(--ease),opacity .34s var(--ease);
+}
+.mAuth .pill.me:hover .meCaret{opacity:.8}
+.mAuthWrap.open .meCaret{transform:rotate(180deg);opacity:.8}
+
+/* ── 이식하면서 놓쳤던 것들 ──────────────────────────────
+   1) .panel 은 이 목업에서 이미 '덱 한 장(100vw × 100vh)' 이다.
+      마이페이지 패널이 그걸 물려받아 화면을 통째로 먹고 있었다. 여기서 끊는다.
+   2) 카드 안쪽(.recFig / .recBody / .itemFig …) 규칙이 추출에서 빠져
+      사진이 크기 제한 없이 늘어났다. 원본 규칙을 그대로 가져온다. */
+.acct .panel{
+  flex:0 1 auto;width:auto;height:auto;min-height:0;
+  display:block;overflow:visible;position:relative;
+  padding:24px;background:#fff;border:1px solid var(--pink-3);border-radius:16px;
+  align-items:stretch;justify-content:flex-start;
+}
+.acct .myWrap{padding:clamp(28px,4vh,44px) 0 clamp(60px,8vh,90px)}
+.acct .pageHead{margin-bottom:clamp(24px,3.4vh,34px)}
+.acct .pageHead h1{font-size:clamp(24px,3vw,30px);font-weight:600;letter-spacing:-.035em;margin-bottom:8px}
+.acct .pageHead p{font-size:13.5px;color:var(--pink-1);line-height:1.6}
+.acct .myGrid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:20px;align-items:start}
+.acct .myCol{display:flex;flex-direction:column;gap:18px;min-width:0}
+/* 로그아웃 버튼을 걷어낸 만큼 위아래 여백을 고르게 다시 나눠 준다.
+   패널이 위로 쏠리지 않게 padding 을 키우고 각 요소 간격을 비례로 늘렸다. */
+.acct .profilePanel{text-align:center;padding:30px 24px 28px}
+.acct .avatarWrap{position:relative;width:78px;margin:2px auto 18px}
+.acct .avatarCircle{width:78px;height:78px;border-radius:50%;
+  background:linear-gradient(135deg,var(--coral),#ffb199);display:grid;place-items:center;
+  color:#fff;font-size:28px;font-weight:600;
+  transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
+.acct .avatarWrap:hover .avatarCircle{transform:scale(1.03);
+  box-shadow:0 8px 24px -10px rgba(255,107,74,.55)}
+/* 아이콘 수정 — 오른쪽 아래 모서리에 조용히 붙어 있다가 올리면 또렷해진다 */
+/* 연필은 등급 링을 가로지르지 않도록 링 바깥 가장자리로 밀어 둔다 */
+.acct .avatarEdit{position:absolute;right:-7px;bottom:-7px;width:26px;height:26px;
+  border-radius:50%;background:#fff;border:1px solid var(--pink-3);
+  display:grid;place-items:center;cursor:pointer;padding:0;
+  box-shadow:0 2px 8px -3px rgba(0,0,0,.22);opacity:.82;
+  transition:opacity .38s var(--ease),transform .38s var(--ease),border-color .38s var(--ease)}
+.acct .avatarEdit svg{width:13px;height:13px;fill:none;stroke:var(--pink-1);
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke .38s var(--ease)}
+.acct .avatarWrap:hover .avatarEdit{opacity:1;transform:scale(1.08)}
+.acct .avatarEdit:hover{border-color:var(--coral)}
+.acct .avatarEdit:hover svg{stroke:var(--coral)}
+.acct .avatarEdit:active{transform:scale(.94)}
+/* ── 경험치 바 ──
+   등급 표기를 대신한다. 채워진 부분은 현재 레벨 색(--rk-c)을 그대로 쓰고,
+   Lv.4·Lv.Max 는 금속감이 나도록 그라디언트를 얹는다. */
+.acct .xpWrap{margin:18px 0 20px;text-align:left}
+.acct .xpTop{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+.acct .xpLv{font-family:var(--num);font-size:12px;font-weight:600;letter-spacing:.1em;
+  color:var(--rk-c,var(--pink-1))}
+.acct .xpNum{font-family:var(--num);font-size:10px;color:var(--pink-2);
+  font-feature-settings:'tnum' 1,'zero' 0}
+.acct .xpBar{height:6px;border-radius:999px;background:var(--pink-3);overflow:hidden;position:relative}
+.acct .xpBar i{
+  display:block;height:100%;width:0;border-radius:999px;
+  background:var(--rk-c,var(--pink-0));
+  background-image:var(--xp-grad,none);
+  transition:width 1.1s var(--ease);
+}
+/* 채워진 끝에 빛이 한 번씩 지나간다 — 살아 있는 값이라는 표시 */
+.acct .xpBar i::after{
+  content:"";position:absolute;inset:0;border-radius:999px;
+  background:linear-gradient(100deg,transparent 42%,rgba(255,255,255,.55) 50%,transparent 58%);
+  background-size:240% 100%;background-repeat:no-repeat;
+  animation:rkGloss 7s var(--ease) infinite;pointer-events:none;
+}
+.acct .xpNext{font-size:10.5px;color:var(--pink-2);margin-top:8px;line-height:1.5}
+/* 최고 레벨 문구까지 등급색으로 칠하면 바와 경쟁한다. 색은 Lv 글자에만 준다 */
+.acct .profileName{font-size:18px;font-weight:600;letter-spacing:-.02em}
+.acct .profileEmail{font-size:12px;color:var(--pink-2);margin-top:5px;margin-bottom:18px}
+/* 키 · 몸무게 — 한 줄에 나란히. 단위는 칸 안쪽 오른쪽에 조용히 붙는다.
+   회원가입 화면(.acct)과 회원정보 수정 모달(.acctModal) 둘 다에서 쓰이므로
+   양쪽을 모두 잡는다. 한쪽만 잡으면 모달에서 em 이 인라인으로 풀려
+   입력칸 아래로 흘러내린다. */
+.acct .cPair, .acctModal .cPair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.acct .cUnit, .acctModal .cUnit{position:relative;display:block}
+.acct .cUnit .cInput, .acctModal .cUnit .cInput{
+  width:100%;padding-right:36px;appearance:textfield;-moz-appearance:textfield}
+.acct .cUnit .cInput::-webkit-outer-spin-button,
+.acct .cUnit .cInput::-webkit-inner-spin-button,
+.acctModal .cUnit .cInput::-webkit-outer-spin-button,
+.acctModal .cUnit .cInput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.acct .cUnit em, .acctModal .cUnit em{
+  position:absolute;right:13px;top:50%;transform:translateY(-50%);
+  font-style:normal;font-family:var(--num);font-size:11.5px;line-height:1;
+  color:rgba(74,62,54,.5);            /* 잉크보다 따뜻한 회갈색 — 값과 헷갈리지 않게 */
+  letter-spacing:.02em;pointer-events:none;
+}
+
+/* ── 회원 탈퇴 ── 강조하지 않는다. 밑줄 하나에 붉은 기가 도는 정도 */
+.acct .leaveBtn{
+  display:block;margin:16px auto 0;padding:4px 2px;
+  font-size:11.5px;color:rgba(200,58,44,.62);
+  text-decoration:underline;text-underline-offset:3px;
+  text-decoration-thickness:1px;text-decoration-color:rgba(200,58,44,.32);
+  transition:color .3s var(--ease),text-decoration-color .3s var(--ease);
+}
+.acct .leaveBtn:hover{color:#c83a2c;text-decoration-color:rgba(200,58,44,.7)}
+.acct .statRow{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--pink-3);
+  border:1px solid var(--pink-3);border-radius:12px;overflow:hidden;margin-top:18px}
+.acct .statCell{background:var(--paper);padding:15px 4px;width:100%;cursor:none;
+  transition:background .25s var(--ease)}
+.acct .statCell:hover{background:#fff}
+.acct .statCell .n{font-family:var(--num);font-size:17px;font-weight:600;color:var(--pink-0);
+  font-feature-settings:'tnum' 1,'zero' 0}
+.acct .statCell .l{font-size:10.5px;color:var(--pink-2);margin-top:3px}
+/* 아바타 고르기 — 색을 바꾸는 작은 팔레트 (모달 안이라 .acct 밖) */
+.avaPick{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:4px}
+.avaSw{aspect-ratio:1;border-radius:50%;border:2px solid transparent;cursor:pointer;
+  padding:0;position:relative;background-clip:padding-box;
+  transition:transform .38s var(--ease),border-color .38s var(--ease)}
+.avaSw:hover{transform:scale(1.09)}
+.avaSw.on{border-color:var(--pink-0)}
+.avaSw.on::after{content:"";position:absolute;inset:-5px;border-radius:50%;
+  border:1px solid var(--pink-3)}
+/* 탈퇴 확인 — 여기서만 붉은색을 쓴다 */
+.leaveCopy{font-size:13px;line-height:1.8;color:var(--pink-1)}
+.acctModal .pill.danger{
+  background:#c83a2c;border-color:#c83a2c;color:#fff;
+  transition:background .3s var(--ease),box-shadow .3s var(--ease);
+}
+.acctModal .pill.danger:hover{background:#b02f22;box-shadow:0 8px 22px -12px rgba(200,58,44,.9)}
+
+/* ══ 컬렉션 뱃지 모달 ══
+   모은 것만 또렷하고 나머지는 자물쇠와 함께 가라앉는다.
+   위에 요약 바 → 고른 뱃지 상세 → 카테고리별 타일 순서. */
+.bgSummary{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  background:var(--paper);border:1px solid var(--pink-3);border-radius:12px;
+  padding:14px 18px;margin-bottom:14px;
+}
+.bgSummary .bsLabel{font-size:12px;color:var(--pink-1)}
+.bgSummary .bsLabel b{font-family:var(--num);font-size:15px;color:var(--pink-0);font-weight:600}
+.bgBar{width:130px;height:5px;border-radius:999px;background:var(--pink-3);overflow:hidden;flex:0 0 auto}
+.bgBar i{display:block;height:100%;width:0;background:var(--coral);border-radius:999px;
+  transition:width 1s var(--ease)}
+
+.bgDetail{
+  display:flex;gap:14px;align-items:center;background:#fff;
+  border:1px solid var(--pink-3);border-radius:14px;padding:15px 17px;margin-bottom:18px;
+}
+.bgDetail .ddIcon{width:46px;height:46px;border-radius:50%;flex:0 0 auto;
+  display:grid;place-items:center;background:var(--pink-3);color:var(--pink-2)}
+.bgDetail .ddIcon svg{width:21px;height:21px}
+.bgDetail.earned .ddIcon{background:linear-gradient(135deg,var(--coral),#ffb199);color:#fff;
+  box-shadow:0 8px 18px -8px rgba(255,107,74,.55)}
+.bgDetail .ddInfo{flex:1;min-width:0}
+.bgDetail .ddName{font-size:13.5px;font-weight:600;letter-spacing:-.02em;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bgDetail .ddTag{font-family:var(--num);font-size:9px;letter-spacing:.03em;padding:3px 8px;
+  border-radius:999px;background:var(--paper);color:var(--pink-1);
+  box-shadow:inset 0 0 0 1px var(--pink-3)}
+.bgDetail .ddDesc{font-size:11.5px;color:var(--pink-1);line-height:1.55;margin-top:5px}
+.bgDetail .ddStatus{font-size:10.5px;color:var(--coral);font-family:var(--num);
+  margin-top:6px;font-weight:600}
+.bgDetail.locked .ddStatus{color:var(--pink-2)}
+
+.bgGrid{max-height:50vh;overflow-y:auto;padding-right:2px}
+.bgSection{margin-bottom:20px}
+.bgSection:last-child{margin-bottom:0}
+.bgSecTitle{font-size:11.5px;font-weight:600;color:var(--pink-1);margin-bottom:11px;
+  display:flex;align-items:center;gap:8px}
+.bgSecTitle .cnt{font-family:var(--num);color:var(--pink-2);font-weight:500}
+.bgTiles{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.bgTile{
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;
+  padding:10px 3px;border-radius:12px;cursor:none;
+  transition:background .22s var(--ease),transform .4s var(--ease);
+}
+.bgTile:hover{background:#fff;transform:translateY(-2px)}
+.bgTile.active{background:#fff;box-shadow:inset 0 0 0 1px var(--pink-3)}
+.bgMedal{position:relative;width:56px;height:56px}
+.bgMedal .mr{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;
+  background:var(--pink-3);color:var(--pink-2);transition:box-shadow .25s var(--ease)}
+.bgTile.earned .bgMedal .mr{background:linear-gradient(135deg,var(--coral),#ffb199);color:#fff;
+  box-shadow:0 6px 14px -7px rgba(255,107,74,.6)}
+.bgMedal svg{width:22px;height:22px}
+.bgMedal .chip{
+  position:absolute;right:-3px;bottom:-3px;min-width:18px;height:18px;padding:0 4px;
+  border-radius:999px;background:#fff;box-shadow:0 0 0 2px #fff;
+  display:grid;place-items:center;font-family:var(--num);font-size:8.5px;font-weight:700;
+  color:var(--pink-1);
+}
+.bgTile.earned .bgMedal .chip{background:var(--pink-0);color:#fff}
+.bgMedal .lockChip{
+  position:absolute;right:-2px;bottom:-2px;width:17px;height:17px;border-radius:50%;
+  background:var(--pink-1);color:#fff;display:grid;place-items:center;box-shadow:0 0 0 2px #fff;
+}
+.bgMedal .lockChip svg{width:8px;height:8px}
+.bgTileName{font-size:10.5px;font-weight:600;color:var(--pink-0);line-height:1.3}
+.bgTile.locked .bgTileName{color:var(--pink-2)}
+.bgTileSub{font-size:9px;color:var(--pink-2);font-family:var(--num)}
+@media(max-width:640px){ .bgTiles{grid-template-columns:repeat(4,1fr)} }
+
+.acctModal .fieldMsg{font-size:11.5px;color:var(--pink-2)}
+.acct .panelHead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:20px}
+.acct .panelHead h3{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.acct .panelHead .sub{font-size:11.5px;color:var(--pink-2)}
+.acct .formRow{margin-bottom:22px}
+.acct .formRow:last-child{margin-bottom:0}
+.acct .formRow>label{display:block;font-size:12.5px;font-weight:600;color:var(--pink-1);margin-bottom:11px}
+.acct .formRow>label span{font-weight:400;color:var(--pink-2);margin-left:5px}
+.acct .recGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.acct .recCard{background:var(--paper);border:1px solid var(--pink-3);border-radius:12px;
+  overflow:hidden;cursor:none;transition:transform .35s var(--ease),border-color .3s}
+.acct .recCard:hover{transform:translateY(-4px);border-color:var(--pink-2)}
+.acct .recFig{aspect-ratio:3/4;position:relative;overflow:hidden;background:#e8e4dd}
+.acct .recFig img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.acct .recFig .fitTag{position:absolute;left:9px;top:9px;background:rgba(10,10,10,.78);color:#fff;
+  font-family:var(--num);font-size:10px;letter-spacing:.02em;padding:4px 9px;border-radius:999px;z-index:2}
+.acct .recBody{padding:12px 13px}
+.acct .recBody .br{font-family:var(--num);font-size:9.5px;letter-spacing:.09em;color:var(--pink-2);
+  text-transform:uppercase;margin-bottom:4px}
+.acct .recBody .nm{font-size:12.5px;font-weight:600;margin-bottom:6px;line-height:1.35}
+.acct .recBody .pr{font-family:var(--num);font-size:12.5px;font-weight:600;
+  font-feature-settings:'tnum' 1,'zero' 0}
+.acctModal .itemGrid{max-height:56vh;overflow-y:auto;padding-right:2px}
+.acctModal .recCard{background:var(--paper);border:1px solid var(--pink-3);border-radius:12px;overflow:hidden}
+.acctModal .recFig{aspect-ratio:3/4;position:relative;overflow:hidden;background:#e8e4dd}
+.acctModal .recFig img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.acctModal .recFig .fitTag{position:absolute;left:8px;top:8px;background:rgba(10,10,10,.78);color:#fff;
+  font-family:var(--num);font-size:9.5px;padding:3px 8px;border-radius:999px;z-index:2}
+.acctModal .recBody{padding:10px 11px}
+.acctModal .recBody .br{font-family:var(--num);font-size:9px;letter-spacing:.09em;color:var(--pink-2);
+  text-transform:uppercase;margin-bottom:3px}
+.acctModal .recBody .nm{font-size:12px;font-weight:600;line-height:1.35;margin-bottom:4px}
+.acctModal .recBody .pr{font-family:var(--num);font-size:12px;font-weight:600}
+@media(max-width:1080px){
+  .acct .myGrid{grid-template-columns:1fr}
+  .acct .recGrid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ── 헤더 계정 메뉴 (마이페이지 / 로그아웃) ── */
+.mAuthWrap{position:relative}
+.acctMenu{
+  position:absolute;right:0;top:calc(100% + 8px);z-index:30;min-width:160px;
+  background:#fff;border:1px solid var(--pink-3);border-radius:11px;padding:5px;
+  box-shadow:0 24px 48px -24px rgba(10,10,10,.4);
+  opacity:0;visibility:hidden;transform:translateY(-6px);
+  transition:opacity .26s var(--ease),transform .26s var(--ease),visibility .26s;
+}
+.acctMenu.on{opacity:1;visibility:visible;transform:translateY(0)}
+.acctMenu button{
+  display:flex;align-items:center;gap:9px;width:100%;cursor:none;
+  padding:10px 12px;border-radius:8px;font-size:13px;color:var(--pink-1);
+  letter-spacing:-.02em;transition:.24s var(--ease);text-align:left;
+}
+.acctMenu button:hover{background:rgba(10,10,10,.05);color:var(--pink-0)}
+.acctMenu button i{font-style:normal;font-size:12px;color:var(--pink-2);width:14px}
+.acctMenu hr{border:0;border-top:1px solid var(--pink-3);margin:4px 6px}
+.acctMenu button.out:hover{color:var(--coral)}

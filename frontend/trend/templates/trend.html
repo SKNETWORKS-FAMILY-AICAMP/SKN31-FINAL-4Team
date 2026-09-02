@@ -1,0 +1,97 @@
+<!--
+  참고용 사본 — 실제로 렌더링되는 파일이 아닙니다.
+  이 프로젝트는 Vite 기반 SPA라 화면은 root의 index.html 하나로 동작하고,
+  브라우저 JS 라우터(app-shell/static/js/router.js)가 화면 전환을 담당합니다.
+  아래 마크업은 trend 앱(트렌드 분석 화면, 연관어 근거 팝오버 — index.html 239-310, 409-421행)이 사용하는 부분을 index.html에서 그대로 옮겨 온 것으로,
+  Django 스타일 폴더 구성에 맞춰 정리해 둔 참고 사본입니다.
+  실제로 수정하려면 반드시 root의 index.html을 고쳐야 합니다.
+-->
+
+<!-- 239-310행: v-trend -->
+  <section class="view" id="v-trend">
+    <div class="trWrap">
+      <aside class="side" id="side">
+        <div class="sTop"><button class="sToggle" id="sToggle" aria-label="사이드바 펼치기">☰</button></div>
+        <div class="sGroup">
+          <div class="sLabel">FEED — 모으다</div>
+          <div id="sFeed"></div>
+        </div>
+        <div class="sGroup">
+          <div class="sLabel">EDIT — 고르다</div>
+          <div id="sEdit"></div>
+        </div>
+        <div class="sFoot onDark" id="sFoot">
+          <span class="av">혁</span>
+          <!-- 이름 아래에 직위, 뱃지는 오른쪽 끝에 -->
+          <span class="who"><b>혁진</b><em id="sFootPlan">ADMIN · 서울</em></span>
+          <span class="sFootRk" id="sFootRk"></span>
+        </div>
+      </aside>
+
+      <div class="trMain">
+        <div class="trHead">
+          <div id="trTitleWrap">
+            <div class="trKicker" id="trKicker" hidden="">TREND ANALYSIS · PERSONAL CONSULTING</div>
+            <h2 id="trTitle">내 피드</h2>
+            <p id="trDesc">취향 벡터와 최근 행동을 합쳐 오늘 볼 만한 것만 골랐습니다. 왜 골랐는지는 카드마다 한 줄로 붙습니다.</p>
+          </div>
+          <!-- 내 피드에서는 제목 대신 프로필이 선다 -->
+          <div class="trProfile" id="trProfile" hidden>
+            <div class="trProfAv" id="trProfAv">혁</div>
+            <div class="trProfInfo">
+              <div class="trProfName"><b id="trProfNm">혁진</b><span id="trProfRk"></span></div>
+              <div class="trProfDivider"></div>
+              <!-- 소개글. 비어 있으면 예시가 흐리게 서 있고, 연필을 누르면 그 자리에서 고친다 -->
+              <div class="trBioRow">
+                <p id="trProfBio" class="isEmpty"></p>
+                <button type="button" class="bioEdit" id="trBioEdit" title="소개 수정" aria-label="소개 수정">
+                  <!-- 연필 + 그 아래 밑줄 — "이 줄을 고친다"가 한눈에 읽히는 형태 -->
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path class="bePen" d="M4.5 16.5h3.2L18.9 5.3a1.9 1.9 0 0 0-2.7-2.7L5 13.8v2.7z"/>
+                    <path class="bePen" d="M14.7 4.1l2.2 2.2"/>
+                    <path class="bePen beLine" d="M4 20.6h16"/>
+                    <path class="beOk" d="M5 12l4 4 9-9"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <span style="font-family:var(--num);font-size:10px;letter-spacing:.24em;color:var(--pink-2)">2026 · W33</span>
+        </div>
+        <div class="trTabs" id="trTabs"></div>
+
+        <!-- 할인률·리세일·수명주기 공용 검색. 패널마다 다시 만들지 않고
+             여기 한 벌만 두고 보였다 감췄다 한다 (리스너도 한 번만 붙는다). -->
+        <div class="fsWrap" id="trSearch" hidden="">
+          <div class="fsRow">
+            <div class="fsBar" id="fsBar">
+              <span class="fsIc">◎</span>
+              <input type="text" id="fsInput" autocomplete="off" spellcheck="false" placeholder="소재 · 아이템 · 스타일 · 브랜드로 검색">
+              <span class="fsGhost" id="fsGhost"><span class="fsQ" id="fsQ"><i>“<b>살로몬 XT-6</b>&nbsp;리세일 시세 아직 버텨?”</i></span></span>
+              <button class="fsClear" id="fsClear" type="button" hidden="">×</button>
+            </div>
+            <button class="fsMore" id="fsMore" type="button">세부 검색 <u>▾</u></button>
+          </div>
+          <div class="fsSug" id="fsSug" hidden=""></div>
+          <div class="fsChips" id="fsChips" hidden=""></div>
+        </div>
+
+        <div id="trBody"></div>
+      </div>
+    </div>
+  </section>
+
+<!-- 409-421행: 연관어 근거 팝오버(assocPop) -->
+<!-- ===== 연관어 근거 팝오버 (트렌드 · 연관어 페이지) ===== -->
+<div class="assocPop" id="assocPop">
+  <div class="apHead">
+    <b id="apWord"></b><span id="apCat"></span>
+    <button class="apClose" id="apClose" aria-label="닫기">×</button>
+  </div>
+  <div class="apSpark">
+    <svg viewBox="0 0 200 46" id="apSparkSvg"><polyline id="apSparkLine"></polyline></svg>
+    <div class="apSparkAx"><span>3주 전</span><span>2주 전</span><span>지난주</span><span>이번주</span></div>
+  </div>
+  <div class="apSrc" id="apSrc"></div>
+</div>
+

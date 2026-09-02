@@ -1,0 +1,154 @@
+/* ══════════════ 요금제 ══════════════ */
+.prGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.prCard{background:#fff;border:1px solid var(--pink-3);border-radius:12px;
+  padding:clamp(24px,2.8vw,34px);display:flex;flex-direction:column;
+  transition:transform .45s var(--ease),box-shadow .45s var(--ease)}
+.prCard:hover{transform:translateY(-4px);box-shadow:0 40px 80px -60px rgba(10,10,10,.5)}
+.prCard.best{border-color:var(--pink-0);box-shadow:inset 0 0 0 1px var(--pink-0)}
+.prCard .bd1{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.prCard .bd1 b{font-size:15px;font-weight:500;letter-spacing:-.02em}
+.prCard .bd1 u{background:var(--coral);color:#fff;border-radius:99px;padding:4px 10px;
+  font-family:var(--num);font-size:8.5px;letter-spacing:.16em;text-decoration:none}
+.prCard .ds{color:var(--pink-2);font-size:12.5px;line-height:1.7;margin-bottom:20px}
+.prCard .pz{display:flex;align-items:baseline;gap:7px;margin-bottom:22px;
+  padding-bottom:22px;border-bottom:1px solid var(--pink-3)}
+.prCard .pz b{font-family:var(--num);font-weight:500;font-size:clamp(28px,3.2vw,44px);
+  letter-spacing:-.035em;font-feature-settings:'tnum' 1,'zero' 0}
+.prCard .pz span{font-size:12.5px;color:var(--pink-2)}
+.prCard ul{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:26px;flex:1}
+.prCard li{display:flex;gap:10px;font-size:13px;color:var(--pink-1);letter-spacing:-.015em}
+.prCard li u{color:var(--coral);text-decoration:none;flex:0 0 auto}
+.faq{margin-top:clamp(46px,7vh,86px);border-top:1px solid var(--pink-3)}
+.faq details{border-bottom:1px solid var(--pink-3)}
+.faq summary{padding:20px 0;font-size:14.5px;letter-spacing:-.025em;cursor:none;
+  display:flex;justify-content:space-between;gap:20px;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:var(--pink-2);font-size:16px;transition:transform .35s var(--ease)}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq p{padding:0 0 22px;color:var(--pink-1);font-size:13.5px;line-height:1.85;max-width:64ch}
+
+@media (max-width:1000px){
+  .heroR{width:100%;margin-top:clamp(30px,5vh,56px)}
+  .trGrid,.stAbout{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .prGrid{grid-template-columns:1fr}
+}
+@media (max-width:920px){
+  .ansBody{grid-template-columns:1fr}
+  .ansBody > div + div{border-left:0;border-top:1px solid var(--pink-3)}
+  .mFeat{grid-template-columns:1fr}
+  .smIn{grid-template-columns:1fr}
+  .mNum + .mNum{border-left:0}
+  .mNav{display:none}
+}
+
+/* iOS 홈 화면 */
+.collStage .homeApp{background:#0e1424}
+.collStage .iosHome{position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:calc(var(--pw)*.25) calc(var(--pw)*.06) calc(var(--pw)*.055)}
+.collStage .wall{position:absolute;inset:0;
+  background:radial-gradient(70% 50% at 24% 14%,#3a2c6b 0%,transparent 62%),
+             radial-gradient(64% 46% at 82% 78%,#7a3350 0%,transparent 60%),
+             linear-gradient(168deg,#141a2e 0%,#0c1120 100%)}
+.collStage .grid{position:relative;flex:1;display:grid;grid-template-columns:repeat(4,1fr);
+  align-content:start;justify-items:center;grid-auto-rows:min-content;
+  gap:calc(var(--pw)*.055) calc(var(--pw)*.02);padding-top:calc(var(--pw)*.03)}
+.collStage .ic{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.collStage .ic u{display:block;width:calc(var(--pw)*.155);height:calc(var(--pw)*.155);
+  border-radius:24%;background:rgba(255,255,255,.16);
+  box-shadow:0 3px 8px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.22)}
+.collStage .ic em{font-style:normal;font-size:6px;color:rgba(255,255,255,.86);
+  letter-spacing:-.02em;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.collStage .ic.a-yt u{background:linear-gradient(160deg,#ff5a4d,#e6001f)}
+.collStage .ic.a-ig u{background:linear-gradient(140deg,#f9ce34,#ee2a7b 52%,#6228d7)}
+.collStage .ic.a-mu u{background:linear-gradient(160deg,#3a3a3a,#000)}
+.collStage .ic.a-nv u{background:linear-gradient(160deg,#3ee08a,#03c75a)}
+.collStage .ic.a-tt u{background:linear-gradient(160deg,#4ff8f0,#0b0b0b 60%)}
+.collStage .ic.a-zz u{background:linear-gradient(160deg,#ffb0cd,#ff3f8e)}
+.collStage .ic.a-ph u{background:linear-gradient(160deg,#ffd76e,#ff7a45)}
+.collStage .ic.a-mp u{background:linear-gradient(160deg,#8fe3a8,#3aa76a)}
+.collStage .ic.a-mu2 u{background:linear-gradient(160deg,#ff8a8a,#e33)}
+.collStage .ic.a-nt u{background:linear-gradient(160deg,#ffe680,#f5c400)}
+.collStage .ic.a-st u{background:linear-gradient(160deg,#9aa4ae,#5c6670)}
+.collStage .ic.a-ph2 u{background:linear-gradient(160deg,#ffd76e,#ff7a45)}
+.collStage .ic.a-mg u{background:linear-gradient(160deg,#6fd1ff,#1a7fe0)}
+.collStage .ic.a-sf u{background:linear-gradient(160deg,#7fd0ff,#0a63c8)}
+.collStage .ic.a-mu3 u{background:linear-gradient(160deg,#ff8a8a,#e33)}
+/* FEEDiT 아이콘 — 로고 SVG 를 타일 안에 그대로 */
+.collStage .ic.me u{
+  background:#f1efea;display:grid;place-items:center;
+  box-shadow:0 6px 16px rgba(255,107,74,.42),inset 0 1px 0 rgba(255,255,255,.7);
+}
+.collStage .ic.me u svg{width:60%;height:60%;overflow:visible}
+.collStage .dock{
+  position:relative;display:grid;grid-template-columns:repeat(4,1fr);
+  gap:calc(var(--pw)*.03);padding:calc(var(--pw)*.032) calc(var(--pw)*.02);
+  border-radius:calc(var(--pw)*.09);background:rgba(255,255,255,.14);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  margin-bottom:calc(var(--pw)*.06);
+}
+.collStage .tapRing{position:absolute;left:0;top:0;
+  width:calc(var(--pw)*.22);height:calc(var(--pw)*.22);
+  margin:calc(var(--pw)*-.11) 0 0 calc(var(--pw)*-.11);border-radius:50%;
+  border:2px solid var(--coral);opacity:0;pointer-events:none;z-index:3}
+
+/* FEEDiT — 모바일 전용. 가운데 챗바 하나. */
+.collStage .feLoad{
+  position:absolute;inset:0;z-index:3;background:#f1efea;
+  display:grid;place-items:center;
+}
+.collStage .feMark svg{width:calc(var(--pw)*.185);height:calc(var(--pw)*.185);overflow:visible}
+.collStage .feWrap{position:absolute;inset:0}
+.collStage .feMin{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:calc(var(--pw)*.075);padding:0 calc(var(--pw)*.075);
+}
+.collStage .feMinTx{
+  text-align:center;font-size:calc(var(--pw)*.082);font-weight:600;letter-spacing:-.045em;
+  line-height:1.16;color:#0a0a0a;
+}
+.collStage .feMinTx i{font-style:normal;color:var(--coral)}
+.collStage .feMin .feBar{width:100%;margin:0}
+.collStage .feMinLogo{display:flex;align-items:center;
+  gap:calc(var(--pw)*.026);margin-top:calc(var(--pw)*.035)}
+.collStage .feMinLogo svg{width:calc(var(--pw)*.058);height:calc(var(--pw)*.058);overflow:visible}
+.collStage .feMinLogo b{font-family:var(--logo);font-weight:600;font-size:calc(var(--pw)*.066);
+  color:#0a0a0a;letter-spacing:calc(var(--logo-ls) * -1);margin-right:var(--logo-ls)}
+.collStage .feMinLogo b i{font-style:normal;color:var(--coral)}
+
+/* 좌하단 진행도 — 밝은 장에서도 보이게 */
+.ftr.onlight{color:rgba(12,20,28,.72)}
+.ftr.onlight .dots i{background:rgba(12,20,28,.2)}
+.ftr.onlight .dots i.on{background:var(--coral)}
+
+/* 06 START — 문구 없이 로고 · 로딩 · 버튼만 */
+.startbg{position:absolute;inset:0;overflow:hidden;background:#f4f6f8;
+  display:grid;place-items:center;--stm:clamp(76px,9vw,124px)}
+/* 로고는 화면 정중앙에 고정하고, 로딩·버튼은 그 아래에 얹는다.
+   같은 흐름에 두면 둘의 높이만큼 로고가 위로 밀린다. */
+.startIn{position:absolute;inset:0;display:grid;place-items:center}
+/* 심볼 하나만. 워드마크는 쓰지 않는다. */
+.stMark{grid-area:1/1;display:flex;align-items:center;justify-content:center;opacity:0}
+.stMark svg{width:var(--stm);height:var(--stm);overflow:visible}
+/* 로딩바가 있던 자리에서 그대로 버튼이 피어난다 — 둘은 같은 칸, 같은 폭.
+   심볼 뷰박스(0~120) 아래쪽 25% 는 빈 여백이므로 그만큼 끌어올려
+   로고 밑선에서 실제로 18px 떨어지게 한다. */
+.stSlot{position:absolute;left:50%;top:calc(50% + var(--stm)*.25 + 18px);
+  transform:translateX(-50%);display:grid;place-items:center;
+  width:clamp(200px,21vw,288px);height:54px}
+/* 트랙은 처음부터 끝까지 같은 길이. 코랄이 그 위를 채운다. */
+.stBar{position:absolute;left:0;right:0;display:block;width:100%;height:3px;border-radius:99px;
+  background:rgba(12,20,28,.16);overflow:hidden;opacity:0}
+.stBar i{display:block;height:100%;width:0;background:var(--coral);border-radius:99px}
+.stCta{
+  display:inline-flex;align-items:center;gap:10px;cursor:none;white-space:nowrap;opacity:0;
+  background:#0c1116;color:#f4f6f8;border-radius:999px;padding:16px 32px;font-size:15px;
+  letter-spacing:-.015em;box-shadow:0 22px 44px -24px rgba(12,20,28,.6);
+  transition:transform .4s var(--ease),background .3s,color .3s;
+  position:absolute;left:0;right:0;width:100%;justify-content:center;
+  z-index:3;pointer-events:auto;
+}
+.stCta span{transition:transform .4s var(--ease)}
+.stCta:hover{transform:translateY(-3px);background:var(--coral);color:#fff}
+.stCta:hover span{transform:translateX(4px)}
+

@@ -1,0 +1,80 @@
+/* ============================================================
+   로고 마크 — FEEDiT 중 D 만 남아 배경이 되고, F 와 i 가 좌우에서 들어와 앉는다
+   ============================================================ */
+.markStage{
+  position:fixed;inset:0;z-index:5;display:grid;place-items:center;
+  pointer-events:none;opacity:0;
+}
+/* 로고 = 아이덴티티 시스템(feedit-logo.html)의 세로형 락업 그대로.
+   심볼 : 68 → 43 → 18 로 좁혀지는 세 줄 = 수집 · 분석 · 결정
+   워드마크 : Roboto Flex Semibold 600, 코랄은 소문자 i 의 점 하나에만 */
+/* 00 은 심볼 하나만 화면 정중앙에 둔다 — 워드마크는 쓰지 않는다 */
+.idLock{
+  display:flex;flex-direction:column;align-items:center;gap:.44em;
+  font-size:clamp(30px,5.2vw,60px);
+}
+.idSym{width:2.34em;height:2.34em;display:block;overflow:visible}
+/* 프레임 · F · 코랄 사각. 사각과 프레임 사이의 틈은 배경색으로 파낸다. */
+.idSym{--mkbg:#000;transition:--mkbg .9s var(--ease)}
+.idSym .fr{fill:none;stroke:#fff;stroke-width:4}
+.idSym .fl{fill:#fff}
+.idSym .dt{fill:var(--coral);stroke:var(--mkbg);stroke-width:2}
+body.lightHero .idSym{--mkbg:#f6f8fa}
+.idWord{
+  display:flex;font-family:var(--logo);font-weight:600;font-size:1em;
+  line-height:1;   /* uppercase 를 쓰면 i 가 다시 대문자가 된다 */
+  letter-spacing:calc(var(--logo-ls) * -1);margin-right:var(--logo-ls);
+}
+.idWord span{display:inline-block;will-change:transform,opacity}
+/* 코랄은 소문자 i 의 점 하나에만.
+   점 없는 ı(U+0131) 를 쓰고 그 위에 코랄 사각을 얹는다. 위치는 변수로 조정. */
+.dotI{position:relative;display:inline-block;line-height:1}
+.dotI .tit{
+  position:absolute;left:50%;transform:translateX(-50%);
+  top:var(--tit-y,.132em);width:var(--tit-d,.108em);height:var(--tit-d,.108em);
+  border-radius:.018em;background:var(--coral);
+}
+
+/* 세로 스크롤 → 가로 이동 */
+.deck{position:fixed;inset:0;z-index:1}
+.hsticky{position:absolute;inset:0;overflow:hidden;display:flex;align-items:center}
+.htrack{display:flex;will-change:transform}
+.panel{
+  flex:0 0 100vw;width:100vw;height:100vh;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:0 max(6vw,40px);position:relative;
+  overflow:hidden;
+}
+/* 우측에 비주얼이 있는 패널은 텍스트 칼럼을 왼쪽에 가둔다 */
+/* 좌 설명 · 우 비주얼을 한 덩어리로 가운데 모은다 */
+.panel{align-items:center}
+.panel .copy{width:min(1180px,88vw);margin:0 auto}
+.panel.hasvis .copy{width:min(1180px,88vw);padding-right:min(40vw,500px)}
+.panel.hasvis h2{max-width:12ch}
+.panel.hasvis p{max-width:34ch}
+.panel .no{
+  font-family:var(--mono);font-size:11px;letter-spacing:.24em;
+  color:rgba(255,255,255,.55);margin-bottom:26px;
+}
+.panel h2{
+  font-family:var(--logo);font-weight:600;
+  font-size:clamp(34px,5.4vw,78px);line-height:1.04;
+  letter-spacing:calc(var(--logo-ls) * -1);max-width:15ch;
+}
+.panel h2 em{font-style:normal;color:var(--coral)}
+.panel p{
+  margin-top:26px;max-width:44ch;font-size:clamp(14px,1.25vw,17px);
+  line-height:1.75;color:rgba(255,255,255,.72);
+}
+.panel .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:34px}
+.panel .tags span{
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+  padding:8px 13px;border-radius:99px;
+  color:rgba(255,255,255,.9);
+  /* liquid glass */
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.18);
+  backdrop-filter:blur(16px) saturate(180%);
+  -webkit-backdrop-filter:blur(16px) saturate(180%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25);
+}

@@ -1,0 +1,200 @@
+/* ══════════════ 트렌드 분석 ══════════════ */
+/* 사이드바는 고정. 본문만 스크롤된다. */
+.trWrap{display:block;min-height:calc(100vh - 58px)}
+/* 사이드바 — 평소엔 아이콘만, 펼치면 라벨까지 */
+.side{
+  position:fixed;top:58px;left:0;bottom:0;z-index:8;width:66px;
+  background:var(--side);color:var(--paper);
+  display:flex;flex-direction:column;
+  transition:width .46s var(--ease);overflow:hidden;z-index:8;
+}
+.side.open{width:236px}
+/* 진입 순간 접힌 상태로 되돌릴 때만 전환을 끈다 (한 프레임) */
+.side.noTr,.trWrap.noTr,.trWrap.noTr .trMain{transition:none!important}
+.side .sTop{padding:16px 0 8px;display:flex;justify-content:center;flex:0 0 auto}
+.side.open .sTop{justify-content:flex-start;padding-left:18px}
+.sToggle{
+  width:34px;height:34px;border-radius:9px;display:grid;place-items:center;cursor:none;
+  color:rgba(241,239,234,.6);transition:background .3s,color .3s;flex:0 0 auto;
+}
+.sToggle:hover{background:rgba(241,239,234,.09);color:var(--paper)}
+.sGroup{padding:12px 0 6px;flex:0 0 auto}
+/* 지표가 많아도 프로필이 잘리지 않도록 이 구간만 스크롤한다 */
+.sGroup + .sGroup{
+  flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+  border-top:1px solid rgba(241,239,234,.08);padding-top:14px;
+  scrollbar-width:thin;scrollbar-color:rgba(241,239,234,.22) transparent;
+}
+.sGroup + .sGroup::-webkit-scrollbar{width:4px}
+.sGroup + .sGroup::-webkit-scrollbar-thumb{background:rgba(241,239,234,.22);border-radius:99px}
+.sGroup + .sGroup::-webkit-scrollbar-track{background:transparent}
+.sLabel{
+  font-family:var(--num);font-size:8.5px;letter-spacing:.28em;
+  color:rgba(241,239,234,.35);padding:0 18px 10px;white-space:nowrap;
+  opacity:0;transition:opacity .3s;height:0;overflow:hidden;
+}
+.side.open .sLabel{opacity:1;height:auto}
+.sItem{
+  display:flex;align-items:center;gap:14px;width:100%;cursor:none;
+  padding:9px 16px;color:rgba(241,239,234,.6);white-space:nowrap;
+  transition:color .3s,background .3s;position:relative;
+}
+.sItem:hover{color:var(--paper);background:rgba(241,239,234,.06)}
+.sItem.on{color:var(--paper)}
+.sItem.on::before{
+  content:"";position:absolute;left:0;top:8px;bottom:8px;width:2px;background:var(--coral);
+}
+.sItem .ic{
+  width:31px;height:31px;border-radius:9px;display:grid;place-items:center;
+  font-size:13px;flex:0 0 auto;background:rgba(241,239,234,.07);
+}
+.sItem.on .ic{background:var(--coral);color:#fff}
+.sItem .tx{font-size:13px;letter-spacing:-.02em;opacity:0;transition:opacity .28s}
+.side.open .sItem .tx{opacity:1}
+/* 위 EDIT 구간과 구분선을 둔다 */
+/* 프로필은 언제나 맨 아래에 고정 */
+/* 아래쪽 여백을 줄이고 아바타 · 이름 · 등급을 한 줄기로 붙인다 */
+.sFoot{flex:0 0 auto;padding:13px 16px 15px;border-top:1px solid rgba(241,239,234,.09);
+  display:flex;align-items:center;gap:12px;white-space:nowrap;background:var(--side)}
+.sFoot .av{width:31px;height:31px;border-radius:50%;background:var(--coral);flex:0 0 auto;
+  display:grid;place-items:center;font-size:12px;color:#fff}
+/* 최고 등급 표시는 .top 이 아니라 등급 링(.rkAv)이 맡는다 */
+/* [아바타] [이름 / 직위] ……… [뱃지] — 뱃지만 오른쪽 끝에 따로 선다 */
+.sFoot .who,.sFoot .sFootRk{opacity:0;transition:opacity .28s}
+.side.open .sFoot .who,.side.open .sFoot .sFootRk{opacity:1}
+.sFoot .who{min-width:0;line-height:1.25}
+.sFoot .who b{display:block;font-size:12.5px;font-weight:500;letter-spacing:-.025em}
+.sFoot .who em{display:block;margin-top:3px;font-style:normal;
+  font-family:var(--num);font-size:9.5px;letter-spacing:.08em;
+  color:rgba(241,239,234,.42)}
+.sFoot .sFootRk{margin-left:auto;flex:0 0 auto;display:inline-flex}
+/* 소개 줄에서 연필은 오른쪽 끝이 아니라 글자 바로 뒤 */
+.trBioRow .bioEdit{margin-left:0}
+/* 잉크 사이드바 위라 흰 칩은 그대로 두되 낮은 등급만 지면에 맞춘다 */
+.sFoot .rk1,.sFoot .rk2,.sFoot .rk3,.sFoot .rk4{
+  background:rgba(241,239,234,.06);border-color:rgba(241,239,234,.16);
+  color:rgba(241,239,234,.72)}
+
+/* 고정된 사이드바 폭만큼 비켜 놓는다 (펼치면 같이 밀린다) */
+.trMain{min-width:0;margin-left:66px;
+  padding:clamp(26px,3.4vw,44px) clamp(22px,3.4vw,48px) 80px;
+  transition:margin-left .46s var(--ease)}
+.trWrap.open .trMain{margin-left:236px}
+.trHead{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;
+  flex-wrap:wrap;margin-bottom:26px}
+.trHead h2{font-weight:600;font-size:clamp(22px,2.6vw,34px);letter-spacing:-.04em}
+.trHead p{color:var(--pink-1);font-size:13.5px;line-height:1.75;margin-top:9px;max-width:52ch}
+/* 내 피드 상단 — 타이틀/설명 대신 프로필(아바타·이름·레벨·한줄소개) */
+.trProfile{display:flex;align-items:center;gap:28px}
+.trProfile[hidden]{display:none}
+.trProfAv{width:100px;height:100px;border-radius:50%;background:var(--pink-0);color:var(--paper);
+  flex:0 0 auto;display:grid;place-items:center;font-size:38px;font-weight:500;letter-spacing:0}
+.trProfName{display:flex;align-items:center;gap:10px}
+.trProfName b{font-size:clamp(24px,2.4vw,30px);font-weight:700;letter-spacing:-.03em}
+.trProfLv{font-family:var(--num);font-size:12.5px;font-weight:600;color:#fff;background:var(--coral);
+  border-radius:5px;padding:4px 9px;letter-spacing:.01em}
+.trProfInfo p{margin-top:12px;font-size:15px;color:var(--pink-1);letter-spacing:-.02em}
+.trProfDivider{width:480px;max-width:80vw;height:1px;background:var(--pink-3);margin-top:12px}
+.trTabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px}
+/* 이 자리에는 커머스 탭과 키워드 챗바가 번갈아 들어온다.
+   탭 스타일이 챗바 안 버튼(× 등)까지 먹지 않도록 실제 탭에만 건다. */
+.trTabs button[data-t]{border-radius:999px;padding:8px 14px;font-size:12.5px;cursor:none;
+  color:var(--pink-1);box-shadow:inset 0 0 0 1px var(--pink-3);transition:all .3s}
+.trTabs button[data-t].on{background:var(--pink-0);color:var(--paper);box-shadow:none}
+/* 키워드 직접 입력 — 할인률 변화 파트의 챗바(.fsWrap/.fsRow/.fsBar)를 그대로 쓴다.
+   다른 건 세부 검색 버튼이 없다는 것과, 안에서 굴러가는 예시 질문 내용뿐이다. */
+.trTabs.kwmode{display:block;margin-bottom:0}
+.kwWrap .fsSug{top:56px}
+/* 사전에 없는 말 — 실패로 끝내지 않고 등록을 받는다 */
+.kwReq{padding:16px 14px 14px;text-align:left}
+.kwReq p{font-size:13px;line-height:1.75;color:var(--pink-1)}
+.kwReq p b{color:var(--pink-0);font-weight:600}
+.kwReq .near{margin-top:11px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.kwReq .near em{font-style:normal;font-size:11.5px;color:var(--pink-2);margin-right:2px}
+.kwReq .near button{padding:6px 12px;border-radius:999px;cursor:none;font-size:12px;
+  border:1px solid var(--pink-3);color:var(--pink-1);transition:.26s}
+.kwReq .near button:hover{border-color:var(--pink-0);color:var(--pink-0)}
+.kwReq .ask{
+  display:flex;align-items:center;gap:9px;margin-top:14px;padding-top:13px;
+  border-top:1px solid var(--pink-3);
+}
+.kwReq .ask span{flex:1;min-width:0;font-size:11.5px;color:var(--pink-2);line-height:1.6}
+.kwReq .ask button{
+  flex:0 0 auto;padding:9px 15px;border-radius:999px;cursor:none;
+  background:var(--coral);color:#fff;font-size:12px;letter-spacing:-.01em;
+  transition:filter .3s,transform .3s var(--ease);
+}
+.kwReq .ask button:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.kwReq .ask button[disabled]{background:rgba(10,10,10,.08);color:var(--pink-2);
+  filter:none;transform:none;cursor:none}
+.tempHead{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
+  flex-wrap:wrap;margin-bottom:18px}
+.tempHead .q{text-align:left}
+.tempHead .q{font-weight:600;font-size:clamp(24px,2.8vw,34px);letter-spacing:-.03em;line-height:1.15}
+.tempHead .q b{display:block;font-family:var(--num);font-weight:600;color:var(--coral);
+  font-size:clamp(44px,5vw,68px);letter-spacing:-.03em;margin-top:-2px;
+  font-feature-settings:'tnum' 1,'zero' 0}
+.tempHead .q .hl{text-decoration:underline;text-decoration-color:var(--coral);
+  text-decoration-thickness:3px;text-underline-offset:5px}
+.tempStats{display:flex;gap:36px}
+.tempStats div{text-align:right}
+.tempStats span{display:block;font-size:15px;color:var(--pink-2)}
+.tempStats b{display:block;margin-top:8px;font-family:var(--num);font-weight:600;font-size:36px;
+  letter-spacing:-.02em;font-feature-settings:'tnum' 1,'zero' 0}
+.tempStats .dl{margin-top:6px;font-family:var(--num);font-size:13px;color:var(--coral);
+  font-feature-settings:'tnum' 1,'zero' 0}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--pink-3);border-radius:9px;padding:16px 18px}
+.kpi span{display:block;font-size:11.5px;color:var(--pink-2);letter-spacing:-.01em}
+.kpi b{display:block;margin-top:9px;font-family:var(--num);font-weight:500;font-size:26px;
+  letter-spacing:-.03em;font-feature-settings:'tnum' 1,'zero' 0}
+.kpi b u{font-size:.46em;text-decoration:none;margin-left:.16em;color:var(--pink-2)}
+.kpi .dl{margin-top:7px;font-family:var(--num);font-size:11px;font-feature-settings:'tnum' 1,'zero' 0}
+.kpi .dl.up{color:var(--coral)} .kpi .dl.dn{color:var(--pink-2)}
+.trGrid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px}
+.panelC{background:#fff;border:1px solid var(--pink-3);border-radius:9px;padding:18px 20px}
+.panelC .ph{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:16px}
+.panelC .ph h3{font-size:14px;font-weight:500;letter-spacing:-.025em}
+.panelC .ph em{font-style:normal;font-family:var(--num);font-size:9.5px;letter-spacing:.16em;
+  color:var(--pink-2);font-feature-settings:'zero' 0}
+.lifeSvg{width:100%;height:auto;display:block;overflow:visible}
+.lifeSvg .ax{stroke:var(--pink-3);stroke-width:1}
+.lifeSvg .cv{fill:none;stroke:var(--pink-0);stroke-width:2;stroke-linecap:round}
+.lifeSvg .cvc{fill:none;stroke:var(--coral);stroke-width:2;stroke-linecap:round}
+.lifeSvg .zn{fill:rgba(255,107,74,.08)}
+.lifeSvg text{font-family:var(--num);font-size:9px;letter-spacing:.14em;fill:var(--pink-2)}
+.lifeSvg .dot{fill:var(--coral)}
+.stageRow{display:flex;gap:6px;margin-top:16px}
+.stageRow div{flex:1;text-align:center;padding:9px 4px;border-radius:6px;
+  font-family:var(--num);font-size:9px;letter-spacing:.14em;color:var(--pink-2);
+  background:rgba(10,10,10,.035)}
+.stageRow div.on{background:var(--coral);color:#fff}
+.flow{display:flex;flex-direction:column;gap:12px}
+.flow .st{display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:11px}
+.flow .st span{font-size:12px;color:var(--pink-1)}
+.flow .st u{display:block;height:26px;background:rgba(10,10,10,.04);border-radius:5px;position:relative;overflow:hidden}
+.flow .st u i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--pink-0);border-radius:5px}
+.flow .st u i.c{background:var(--coral)}
+.flow .st em{font-style:normal;font-family:var(--num);font-size:10.5px;color:var(--pink-2);
+  font-feature-settings:'tnum' 1,'zero' 0}
+/* 세로 막대 — 플랫폼별 온도처럼 항목이 적고 값 비교가 중심일 때 */
+.pbars{display:flex;align-items:flex-end;justify-content:space-around;gap:12px;flex:1;padding-top:6px}
+.pbars .pc{display:flex;flex-direction:column;align-items:center;gap:10px;flex:1;height:100%;
+  justify-content:flex-end}
+.pbars .pc .pv{font-family:var(--num);font-size:12.5px;color:var(--pink-1);
+  font-feature-settings:'tnum' 1,'zero' 0}
+.pbars .pc .pt{width:100%;max-width:46px;background:rgba(10,10,10,.04);border-radius:7px 7px 3px 3px;
+  position:relative;flex:1;display:flex;align-items:flex-end;overflow:hidden}
+.pbars .pc .pt i{display:block;width:100%;height:0;border-radius:7px 7px 3px 3px;background:var(--pink-0)}
+.pbars .pc .pt i.c{background:var(--coral)}
+.pbars .pc .pl{font-size:12px;color:var(--pink-1);white-space:nowrap}
+.myFeed{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.fItem{background:#fff;border:1px solid var(--pink-3);border-radius:9px;overflow:hidden;cursor:none}
+.fItem .im{aspect-ratio:3/4;overflow:hidden;background:#e8e4dd}
+.fItem .im img{width:100%;height:100%;object-fit:cover;filter:grayscale(.25);
+  transition:transform 1s var(--ease),filter 1s var(--ease)}
+.fItem:hover .im img{transform:scale(1.06);filter:grayscale(0)}
+.fItem .tx{padding:12px 14px}
+.fItem .tx b{display:block;font-size:13px;font-weight:500;letter-spacing:-.025em}
+.fItem .tx span{display:block;margin-top:5px;font-size:11.5px;color:var(--pink-2)}
+.why{margin-top:8px;font-size:11px;color:var(--coral);letter-spacing:-.01em}

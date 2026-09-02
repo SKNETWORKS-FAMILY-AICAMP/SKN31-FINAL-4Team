@@ -1,0 +1,20 @@
+<!--
+  참고용 사본 — 실제로 렌더링되는 파일이 아닙니다.
+  이 프로젝트는 Vite 기반 SPA라 화면은 root의 index.html 하나로 동작하고,
+  브라우저 JS 라우터(app-shell/static/js/router.js)가 화면 전환을 담당합니다.
+  아래 마크업은 pricing 앱(요금제 화면, index.html 394-404행)이 사용하는 부분을 index.html에서 그대로 옮겨 온 것으로,
+  Django 스타일 폴더 구성에 맞춰 정리해 둔 참고 사본입니다.
+  실제로 수정하려면 반드시 root의 index.html을 고쳐야 합니다.
+-->
+
+  <section class="view" id="v-price">
+    <section class="mSec" style="padding-top:clamp(26px,3.4vw,44px)"><div class="mwrap">
+      <div class="mSecHead">
+        <div><h2 class="priceTitle">베타 기간엔<br>대부분 무료입니다.</h2>
+          <p>개인은 계속 무료로, 실무에 매일 쓰는 분들만 프로로.<br>언제든 해지할 수 있습니다.</p></div>
+        <span>Pricing</span>
+      </div>
+      <div class="prGrid" id="prGrid"></div>
+      <div class="faq" id="faq"></div>
+    </div></section>
+  </section>

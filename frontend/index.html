@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FEEDiT</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<!-- Roboto Flex = 영문 · 로고(Semibold 600) · Space Grotesk = 연대 숫자 -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="https://cdn.jsdelivr.net/npm/animejs@4.5.0/dist/bundles/anime.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
+<link rel="stylesheet" href="/main.css">
+</head>
+<body class="">
+
+<!-- ===== 상단 메타 ===== -->
+<div class="meta">
+  <span class="brand">
+    <span>FEED<span class="dotI">ı<span class="tit"></span></span>T</span>
+  </span>
+  <span>FASHION TREND INTELLIGENCE</span>
+  <button class="skip" id="skip">SKIP →</button>
+</div>
+
+<!-- ===== 로딩 스테이지 ===== -->
+<div class="stage" id="stage" style="filter: blur(0px)">
+  <div class="word" id="word">
+    <span class="half" id="halfL">FEED</span>
+    <span class="slot" id="slot"></span>
+    <span class="half" id="halfR">iT</span>
+  </div>
+</div>
+
+<!-- ===== 하단 중앙 연대 게이지 ===== -->
+<div class="gauge" id="gauge">
+  <div class="yr"><b id="gY">2026</b><span id="gM">AUG</span></div>
+  <div class="rail"><i id="gRail"></i></div>
+  <div class="ends"><span>2000 JAN</span><span>2026 AUG</span></div>
+</div>
+
+<!-- ===== 설명 페이지 ===== -->
+<div class="wash" id="wash"></div>
+<!-- 로고 화면(00)을 덮는 흰 지면. 로딩의 검정에서 서서히 물들고,
+     01 로 넘어가면 걷혀 화보 패널이 드러난다. -->
+<div class="heroLight" id="heroLight"></div>
+<div class="markStage" id="markStage">
+  <div class="idLock" id="idLock">
+    <svg class="idSym" id="idSym" viewBox="0 0 120 120" aria-hidden="true">
+      <path class="fr" d="M88 32V80C88 84.4183 84.4183 88 80 88H32V32H88Z" style="transform-origin: 50% 50%"></path>
+      <path class="fl" d="M49.8546 77V42.92H71.9826V47.672H52.3026L55.0386 44.84V60.488L52.3026 58.04H71.1186V62.648H52.3026L55.0386 60.2V77H49.8546Z" style="transform-origin: 50% 50%"></path>
+      <path class="dt" d="M91 29V39H81V29H91Z" style="transform-origin: 86px 34px"></path>
+    </svg>
+  </div>
+</div>
+<div class="site" id="site">
+
+  <footer class="ftr">
+    <span class="dots" id="dots"></span>
+    <span id="panelNo">01 / 06</span>
+  </footer>
+
+  <button class="jump" id="jumpBtn" type="button"><i></i>바로 시작 <u>→</u></button>
+
+  <!-- 한 번의 스크롤 = 한 페이지. 스프링으로 통통 넘어간다 -->
+  <div class="deck" id="hstage">
+    <div class="hsticky">
+      <div class="htrack" id="htrack">
+
+        <section class="panel hero" id="hero">
+          <span class="hint"><span class="bar"></span>SCROLL</span>
+        </section>
+
+        <section class="panel">
+          <div class="pbg"><div class="ph" data-shots="a"></div>
+            <div class="scrim"></div><div class="lift"></div><div class="vig"></div></div>
+          
+          
+          
+          
+        <div class="copy"><span class="no">01 — WHAT IT IS</span><h2>스크롤 속 패션을,<br>하나의 <em>트렌드</em>로.</h2><p>매거진보다 빠르고, 피드보다 선명하게.<br>
+             무신사·지그재그·유튜브·틱톡에 흩어진 신호를 모아<br>
+             지금 무엇이 오고 무엇이 가는지 한 줄로 정리합니다.</p><div class="tags"><span>TREND INTELLIGENCE</span><span>K-FASHION</span><span>SINCE 2026</span></div></div></section>
+
+        <section class="panel">
+          <div class="pbg collbg">
+            <div class="collStage" id="collStage"></div>
+            <div class="collCap" id="collCap"></div>
+          </div>
+          
+          
+          
+          
+        <div class="copy"><span class="no">02 — COLLECT</span><h2>여섯 앱 대신,<br>하나면 <em>충분합니다</em>.</h2><p>옮겨 다닐 필요 없이,<br>
+             한 화면에서 끝납니다.</p><div class="tags"><span>9 SOURCES</span><span>6H REFRESH</span><span>124K / DAY</span></div></div></section>
+
+        <section class="panel a3">
+          <div class="pbg anzbg"><div class="anzStage" id="anzStage"></div></div>
+          
+          
+          
+          
+        <div class="copy"><span class="no">03 — ANALYZE</span><h2>무엇이 뜨는지,<br>언제 <em>꺼지는지</em>.</h2><p>언급이 늘어도 반응이 나쁜 키워드는 걸러내고,<br>
+             정점을 지난 시점과 남은 기간을 같이 봅니다.</p><div class="tags"><span>RISING / FALLING</span><span>LIFECYCLE</span><span>INFLECTION</span></div></div></section>
+
+        <section class="panel hasvis">
+          <div class="pbg decbg"></div>
+          
+          
+          
+          
+          <div class="pvis" id="itm"></div>
+        <div class="copy"><span class="no">04 — DECIDE</span><h2>고민은 그만.<br><em>투표</em>로 정하세요.</h2><p>취향이 겹치는 사람들이 24시간 안에,<br>
+             트렌드 지표까지 얹어서 답합니다.</p><div class="tags"><span>살!말?</span><span>TASTE MATCH</span><span>24H</span></div></div></section>
+
+        <section class="panel">
+          <div class="pbg"><div class="ph" data-shots="b"></div>
+            <div class="scrim"></div><div class="lift"></div><div class="vig"></div></div>
+          
+          
+          
+          
+        <div class="copy"><span class="no">05 — FOR WHOM</span><h2>브랜드 MD부터<br>옷 좋아하는 <em>사람</em>까지.</h2><p>다음 시즌 발주를 앞둔 MD,<br>
+             무드보드에 근거가 필요한 디자이너,<br>
+             재고를 잡기 전인 셀렉트샵,<br>
+             그리고 오늘 뭘 살지 고민인 사람.</p><div class="tags"><span>MD</span><span>DESIGNER</span><span>BUYER</span><span>EVERYONE</span></div></div></section>
+
+        <section class="panel" id="panelStart">
+          <div class="pbg startbg">
+            <div class="startIn">
+              <span class="stMark" id="stMark"><svg viewBox="0 0 120 120" aria-hidden="true">
+                <path d="M88 32V80C88 84.4183 84.4183 88 80 88H32V32H88Z" fill="none" stroke="#0a0a0a" stroke-width="4"></path><path d="M49.8546 77V42.92H71.9826V47.672H52.3026L55.0386 44.84V60.488L52.3026 58.04H71.1186V62.648H52.3026L55.0386 60.2V77H49.8546Z" fill="#0a0a0a"></path><path d="M91 29V39H81V29H91Z" fill="#ff6b4a" stroke="#f4f6f8" stroke-width="2"></path></svg>
+                </span>
+              <span class="stSlot">
+                <span class="stBar" id="stBar"><i></i></span>
+                <button class="stCta" id="startBtn">지금 시작하세요 <span>→</span></button>
+              </span>
+            </div>
+          </div>
+        <div class="copy"></div></section>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="replay" id="again">↺ 로딩 다시 보기</button>
+
+<!-- ============================================================
+     메인 랜딩 페이지 (pamidordesign 레퍼런스 · 오프화이트 + 블랙)
+     ============================================================ -->
+<main class="mainpage" id="mainpage">
+
+  <header class="mHead">
+    <a class="mLogo" id="mHome">
+      <!-- 헤더에서는 마크가 작아 보이지 않도록 뷰박스를 실제 획 경계로 조여 쓴다 -->
+      <svg viewBox="29 27 64 64" aria-hidden="true">
+        <path d="M88 32V80C88 84.4183 84.4183 88 80 88H32V32H88Z" fill="none" stroke="currentColor" stroke-width="4"></path><path d="M49.8546 77V42.92H71.9826V47.672H52.3026L55.0386 44.84V60.488L52.3026 58.04H71.1186V62.648H52.3026L55.0386 60.2V77H49.8546Z" fill="currentColor"></path><path d="M91 29V39H81V29H91Z" fill="#ff6b4a" stroke="#f1efea" stroke-width="2"></path>
+      </svg>
+      <b>FEED<span class="dotI">ı<span class="tit"></span></span>T</b>
+    </a>
+    <nav class="mNav" id="mNav">
+      <button class="on" data-v="home" data-t="홈"><span>홈</span></button>
+      <button data-v="trend" data-t="트렌드 분석" class=""><span>트렌드 분석</span></button>
+      <button data-v="salmal" data-t="살!말?" class=""><span>살!말?</span></button>
+      <button data-v="style" data-t="스타일" class=""><span>스타일</span></button>
+      <button data-v="price" data-t="요금제"><span>요금제</span></button>
+    </nav>
+    <div class="mHeadR mAuth" id="mHeadR">
+      <button class="pill ghost" id="mBackBtn">← 소개로</button>
+      <!-- 로그인 전에는 [로그인], 후에는 이름 버튼 + 메뉴 (authPaint) -->
+      <span class="mAuthWrap">
+        <button class="pill" id="mAuthBtn" data-v="login">로그인</button>
+        <div class="acctMenu" id="acctMenu">
+          <button type="button" id="menuMypage"><i>◧</i>내 정보</button>
+          <hr>
+          <button type="button" class="out" id="menuLogout"><i>→</i>로그아웃</button>
+        </div>
+      </span>
+    </div>
+  </header>
+
+  <!-- ══════════════ 홈 (챗봇) ══════════════ -->
+  <section class="view on" id="v-home">
+    <div class="chatStage">
+      <div class="mwrap heroGrid">
+        <div class="heroL">
+          <div class="mKicker"><b>BETA</b> 패션 트렌드 AI 에이전트</div>
+          <h1 class="mStatement" id="mState">
+            <span class="ln">스크롤 속 패션을,</span>
+            <span class="ln">하나의 <em class="ul">트렌드</em>로.</span>
+          </h1>
+          <p>매거진보다 빠르고, 피드보다 선명하게.</p>
+        </div>
+
+        <div class="heroR">
+          <div class="hot" id="hot">
+            <!-- 라벨과 목록을 한 덩어리로 묶어 바 위에 올려 둔다.
+                 아래가 고정이라 목록이 자라면 라벨이 같이 밀려 올라간다. -->
+            <div class="hotTop">
+              <span class="lbl"><u>HOT</u> TREND TOP 10</span>
+              <div class="hotList" id="hotList"></div>
+            </div>
+            <button class="hotBar" id="hotBar">
+              <span class="hotRoll" id="hotRoll"></span>
+              <span class="cv">▾</span>
+            </button>
+          </div>
+
+          <div class="chatWrap">
+            <div class="chatbar">
+              <button class="salmalBtn" id="smToggle" type="button" aria-pressed="false"><span class="lbl"><i class="ic">◑</i><span class="tx">살!말?</span></span></button>
+              <div class="cfield">
+                <div class="ghostQ" id="ghostQ">
+                  <span class="spark">✧</span>
+                  <span class="qline" id="qline"></span>
+                </div>
+                <input type="text" id="mInput" autocomplete="off">
+              </div>
+              <button class="sendBtn" id="mSend" aria-label="보내기">→</button>
+            </div>
+          </div>
+          <div class="chips" id="mChips"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 대화 스레드 : 질문을 던지면 여기에 쌓인다 -->
+    <div class="threadWrap" id="threadWrap">
+      <div class="mwrap">
+        <div class="thread" id="thread"></div>
+        <button class="pill ghost" id="newChat" style="margin:26px auto 0;display:flex">↺ 새 대화</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ 트렌드 분석 ══════════════ -->
+  <section class="view" id="v-trend">
+    <div class="trWrap">
+      <aside class="side" id="side">
+        <div class="sTop"><button class="sToggle" id="sToggle" aria-label="사이드바 펼치기">☰</button></div>
+        <div class="sGroup">
+          <div class="sLabel">FEED — 모으다</div>
+          <div id="sFeed"></div>
+        </div>
+        <div class="sGroup">
+          <div class="sLabel">EDIT — 고르다</div>
+          <div id="sEdit"></div>
+        </div>
+        <div class="sFoot onDark" id="sFoot">
+          <span class="av">혁</span>
+          <!-- 이름 아래에 직위, 뱃지는 오른쪽 끝에 -->
+          <span class="who"><b>혁진</b><em id="sFootPlan">ADMIN · 서울</em></span>
+          <span class="sFootRk" id="sFootRk"></span>
+        </div>
+      </aside>
+
+      <div class="trMain">
+        <div class="trHead">
+          <div id="trTitleWrap">
+            <div class="trKicker" id="trKicker" hidden="">TREND ANALYSIS · PERSONAL CONSULTING</div>
+            <h2 id="trTitle">내 피드</h2>
+            <p id="trDesc">취향 벡터와 최근 행동을 합쳐 오늘 볼 만한 것만 골랐습니다. 왜 골랐는지는 카드마다 한 줄로 붙습니다.</p>
+          </div>
+          <!-- 내 피드에서는 제목 대신 프로필이 선다 -->
+          <div class="trProfile" id="trProfile" hidden>
+            <div class="trProfAv" id="trProfAv">혁</div>
+            <div class="trProfInfo">
+              <div class="trProfName"><b id="trProfNm">혁진</b><span id="trProfRk"></span></div>
+              <div class="trProfDivider"></div>
+              <!-- 소개글. 비어 있으면 예시가 흐리게 서 있고, 연필을 누르면 그 자리에서 고친다 -->
+              <div class="trBioRow">
+                <p id="trProfBio" class="isEmpty"></p>
+                <button type="button" class="bioEdit" id="trBioEdit" title="소개 수정" aria-label="소개 수정">
+                  <!-- 연필 + 그 아래 밑줄 — "이 줄을 고친다"가 한눈에 읽히는 형태 -->
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path class="bePen" d="M4.5 16.5h3.2L18.9 5.3a1.9 1.9 0 0 0-2.7-2.7L5 13.8v2.7z"/>
+                    <path class="bePen" d="M14.7 4.1l2.2 2.2"/>
+                    <path class="bePen beLine" d="M4 20.6h16"/>
+                    <path class="beOk" d="M5 12l4 4 9-9"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <span style="font-family:var(--num);font-size:10px;letter-spacing:.24em;color:var(--pink-2)">2026 · W33</span>
+        </div>
+        <div class="trTabs" id="trTabs"></div>
+
+        <!-- 할인률·리세일·수명주기 공용 검색. 패널마다 다시 만들지 않고
+             여기 한 벌만 두고 보였다 감췄다 한다 (리스너도 한 번만 붙는다). -->
+        <div class="fsWrap" id="trSearch" hidden="">
+          <div class="fsRow">
+            <div class="fsBar" id="fsBar">
+              <span class="fsIc">◎</span>
+              <input type="text" id="fsInput" autocomplete="off" spellcheck="false" placeholder="소재 · 아이템 · 스타일 · 브랜드로 검색">
+              <span class="fsGhost" id="fsGhost"><span class="fsQ" id="fsQ"><i>“<b>살로몬 XT-6</b>&nbsp;리세일 시세 아직 버텨?”</i></span></span>
+              <button class="fsClear" id="fsClear" type="button" hidden="">×</button>
+            </div>
+            <button class="fsMore" id="fsMore" type="button">세부 검색 <u>▾</u></button>
+          </div>
+          <div class="fsSug" id="fsSug" hidden=""></div>
+          <div class="fsChips" id="fsChips" hidden=""></div>
+        </div>
+
+        <div id="trBody"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ 살!말? ══════════════ -->
+  <section class="view" id="v-salmal">
+<div class="smPage">
+
+
+  <section class="smHero">
+    <div class="liveNow"><span class="dot"></span>지금 <b id="liveCount">102</b>명이 함께 고민 중</div>
+    <h1 class="smStatement">살까, <em>말까</em>.</h1>
+    <div class="smHeroRow">
+      <p>리뷰보다 빠르고, 친구보다 솔직합니다.</p>
+    </div>
+
+    <div class="smTabsRow">
+      <div class="smTabs" id="smTabs">
+        <button class="on" data-tab="taste">내 취향</button>
+        <button data-tab="popular" class="">인기순</button>
+        <button data-tab="latest" class="">최신순</button>
+        <button data-tab="closing">마감임박</button>
+      </div>
+      <button class="addItemBtn" id="addItemBtn">＋ 살까말까 물어보기</button>
+    </div>
+  </section>
+
+  <section class="voteSection">
+    <div class="voteGrid" id="voteGrid"></div>
+    <div class="pager" id="pager">
+    <button class="pagerBtn" id="pagerPrev" disabled="" aria-label="이전 페이지">←</button>
+    <div class="pagerNums"><button data-page="1" class="on">1</button><button data-page="2" class="">2</button></div>
+    <button class="pagerBtn" id="pagerNext" aria-label="다음 페이지">→</button></div>
+  </section>
+
+  <hr class="sectionDivider">
+
+  <section class="closedSection">
+    <h2 class="closedTitle">마감된 투표</h2>
+    <div class="voteGrid" id="closedGrid"></div>
+    <div class="carouselDots" id="closedDots"></div>
+  </section>
+
+
+</div>
+  </section>
+
+  <!-- ══════════════ Style ══════════════ -->
+  <section class="view" id="v-style">
+    <!-- 카테고리 + 자동 순환 쇼케이스 -->
+    <div id="styleHome">
+      <section class="mSec" style="padding-top:clamp(26px,3.4vw,44px);padding-bottom:0"><div class="mwrap">
+        <div class="mSecHead">
+          <div><h2 class="styleTitle">코어로 고르는 옷.</h2>
+            <p>하나를 고르면 그 코어의 시작과 지금, 그리고 아이템까지 이어집니다.</p></div>
+          <span>Style</span>
+        </div>
+        <div class="stCats" id="stCats"></div>
+        <div class="stShow" id="stShow"></div>
+        <div class="stGrid" id="stGrid"></div>
+      </div></section>
+      <div style="height:clamp(60px,9vh,110px)"></div>
+    </div>
+
+    <!-- 스타일 상세 -->
+    <div id="styleDetail" style="display:none">
+      <section style="padding:clamp(20px,3vh,34px) 0 0"><div class="mwrap">
+        <button class="pill ghost" id="stBack" style="margin-bottom:18px">← 스타일 전체</button>
+        <div class="stHero" id="stHero"></div>
+      </div></section>
+      <section><div class="mwrap"><div class="stAbout" id="stAbout"></div></div></section>
+      <section class="mSec" style="padding-bottom:clamp(40px,6vh,70px)"><div class="mwrap">
+        <div class="mSecHead"><div><h2 style="font-size:clamp(20px,2.2vw,30px)">인플루언서 피드</h2></div>
+          <span>Who wears it</span></div>
+        <div class="infFeed" id="stInf"></div>
+      </div></section>
+      <section style="padding-bottom:clamp(60px,9vh,110px)"><div class="mwrap">
+        <div class="mSecHead"><div><h2 style="font-size:clamp(20px,2.2vw,30px)">이 스타일의 아이템</h2></div>
+          <span id="stItemCount">Items</span></div>
+        <div class="itGrid" id="stItems"></div>
+        <div class="itMore" id="stMore">스크롤하면 더 불러옵니다</div>
+      </div></section>
+    </div>
+  </section>
+
+  <!-- ══════════════ 요금제 ══════════════ -->
+  <section class="view" id="v-price">
+    <section class="mSec" style="padding-top:clamp(26px,3.4vw,44px)"><div class="mwrap">
+      <div class="mSecHead">
+        <div><h2 class="priceTitle">베타 기간엔<br>대부분 무료입니다.</h2>
+          <p>개인은 계속 무료로, 실무에 매일 쓰는 분들만 프로로.<br>언제든 해지할 수 있습니다.</p></div>
+        <span>Pricing</span>
+      </div>
+      <div class="prGrid" id="prGrid"></div>
+      <div class="faq" id="faq"></div>
+    </div></section>
+  </section>
+
+  <!-- 팝업은 뷰 밖에 둔다. 뷰에 남는 transform 이 position:fixed 기준을 바꾸기 때문. -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== 연관어 근거 팝오버 (트렌드 · 연관어 페이지) ===== -->
+<div class="assocPop" id="assocPop">
+  <div class="apHead">
+    <b id="apWord"></b><span id="apCat"></span>
+    <button class="apClose" id="apClose" aria-label="닫기">×</button>
+  </div>
+  <div class="apSpark">
+    <svg viewBox="0 0 200 46" id="apSparkSvg"><polyline id="apSparkLine"></polyline></svg>
+    <div class="apSparkAx"><span>3주 전</span><span>2주 전</span><span>지난주</span><span>이번주</span></div>
+  </div>
+  <div class="apSrc" id="apSrc"></div>
+</div>
+
+<!-- ===== 세부 검색 — Style › 종류 › 브랜드 › 아이템명 ===== -->
+<div class="fsPopBg" id="fsPopBg">
+  <div class="fsPop" role="dialog" aria-label="세부 검색">
+    <div class="fsPopHead">
+      <div>
+        <h3>세부 검색</h3>
+        <p>왼쪽부터 좁혀 갑니다. 고른 항목은 아래 칩으로 쌓이고, 지우면 그 아래 단계가 풀립니다.</p>
+      </div>
+      <button class="fsX" id="fsPopX" type="button">×</button>
+    </div>
+    <div class="fsCols">
+      <div class="fsCol" data-lv="0"><div class="fsColH">STYLE</div><div class="fsList" id="fsC0"><button type="button" data-lv="0" data-v="스트릿">스트릿<i>4</i></button><button type="button" data-lv="0" data-v="아메카지">아메카지<i>4</i></button><button type="button" data-lv="0" data-v="그런지">그런지<i>4</i></button><button type="button" data-lv="0" data-v="포멀">포멀<i>4</i></button><button type="button" data-lv="0" data-v="발레코어">발레코어<i>4</i></button><button type="button" data-lv="0" data-v="고프코어">고프코어<i>4</i></button><button type="button" data-lv="0" data-v="블록코어">블록코어<i>3</i></button><button type="button" data-lv="0" data-v="놈코어">놈코어<i>4</i></button></div></div>
+      <div class="fsCol" data-lv="1"><div class="fsColH">종류</div><div class="fsList" id="fsC1"><div class="hint">STYLE 을 먼저 고르세요.</div></div></div>
+      <div class="fsCol" data-lv="2"><div class="fsColH">브랜드</div><div class="fsList" id="fsC2"><div class="hint">종류를 먼저 고르세요.</div></div></div>
+      <div class="fsCol" data-lv="3"><div class="fsColH">아이템명</div><div class="fsList" id="fsC3"><div class="hint">브랜드를 먼저 고르세요.</div></div></div>
+    </div>
+    <div class="fsPopFoot">
+      <div class="fsPicked" id="fsPicked"><span class="ph2">아직 고른 조건이 없습니다.</span></div>
+      <div class="fsActs">
+        <button class="fsReset" id="fsReset" type="button">초기화</button>
+        <button class="fsApply" id="fsApply" type="button">이 조건으로 분석 <u>→</u></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 신고/삭제 컨텍스트 메뉴 (카드 · 댓글 공용) ===== -->
+<div class="ctxMenu" id="ctxMenu">
+  <button data-action="report">신고하기</button>
+  <button data-action="delete" class="danger">삭제하기</button>
+</div>
+
+<!-- ===== 살!말? 상세 모달 ===== -->
+<div class="modalOverlay" id="modalOverlay">
+  <div class="modalShell">
+    <div class="modalBox" id="modalBox">
+    <div class="modalGrid">
+
+      <!-- 좌측 : 이미지 + 작성자 사연 -->
+      <div class="modalLeft">
+        <div class="modalFig">
+          <div class="plate" id="modalPlate"></div>
+          <div class="vig"></div>
+          <button class="cardMenuBtn modalMenuBtn" id="modalMenuBtn" aria-label="더보기">⋯</button>
+          <div class="aiBtnWrap">
+            <button class="aiBtn" id="aiBtn"><span class="dotc"></span>AI 살!말? 리포트</button>
+            <div class="aiChatBubble" id="aiChatBubble">
+              <div class="aiChatHead">
+                <div class="aiChatAvatar">AI</div>
+                <div class="who"><b>FEEDiT AI</b></div>
+                <button class="aiChatClose" id="aiChatClose" aria-label="닫기">×</button>
+              </div>
+              <div class="aiChatBody">
+                <span class="aiVerdict" id="aiVerdict"></span>
+                <p class="aiWhy" id="aiWhy"></p>
+                <div class="aiStats" id="aiStats"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modalInfo">
+          <h3 id="modalTitle"></h3>
+          <div class="modalMeta"><b id="modalBrand"></b> · <span id="modalPrice"></span></div>
+        </div>
+        <div class="modalPost">
+          <span class="postName" id="modalNoteName"></span>
+          <p class="postText" id="modalNote"></p>
+        </div>
+      </div>
+
+      <!-- 우측 : 투표 현황(전체 / 유사 세그먼트) + 댓글 -->
+      <div class="modalRight">
+        <div class="voteBlock">
+          <div class="voteBlockHead">
+            <span>전체 투표</span>
+            <span class="cnt" id="modalCntAll"></span>
+          </div>
+          <div class="smBar" id="modalBarAll">
+            <i class="buy"></i><i class="no"></i>
+          </div>
+        </div>
+
+        <div class="voteBlock similar">
+          <div class="voteBlockHead">
+            <span>나와 비슷한 사용자들<em id="modalSegLabel"></em></span>
+          </div>
+          <div class="smBar" id="modalBarSim">
+            <i class="buy"></i><i class="no"></i>
+          </div>
+        </div>
+
+        <div class="commentsHead">댓글 <span id="commentCount"></span></div>
+        <div class="commentsList" id="commentsList"></div>
+        <div class="commentForm">
+          <div class="commentInputRow">
+            <textarea id="commentInput" placeholder="댓글을 남겨보세요"></textarea>
+            <button class="commentSend" id="commentSend" aria-label="등록">→</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    </div>
+    <button class="modalClose" id="modalClose" aria-label="닫기">×</button>
+  </div>
+</div>
+
+<!-- ===== 살까말까 물어보기 — 글쓰기 모달 ===== -->
+<div class="modalOverlay" id="createOverlay">
+  <div class="modalShell">
+    <div class="modalBox createBox" id="createBox">
+      <div class="createGrid">
+
+        <!-- 좌측 : 인트로 문구 + 상품 이미지 -->
+        <div class="createLeft">
+          <h3 class="createTitle">살까말까 물어보기</h3>
+          <p class="createSub">고민되는 아이템을 올리면 취향이 비슷한 사람들이 살지 말지 투표해드려요.</p>
+          <div class="cField">
+            <label class="cLabel">상품 이미지</label>
+            <div class="imgDrop" id="imgDrop">
+              <input type="file" id="imgInput" accept="image/*" hidden="">
+              <img id="imgPreview" alt="" hidden="">
+              <div class="imgDropInner" id="imgDropInner">
+                <span class="imgDropIcon">＋</span>
+                <span>이미지를 선택하세요</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 우측 : 상품명 / 브랜드 / 가격 / 사연 -->
+        <div class="createRight">
+          <div class="cField">
+            <label class="cLabel">상품명</label>
+            <input type="text" class="cInput" id="cTitle" placeholder="예: 스웨이드 블루종 (버건디)">
+          </div>
+
+          <div class="cRow2">
+            <div class="cField">
+              <label class="cLabel">브랜드</label>
+              <select class="cInput" id="cBrand">
+                <option value="" disabled="" selected="">브랜드 선택</option>
+              <option value="ADIDAS">ADIDAS</option><option value="AMOMENTO">AMOMENTO</option><option value="ANDERSSON BELL">ANDERSSON BELL</option><option value="CARHARTT WIP">CARHARTT WIP</option><option value="CENTIME">CENTIME</option><option value="COS">COS</option><option value="GENTLE MONSTER">GENTLE MONSTER</option><option value="INSILENCE">INSILENCE</option><option value="KIJUN">KIJUN</option><option value="LE 17 SEPTEMBRE">LE 17 SEPTEMBRE</option><option value="LEMAIRE">LEMAIRE</option><option value="LEVI'S">LEVI'S</option><option value="MATIN KIM">MATIN KIM</option><option value="MSTA">MSTA</option><option value="MUSINSA STANDARD">MUSINSA STANDARD</option><option value="NAUTICA">NAUTICA</option><option value="NEW BALANCE">NEW BALANCE</option><option value="RANDOM IDENTITIES">RANDOM IDENTITIES</option><option value="SOLEW">SOLEW</option><option value="THISISNEVERTHAT">THISISNEVERTHAT</option><option value="UNIFORM BRIDGE">UNIFORM BRIDGE</option><option value="기타">기타 (직접 입력 예정)</option></select>
+            </div>
+            <div class="cField">
+              <label class="cLabel">가격</label>
+              <input type="text" inputmode="numeric" class="cInput" id="cPrice" placeholder="숫자만 입력 (원)">
+            </div>
+          </div>
+
+          <div class="cField grow">
+            <label class="cLabel">사연</label>
+            <textarea class="cInput cTextarea" id="cNote" placeholder="이 아이템을 왜 올리는지 알려주세요. 예) 이 가격에 사도 될지 궁금해서 올려봅니다."></textarea>
+          </div>
+
+          <button class="pill big coral createSubmit" id="createSubmit">물어보기</button>
+        </div>
+
+      </div>
+    </div>
+    <button class="modalClose" id="createClose" aria-label="닫기">×</button>
+  </div>
+</div>
+
+<!-- ===== 챗봇 팝업 (일반 모드 / 살말 모드 공용 — 프로필·대화 목록만 갈아입는다) ===== -->
+<div class="modalOverlay cpOverlay" id="cpOverlay">
+  <div class="modalShell cpShell">
+    <div class="cpBox" id="cpBox">
+      <aside class="cpSide">
+        <div class="cpProfile">
+          <div class="cpAv" id="cpAv"></div>
+          <div class="cpProfileText">
+            <b id="cpName">일반 모드</b>
+            <p id="cpDesc"></p>
+          </div>
+        </div>
+        <button type="button" class="cpNewBtn" id="cpNewBtn"><i>＋</i>새로운 대화</button>
+        <div class="cpListLabel">대화 목록</div>
+        <div class="cpList" id="cpList"></div>
+      </aside>
+      <div class="cpMain">
+        <div class="cpThreadWrap" id="cpThreadWrap">
+          <div class="cpEmpty"><p id="cpEmptyText">궁금한 걸 물어보세요.</p></div>
+          <div class="thread cpThread" id="cpThread"></div>
+        </div>
+        <div class="cpInputRow">
+          <textarea id="cpInput" rows="1" placeholder="궁금한 점을 질문해 주세요." autocomplete="off"></textarea>
+          <button class="cpSend" id="cpSend" aria-label="보내기">→</button>
+        </div>
+      </div>
+    </div>
+    <button class="modalClose" id="cpClose" aria-label="닫기">×</button>
+  </div>
+</div>
+
+
+
+  <!-- ══════════════ 로그인 ══════════════ -->
+  <section class="view acct" id="v-login">
+    <div class="authWrap"><div class="authCard">
+      <div class="authEyebrow">Welcome back</div>
+      <h1 class="authTitle">로그인</h1>
+      <p class="authSub">취향이 맞는 사람들의 투표와 트렌드 리포트를 계속 이어보세요.</p>
+      <button class="googleBtn" id="googleLoginBtn" type="button"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10.1-2 13.7-5.3l-6.3-5.3C29.4 35.4 26.8 36 24 36c-5.2 0-9.6-3.1-11.3-7.6l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.3 5.3C40.9 36 44 30.6 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>Google로 계속하기</button>
+      <div class="divider">또는 아이디로 로그인</div>
+      <form class="authForm" id="loginForm" novalidate>
+        <div class="cField">
+          <label class="cLabel" for="loginId">아이디</label>
+          <input class="cInput" id="loginId" type="text" placeholder="아이디를 입력하세요" autocomplete="username">
+        </div>
+        <div class="cField">
+          <label class="cLabel" for="loginPw">비밀번호</label>
+          <input class="cInput" id="loginPw" type="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password">
+        </div>
+        <p class="fieldMsg err" id="loginErr" style="display:none;margin-bottom:14px">아이디와 비밀번호를 모두 입력해주세요.</p>
+        <a class="miniLink" href="#" onclick="return false">비밀번호를 잊으셨나요?</a>
+        <button type="submit" class="pill authSubmit">로그인</button>
+      </form>
+      <p class="authFoot">아직 계정이 없으신가요? <a href="#" data-v="signup">회원가입</a></p>
+    </div></div>
+  </section>
+
+  <!-- ══════════════ 회원가입 ══════════════ -->
+  <section class="view acct" id="v-signup">
+    <div class="authWrap"><div class="authCard wide">
+      <div class="authEyebrow">Join FEEDiT</div>
+      <h1 class="authTitle">회원가입</h1>
+      <p class="authSub">30초면 가입 완료. 취향 태그를 등록하면 추천과 살!말? 세그먼트가 바로 맞춰집니다.</p>
+      <button class="googleBtn" id="googleSignupBtn" type="button"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10.1-2 13.7-5.3l-6.3-5.3C29.4 35.4 26.8 36 24 36c-5.2 0-9.6-3.1-11.3-7.6l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.3 5.3C40.9 36 44 30.6 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>Google로 계속하기</button>
+      <div class="divider">또는 아이디로 가입</div>
+      <form class="authForm" id="signupForm" novalidate>
+        <div class="cField">
+          <label class="cLabel" for="suId">아이디</label>
+          <input class="cInput" id="suId" type="text" placeholder="영문/숫자 4~16자" autocomplete="username">
+          <p class="fieldMsg" id="suIdMsg"></p>
+        </div>
+        <div class="cField">
+          <label class="cLabel" for="suNickname">닉네임</label>
+          <input class="cInput" id="suNickname" type="text" placeholder="다른 사람에게 보여질 이름 (2~12자)" autocomplete="nickname">
+        </div>
+        <div class="cRow2">
+          <div class="cField">
+            <label class="cLabel" for="suPw">비밀번호</label>
+            <input class="cInput" id="suPw" type="password" placeholder="8자 이상" autocomplete="new-password">
+          </div>
+          <div class="cField">
+            <label class="cLabel" for="suPw2">비밀번호 확인</label>
+            <input class="cInput" id="suPw2" type="password" placeholder="다시 입력" autocomplete="new-password">
+          </div>
+        </div>
+        <p class="fieldMsg" id="suPwMsg"></p>
+        <div class="cField">
+          <label class="cLabel" for="suBirth">생년월일</label>
+          <input class="cInput" id="suBirth" type="date">
+        </div>
+        <!-- 체형 — 살!말? 세그먼트를 나눌 때 쓰인다 -->
+        <div class="cField">
+          <label class="cLabel">체형 <span>추천·살!말? 세그먼트에 쓰여요</span></label>
+          <div class="cPair">
+            <span class="cUnit"><input class="cInput" id="suHeight" type="number" inputmode="numeric"
+              min="120" max="220" placeholder="키"><em>cm</em></span>
+            <span class="cUnit"><input class="cInput" id="suWeight" type="number" inputmode="numeric"
+              min="30" max="200" placeholder="몸무게"><em>kg</em></span>
+          </div>
+          <p class="fieldMsg" id="suBodyMsg"></p>
+        </div>
+        <div class="cField">
+          <label class="cLabel">즐겨입는 스타일 <span>복수 선택 가능</span></label>
+          <div class="chipRow" id="styleChips"></div>
+          <p class="styleHint">선택한 스타일은 추천과 살!말? 노출 세그먼트에 반영돼요.</p>
+        </div>
+        <p class="fieldMsg err" id="signupErr" style="display:none;margin-top:14px"></p>
+        <button type="submit" class="pill authSubmit">가입하기</button>
+      </form>
+      <p class="authFoot">이미 계정이 있으신가요? <a href="#" data-v="login">로그인</a></p>
+    </div></div>
+  </section>
+
+  <!-- ══════════════ 마이페이지 ══════════════ -->
+  <section class="view acct" id="v-mypage">
+    <div class="wrap myWrap" id="myView">
+      <div class="pageHead">
+        <h1>마이페이지</h1>
+        <p>가입 시 선택한 정보와 취향 설정을 기반으로 추천과 살!말? 노출이 매일 갱신됩니다.</p>
+      </div>
+      <div class="myGrid">
+        <div class="myCol">
+          <div class="panel profilePanel">
+            <!-- 아바타 자체를 눌러 바꾼다. 연필은 오른쪽 아래 모서리에 붙는다 -->
+            <div class="avatarWrap">
+              <div class="avatarCircle" id="avatarInitial">혁</div>
+              <button type="button" class="avatarEdit" id="avatarEditBtn" title="아이콘 변경" aria-label="아이콘 변경">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4.5 16.5h3.2L18.9 5.3a1.9 1.9 0 0 0-2.7-2.7L5 13.8v2.7z"/>
+                  <path d="M14.7 4.1l2.2 2.2"/>
+                  <path d="M4 20.6h16"/>
+                </svg>
+              </button>
+            </div>
+            <!-- 등급은 뱃지가 아니라 경험치 바가 말한다. 바 색은 현재 레벨을 따라간다 -->
+            <div class="xpWrap" id="xpWrap">
+              <div class="xpTop">
+                <span class="xpLv" id="xpLv">Lv.1</span>
+                <span class="xpNum" id="xpNum">0 / 100 XP</span>
+              </div>
+              <div class="xpBar"><i id="xpFill"></i></div>
+              <div class="xpNext" id="xpNext"></div>
+            </div>
+            <div class="profileName" id="profileName">혁진</div>
+            <div class="profileEmail" id="profileEmail">hyeokjin@feedit.co.kr</div>
+            <button type="button" class="editProfileBtn" id="editProfileBtn">회원 정보 수정</button>
+            <div class="statRow">
+              <button type="button" class="statCell" id="statSavedBtn"><div class="n" id="statSavedN">0</div><div class="l">저장</div></button>
+              <button type="button" class="statCell" id="statVotedBtn"><div class="n" id="statVotedN">0</div><div class="l">투표</div></button>
+              <button type="button" class="statCell" id="statBadgeBtn"><div class="n" id="statBadgeN">0</div><div class="l">뱃지</div></button>
+            </div>
+            <button type="button" class="leaveBtn" id="leaveBtn">회원 탈퇴</button>
+          </div>
+          <div class="panel">
+            <div class="panelHead"><h3>필터</h3></div>
+            <div class="formRow">
+              <label>이런 스타일이 좋아요 <span>복수 선택</span></label>
+              <div class="chipRow" id="styleWrap"></div>
+            </div>
+            <div class="formRow">
+              <label>추천 성향 <span>안정 ↔ 실험</span></label>
+              <input type="range" class="rangeSlider" id="myRange" min="0" max="100" value="38">
+              <div class="rangeLab"><span>무난템 · 국밥템</span><span>하이엔드 · 실험적</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="myCol">
+          <div class="panel">
+            <div class="panelHead"><h3>오늘의 추천</h3><span class="sub" id="recSub">매칭도 순</span></div>
+            <div class="recGrid" id="recGrid"></div>
+          </div>
+          <div class="panel">
+            <div class="panelHead"><h3>무난템 · 국밥템</h3><span class="sub">실패 확률이 낮은 기본 아이템</span></div>
+            <div class="recGrid" id="basicGrid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mFoot"><div class="mwrap footRow">
+    <span>FEEDiT — Fashion Trend Intelligence</span>
+    <span>2026 · Seoul</span>
+  </div></footer>
+</main>
+
+
+<!-- ── 계정 화면 모달 3종 ── -->
+<div class="acctModal" id="editModal">
+  <div class="modalCard">
+    <div class="modalHead"><h3>회원 정보 수정</h3>
+      <button type="button" class="modalClose" id="editModalClose" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <form id="editProfileForm" novalidate>
+      <div class="cField" style="margin-bottom:16px">
+        <label class="cLabel" for="editNickname">닉네임</label>
+        <input class="cInput" id="editNickname" type="text" placeholder="2~12자">
+      </div>
+      <div class="cRow2">
+        <div class="cField">
+          <label class="cLabel" for="editPw">새 비밀번호<span>변경 시에만 작성</span></label>
+          <input class="cInput" id="editPw" type="password" placeholder="8자 이상" autocomplete="new-password">
+        </div>
+        <div class="cField">
+          <label class="cLabel" for="editPw2">새 비밀번호 확인</label>
+          <input class="cInput" id="editPw2" type="password" placeholder="다시 입력" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="cField" style="margin:16px 0 0">
+        <label class="cLabel" for="editBirth">생년월일</label>
+        <input class="cInput" id="editBirth" type="date">
+      </div>
+      <div class="cField" style="margin:16px 0 0">
+        <label class="cLabel">체형</label>
+        <div class="cPair">
+          <span class="cUnit"><input class="cInput" id="editHeight" type="number" inputmode="numeric"
+            min="120" max="220" placeholder="키"><em>cm</em></span>
+          <span class="cUnit"><input class="cInput" id="editWeight" type="number" inputmode="numeric"
+            min="30" max="200" placeholder="몸무게"><em>kg</em></span>
+        </div>
+      </div>
+      <p class="fieldMsg err" id="editModalErr" style="display:none;margin-top:12px"></p>
+      <div class="modalBtns">
+        <button type="button" class="pill ghost" id="editModalCancel">취소</button>
+        <button type="submit" class="pill">저장하기</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="acctModal" id="savedModal">
+  <div class="modalCard wide">
+    <div class="modalHead"><h3>저장한 아이템</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="itemGrid" id="savedGrid"></div>
+  </div>
+</div>
+<div class="acctModal" id="votedModal">
+  <div class="modalCard wide">
+    <div class="modalHead"><h3>투표한 카드</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="itemGrid" id="votedGrid"></div>
+  </div>
+</div>
+<div class="acctModal" id="badgeModal">
+  <div class="modalCard wide">
+    <div class="modalHead"><h3>내 뱃지</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <!-- 컬렉션 뱃지. 등급(Lv)은 아바타 링이 맡으니 여기 섞지 않는다. -->
+    <div class="bgSummary">
+      <div class="bsLabel"><b id="bgCount">0</b> / <span id="bgTotal">0</span>개 획득</div>
+      <div class="bgBar"><i id="bgBar"></i></div>
+    </div>
+    <div class="bgDetail" id="bgDetail"></div>
+    <div class="bgGrid" id="badgeGrid"></div>
+  </div>
+</div>
+<div class="acctModal" id="avatarModal">
+  <div class="modalCard">
+    <div class="modalHead"><h3>아이콘 변경</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="avaPick" id="avaPick"></div>
+  </div>
+</div>
+<div class="acctModal" id="leaveModal">
+  <div class="modalCard">
+    <div class="modalHead"><h3>회원 탈퇴</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p class="leaveCopy">탈퇴하면 저장한 아이템과 투표 이력, 모은 뱃지가 모두 사라집니다.<br>
+      되돌릴 수 없습니다.</p>
+    <div class="modalBtns">
+      <button type="button" class="pill ghost" data-close-modal>남아 있을게요</button>
+      <button type="button" class="pill danger" id="leaveConfirm">탈퇴하겠습니다</button>
+    </div>
+  </div>
+</div>
+
+<div class="grain"></div>
+<div class="curRing" id="curRing"></div>
+<div class="cur" id="cur"></div>
+
+<script type="module" src="/main.js"></script>
+
+
+</body></html>

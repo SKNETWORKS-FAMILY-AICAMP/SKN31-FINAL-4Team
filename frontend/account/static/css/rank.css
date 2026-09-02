@@ -1,0 +1,144 @@
+/* ══════════════ 등급 뱃지 ══════════════
+   Basic → Finder → TrendSetter → Mania → Analyst → Director → Icon.
+   크기를 키우지 않고 재질만 올린다 — 선 → 잉크 → 금속 → 브랜드 → 라벨. */
+/* 치수는 뱃지 시안(badges.html)과 동일하게 — 13px 로 줄였더니
+   심볼 획(48 뷰박스에 1.4)이 0.4px 아래로 내려가 뭉개져 보였다. */
+/* ══════════════════════════════════════════════════════════════
+   등급 — Lv.1 ~ Lv.Max
+   --------------------------------------------------------------
+   뱃지 심볼은 없앴다. 등급은 ① 글자 칩과 ② 아바타 테두리 링,
+   두 가지로만 말한다. 링은 아바타 안쪽을 건드리지 않고 위에만 얹히므로
+   이니셜이 사진으로 바뀌어도 그대로 쓴다.
+
+   위계를 만드는 축
+     ① 색      잉크 → 진한 잉크 → 실버 → 골드 → 시그니처 코랄
+     ② 빛의 폭 좁은 실오라기 → 넓은 띠
+     ③ 회전    느림 → 빠름
+     ④ 겹수    한 겹 → 두 겹 (Lv.3 부터)
+     ⑤ 전용 효과  Lv.3 링 눈금 / Lv.4 표면 광택 / Lv.Max 광택 + 오라
+   ══════════════════════════════════════════════════════════════ */
+@property --rka{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes rkSpin{to{--rka:360deg}}
+@keyframes rkFlash{0%,86%,100%{opacity:0} 90%{opacity:.85} 95%{opacity:.25}}
+@keyframes rkGloss{0%,70%{background-position:178% 0} 86%,100%{background-position:-78% 0}}
+@keyframes rkAura{0%{transform:scale(.93);opacity:.4} 64%,100%{transform:scale(1.13);opacity:0}}
+
+/* ── 글자 표기 ── 테두리도 배경도 없다. 등급 색을 입은 글자만 남긴다 */
+.rk{
+  display:inline-flex;align-items:center;vertical-align:middle;white-space:nowrap;
+  font-family:var(--num);font-weight:600;font-size:11px;
+  letter-spacing:.12em;color:var(--rk-c,var(--pink-1));
+  font-feature-settings:'tnum' 1,'zero' 0;
+}
+.rk.lg{font-size:12.5px}
+
+/* ── 아바타 링 ──
+   host 에 .rkAv + .rk1~.rk5 를 붙이고 안에 .rkRing 을 한 줄 넣으면 끝.
+   --rkS 만 자리마다 지정한다. */
+.rkAv{
+  position:relative;
+  --rkGap:calc(var(--rkS,72px) * .118);
+  --rkRim:max(1.5px, calc(var(--rkS,72px) * .032));
+  --rkW:max(1.4px, calc(var(--rkS,72px) * .034));
+  --rkSep:max(1px, calc(var(--rkS,72px) * .022));
+  /* 아바타 색과 등급 색이 겹칠 수 있다(코랄 아바타 + Lv.Max 코랄).
+     사이에 지면색 한 겹을 끼워 두면 어떤 조합에서도 테두리가 살아난다.
+     --rk-sep 은 그 아바타가 놓인 배경색으로 자리마다 지정한다. */
+  box-shadow:
+    0 0 0 var(--rkSep) var(--rk-sep, #fff),
+    0 0 0 calc(var(--rkSep) + var(--rkRim)) var(--rk-c),
+    var(--rk-glow, 0 0 0 0 transparent);
+}
+.rkRing{position:absolute;inset:calc(var(--rkGap) * -1);border-radius:50%;pointer-events:none}
+.rkRing::before{content:"";position:absolute;inset:0;border-radius:50%;
+  border:1px solid var(--rk-track)}
+.rkRing i{
+  position:absolute;inset:0;border-radius:50%;padding:var(--rkW);
+  background:conic-gradient(from var(--rka), var(--rk-sweep));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+  animation:rkSpin var(--rk-dur) linear infinite;
+}
+/* 두 번째 겹 — 한 칸 바깥에서 반대편을 돈다. 주기를 어긋내야 패턴이 생긴다 */
+.rkRing i.o2{inset:calc(var(--rkS,72px) * -.052);opacity:.62;
+  animation-delay:calc(var(--rk-dur) * -.5);
+  animation-duration:calc(var(--rk-dur) * 1.62)}
+/* Lv.Max — 가끔 링 전체가 한 번 밝아진다 */
+.rkRing i.flash{inset:0;padding:var(--rkW);
+  background:conic-gradient(from 0deg,#ffd0bf,var(--coral),#ffe4d8,var(--coral),#ffd0bf);
+  animation:rkFlash 9s var(--ease) infinite}
+/* Lv.3 — 링에 박힌 네 개의 눈금. 정지해 있고 빛이 지날 때만 살아난다 */
+.rkRing b.ticks{
+  position:absolute;inset:0;border-radius:50%;padding:var(--rkW);opacity:.6;
+  background:conic-gradient(
+    var(--rk-c) 0 1.6deg,         transparent 1.6deg 88.4deg,
+    var(--rk-c) 88.4deg 91.6deg,  transparent 91.6deg 178.4deg,
+    var(--rk-c) 178.4deg 181.6deg,transparent 181.6deg 268.4deg,
+    var(--rk-c) 268.4deg 271.6deg,transparent 271.6deg 358.4deg,
+    var(--rk-c) 358.4deg 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+}
+/* Lv.Max — 링 밖으로 조용히 번지는 오라 */
+.rkRing b.aura{
+  position:absolute;inset:calc(var(--rkS,72px) * -.085);border-radius:50%;
+  border:1px solid var(--rk-c);animation:rkAura 4.9s var(--ease) infinite;
+}
+/* Lv.4 · Lv.Max — 아바타 표면 광택. 띠는 좁게 (넓으면 광택이 아니라 안개다) */
+.rkGloss{
+  position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background-image:linear-gradient(102deg,
+    transparent 43%, rgba(255,255,255,.07) 47%,
+    var(--rk-gloss-c, rgba(255,255,255,.54)) 50%,
+    rgba(255,255,255,.07) 53%, transparent 57%);
+  background-size:232% 100%;background-repeat:no-repeat;
+  animation:rkGloss var(--rk-gloss-dur, 8s) var(--ease) infinite;
+}
+
+/* ── 등급별 값 ── */
+.rk1{--rk-c:rgba(10,10,10,.28);--rk-track:rgba(10,10,10,.10);--rk-dur:13s;
+  --rk-sweep:transparent 0 84%, rgba(10,10,10,.44) 93%, transparent 99% 100%}
+.rk2{--rk-c:rgba(10,10,10,.66);--rk-track:rgba(10,10,10,.14);--rk-dur:10.5s;
+  --rk-sweep:transparent 0 74%, rgba(10,10,10,.30) 82%, rgba(10,10,10,.86) 91%, transparent 98% 100%}
+.rk3{--rk-c:#7c8792;--rk-track:rgba(124,135,146,.26);--rk-dur:8s;
+  --rk-glow:0 0 0 calc(var(--rkRim) + 3px) rgba(124,135,146,.20), 0 6px 18px -9px rgba(96,108,120,.55);
+  --rk-sweep:transparent 0 60%, rgba(96,108,120,.5) 69%, #b9c4cd 76%, #ffffff 82%,
+             #8e9aa4 88%, rgba(124,135,146,.4) 93%, transparent 99% 100%}
+.rk4{--rk-c:#c9a961;--rk-track:rgba(201,169,97,.28);--rk-dur:6.4s;
+  --rk-glow:0 7px 22px -9px rgba(201,169,97,.78);
+  --rk-gloss-dur:8.5s; --rk-gloss-c:rgba(255,246,222,.56);
+  --rk-sweep:transparent 0 54%, rgba(201,169,97,.32) 64%, #f4e3b8 74%, #fff6e2 81%,
+             #c9a961 88%, rgba(201,169,97,.38) 93%, transparent 99% 100%}
+.rk5{--rk-c:var(--coral);--rk-track:rgba(255,107,74,.26);--rk-dur:5.2s;
+  --rk-glow:0 9px 30px -9px rgba(255,107,74,.85);
+  --rk-gloss-dur:6.6s; --rk-gloss-c:rgba(255,255,255,.62);
+  --rk-sweep:transparent 0 46%, rgba(255,107,74,.3) 56%, #ffd0bf 68%, #fff1ea 76%,
+             var(--coral) 84%, rgba(255,107,74,.35) 92%, transparent 99% 100%}
+
+/* 어두운 지면(사이드바 하단)에서는 잉크 두 등급이 묻힌다. 값을 뒤집는다.
+   금속 세 등급은 어디서든 살아 있으므로 그대로 둔다. */
+.onDark .rk1{--rk-c:rgba(241,239,234,.30);--rk-track:rgba(241,239,234,.12);
+  --rk-sweep:transparent 0 84%, rgba(241,239,234,.5) 93%, transparent 99% 100%}
+.onDark .rk2{--rk-c:rgba(241,239,234,.80);--rk-track:rgba(241,239,234,.16);
+  --rk-sweep:transparent 0 74%, rgba(241,239,234,.34) 82%, #f1efea 91%, transparent 98% 100%}
+
+@media(prefers-reduced-motion:reduce){
+  .rkRing i,.rkRing b.aura,.rkGloss{animation:none}
+}
+
+/* 링이 붙는 자리마다 지름만 알려 준다. 나머지(간격·굵기)는 비례로 따라온다. */
+.acct .avatarCircle{--rkS:78px;  --rk-sep:#fff}
+.mAuth .meAv       {--rkS:22px;  --rk-sep:var(--pink-0)}   /* 검은 알약 안에 있다 */
+.trProfAv          {--rkS:100px; --rk-sep:#fff}
+.sFoot .av         {--rkS:31px;  --rk-sep:var(--side)}
+/* 아바타 안의 이니셜이 링 아래로 깔리지 않게 */
+.rkAv > .rkRing,.rkAv > .rkGloss{z-index:1}
+/* 작은 자리에서는 두 번째 겹이 뭉개지므로 접는다 — 테두리 색만으로도 읽힌다 */
+.mAuth .meAv .rkRing i.o2,.mAuth .meAv .rkRing b.aura{display:none}
+/* 사이드바 아바타는 옛 브래스 링을 쓰지 않는다 */
+.sFoot .av{background:var(--coral)}
+
+/* 사이드바(잉크 지면) 위에서는 흰 칩이 뜨므로 톤을 낮춘다 */
+.sFoot .rk1,.sFoot .rk2{color:var(--paper)}

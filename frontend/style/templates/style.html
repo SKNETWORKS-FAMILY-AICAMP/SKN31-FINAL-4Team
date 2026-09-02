@@ -1,0 +1,74 @@
+<!--
+  참고용 사본 — 실제로 렌더링되는 파일이 아닙니다.
+  이 프로젝트는 Vite 기반 SPA라 화면은 root의 index.html 하나로 동작하고,
+  브라우저 JS 라우터(app-shell/static/js/router.js)가 화면 전환을 담당합니다.
+  아래 마크업은 style 앱(스타일 화면, 세부 검색 팝업 — index.html 356-391, 422-447행)이 사용하는 부분을 index.html에서 그대로 옮겨 온 것으로,
+  Django 스타일 폴더 구성에 맞춰 정리해 둔 참고 사본입니다.
+  실제로 수정하려면 반드시 root의 index.html을 고쳐야 합니다.
+-->
+
+<!-- 356-391행: v-style -->
+  <section class="view" id="v-style">
+    <!-- 카테고리 + 자동 순환 쇼케이스 -->
+    <div id="styleHome">
+      <section class="mSec" style="padding-top:clamp(26px,3.4vw,44px);padding-bottom:0"><div class="mwrap">
+        <div class="mSecHead">
+          <div><h2 class="styleTitle">코어로 고르는 옷.</h2>
+            <p>하나를 고르면 그 코어의 시작과 지금, 그리고 아이템까지 이어집니다.</p></div>
+          <span>Style</span>
+        </div>
+        <div class="stCats" id="stCats"></div>
+        <div class="stShow" id="stShow"></div>
+        <div class="stGrid" id="stGrid"></div>
+      </div></section>
+      <div style="height:clamp(60px,9vh,110px)"></div>
+    </div>
+
+    <!-- 스타일 상세 -->
+    <div id="styleDetail" style="display:none">
+      <section style="padding:clamp(20px,3vh,34px) 0 0"><div class="mwrap">
+        <button class="pill ghost" id="stBack" style="margin-bottom:18px">← 스타일 전체</button>
+        <div class="stHero" id="stHero"></div>
+      </div></section>
+      <section><div class="mwrap"><div class="stAbout" id="stAbout"></div></div></section>
+      <section class="mSec" style="padding-bottom:clamp(40px,6vh,70px)"><div class="mwrap">
+        <div class="mSecHead"><div><h2 style="font-size:clamp(20px,2.2vw,30px)">인플루언서 피드</h2></div>
+          <span>Who wears it</span></div>
+        <div class="infFeed" id="stInf"></div>
+      </div></section>
+      <section style="padding-bottom:clamp(60px,9vh,110px)"><div class="mwrap">
+        <div class="mSecHead"><div><h2 style="font-size:clamp(20px,2.2vw,30px)">이 스타일의 아이템</h2></div>
+          <span id="stItemCount">Items</span></div>
+        <div class="itGrid" id="stItems"></div>
+        <div class="itMore" id="stMore">스크롤하면 더 불러옵니다</div>
+      </div></section>
+    </div>
+  </section>
+
+<!-- 422-447행: 세부 검색 팝업(fsPopBg) -->
+<!-- ===== 세부 검색 — Style › 종류 › 브랜드 › 아이템명 ===== -->
+<div class="fsPopBg" id="fsPopBg">
+  <div class="fsPop" role="dialog" aria-label="세부 검색">
+    <div class="fsPopHead">
+      <div>
+        <h3>세부 검색</h3>
+        <p>왼쪽부터 좁혀 갑니다. 고른 항목은 아래 칩으로 쌓이고, 지우면 그 아래 단계가 풀립니다.</p>
+      </div>
+      <button class="fsX" id="fsPopX" type="button">×</button>
+    </div>
+    <div class="fsCols">
+      <div class="fsCol" data-lv="0"><div class="fsColH">STYLE</div><div class="fsList" id="fsC0"><button type="button" data-lv="0" data-v="스트릿">스트릿<i>4</i></button><button type="button" data-lv="0" data-v="아메카지">아메카지<i>4</i></button><button type="button" data-lv="0" data-v="그런지">그런지<i>4</i></button><button type="button" data-lv="0" data-v="포멀">포멀<i>4</i></button><button type="button" data-lv="0" data-v="발레코어">발레코어<i>4</i></button><button type="button" data-lv="0" data-v="고프코어">고프코어<i>4</i></button><button type="button" data-lv="0" data-v="블록코어">블록코어<i>3</i></button><button type="button" data-lv="0" data-v="놈코어">놈코어<i>4</i></button></div></div>
+      <div class="fsCol" data-lv="1"><div class="fsColH">종류</div><div class="fsList" id="fsC1"><div class="hint">STYLE 을 먼저 고르세요.</div></div></div>
+      <div class="fsCol" data-lv="2"><div class="fsColH">브랜드</div><div class="fsList" id="fsC2"><div class="hint">종류를 먼저 고르세요.</div></div></div>
+      <div class="fsCol" data-lv="3"><div class="fsColH">아이템명</div><div class="fsList" id="fsC3"><div class="hint">브랜드를 먼저 고르세요.</div></div></div>
+    </div>
+    <div class="fsPopFoot">
+      <div class="fsPicked" id="fsPicked"><span class="ph2">아직 고른 조건이 없습니다.</span></div>
+      <div class="fsActs">
+        <button class="fsReset" id="fsReset" type="button">초기화</button>
+        <button class="fsApply" id="fsApply" type="button">이 조건으로 분석 <u>→</u></button>
+      </div>
+    </div>
+  </div>
+</div>
+

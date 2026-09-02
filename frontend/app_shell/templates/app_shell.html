@@ -1,0 +1,51 @@
+<!--
+  참고용 사본 — 실제로 렌더링되는 파일이 아닙니다.
+  이 프로젝트는 Vite 기반 SPA라 화면은 root의 index.html 하나로 동작하고,
+  브라우저 JS 라우터(app-shell/static/js/router.js)가 화면 전환을 담당합니다.
+  아래 마크업은 app-shell 앱(헤더/내비게이션, 토스트, 하단 푸터, 커스텀 커서 — index.html 155-182, 407, 767-770, 863-864행)이 사용하는 부분을 index.html에서 그대로 옮겨 온 것으로,
+  Django 스타일 폴더 구성에 맞춰 정리해 둔 참고 사본입니다.
+  실제로 수정하려면 반드시 root의 index.html을 고쳐야 합니다.
+-->
+
+<!-- 155-182행: 헤더 · 내비게이션 -->
+  <header class="mHead">
+    <a class="mLogo" id="mHome">
+      <!-- 헤더에서는 마크가 작아 보이지 않도록 뷰박스를 실제 획 경계로 조여 쓴다 -->
+      <svg viewBox="29 27 64 64" aria-hidden="true">
+        <path d="M88 32V80C88 84.4183 84.4183 88 80 88H32V32H88Z" fill="none" stroke="currentColor" stroke-width="4"></path><path d="M49.8546 77V42.92H71.9826V47.672H52.3026L55.0386 44.84V60.488L52.3026 58.04H71.1186V62.648H52.3026L55.0386 60.2V77H49.8546Z" fill="currentColor"></path><path d="M91 29V39H81V29H91Z" fill="#ff6b4a" stroke="#f1efea" stroke-width="2"></path>
+      </svg>
+      <b>FEED<span class="dotI">ı<span class="tit"></span></span>T</b>
+    </a>
+    <nav class="mNav" id="mNav">
+      <button class="on" data-v="home" data-t="홈"><span>홈</span></button>
+      <button data-v="trend" data-t="트렌드 분석" class=""><span>트렌드 분석</span></button>
+      <button data-v="salmal" data-t="살!말?" class=""><span>살!말?</span></button>
+      <button data-v="style" data-t="스타일" class=""><span>스타일</span></button>
+      <button data-v="price" data-t="요금제"><span>요금제</span></button>
+    </nav>
+    <div class="mHeadR mAuth" id="mHeadR">
+      <button class="pill ghost" id="mBackBtn">← 소개로</button>
+      <!-- 로그인 전에는 [로그인], 후에는 이름 버튼 + 메뉴 (authPaint) -->
+      <span class="mAuthWrap">
+        <button class="pill" id="mAuthBtn" data-v="login">로그인</button>
+        <div class="acctMenu" id="acctMenu">
+          <button type="button" id="menuMypage"><i>◧</i>내 정보</button>
+          <hr>
+          <button type="button" class="out" id="menuLogout"><i>→</i>로그아웃</button>
+        </div>
+      </span>
+    </div>
+  </header>
+
+<!-- 407행: 전역 토스트 -->
+<div class="toast" id="toast"></div>
+
+<!-- 767-770행: 하단 푸터 -->
+  <footer class="mFoot"><div class="mwrap footRow">
+    <span>FEEDiT — Fashion Trend Intelligence</span>
+    <span>2026 · Seoul</span>
+  </div></footer>
+
+<!-- 863-864행: 커스텀 커서 -->
+<div class="curRing" id="curRing"></div>
+<div class="cur" id="cur"></div>

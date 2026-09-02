@@ -1,0 +1,105 @@
+/* ============================================================
+   로딩 스테이지
+   ============================================================ */
+.stage{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:0;
+}
+/* FEED  [ 슬롯 ]  IT */
+.word{
+  display:flex;align-items:center;justify-content:center;
+  white-space:nowrap;position:relative;z-index:3;
+}
+.half{
+  font-family:var(--logo);
+  font-size:clamp(44px,9.2vw,124px);font-weight:600;
+  letter-spacing:calc(var(--logo-ls) * -1);
+  line-height:1;will-change:transform;
+}
+/* 마지막 글자 뒤 음수 자간만큼 되돌려 광학 중심을 맞춘다 */
+/* 마지막 글자 뒤 음수 자간만큼 되돌려 광학 중심을 맞춘다.
+   코랄은 로고 규정대로 공유 축 ED 에만 (JS 에서 지정). */
+#halfR{margin-right:var(--logo-ls)}
+.half .ch{display:inline-block;will-change:transform,opacity}
+/* 벌어진 사이의 트렌드 슬롯 */
+.slot{
+  position:relative;width:0;height:var(--slotH);
+  overflow:hidden;flex:0 0 auto;background:#0a0a0a;
+  will-change:width;
+}
+.slot img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  opacity:0;
+}
+.slot img.on{opacity:1}
+/* 슬롯 안쪽 미세한 프레임 */
+.slot::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);
+}
+/* ============================================================
+   하단 중앙 연대 게이지 (noth.in 구조)
+   ============================================================ */
+.gauge{
+  position:fixed;left:0;right:0;bottom:38px;z-index:6;
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+}
+.gauge .yr{
+  font-family:var(--num);font-weight:500;
+  font-size:clamp(15px,1.8vw,20px);letter-spacing:.05em;
+  font-variant-numeric:tabular-nums lining-nums;
+  font-feature-settings:'tnum' 1,'zero' 0;   /* 0 에 사선 넣지 않음 */
+  display:flex;align-items:baseline;gap:10px;
+}
+.gauge .yr b{font-size:1.5em;letter-spacing:.01em}
+.gauge .yr span{color:var(--ink-2)}
+.gauge .rail{width:min(420px,52vw);height:1px;background:rgba(255,255,255,.18);position:relative}
+.gauge .rail i{position:absolute;inset:0 auto 0 0;width:0;background:#fff}
+/* 시작·끝 눈금 */
+.gauge .ends{
+  width:min(420px,52vw);display:flex;justify-content:space-between;
+  font-family:var(--num);font-weight:400;font-size:9.5px;
+  letter-spacing:.14em;color:var(--ink-3);
+  font-feature-settings:'tnum' 1,'zero' 0;
+}
+
+/* 상단 모서리 메타 */
+.meta{
+  position:fixed;top:30px;left:32px;right:32px;z-index:6;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--ink-3);
+}
+
+.meta .brand b{color:var(--coral);font-weight:inherit}
+.meta .brand{
+  display:flex;align-items:center;gap:10px;color:var(--ink-2);
+  font-family:var(--logo);font-weight:600;font-size:12px;letter-spacing:.02em;
+}
+.skip{color:var(--ink-3);transition:color .2s;letter-spacing:.14em}
+.skip:hover{color:#fff}
+
+/* 커서
+   본문 전체가 cursor:none 이라 이 두 개가 유일한 포인터다.
+   모달·팝업(z 50~120)보다 반드시 위에 있어야 한다. 아래에 깔리면
+   창이 열리는 순간 포인터가 통째로 사라져 아무것도 누를 수가 없다. */
+.cur{
+  position:fixed;top:0;left:0;z-index:999;pointer-events:none;
+  width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;
+  background:#fff;mix-blend-mode:difference;will-change:transform;
+}
+.curRing{
+  position:fixed;top:0;left:0;z-index:999;pointer-events:none;
+  width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.45);mix-blend-mode:difference;will-change:transform;
+}
+
+/* 필름 그레인 */
+.grain{
+  position:fixed;inset:-120px;z-index:15;pointer-events:none;opacity:.04;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  animation:grainShift .7s steps(3) infinite;
+}
+@keyframes grainShift{
+  0%{transform:translate(0,0)}33%{transform:translate(-22px,12px)}
+  66%{transform:translate(16px,-18px)}100%{transform:translate(0,0)}
+}

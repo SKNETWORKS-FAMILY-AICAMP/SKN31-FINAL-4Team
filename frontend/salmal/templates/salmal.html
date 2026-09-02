@@ -1,0 +1,195 @@
+<!--
+  참고용 사본 — 실제로 렌더링되는 파일이 아닙니다.
+  이 프로젝트는 Vite 기반 SPA라 화면은 root의 index.html 하나로 동작하고,
+  브라우저 JS 라우터(app-shell/static/js/router.js)가 화면 전환을 담당합니다.
+  아래 마크업은 salmal 앱(살!말? 화면, 신고 메뉴, 상세/글쓰기 모달 — index.html 313-353, 448-585행)이 사용하는 부분을 index.html에서 그대로 옮겨 온 것으로,
+  Django 스타일 폴더 구성에 맞춰 정리해 둔 참고 사본입니다.
+  실제로 수정하려면 반드시 root의 index.html을 고쳐야 합니다.
+-->
+
+<!-- 313-353행: v-salmal -->
+  <section class="view" id="v-salmal">
+<div class="smPage">
+
+
+  <section class="smHero">
+    <div class="liveNow"><span class="dot"></span>지금 <b id="liveCount">102</b>명이 함께 고민 중</div>
+    <h1 class="smStatement">살까, <em>말까</em>.</h1>
+    <div class="smHeroRow">
+      <p>리뷰보다 빠르고, 친구보다 솔직합니다.</p>
+    </div>
+
+    <div class="smTabsRow">
+      <div class="smTabs" id="smTabs">
+        <button class="on" data-tab="taste">내 취향</button>
+        <button data-tab="popular" class="">인기순</button>
+        <button data-tab="latest" class="">최신순</button>
+        <button data-tab="closing">마감임박</button>
+      </div>
+      <button class="addItemBtn" id="addItemBtn">＋ 살까말까 물어보기</button>
+    </div>
+  </section>
+
+  <section class="voteSection">
+    <div class="voteGrid" id="voteGrid"></div>
+    <div class="pager" id="pager">
+    <button class="pagerBtn" id="pagerPrev" disabled="" aria-label="이전 페이지">←</button>
+    <div class="pagerNums"><button data-page="1" class="on">1</button><button data-page="2" class="">2</button></div>
+    <button class="pagerBtn" id="pagerNext" aria-label="다음 페이지">→</button></div>
+  </section>
+
+  <hr class="sectionDivider">
+
+  <section class="closedSection">
+    <h2 class="closedTitle">마감된 투표</h2>
+    <div class="voteGrid" id="closedGrid"></div>
+    <div class="carouselDots" id="closedDots"></div>
+  </section>
+
+
+</div>
+  </section>
+
+<!-- 448-453행: 신고/삭제 컨텍스트 메뉴(ctxMenu) -->
+<!-- ===== 신고/삭제 컨텍스트 메뉴 (카드 · 댓글 공용) ===== -->
+<div class="ctxMenu" id="ctxMenu">
+  <button data-action="report">신고하기</button>
+  <button data-action="delete" class="danger">삭제하기</button>
+</div>
+
+
+<!-- 454-528행: 상세 모달(modalOverlay) -->
+<!-- ===== 살!말? 상세 모달 ===== -->
+<div class="modalOverlay" id="modalOverlay">
+  <div class="modalShell">
+    <div class="modalBox" id="modalBox">
+    <div class="modalGrid">
+
+      <!-- 좌측 : 이미지 + 작성자 사연 -->
+      <div class="modalLeft">
+        <div class="modalFig">
+          <div class="plate" id="modalPlate"></div>
+          <div class="vig"></div>
+          <button class="cardMenuBtn modalMenuBtn" id="modalMenuBtn" aria-label="더보기">⋯</button>
+          <div class="aiBtnWrap">
+            <button class="aiBtn" id="aiBtn"><span class="dotc"></span>AI 살!말? 리포트</button>
+            <div class="aiChatBubble" id="aiChatBubble">
+              <div class="aiChatHead">
+                <div class="aiChatAvatar">AI</div>
+                <div class="who"><b>FEEDiT AI</b></div>
+                <button class="aiChatClose" id="aiChatClose" aria-label="닫기">×</button>
+              </div>
+              <div class="aiChatBody">
+                <span class="aiVerdict" id="aiVerdict"></span>
+                <p class="aiWhy" id="aiWhy"></p>
+                <div class="aiStats" id="aiStats"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modalInfo">
+          <h3 id="modalTitle"></h3>
+          <div class="modalMeta"><b id="modalBrand"></b> · <span id="modalPrice"></span></div>
+        </div>
+        <div class="modalPost">
+          <span class="postName" id="modalNoteName"></span>
+          <p class="postText" id="modalNote"></p>
+        </div>
+      </div>
+
+      <!-- 우측 : 투표 현황(전체 / 유사 세그먼트) + 댓글 -->
+      <div class="modalRight">
+        <div class="voteBlock">
+          <div class="voteBlockHead">
+            <span>전체 투표</span>
+            <span class="cnt" id="modalCntAll"></span>
+          </div>
+          <div class="smBar" id="modalBarAll">
+            <i class="buy"></i><i class="no"></i>
+          </div>
+        </div>
+
+        <div class="voteBlock similar">
+          <div class="voteBlockHead">
+            <span>나와 비슷한 사용자들<em id="modalSegLabel"></em></span>
+          </div>
+          <div class="smBar" id="modalBarSim">
+            <i class="buy"></i><i class="no"></i>
+          </div>
+        </div>
+
+        <div class="commentsHead">댓글 <span id="commentCount"></span></div>
+        <div class="commentsList" id="commentsList"></div>
+        <div class="commentForm">
+          <div class="commentInputRow">
+            <textarea id="commentInput" placeholder="댓글을 남겨보세요"></textarea>
+            <button class="commentSend" id="commentSend" aria-label="등록">→</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    </div>
+    <button class="modalClose" id="modalClose" aria-label="닫기">×</button>
+  </div>
+</div>
+
+
+<!-- 529-585행: 글쓰기 모달(createOverlay) -->
+<!-- ===== 살까말까 물어보기 — 글쓰기 모달 ===== -->
+<div class="modalOverlay" id="createOverlay">
+  <div class="modalShell">
+    <div class="modalBox createBox" id="createBox">
+      <div class="createGrid">
+
+        <!-- 좌측 : 인트로 문구 + 상품 이미지 -->
+        <div class="createLeft">
+          <h3 class="createTitle">살까말까 물어보기</h3>
+          <p class="createSub">고민되는 아이템을 올리면 취향이 비슷한 사람들이 살지 말지 투표해드려요.</p>
+          <div class="cField">
+            <label class="cLabel">상품 이미지</label>
+            <div class="imgDrop" id="imgDrop">
+              <input type="file" id="imgInput" accept="image/*" hidden="">
+              <img id="imgPreview" alt="" hidden="">
+              <div class="imgDropInner" id="imgDropInner">
+                <span class="imgDropIcon">＋</span>
+                <span>이미지를 선택하세요</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 우측 : 상품명 / 브랜드 / 가격 / 사연 -->
+        <div class="createRight">
+          <div class="cField">
+            <label class="cLabel">상품명</label>
+            <input type="text" class="cInput" id="cTitle" placeholder="예: 스웨이드 블루종 (버건디)">
+          </div>
+
+          <div class="cRow2">
+            <div class="cField">
+              <label class="cLabel">브랜드</label>
+              <select class="cInput" id="cBrand">
+                <option value="" disabled="" selected="">브랜드 선택</option>
+              <option value="ADIDAS">ADIDAS</option><option value="AMOMENTO">AMOMENTO</option><option value="ANDERSSON BELL">ANDERSSON BELL</option><option value="CARHARTT WIP">CARHARTT WIP</option><option value="CENTIME">CENTIME</option><option value="COS">COS</option><option value="GENTLE MONSTER">GENTLE MONSTER</option><option value="INSILENCE">INSILENCE</option><option value="KIJUN">KIJUN</option><option value="LE 17 SEPTEMBRE">LE 17 SEPTEMBRE</option><option value="LEMAIRE">LEMAIRE</option><option value="LEVI'S">LEVI'S</option><option value="MATIN KIM">MATIN KIM</option><option value="MSTA">MSTA</option><option value="MUSINSA STANDARD">MUSINSA STANDARD</option><option value="NAUTICA">NAUTICA</option><option value="NEW BALANCE">NEW BALANCE</option><option value="RANDOM IDENTITIES">RANDOM IDENTITIES</option><option value="SOLEW">SOLEW</option><option value="THISISNEVERTHAT">THISISNEVERTHAT</option><option value="UNIFORM BRIDGE">UNIFORM BRIDGE</option><option value="기타">기타 (직접 입력 예정)</option></select>
+            </div>
+            <div class="cField">
+              <label class="cLabel">가격</label>
+              <input type="text" inputmode="numeric" class="cInput" id="cPrice" placeholder="숫자만 입력 (원)">
+            </div>
+          </div>
+
+          <div class="cField grow">
+            <label class="cLabel">사연</label>
+            <textarea class="cInput cTextarea" id="cNote" placeholder="이 아이템을 왜 올리는지 알려주세요. 예) 이 가격에 사도 될지 궁금해서 올려봅니다."></textarea>
+          </div>
+
+          <button class="pill big coral createSubmit" id="createSubmit">물어보기</button>
+        </div>
+
+      </div>
+    </div>
+    <button class="modalClose" id="createClose" aria-label="닫기">×</button>
+  </div>
+</div>
+
