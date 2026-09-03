@@ -88,6 +88,5 @@ __pycache__/
 tmp/
 temp/
 cache/
-outputs/
 output/
 backend/collection/ably/README.md
