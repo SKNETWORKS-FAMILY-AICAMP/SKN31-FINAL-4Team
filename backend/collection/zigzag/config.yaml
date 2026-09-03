@@ -1,0 +1,240 @@
+# ═══════════════════════════════════════════════════════════════
+#  지그재그 (ZIGZAG) — 수집 설정
+#  ---------------------------------------------------------------
+#  ✅ robots.txt 확인 (2026-08). 우리에게 열려 있습니다.
+#        User-agent: GPTBot → Disallow: /
+#        User-agent: *      → Allow: /
+#     GPTBot 만 막고 나머지는 전부 허용입니다. 우리 FEEDiTBot 은 문제없습니다.
+#
+#  ✅ 상세는 실제 저장본(169628128)으로 검증했습니다.
+#
+#  ── 알아 둘 것 ──
+#  · Next.js 입니다. 상세는 dehydratedState(React Query 캐시)에 값이 통째로 옵니다.
+#  · ★ 목록은 안 됩니다 / 상세는 됩니다. 실제로 요청해 확인했습니다.
+#      목록 → 푸터만 오고 상품 0개 (화면 그린 뒤 API 로 받아옴)
+#      상세 → 가격·브랜드·카테고리까지 서버가 다 채워서 줌 ✅
+#  · ★ 여기서 '브랜드'는 브랜드가 아니라 **입점 쇼핑몰**입니다 (페트리코어 등).
+#    무신사의 아디다스와 같은 층위가 아니므로, 지표에서 섞으면 안 됩니다.
+#  · JSON-LD 도 있지만 offers 에 가격이 비어 있어 쓸모가 없습니다. 무시하세요.
+# ═══════════════════════════════════════════════════════════════
+
+code: zigzag
+name: 지그재그
+base_url: https://zigzag.kr
+
+# 정가 판매입니다. 크림 체결가와 절대 섞지 마세요.
+listing_type_default: retail
+
+pace:
+  base_delay: 4.0
+  jitter: 1.5
+  max_delay: 240.0
+  burst_pause_every: 40
+  burst_pause_sec: 50.0
+  max_rps: 0.3
+
+# ── 시드 ──
+#  ★★ 목록은 자동 수집이 안 됩니다 (실제로 요청해 확인했습니다) ★★
+#    /categories/-1?middle_category_id=474&sort=200 을 그대로 받아 보면
+#    푸터(사업자 정보)만 오고 상품이 하나도 없습니다. 화면을 그린 뒤
+#    API 로 받아오는 구조입니다.
+#
+#  ★ 카테고리를 URL 로 고를 수도 없습니다.
+#    상의·하의·아우터·원피스 저장본 4장이 전부 middle_category_id=474 였습니다.
+#    탭이 <a> 가 아니라 JS 버튼이라 주소가 안 바뀝니다.
+#    → 그래도 괜찮습니다. 상세에 managed_category_list 가 들어 있어서
+#      상품이 자기 카테고리를 들고 옵니다. 시드로 나눌 필요가 없습니다.
+#
+#  ※ 지그재그에는 '전체 랭킹' 탭이 없습니다. 카테고리별 인기순 정렬뿐입니다.
+#
+#  ── 그래서 이렇게 씁니다 (반자동) ──
+#    ① 목록은 사람이 저장 → [가져오기] 탭에 넣으면 상세 URL 이 쌓입니다.
+#    ② 상세는 자동입니다. 서버가 완전히 렌더해서 주는 걸 확인했습니다.
+#    ③ 한 번 알아낸 상품 주소는 계속 재방문하면 되므로,
+#       매일 도는 데에는 목록이 필요 없습니다.
+#       신상품을 넣고 싶을 때만 가끔 목록을 저장해 넣으면 됩니다.
+seeds: []
+  # 목록이 자동으로 안 되므로 비워 둡니다.
+  # 정기 수집은 revisit(이미 아는 상품 다시 보기) 로 돕니다 — 아래 참조.
+
+# ── 정기 재방문 ──
+#  이미 DB 에 있는 이 사이트 상품들의 상세를 다시 받아 가격을 갱신합니다.
+#  목록 없이도 시세 시계열이 쌓입니다.
+revisit:
+  enabled: true
+  # 오래 안 본 것부터. 한 번에 이만큼만.
+  batch: 160
+  # 이만큼 지난 것만 다시 봅니다 (시간).
+  stale_hours: 12
+
+# ── 자동 실행 ──
+#  목록이 안 되므로 revisit(이미 아는 상품 다시 보기)로만 돕니다.
+#  시드가 비어 있어도 revisit 이 켜져 있으면 스케줄러가 돌립니다.
+schedule:
+  every_hours: 12
+  list_only: false
+  # 재방문 상한. 목록 400개를 하루 두 번 갱신하는 규모입니다.
+  max_items: 160
+
+# ── 브라우저로 목록 그려 오기 ──
+#  ✅ robots.txt 가 우리를 허용하므로 정기 수집을 해도 됩니다.
+#     목록이 안 됐던 건 규칙 때문이 아니라 화면을 JS 로 그려서라는
+#     기술적 이유였고, 그것만 푸는 도구입니다.
+#
+#  ★ 1차 목표: 카테고리 4종 × 100개 = 400개
+#
+#  ★ 카테고리를 주소로 못 고릅니다(탭이 JS 버튼).
+#    그래서 **탭 글자를 눌러서** 바꿉니다. 클래스는 빌드마다 바뀌는 해시라
+#    쓸 수 없지만 '아우터' 라는 글자는 잘 안 바뀝니다.
+#
+#  ⚠ 탭 글자는 저장본에서 본 것(상의·하의·아우터·원피스·스커트)을 그대로 썼습니다.
+#    실제 화면과 다르면 로그에 "'아우터' 를 누르지 못했습니다" 라고 남으니,
+#    그때 여기 글자만 고치면 됩니다.
+render:
+  enabled: true
+  # 지그재그도 모바일 우선 화면이다.
+  mobile: true
+  wait_ms: 3000
+  scroll_wait_ms: 1000
+  target: 40
+  fail_fast: false
+  # 상세의 리뷰 수는 서버 JSON/목록에서 잡히지만 원문 카드는 화면에서
+  # `리뷰` 탭을 연 뒤에만 생긴다. 실제 저장본에서 기존 파서가 원문을
+  # 읽는 것을 검증했으므로, 회차마다 오래 안 본 상품 일부를 보강한다.
+  review_capture:
+    enabled: true
+    click_text: "리뷰"
+    click_wait_ms: 2200
+    detail_limit: 40
+    target: 100
+    scroll: 18
+  pages:
+    - {label: "엄브로", url: "/search?keyword=엄브로", scroll: 24}
+    - {label: "아디다스", url: "/search?keyword=아디다스", scroll: 24}
+    - {label: "키르시", url: "/search?keyword=키르시", scroll: 24}
+    - {label: "새틴", url: "/search?keyword=새틴", scroll: 24}
+    - {label: "스웨이드", url: "/search?keyword=스웨이드", scroll: 24}
+    - {label: "나일론", url: "/search?keyword=나일론", scroll: 24}
+    - {label: "발레코어", url: "/search?keyword=발레코어", scroll: 24}
+    - {label: "스트릿웨어", url: "/search?keyword=스트릿", scroll: 24}
+
+# ── 목록 페이지 ──
+# ✅ 실제 렌더링 결과(data/rendered/)로 검증했습니다.
+#
+#  ★ 카드는 div.product-card 입니다.
+#    상품 링크(a.product-card-link)는 **안이 비어 있습니다** — 클릭 영역만이고
+#    이름·가격은 그 형제로 놓여 있습니다. 그래서 링크를 카드로 쓰면
+#    전부 빈 값이 들어옵니다 (실제로 6건이 그렇게 들어왔습니다).
+#
+#  ★ product-card / product-card-link 는 의미가 담긴 이름이라
+#    css-1pjr9xx 같은 해시보다 훨씬 오래 갑니다. 이걸 기준으로 씁니다.
+#
+#  카드 안 글자 순서 (실측 8개 기준)
+#    [몰이름] [상품명] [22%] [18,000] [4.8] [(601)]
+#    · 가격이 '~' 로 나오는 상품이 있습니다(옵션별 가격). 그건 비게 둡니다.
+#    · 평점이 '5' 처럼 소수점 없이 오기도 합니다.
+list_page:
+  item_link: 'a.product-card-link'
+  card: 'div.product-card'
+  card_fields:
+    # 몰 이름 → 첫 글자, 상품명 → 두 번째
+    # ★ leaf:true — 글자를 직접 담은 요소만 셉니다.
+    #   그냥 세면 앞쪽 빈 컨테이너를 집어서 통째로 빕니다.
+    brand: { css_all: "div, span, p", leaf: true, nth: 0, cast: str }
+    name:  { css_all: "div, span, p", leaf: true, nth: 1, cast: str }
+
+    price:    { css_all: "div, span, p", leaf: true, match: "^[\\d,]{3,}$", cast: int }
+    discount: { css_all: "div, span, p", leaf: true, match: "^\\d+%$",       cast: int }
+
+    # ★ 평점·리뷰 수 — 상세 JSON 에는 없다고 했는데 목록에 있었습니다.
+    #   인기 지표에 쓸 수 있습니다.
+    review_score: { css_all: "div, span, p", leaf: true, match: "^\\d(\\.\\d)?$", cast: str }
+    review_count:
+      css_all: "div, span, p"
+      leaf: true
+      match: "^\\([\\d,]+\\)$"
+      regex: "([\\d,]+)"
+      cast: int
+
+    # 상품 이미지만. 뱃지 이미지(image-farm)는 걸러냅니다.
+    image_url: { css: 'img[src*="product-image"]', attr: "src", cast: str }
+
+  detail_url_template: "/catalog/products/{id}"
+
+# ── 상세 페이지 ──
+# ✅ 실제 저장본으로 검증 완료.
+detail_page:
+  listing_type: retail
+
+  # 값이 들어 있는 자리를 정확히 집는다.
+  # queryKey 가 ["getPdpBaseInfo", "<상품번호>"] 인 항목이다.
+  next_query:
+    queries_path: "props.pageProps.dehydratedState.queries"
+    key_prefix: ["getPdpBaseInfo"]
+    match_id: true
+    path: "state.data"
+
+  fields:
+    source_uid:    { json: "product.id",   cast: str }
+    name:          { json: "product.name", cast: str }
+    # ★ 브랜드가 아니라 쇼핑몰 이름입니다. 무신사 브랜드와 같은 칸에 넣되
+    #   출처가 다르다는 걸 지표 계산 때 반드시 감안하세요.
+    brand:         { json: "shop.name",    cast: str }      # 페트리코어
+    shop_domain:   { json: "shop.main_domain", cast: str }
+    # 쇼핑몰 찜 수 — 지그재그에는 상품 리뷰 수가 상세 JSON 에 없어서,
+    # 인기 지표로 쓸 수 있는 건 이것뿐입니다 (상품이 아니라 '몰' 단위입니다).
+    shop_bookmark: { json: "shop.bookmark_count", cast: int }
+
+    # ── 분류 ──
+    # managed_category_list 가 depth 1~4 로 옵니다.
+    # 패션의류 > 여성 패션의류 > 셔츠/남방/블라우스 > 블라우스
+    category_path: { json: "product.managed_category_list[3].value", cast: str }
+    category_l2:   { json: "product.managed_category_list[1].value", cast: str }
+    category_code: { json: "product.category_key", cast: str }   # fashion_clothing
+
+    # ── 가격 ★ ──
+    #   final  = 쿠폰까지 다 먹인 실제 결제가 (28,800 / 37%)
+    #   store  = 쿠폰 전 몰 판매가        (36,000 / 22%)
+    #   정가   = 칸이 없어서 되짚어야 합니다 → 28,800 + 17,200 = 46,000
+    price:        { json: "product.product_price.final_discount_info.discount_price", cast: int }
+    discount:     { json: "product.product_price.final_discount_info.discount_rate",  cast: int }
+    store_price:  { json: "product.product_price.store_discount_info.discount_price", cast: int }
+    retail_price:
+      sum:
+        - "product.product_price.final_discount_info.discount_price"
+        - "product.product_price.final_discount_info.discount_amount"
+      cast: int
+
+    image_url:    { json: "product.product_image_list[0].url", cast: str }
+    sales_status: { json: "product.sales_status", cast: str }    # ON_SALE
+    # 상세 설명 HTML. 이미지가 대부분이라 텍스트 분석 가치는 낮습니다.
+    description:  { json: "product.description", cast: str }
+
+notes: |
+  ✅ robots.txt 상 자동 수집 가능합니다 (GPTBot 만 차단).
+
+  ── 수집 방식: 반자동 ──
+    목록  ❌ 자동 불가. 서버 응답에 상품이 없습니다. 사람이 저장해 [가져오기].
+    상세  ✅ 자동 가능. 서버가 완전히 렌더해서 줍니다.
+    → 신규 상품은 가끔 목록을 저장해 넣고, 시세 갱신은 revisit 로 매일 돕니다.
+      한 번 알아낸 상품 주소는 계속 다시 볼 수 있으니 목록이 매번 필요하지 않습니다.
+
+  ★ 지그재그가 맡는 자리
+    · 여성 캐주얼·데일리 축. 무신사가 못 덮는 층입니다.
+
+  ⚠ 주의할 점
+    · ★★ 상품명의 스타일 태그를 그대로 믿으면 안 됩니다 ★★
+      "[가을블라우스/단독] … (출근룩/데이트룩/라운드넥/레이어드)" 처럼 붙는데,
+      상당수가 **검색 노출을 노린 끼워넣기**입니다. 실제 상품 성격과 무관한
+      단어가 섞입니다. 어휘사전에 그대로 넣으면 연관어가 오염됩니다.
+      → 쓰려면 이렇게 거르세요:
+        · 한 상품에 태그가 너무 많으면(예: 6개 초과) 통째로 신뢰도를 낮춘다
+        · 여러 쇼핑몰에 걸쳐 반복되는 단어만 살린다 (한 몰에서만 쓰는 건 버림)
+        · 상세의 shop.trait(20대·캐주얼·심플베이직)이 훨씬 믿을 만합니다 —
+          몰이 스스로 신고한 값이 아니라 지그재그가 분류한 값입니다.
+    · '브랜드' 칸은 입점 쇼핑몰입니다. 무신사의 브랜드(아디다스)와 층위가 다릅니다.
+      브랜드 지표를 만들 때 한 통에 넣으면 안 됩니다.
+    · 상품 리뷰 수·평점이 상세에 없습니다. 인기 지표는 몰 찜 수로 대신하세요.
+    · 정가 칸이 없어 판매가 + 할인액으로 되짚습니다.
+    · 카테고리를 URL 로 못 고릅니다(탭이 JS 버튼). 상품이 자기 카테고리를
+      들고 오므로 시드로 나눌 필요는 없습니다.
