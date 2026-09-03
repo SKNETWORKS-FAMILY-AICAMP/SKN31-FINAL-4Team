@@ -1,21 +1,19 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import boto3
 
 from django.conf import settings
-from django.db.models import Q
+from django.db import transaction
 from django.utils import timezone
 
 from apps.core.models import (
     Brand,
     BrandSource,
     CrawlRun,
-    DictionaryTerm,
-    MappingCandidate,
     RawDocument,
-    TermAlias,
 )
 
 from analysis.commerce.musinsa.normalizer import (
@@ -24,28 +22,13 @@ from analysis.commerce.musinsa.normalizer import (
 
 
 # =========================================================
-# Common
+# TEXT NORMALIZE
 # =========================================================
 
 
 def normalize_text(
     value: str | None,
 ) -> str:
-    """
-    문자열 비교용 기본 정규화.
-
-    현재는:
-    - 앞뒤 공백 제거
-    - 소문자 변환
-    - 연속 공백 제거
-
-    추후 필요하면:
-    - 특수문자 제거
-    - 유니코드 정규화
-    - 한글/영문 브랜드명 전처리
-    등을 공통 normalizer로 확장할 수 있다.
-    """
-
     if not value:
         return ""
 
@@ -58,24 +41,27 @@ def normalize_text(
 
 
 # =========================================================
-# S3 RawDocument
+# S3
 # =========================================================
 
 
-def _load_raw_json(
-    raw_document: RawDocument,
-) -> dict:
-    """
-    RawDocument에 기록된 S3 위치에서
-    원본 JSON을 읽는다.
-    """
-
-    client = boto3.client(
+def _get_s3_client():
+    return boto3.client(
         "s3",
         region_name=settings.AWS_REGION,
     )
 
-    response = client.get_object(
+
+def _load_raw_json(
+    *,
+    raw_document: RawDocument,
+    s3_client,
+) -> dict:
+    """
+    RawDocument에 저장된 S3 위치에서 JSON 원본을 읽는다.
+    """
+
+    response = s3_client.get_object(
         Bucket=raw_document.s3_bucket,
         Key=raw_document.s3_key,
     )
@@ -90,780 +76,876 @@ def _load_raw_json(
 
 
 # =========================================================
-# Brand Matching
+# BRAND MATCH
 # =========================================================
 
 
-def _find_brand_by_brand_table(
-    *,
-    name_ko: str | None,
-    name_en: str | None,
+def _find_single_brand(
+    queryset,
 ) -> Brand | None:
     """
-    Brand 테이블 자체에서 exact match.
+    후보가 정확히 1개일 때만 자동 매핑한다.
 
-    1. 한글/대표 이름
-    2. 영문 이름
-
-    한 건만 정확하게 발견됐을 때만 반환한다.
+    동일 이름의 Brand가 2개 이상이면
+    잘못된 FK를 걸지 않고 미매핑으로 남긴다.
     """
 
-    if name_ko:
-        qs = Brand.objects.filter(
-            status=Brand.Status.ACTIVE,
-            name__iexact=name_ko.strip(),
-        )
+    candidates = list(
+        queryset[:2]
+    )
 
-        if qs.count() == 1:
-            return qs.first()
-
-    if name_en:
-        qs = Brand.objects.filter(
-            status=Brand.Status.ACTIVE,
-            english_name__iexact=name_en.strip(),
-        )
-
-        if qs.count() == 1:
-            return qs.first()
+    if len(candidates) == 1:
+        return candidates[0]
 
     return None
 
 
-def _find_brand_by_term_alias(
+def _find_brand_exact(
     *,
-    source,
-    name_ko: str | None,
-    name_en: str | None,
-) -> Brand | None:
+    name: str | None,
+    english_name: str | None,
+) -> tuple[Brand | None, str | None]:
     """
-    DictionaryTerm + TermAlias를 이용한 브랜드 검색.
+    처음 보는 플랫폼 브랜드에 대해서만 호출.
 
-    예:
-        나이키
-        NIKE
-        nike
+    1. Brand.name exact
+    2. Brand.english_name exact
 
-        ↓
-
-        TermAlias
-        ↓
-        DictionaryTerm(term_type=BRAND)
-        ↓
-        Brand
+    반환:
+        (Brand, mapping_method)
+        또는
+        (None, None)
     """
 
-    normalized_values = {
-        normalize_text(name_ko),
-        normalize_text(name_en),
-    }
-
-    normalized_values.discard("")
-
-    if not normalized_values:
-        return None
-
-    aliases = (
-        TermAlias.objects
-        .select_related(
-            "term",
-            "term__brand",
-            "source",
-        )
-        .filter(
-            normalized_alias__in=normalized_values,
-            term__term_type=(
-                DictionaryTerm.TermType.BRAND
-            ),
-            term__status=(
-                DictionaryTerm.Status.ACTIVE
-            ),
-            term__brand__isnull=False,
-        )
-        .filter(
-            Q(source=source)
-            | Q(source__isnull=True)
-        )
-        .order_by(
-            # 특정 플랫폼 alias를 공통 alias보다 우선
-            "-source_id",
-            "id",
-        )
-    )
-
-    brand_ids = list(
-        aliases.values_list(
-            "term__brand_id",
-            flat=True,
-        )
-        .distinct()
-    )
-
-    # 하나의 브랜드로만 명확하게 결정되는 경우
-    if len(brand_ids) == 1:
-        return (
-            Brand.objects
-            .filter(
-                id=brand_ids[0],
+    if name:
+        matched = _find_single_brand(
+            Brand.objects.filter(
                 status=Brand.Status.ACTIVE,
+                name__iexact=name.strip(),
             )
-            .first()
+            .order_by("id")
         )
 
-    return None
-
-
-def _find_brand_by_dictionary_term(
-    *,
-    name_ko: str | None,
-    name_en: str | None,
-) -> Brand | None:
-    """
-    Alias가 없어도 DictionaryTerm의
-    canonical_name / normalized_name / english_name과
-    직접 일치하면 브랜드를 찾는다.
-    """
-
-    normalized_values = {
-        normalize_text(name_ko),
-        normalize_text(name_en),
-    }
-
-    normalized_values.discard("")
-
-    if not normalized_values:
-        return None
-
-    terms = (
-        DictionaryTerm.objects
-        .select_related("brand")
-        .filter(
-            term_type=(
-                DictionaryTerm.TermType.BRAND
-            ),
-            status=(
-                DictionaryTerm.Status.ACTIVE
-            ),
-            brand__isnull=False,
-        )
-        .filter(
-            Q(
-                normalized_name__in=(
-                    normalized_values
-                )
+        if matched:
+            return (
+                matched,
+                BrandSource.MappingMethod.EXACT_NAME,
             )
-            | Q(
-                canonical_name__iexact=(
-                    name_ko or ""
-                )
-            )
-            | Q(
+
+    if english_name:
+        matched = _find_single_brand(
+            Brand.objects.filter(
+                status=Brand.Status.ACTIVE,
                 english_name__iexact=(
-                    name_en or ""
-                )
+                    english_name.strip()
+                ),
             )
+            .order_by("id")
         )
-    )
 
-    brand_ids = list(
-        terms.values_list(
-            "brand_id",
-            flat=True,
-        )
-        .distinct()
-    )
-
-    if len(brand_ids) == 1:
-        return (
-            Brand.objects
-            .filter(
-                id=brand_ids[0],
-                status=Brand.Status.ACTIVE,
+        if matched:
+            return (
+                matched,
+                BrandSource.MappingMethod.EXACT_NAME,
             )
-            .first()
-        )
 
-    return None
-
-
-def _find_exact_brand(
-    *,
-    source,
-    name_ko: str | None,
-    name_en: str | None,
-) -> Brand | None:
-    """
-    브랜드 검색 최종 순서.
-
-    1. Brand 직접 exact
-    2. TermAlias
-    3. DictionaryTerm 직접 exact
-
-    애매하면 자동 매핑하지 않는다.
-    """
-
-    brand = _find_brand_by_brand_table(
-        name_ko=name_ko,
-        name_en=name_en,
-    )
-
-    if brand:
-        return brand
-
-    brand = _find_brand_by_term_alias(
-        source=source,
-        name_ko=name_ko,
-        name_en=name_en,
-    )
-
-    if brand:
-        return brand
-
-    return _find_brand_by_dictionary_term(
-        name_ko=name_ko,
-        name_en=name_en,
-    )
+    return None, None
 
 
 # =========================================================
-# Mapping Candidate
+# MUSINSA BRAND EXTRACT
 # =========================================================
 
 
-def _upsert_brand_candidate(
+def _extract_brand_payload(
+    item: dict[str, Any],
+) -> dict | None:
+    """
+    MusinsaNormalizer의 상품 결과에서
+    BrandSource에 필요한 공통 브랜드 정보를 만든다.
+    """
+
+    brand_data = (
+        item.get("brand")
+        or {}
+    )
+
+    source_brand_id = (
+        brand_data.get("source_brand_code")
+        or brand_data.get("source_brand_id")
+        or brand_data.get("brand_code")
+    )
+
+    if not source_brand_id:
+        return None
+
+    source_brand_id = str(
+        source_brand_id
+    ).strip()
+
+    if not source_brand_id:
+        return None
+
+    source_brand_name = (
+        brand_data.get("name_ko")
+        or brand_data.get("name")
+        or None
+    )
+
+    source_brand_name_en = (
+        brand_data.get("name_en")
+        or brand_data.get("english_name")
+        or None
+    )
+
+    source_brand_url = (
+        brand_data.get("url")
+        or brand_data.get("brand_url")
+        or None
+    )
+
+    return {
+        "source_brand_id": source_brand_id,
+        "source_brand_name": source_brand_name,
+        "source_brand_name_en": (
+            source_brand_name_en
+        ),
+        "source_brand_url": (
+            source_brand_url
+        ),
+    }
+
+
+# =========================================================
+# BRAND SOURCE UPSERT
+# =========================================================
+
+
+@transaction.atomic
+def _upsert_brand_source(
     *,
     source,
     source_brand_id: str,
-    name_ko: str | None,
-    name_en: str | None,
-    detected_count: int,
-) -> tuple[MappingCandidate, bool]:
+    source_brand_name: str | None,
+    source_brand_name_en: str | None,
+    source_brand_url: str | None,
+    detected_count: int = 1,
+) -> tuple[BrandSource, bool]:
     """
-    자동 매핑에 실패한 플랫폼 브랜드를
-    관리자 검토 대상 MappingCandidate에 저장한다.
+    BrandSource 핵심 로직.
+
+    1. source + source_brand_id 조회
+    2. 있으면 정보만 갱신
+    3. 없으면 그때만 Brand exact match
+    4. 성공하면 AUTO_MAPPED
+    5. 실패하면 UNMAPPED + brand=NULL
+
+    반환:
+        brand_source
+        created
     """
 
     now = timezone.now()
 
-    candidate, created = (
-        MappingCandidate.objects
-        .get_or_create(
+    # -----------------------------------------------------
+    # FAST PATH
+    #
+    # 이미 플랫폼 브랜드를 알고 있으면
+    # 이름 매칭을 다시 하지 않는다.
+    # -----------------------------------------------------
+
+    brand_source = (
+        BrandSource.objects
+        .filter(
             source=source,
-            mapping_type=(
-                MappingCandidate.MappingType.BRAND
-            ),
-            source_key=source_brand_id,
-            defaults={
-                "source_name": (
-                    name_ko
-                    or name_en
-                    or source_brand_id
-                ),
-                "source_detail": {
-                    "source_brand_id": (
-                        source_brand_id
-                    ),
-                    "name_ko": name_ko,
-                    "name_en": name_en,
-                    "normalized_name_ko": (
-                        normalize_text(name_ko)
-                    ),
-                    "normalized_name_en": (
-                        normalize_text(name_en)
-                    ),
-                },
-                "detected_count": (
-                    detected_count
-                ),
-                "status": (
-                    MappingCandidate.Status.PENDING
-                ),
-                "first_seen_at": now,
-                "last_seen_at": now,
-            },
+            source_brand_id=source_brand_id,
         )
+        .first()
     )
 
-    if not created:
-        candidate.source_name = (
-            name_ko
-            or name_en
-            or source_brand_id
-        )
+    if brand_source:
+        update_fields = []
 
-        candidate.source_detail = {
-            "source_brand_id": (
-                source_brand_id
-            ),
-            "name_ko": name_ko,
-            "name_en": name_en,
-            "normalized_name_ko": (
-                normalize_text(name_ko)
-            ),
-            "normalized_name_en": (
-                normalize_text(name_en)
-            ),
-        }
+        if (
+            source_brand_name
+            and brand_source.source_brand_name
+            != source_brand_name
+        ):
+            brand_source.source_brand_name = (
+                source_brand_name
+            )
 
-        candidate.detected_count += (
+            brand_source.normalized_name = (
+                normalize_text(
+                    source_brand_name
+                )
+            )
+
+            update_fields.extend([
+                "source_brand_name",
+                "normalized_name",
+            ])
+
+        if (
+            source_brand_name_en
+            and brand_source.source_brand_name_en
+            != source_brand_name_en
+        ):
+            brand_source.source_brand_name_en = (
+                source_brand_name_en
+            )
+
+            brand_source.normalized_name_en = (
+                normalize_text(
+                    source_brand_name_en
+                )
+            )
+
+            update_fields.extend([
+                "source_brand_name_en",
+                "normalized_name_en",
+            ])
+
+        if (
+            source_brand_url
+            and brand_source.source_brand_url
+            != source_brand_url
+        ):
+            brand_source.source_brand_url = (
+                source_brand_url
+            )
+
+            update_fields.append(
+                "source_brand_url"
+            )
+
+        brand_source.detected_count += (
             detected_count
         )
 
-        candidate.last_seen_at = now
+        brand_source.last_seen_at = now
 
-        # 이전에 REJECTED 등이었다면
-        # 자동으로 PENDING으로 되돌리지는 않는다.
-        candidate.save(
-            update_fields=[
-                "source_name",
-                "source_detail",
-                "detected_count",
-                "last_seen_at",
-                "updated_at",
-            ]
+        update_fields.extend([
+            "detected_count",
+            "last_seen_at",
+            "updated_at",
+        ])
+
+        if not brand_source.first_seen_at:
+            brand_source.first_seen_at = now
+
+            update_fields.append(
+                "first_seen_at"
+            )
+
+        brand_source.save(
+            update_fields=list(
+                dict.fromkeys(
+                    update_fields
+                )
+            )
         )
 
-    return candidate, created
+        return (
+            brand_source,
+            False,
+        )
 
+    # -----------------------------------------------------
+    # NEW PLATFORM BRAND
+    #
+    # 처음 발견했을 때만 FEEDIT Brand 검색
+    # -----------------------------------------------------
 
-# =========================================================
-# Main
-# =========================================================
+    (
+        matched_brand,
+        mapping_method,
+    ) = _find_brand_exact(
+        name=source_brand_name,
+        english_name=source_brand_name_en,
+    )
 
+    if matched_brand:
+        mapping_status = (
+            BrandSource
+            .MappingStatus
+            .AUTO_MAPPED
+        )
 
-def normalize_musinsa_brands_from_crawl_run(
-    *,
-    crawl_run_id: int,
-) -> dict:
-    """
-    MUSINSA CrawlRun의 RawDocument들을 읽어
-    플랫폼 브랜드를 FEEDIT 표준 Brand에 매핑한다.
+        mapping_confidence = 1
 
-    처리 우선순위:
+    else:
+        mapping_status = (
+            BrandSource
+            .MappingStatus
+            .UNMAPPED
+        )
 
-        source_brand_id
-            ↓
-        BrandSource 존재?
-            ↓ YES
-        기존 Brand 사용
+        mapping_method = None
+        mapping_confidence = None
 
-            ↓ NO
+    brand_source = (
+        BrandSource.objects.create(
+            brand=matched_brand,
 
-        Brand / TermAlias / DictionaryTerm
-        exact matching
-            ↓
-        성공
-            ↓
-        BrandSource 생성
+            source=source,
 
-        실패
-            ↓
-        MappingCandidate 생성/누적
-    """
+            source_brand_id=(
+                source_brand_id
+            ),
 
-    crawl_run = (
-        CrawlRun.objects
-        .select_related("source")
-        .get(
-            id=crawl_run_id
+            source_brand_name=(
+                source_brand_name
+            ),
+
+            normalized_name=(
+                normalize_text(
+                    source_brand_name
+                )
+                if source_brand_name
+                else None
+            ),
+
+            source_brand_name_en=(
+                source_brand_name_en
+            ),
+
+            normalized_name_en=(
+                normalize_text(
+                    source_brand_name_en
+                )
+                if source_brand_name_en
+                else None
+            ),
+
+            source_brand_url=(
+                source_brand_url
+            ),
+
+            mapping_status=(
+                mapping_status
+            ),
+
+            mapping_method=(
+                mapping_method
+            ),
+
+            mapping_confidence=(
+                mapping_confidence
+            ),
+
+            detected_count=(
+                detected_count
+            ),
+
+            first_seen_at=now,
+            last_seen_at=now,
         )
     )
 
-    if (
-        crawl_run.status
-        != CrawlRun.Status.SUCCESS
-    ):
-        raise ValueError(
-            "SUCCESS CrawlRun만 정제할 수 있습니다."
+    return (
+        brand_source,
+        True,
+    )
+
+
+# =========================================================
+# NORMALIZE ONE RAW DOCUMENT
+# =========================================================
+
+
+def _normalize_musinsa_raw_document(
+    *,
+    raw_document: RawDocument,
+    normalizer: MusinsaNormalizer,
+    s3_client,
+) -> dict:
+    """
+    RawDocument 하나를 처리한다.
+
+    RawDocument
+        ↓
+    S3 JSON
+        ↓
+    MusinsaNormalizer
+        ↓
+    상품 목록
+        ↓
+    브랜드 그룹화
+        ↓
+    BrandSource UPSERT
+    """
+
+    raw = _load_raw_json(
+        raw_document=raw_document,
+        s3_client=s3_client,
+    )
+
+    # -----------------------------------------------------
+    # RANKING
+    # -----------------------------------------------------
+
+    if raw_document.document_type == "RANKING":
+        normalized = (
+            normalizer
+            .normalize_ranking(raw)
         )
 
-    if (
-        crawl_run.source.code.upper()
-        != "MUSINSA"
-    ):
-        raise ValueError(
-            "현재 브랜드 정제는 MUSINSA만 지원합니다."
+        products = (
+            normalized.get("products")
+            or []
         )
 
-    source = crawl_run.source
+    # -----------------------------------------------------
+    # PRODUCT
+    # -----------------------------------------------------
 
-    raw_documents = (
+    elif raw_document.document_type == "PRODUCT":
+        product = (
+            normalizer
+            .normalize_product(raw)
+        )
+
+        products = (
+            [product]
+            if product
+            else []
+        )
+
+    else:
+        raise ValueError(
+            (
+                "지원하지 않는 "
+                "document_type: "
+                f"{raw_document.document_type}"
+            )
+        )
+
+    # -----------------------------------------------------
+    # 같은 RawDocument 내 브랜드 그룹화
+    # -----------------------------------------------------
+
+    grouped: dict[str, dict] = {}
+
+    for item in products:
+        if not item:
+            continue
+
+        payload = (
+            _extract_brand_payload(
+                item
+            )
+        )
+
+        if not payload:
+            continue
+
+        source_brand_id = (
+            payload[
+                "source_brand_id"
+            ]
+        )
+
+        if source_brand_id not in grouped:
+            grouped[
+                source_brand_id
+            ] = {
+                **payload,
+                "count": 0,
+            }
+
+        grouped[
+            source_brand_id
+        ]["count"] += 1
+
+        # 기존 값이 비어 있고 뒤에서 값이 발견되면 보완
+        for key in (
+            "source_brand_name",
+            "source_brand_name_en",
+            "source_brand_url",
+        ):
+            if (
+                not grouped[
+                    source_brand_id
+                ].get(key)
+                and payload.get(key)
+            ):
+                grouped[
+                    source_brand_id
+                ][key] = payload[key]
+
+    # -----------------------------------------------------
+    # BrandSource
+    # -----------------------------------------------------
+
+    created = 0
+    updated = 0
+    mapped = 0
+    unmapped = 0
+
+    source = (
+        raw_document
+        .crawl_run
+        .source
+    )
+
+    for data in grouped.values():
+
+        (
+            brand_source,
+            was_created,
+        ) = _upsert_brand_source(
+            source=source,
+
+            source_brand_id=(
+                data[
+                    "source_brand_id"
+                ]
+            ),
+
+            source_brand_name=(
+                data[
+                    "source_brand_name"
+                ]
+            ),
+
+            source_brand_name_en=(
+                data[
+                    "source_brand_name_en"
+                ]
+            ),
+
+            source_brand_url=(
+                data[
+                    "source_brand_url"
+                ]
+            ),
+
+            detected_count=(
+                data["count"]
+            ),
+        )
+
+        if was_created:
+            created += 1
+        else:
+            updated += 1
+
+        if brand_source.brand_id:
+            mapped += 1
+        else:
+            unmapped += 1
+
+    return {
+        "raw_document_id": (
+            raw_document.id
+        ),
+        "products": len(products),
+        "brands": len(grouped),
+        "created": created,
+        "updated": updated,
+        "mapped": mapped,
+        "unmapped": unmapped,
+    }
+
+
+# =========================================================
+# OPERATING PIPELINE
+# =========================================================
+
+
+def normalize_pending_musinsa_raw_documents(
+    *,
+    limit: int | None = None,
+) -> dict:
+    """
+    운영용 MUSINSA 정규화 진입점.
+
+    대상:
+    - MUSINSA
+    - CrawlRun SUCCESS
+    - RawDocument PENDING
+    - document_type RANKING / PRODUCT
+
+    각 RawDocument는 독립적으로 처리한다.
+
+    성공:
+        normalization_status = SUCCESS
+
+    실패:
+        normalization_status = FAILED
+        normalization_error 저장
+    """
+
+    queryset = (
         RawDocument.objects
+        .select_related(
+            "crawl_run",
+            "crawl_run__source",
+            "crawl_run__crawl_target",
+        )
         .filter(
-            crawl_run=crawl_run,
+            crawl_run__status=(
+                CrawlRun.Status.SUCCESS
+            ),
+            crawl_run__source__code__iexact=(
+                "MUSINSA"
+            ),
+            normalization_status=(
+                RawDocument
+                .NormalizationStatus
+                .PENDING
+            ),
+            document_type__in=[
+                "RANKING",
+                "PRODUCT",
+            ],
         )
         .order_by("id")
     )
 
-    if not raw_documents.exists():
-        raise ValueError(
-            "연결된 RawDocument가 없습니다."
-        )
+    if limit is not None:
+        queryset = queryset[:limit]
 
-    total_detected = 0
-    created_count = 0
-    updated_count = 0
-    matched_count = 0
-    unmatched_count = 0
+    raw_documents = list(
+        queryset
+    )
 
     normalizer = MusinsaNormalizer()
+    s3_client = _get_s3_client()
 
-    # ---------------------------------------------------------
-    # 같은 CrawlRun 안에서 동일 브랜드가
-    # 여러 RawDocument에 등장할 수 있으므로
-    # Run 전체 기준으로 먼저 그룹화한다.
-    # ---------------------------------------------------------
+    total = len(raw_documents)
 
-    grouped: dict[str, dict] = {}
+    success_count = 0
+    failed_count = 0
+
+    total_products = 0
+    total_brands = 0
+
+    created = 0
+    updated = 0
+    mapped = 0
+    unmapped = 0
+
+    errors = []
 
     for raw_document in raw_documents:
 
-        if raw_document.document_type not in {
-            "RANKING",
-            "PRODUCT",
-        }:
-            continue
+        # -------------------------------------------------
+        # PROCESSING
+        # -------------------------------------------------
 
-        raw = _load_raw_json(
-            raw_document
+        raw_document.normalization_status = (
+            RawDocument
+            .NormalizationStatus
+            .PROCESSING
         )
 
-        # -----------------------------------------------------
-        # Commerce Normalizer
-        # -----------------------------------------------------
+        raw_document.normalization_error = None
 
-        if (
-            raw_document.document_type
-            == "RANKING"
-        ):
-            normalized = (
-                normalizer
-                .normalize_ranking(raw)
-            )
-
-            products = (
-                normalized.get("products")
-                or []
-            )
-
-        else:
-            product = (
-                normalizer
-                .normalize_product(raw)
-            )
-
-            products = (
-                [product]
-                if product
-                else []
-            )
-
-        # -----------------------------------------------------
-        # 플랫폼 브랜드 그룹화
-        # -----------------------------------------------------
-
-        for item in products:
-
-            if not item:
-                continue
-
-            brand_data = (
-                item.get("brand")
-                or {}
-            )
-
-            source_brand_id = (
-                brand_data.get(
-                    "source_brand_code"
-                )
-                or brand_data.get(
-                    "brand_code"
-                )
-                or brand_data.get(
-                    "source_brand_id"
-                )
-            )
-
-            if not source_brand_id:
-                continue
-
-            source_brand_id = str(
-                source_brand_id
-            ).strip()
-
-            if not source_brand_id:
-                continue
-
-            name_ko = (
-                brand_data.get("name_ko")
-                or brand_data.get("name")
-                or None
-            )
-
-            name_en = (
-                brand_data.get("name_en")
-                or brand_data.get(
-                    "english_name"
-                )
-                or None
-            )
-
-            if (
-                source_brand_id
-                not in grouped
-            ):
-                grouped[
-                    source_brand_id
-                ] = {
-                    "count": 0,
-                    "name_ko": name_ko,
-                    "name_en": name_en,
-                    "brand_data": (
-                        brand_data
-                    ),
-                }
-
-            grouped[
-                source_brand_id
-            ]["count"] += 1
-
-            # 기존 데이터에 이름이 없고
-            # 뒤쪽 상품에서 이름을 발견했다면 보완
-            if (
-                not grouped[
-                    source_brand_id
-                ]["name_ko"]
-                and name_ko
-            ):
-                grouped[
-                    source_brand_id
-                ]["name_ko"] = name_ko
-
-            if (
-                not grouped[
-                    source_brand_id
-                ]["name_en"]
-                and name_en
-            ):
-                grouped[
-                    source_brand_id
-                ]["name_en"] = name_en
-
-    # ---------------------------------------------------------
-    # 그룹별 브랜드 매핑
-    # ---------------------------------------------------------
-
-    for (
-        source_brand_id,
-        data,
-    ) in grouped.items():
-
-        total_detected += 1
-
-        detected_count = (
-            data["count"]
+        raw_document.save(
+            update_fields=[
+                "normalization_status",
+                "normalization_error",
+            ]
         )
 
-        name_ko = (
-            data.get("name_ko")
-            or source_brand_id
-        )
-
-        name_en = (
-            data.get("name_en")
-        )
-
-        # =====================================================
-        # 1. BrandSource 기존 매핑 확인
-        # =====================================================
-
-        brand_source = (
-            BrandSource.objects
-            .select_related("brand")
-            .filter(
-                source=source,
-                source_brand_id=(
-                    source_brand_id
-                ),
+        try:
+            result = (
+                _normalize_musinsa_raw_document(
+                    raw_document=raw_document,
+                    normalizer=normalizer,
+                    s3_client=s3_client,
+                )
             )
-            .first()
-        )
 
-        if brand_source:
+            # ---------------------------------------------
+            # SUCCESS
+            # ---------------------------------------------
 
-            changed_fields = []
+            raw_document.normalization_status = (
+                RawDocument
+                .NormalizationStatus
+                .SUCCESS
+            )
 
-            if (
-                brand_source
-                .source_brand_name
-                != name_ko
-            ):
-                brand_source.source_brand_name = (
-                    name_ko
-                )
-                changed_fields.append(
-                    "source_brand_name"
-                )
-
-            brand_source.last_seen_at = (
+            raw_document.normalized_at = (
                 timezone.now()
             )
 
-            changed_fields.append(
-                "last_seen_at"
+            raw_document.normalization_error = (
+                None
             )
 
-            changed_fields.append(
-                "updated_at"
+            raw_document.save(
+                update_fields=[
+                    "normalization_status",
+                    "normalized_at",
+                    "normalization_error",
+                ]
             )
 
-            brand_source.save(
-                update_fields=changed_fields
+            success_count += 1
+
+            total_products += (
+                result["products"]
             )
 
-            updated_count += 1
-            matched_count += 1
-
-            continue
-
-        # =====================================================
-        # 2. 기존 FEEDIT Brand 자동 검색
-        # =====================================================
-
-        matched_brand = (
-            _find_exact_brand(
-                source=source,
-                name_ko=name_ko,
-                name_en=name_en,
+            total_brands += (
+                result["brands"]
             )
-        )
 
-        # =====================================================
-        # 3. 찾았으면 BrandSource 생성
-        # =====================================================
+            created += (
+                result["created"]
+            )
 
-        if matched_brand:
+            updated += (
+                result["updated"]
+            )
 
-            now = timezone.now()
+            mapped += (
+                result["mapped"]
+            )
 
-            BrandSource.objects.create(
-                brand=matched_brand,
-                source=source,
-                source_brand_id=(
-                    source_brand_id
+            unmapped += (
+                result["unmapped"]
+            )
+
+        except Exception as exc:
+
+            # ---------------------------------------------
+            # FAILED
+            # ---------------------------------------------
+
+            raw_document.normalization_status = (
+                RawDocument
+                .NormalizationStatus
+                .FAILED
+            )
+
+            raw_document.normalization_error = (
+                str(exc)
+            )
+
+            raw_document.save(
+                update_fields=[
+                    "normalization_status",
+                    "normalization_error",
+                ]
+            )
+
+            failed_count += 1
+
+            errors.append({
+                "raw_document_id": (
+                    raw_document.id
                 ),
-                source_brand_name=(
-                    name_ko
-                ),
-                first_seen_at=now,
-                last_seen_at=now,
-            )
-
-            # 과거 미매핑 후보가 있었다면
-            # 승인 상태로 정리
-            candidate = (
-                MappingCandidate.objects
-                .filter(
-                    source=source,
-                    mapping_type=(
-                        MappingCandidate
-                        .MappingType
-                        .BRAND
-                    ),
-                    source_key=(
-                        source_brand_id
-                    ),
-                )
-                .first()
-            )
-
-            if candidate:
-                candidate.status = (
-                    MappingCandidate
-                    .Status
-                    .APPROVED
-                )
-
-                candidate.selected_target_type = (
-                    "Brand"
-                )
-
-                candidate.selected_target_id = (
-                    matched_brand.id
-                )
-
-                candidate.selected_target_name = (
-                    matched_brand.name
-                )
-
-                candidate.match_method = (
-                    "EXACT"
-                )
-
-                candidate.reviewed_at = now
-
-                candidate.save(
-                    update_fields=[
-                        "status",
-                        "selected_target_type",
-                        "selected_target_id",
-                        "selected_target_name",
-                        "match_method",
-                        "reviewed_at",
-                        "updated_at",
-                    ]
-                )
-
-            created_count += 1
-            matched_count += 1
-
-            continue
-
-        # =====================================================
-        # 4. 매칭 실패 → MappingCandidate
-        # =====================================================
-
-        _candidate, created = (
-            _upsert_brand_candidate(
-                source=source,
-                source_brand_id=(
-                    source_brand_id
-                ),
-                name_ko=name_ko,
-                name_en=name_en,
-                detected_count=(
-                    detected_count
-                ),
-            )
-        )
-
-        if created:
-            created_count += 1
-        else:
-            updated_count += 1
-
-        unmatched_count += 1
-
-    # ---------------------------------------------------------
-    # Result
-    # ---------------------------------------------------------
+                "error": str(exc),
+            })
 
     return {
-        "crawl_run_id": (
-            crawl_run.id
+        "source": "MUSINSA",
+
+        "target_raw_documents": (
+            total
         ),
-        "detected": (
-            total_detected
+
+        "success": (
+            success_count
         ),
-        "created": (
-            created_count
+
+        "failed": (
+            failed_count
         ),
-        "updated": (
-            updated_count
+
+        "products": (
+            total_products
         ),
-        "matched": (
-            matched_count
+
+        "brands": (
+            total_brands
         ),
-        "unmatched": (
-            unmatched_count
+
+        "brand_source_created": (
+            created
         ),
+
+        "brand_source_updated": (
+            updated
+        ),
+
+        "mapped": (
+            mapped
+        ),
+
+        "unmapped": (
+            unmapped
+        ),
+
+        "errors": errors,
     }
+
+
+# =========================================================
+# RETRY FAILED
+# =========================================================
+
+
+def retry_failed_musinsa_raw_documents(
+    *,
+    limit: int | None = None,
+) -> int:
+    """
+    FAILED RawDocument를 다시 PENDING으로 돌린다.
+
+    실제 정규화는
+    normalize_pending_musinsa_raw_documents()
+    를 다시 실행하면 된다.
+    """
+
+    queryset = (
+        RawDocument.objects
+        .filter(
+            crawl_run__status=(
+                CrawlRun.Status.SUCCESS
+            ),
+            crawl_run__source__code__iexact=(
+                "MUSINSA"
+            ),
+            normalization_status=(
+                RawDocument
+                .NormalizationStatus
+                .FAILED
+            ),
+            document_type__in=[
+                "RANKING",
+                "PRODUCT",
+            ],
+        )
+        .order_by("id")
+    )
+
+    if limit is not None:
+        ids = list(
+            queryset.values_list(
+                "id",
+                flat=True,
+            )[:limit]
+        )
+
+        queryset = (
+            RawDocument.objects
+            .filter(
+                id__in=ids,
+            )
+        )
+
+    return queryset.update(
+        normalization_status=(
+            RawDocument
+            .NormalizationStatus
+            .PENDING
+        ),
+        normalization_error=None,
+        normalized_at=None,
+    )

@@ -1,13 +1,6 @@
 from django.contrib import admin, messages
-from apps.core.models import CrawlTarget
 from apps.core.tasks import run_live_target
-from apps.core.models import MappingCandidate
-
 from .models import *
-
-# =====================================================================
-# collection: 크롤링 소스 / 실행 / 원본 데이터
-# =====================================================================
 
 @admin.register(Source)
 class SourceAdmin(admin.ModelAdmin):
@@ -19,6 +12,49 @@ class SourceAdmin(admin.ModelAdmin):
     search_fields = ("code", "name", "base_url")
     ordering = ("code",)
 
+
+@admin.register(CrawlTarget)
+class CrawlTargetAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "source",
+        "target_type",
+        "name",
+        "is_active",
+        "last_crawled_at",
+        "created_at",
+    )
+
+    list_filter = (
+        "source",
+        "target_type",
+        "is_active",
+    )
+
+    search_fields = (
+        "name",
+        "target_key",
+        "target_url",
+        "source__code",
+    )
+
+    list_select_related = (
+        "source",
+    )
+
+    ordering = (
+        "source",
+        "id",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "last_crawled_at",
+    )
+
+    list_per_page = 50
+    
 @admin.register(CrawlRun)
 class CrawlRunAdmin(admin.ModelAdmin):
 
@@ -63,197 +99,203 @@ class CrawlRunAdmin(admin.ModelAdmin):
 
         return "-"
     
+
 @admin.register(RawDocument)
 class RawDocumentAdmin(admin.ModelAdmin):
-    list_display = (
-        "id", "source", "document_type", "external_id",
-        "http_status", "content_type", "collected_at",
-    )
-    list_filter = ("source", "document_type", "http_status")
-    search_fields = ("external_id", "source_url", "s3_key", "content_hash")
-    autocomplete_fields = ("source", "crawl_run")
-    date_hierarchy = "collected_at"
-    list_select_related = ("source", "crawl_run")
-    readonly_fields = ("created_at",)
 
-
-# =====================================================================
-# dictionary: 표준 용어 사전 / 카테고리 / 브랜드
-# =====================================================================
-
-class TermAliasInline(admin.TabularInline):
-    model = TermAlias
-    extra = 0
-    fields = ("alias", "normalized_alias", "alias_type", "source")
-    autocomplete_fields = ("source",)
-
-
-@admin.register(DictionaryTerm)
-class DictionaryTermAdmin(admin.ModelAdmin):
-    list_display = (
-        "canonical_name", "term_type", "term_code",
-        "status", "first_seen_at", "last_seen_at",
-    )
-    list_filter = ("term_type", "status")
-    search_fields = ("term_code", "canonical_name", "normalized_name", "english_name")
-    inlines = [TermAliasInline]
-    ordering = ("term_type", "term_code")
-
-
-@admin.register(TermAlias)
-class TermAliasAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "alias",
-        "normalized_alias",
-        "term",
-        "term_type",
-        "alias_type",
-        "source",
+        "crawl_run",
+        "source_name",
+        "document_type",
+        "normalization_status",
+        "normalized_at",
+        "short_s3_key",
+        "error_summary",
     )
 
     list_filter = (
-        "term__term_type",
-        "alias_type",
-        "source",
+        "normalization_status",
+        "document_type",
+        "crawl_run__source",
     )
 
     search_fields = (
-        "alias",
-        "normalized_alias",
-        "term__canonical_name",
-        "term__normalized_name",
+        "s3_bucket",
+        "s3_key",
+        "crawl_run__source__code",
     )
 
-    autocomplete_fields = (
-        "term",
-        "source",
+    list_select_related = (
+        "crawl_run",
+        "crawl_run__source",
     )
 
-    def term_type(self, obj):
-        return obj.term.term_type
+    ordering = (
+        "-id",
+    )
 
-    term_type.short_description = "용어 유형"
+    list_per_page = 50
 
+    readonly_fields = (
+        "crawl_run",
+        "s3_bucket",
+        "s3_key",
+        "document_type",
+        "normalization_status",
+        "normalized_at",
+        "normalization_error",
+    )
 
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
+    @admin.display(
+        description="출처",
+        ordering="crawl_run__source__code",
+    )
+    def source_name(self, obj):
+        return (
+            obj.crawl_run.source.code
+            if obj.crawl_run_id
+            and obj.crawl_run.source_id
+            else "-"
+        )
+
+    @admin.display(
+        description="S3 Key",
+    )
+    def short_s3_key(self, obj):
+        if not obj.s3_key:
+            return "-"
+
+        if len(obj.s3_key) <= 80:
+            return obj.s3_key
+
+        return (
+            "..."
+            + obj.s3_key[-77:]
+        )
+
+    @admin.display(
+        description="정규화 오류",
+    )
+    def error_summary(self, obj):
+        if not obj.normalization_error:
+            return "-"
+
+        error = str(
+            obj.normalization_error
+        )
+
+        if len(error) <= 80:
+            return error
+
+        return error[:77] + "..."
+
+@admin.register(Brand)
+class BrandAdmin(admin.ModelAdmin):
     list_display = (
-        "name", "code", "category_type", "parent",
-        "level", "sort_order", "status",
+        "id",
+        "brand_code",
+        "name",
+        "english_name",
+        "status",
     )
-    list_filter = ("category_type", "status", "level")
-    search_fields = ("code", "name")
-    autocomplete_fields = ("parent",)
-    ordering = ("category_type", "level", "sort_order", "code")
 
-
-@admin.register(Style)
-class StyleAdmin(admin.ModelAdmin):
-    list_display = ("term", "style_group", "is_core")
-    list_filter = ("style_group", "is_core")
-    search_fields = ("term__canonical_name",)
-    autocomplete_fields = ("term",)
-
-
-@admin.register(Item)
-class ItemAdmin(admin.ModelAdmin):
-    list_display = ("term", "category", "gender_scope")
-    list_filter = ("gender_scope", "category")
-    search_fields = ("term__canonical_name",)
-    autocomplete_fields = ("term", "category")
-
-
-@admin.register(Detail)
-class DetailAdmin(admin.ModelAdmin):
-    list_display = ("term", "attribute_type", "target_type")
-    list_filter = ("attribute_type",)
-    search_fields = ("term__canonical_name",)
-    autocomplete_fields = ("term",)
-
-
-@admin.register(Material)
-class MaterialAdmin(admin.ModelAdmin):
-    list_display = ("term", "material_type", "process_type")
-    list_filter = ("material_type", "process_type")
-    search_fields = ("term__canonical_name",)
-    autocomplete_fields = ("term",)
-
-
-@admin.register(Color)
-class ColorAdmin(admin.ModelAdmin):
-    list_display = ("term", "color_family", "base_color")
-    list_filter = ("color_family",)
-    search_fields = ("term__canonical_name",)
-    autocomplete_fields = ("term", "base_color")
-    ordering = ("color_family", "term__canonical_name")
-
-
-@admin.register(TPO)
-class TPOAdmin(admin.ModelAdmin):
-    list_display = ("term", "tpo_type")
-    list_filter = ("tpo_type",)
-    search_fields = ("term__canonical_name",)
-    autocomplete_fields = ("term",)
-
-
-@admin.register(TermRelation)
-class TermRelationAdmin(admin.ModelAdmin):
-    list_display = (
-        "source_term", "target_term", "relation_type",
-        "weight", "confidence", "relation_source",
+    list_filter = (
+        "status",
     )
-    list_filter = ("relation_type", "relation_source")
-    search_fields = ("source_term__canonical_name", "target_term__canonical_name")
-    autocomplete_fields = ("source_term", "target_term")
 
-
-@admin.register(TermCandidate)
-class TermCandidateAdmin(admin.ModelAdmin):
-    list_display = (
-        "raw_term", "normalized_term", "suggested_type",
-        "detected_count", "status", "last_seen_at",
+    search_fields = (
+        "brand_code",
+        "name",
+        "english_name",
     )
-    list_filter = ("status", "suggested_type", "detected_source")
-    search_fields = ("raw_term", "normalized_term", "example_context")
-    date_hierarchy = "last_seen_at"
-    actions = ["approve_candidates", "reject_candidates"]
 
-    @admin.action(description="선택한 용어 후보 승인 처리")
-    def approve_candidates(self, request, queryset):
-        updated = queryset.update(status=TermCandidate.Status.APPROVED)
-        self.message_user(request, f"{updated}건을 승인 처리했습니다.")
+    ordering = (
+        "name",
+    )
 
-    @admin.action(description="선택한 용어 후보 제외 처리")
-    def reject_candidates(self, request, queryset):
-        updated = queryset.update(status=TermCandidate.Status.REJECTED)
-        self.message_user(request, f"{updated}건을 제외 처리했습니다.")
+    list_per_page = 50
+
+
+# =========================================================
+# 플랫폼 브랜드
+# =========================================================
+
+
+class BrandMappingFilter(
+    admin.SimpleListFilter
+):
+    title = "매핑 여부"
+    parameter_name = "brand_mapping"
+
+    def lookups(
+        self,
+        request,
+        model_admin,
+    ):
+        return (
+            ("mapped", "매핑 완료"),
+            ("unmapped", "미매핑"),
+        )
+
+    def queryset(
+        self,
+        request,
+        queryset,
+    ):
+        if self.value() == "mapped":
+            return queryset.filter(
+                brand__isnull=False,
+            )
+
+        if self.value() == "unmapped":
+            return queryset.filter(
+                brand__isnull=True,
+            )
+
+        return queryset
+
 
 @admin.register(BrandSource)
 class BrandSourceAdmin(admin.ModelAdmin):
+
     list_display = (
         "id",
-        "brand",
         "source",
         "source_brand_id",
         "source_brand_name",
-        "is_official",
+        "source_brand_name_en",
+        "brand_name",
+        "mapping_status",
+        "mapping_method",
+        "detected_count",
         "last_seen_at",
     )
 
     list_filter = (
         "source",
-        "is_official",
+        BrandMappingFilter,
+        "mapping_status",
+        "mapping_method",
     )
 
     search_fields = (
-        "brand__name",
-        "brand__english_name",
         "source_brand_id",
         "source_brand_name",
+        "source_brand_name_en",
+        "normalized_name",
+        "normalized_name_en",
+        "brand__brand_code",
+        "brand__name",
+        "brand__english_name",
     )
 
-    autocomplete_fields = (
+    raw_id_fields = (
+        "brand",
+        "source",
+    )
+
+    list_select_related = (
         "brand",
         "source",
     )
@@ -263,368 +305,68 @@ class BrandSourceAdmin(admin.ModelAdmin):
         "source_brand_name",
     )
 
-@admin.register(Brand)
-class BrandAdmin(admin.ModelAdmin):
-    list_display = (
-        "name", "brand_code", "english_name",
-        "country_code", "category", "status",
-    )
-    list_filter = ("status", "country_code", "category")
-    search_fields = ("brand_code", "name", "english_name")
-    autocomplete_fields = ("category",)
-    ordering = ("name",)
-
-
-@admin.register(CategoryAlias)
-class CategoryAliasAdmin(admin.ModelAdmin):
-    list_display = ("source_category_name", "category", "source", "source_category_id", "created_at")
-    list_filter = ("source",)
-    search_fields = ("source_category_id", "source_category_name")
-    autocomplete_fields = ("category", "source")
-
-
-# =====================================================================
-# commerce: 상품 / 플랫폼 상품 / 스냅샷
-# =====================================================================
-
-class ProductSourceInline(admin.TabularInline):
-    model = ProductSource
-    extra = 0
-    fields = ("source", "source_product_id", "market_type", "status", "last_seen_at")
-    autocomplete_fields = ("source",)
-    show_change_link = True
-
-
-class ProductTermInline(admin.TabularInline):
-    model = ProductTerm
-    extra = 0
-    autocomplete_fields = ("term",)
-
-
-@admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
-    list_display = (
-        "canonical_name", "brand", "category", "item_term",
-        "gender_scope", "status", "updated_at",
-    )
-    list_filter = ("status", "gender_scope", "brand", "category")
-    search_fields = ("canonical_name", "normalized_name")
-    autocomplete_fields = ("brand", "category", "item_term")
-    inlines = [ProductSourceInline, ProductTermInline]
-    list_select_related = ("brand", "category", "item_term")
-
-
-@admin.register(ProductSource)
-class ProductSourceAdmin(admin.ModelAdmin):
-    list_display = (
-        "product", "source", "source_product_id",
-        "market_type", "status", "last_seen_at",
-    )
-    list_filter = ("market_type", "status", "source")
-    search_fields = ("source_product_id", "product__canonical_name")
-    autocomplete_fields = ("product", "source")
-    list_select_related = ("product", "source")
-
-
-@admin.register(ProductSourceSnapshot)
-class ProductSourceSnapshotAdmin(admin.ModelAdmin):
-    list_display = (
-        "product_source", "observed_at", "sale_price", "list_price",
-        "discount_rate", "rank_position", "rating", "stock_status",
-    )
-    list_filter = ("stock_status", "ranking_scope")
-    search_fields = ("product_source__source_product_id", "product_source__product__canonical_name")
-    autocomplete_fields = ("product_source",)
-    date_hierarchy = "observed_at"
-    list_select_related = ("product_source", "product_source__product")
-
-
-@admin.register(ResaleSnapshot)
-class ResaleSnapshotAdmin(admin.ModelAdmin):
-    list_display = (
-        "product_source", "observed_at", "avg_price",
-        "median_price", "sold_count", "resale_index",
-    )
-    search_fields = ("product_source__source_product_id",)
-    autocomplete_fields = ("product_source",)
-    date_hierarchy = "observed_at"
-    list_select_related = ("product_source",)
-
-
-@admin.register(ProductTerm)
-class ProductTermAdmin(admin.ModelAdmin):
-    list_display = ("product", "term", "created_at")
-    search_fields = ("product__canonical_name", "term__canonical_name")
-    autocomplete_fields = ("product", "term")
-
-
-# =====================================================================
-# content: 콘텐츠 프로필 / 콘텐츠 / 스냅샷
-# =====================================================================
-
-@admin.register(ContentProfile)
-class ContentProfileAdmin(admin.ModelAdmin):
-    list_display = (
-        "name",
-        "handle",
-        "source_code",
-        "profile_type",
-        "status",
-        "last_seen_at",
-    )
-
-    list_filter = (
-        "source",
-        "profile_type",
-        "status",
-        "gender",
-    )
-
-    search_fields = (
-        "name",
-        "handle",
-        "external_profile_id",
-    )
-
-    @admin.display(
-        description="플랫폼",
-        ordering="source__code",
-    )
-    def source_code(self, obj):
-        return obj.source.code
-
-
-@admin.register(ContentItem)
-class ContentItemAdmin(admin.ModelAdmin):
-    list_display = (
-        "title", "source", "profile", "content_type",
-        "analysis_status", "published_at",
-    )
-    list_filter = ("content_type", "analysis_status", "source")
-    search_fields = ("title", "external_content_id", "description")
-    autocomplete_fields = ("source", "profile")
-    date_hierarchy = "published_at"
-    list_select_related = ("source", "profile")
-
-
-@admin.register(ContentSnapshot)
-class ContentSnapshotAdmin(admin.ModelAdmin):
-    list_display = (
-        "content_item", "observed_at", "view_count",
-        "like_count", "comment_count", "share_count",
-    )
-    search_fields = ("content_item__title",)
-    autocomplete_fields = ("content_item",)
-    date_hierarchy = "observed_at"
-    list_select_related = ("content_item",)
-
-
-# =====================================================================
-# analysis: 텍스트 분석 / 용어 트렌드 지표
-# =====================================================================
-
-@admin.register(TextDocument)
-class TextDocumentAdmin(admin.ModelAdmin):
-    list_display = (
-        "id", "document_type", "content_item", "source",
-        "language", "sentiment_score", "analysis_status", "analyzed_at",
-    )
-    list_filter = ("document_type", "analysis_status", "language", "source")
-    search_fields = ("external_id", "body")
-    autocomplete_fields = ("source", "content_item")
-    date_hierarchy = "created_at"
-    list_select_related = ("source", "content_item")
-
-
-@admin.register(TermMetricDaily)
-class TermMetricDailyAdmin(admin.ModelAdmin):
-    list_display = (
-        "term", "metric_date", "mention_count", "document_count",
-        "source_count", "sentiment_avg", "growth_rate", "trend_score",
-    )
-    list_filter = ("metric_date",)
-    search_fields = ("term__canonical_name",)
-    autocomplete_fields = ("term",)
-    date_hierarchy = "metric_date"
-    list_select_related = ("term",)
-
-
-@admin.register(TermAssocDaily)
-class TermAssocDailyAdmin(admin.ModelAdmin):
-    list_display = (
-        "source_term", "target_term", "metric_date",
-        "cooccurrence_count", "association_score", "confidence",
-    )
-    list_filter = ("metric_date",)
-    search_fields = ("source_term__canonical_name", "target_term__canonical_name")
-    autocomplete_fields = ("source_term", "target_term")
-    date_hierarchy = "metric_date"
-    list_select_related = ("source_term", "target_term")
-
-
-# =====================================================================
-# app: 서비스 사용자 / 취향 / 행동 로그 / 살말 / 챗봇
-# =====================================================================
-
-class UserTasteInline(admin.TabularInline):
-    model = UserTaste
-    extra = 0
-    autocomplete_fields = ("term", "brand", "category")
-
-
-@admin.register(AppUser)
-class AppUserAdmin(admin.ModelAdmin):
-    list_display = ("__str__", "user", "gender", "birth_year", "body_type", "created_at")
-    list_filter = ("gender", "body_type")
-    search_fields = ("nickname", "user__username", "user__email")
-    autocomplete_fields = ("user",)
-    inlines = [UserTasteInline]
-
-
-@admin.register(UserTaste)
-class UserTasteAdmin(admin.ModelAdmin):
-    list_display = ("user", "taste_type", "term", "brand", "category", "weight", "source")
-    list_filter = ("taste_type", "source")
-    search_fields = ("user__nickname", "term__canonical_name", "brand__name", "category__name")
-    autocomplete_fields = ("user", "term", "brand", "category")
-
-
-@admin.register(UserEvent)
-class UserEventAdmin(admin.ModelAdmin):
-    list_display = ("user", "event_type", "content_item", "product", "term", "created_at")
-    list_filter = ("event_type",)
-    search_fields = ("user__nickname",)
-    autocomplete_fields = ("user", "content_item", "product", "term")
-    date_hierarchy = "created_at"
-    list_select_related = ("user",)
-
-
-@admin.register(UserSavedItem)
-class UserSavedItemAdmin(admin.ModelAdmin):
-    list_display = ("user", "product", "content_item", "created_at")
-    search_fields = ("user__nickname", "product__canonical_name", "content_item__title")
-    autocomplete_fields = ("user", "product", "content_item")
-    date_hierarchy = "created_at"
-
-
-class VoteBallotInline(admin.TabularInline):
-    model = VoteBallot
-    extra = 0
-    autocomplete_fields = ("user",)
-
-
-@admin.register(VoteCard)
-class VoteCardAdmin(admin.ModelAdmin):
-    list_display = ("title", "user", "product", "status", "created_at")
-    list_filter = ("status",)
-    search_fields = ("title", "description")
-    autocomplete_fields = ("user", "product")
-    inlines = [VoteBallotInline]
-    date_hierarchy = "created_at"
-
-
-@admin.register(VoteBallot)
-class VoteBallotAdmin(admin.ModelAdmin):
-    list_display = ("card", "user", "choice", "created_at")
-    list_filter = ("choice",)
-    search_fields = ("card__title", "user__nickname")
-    autocomplete_fields = ("card", "user")
-
-
-class ChatMessageInline(admin.TabularInline):
-    model = ChatMessage
-    extra = 0
-    fields = ("role", "content", "created_at")
-    readonly_fields = ("created_at",)
-
-
-@admin.register(ChatSession)
-class ChatSessionAdmin(admin.ModelAdmin):
-    list_display = ("__str__", "user", "started_at", "updated_at")
-    search_fields = ("title", "user__nickname")
-    autocomplete_fields = ("user",)
-    inlines = [ChatMessageInline]
-    date_hierarchy = "started_at"
-
-
-@admin.register(ChatMessage)
-class ChatMessageAdmin(admin.ModelAdmin):
-    list_display = ("session", "role", "created_at")
-    list_filter = ("role",)
-    search_fields = ("content", "session__title")
-    autocomplete_fields = ("session",)
-    date_hierarchy = "created_at"
-
-@admin.register(CrawlTarget)
-class CrawlTargetAdmin(admin.ModelAdmin):
-
-    list_display = (
-        "id",
-        "name",
-        "source",
-        "target_type",
-        "collection_mode",
-        "is_active",
-        "priority",
-        "last_crawled_at",
-        "next_crawl_at",
-    )
-
-    list_filter = (
-        "source",
-        "target_type",
-        "collection_mode",
-        "is_active",
-    )
-
-    search_fields = (
-        "name",
-        "target_url",
-        "source__code",
-        "source__name",
-    )
-
-
-@admin.register(MappingCandidate)
-class MappingCandidateAdmin(admin.ModelAdmin):
-
-    list_display = (
-        "id",
-        "mapping_type",
-        "source_code",
-        "source_name",
-        "detected_count",
-        "suggested_target_name",
-        "match_method",
-        "confidence",
-        "status",
-        "last_seen_at",
-    )
-
-    list_filter = (
-        "mapping_type",
-        "status",
-        "source",
-    )
-
-    search_fields = (
-        "source_key",
-        "source_name",
-        "suggested_target_name",
-        "sample_entity_name",
-    )
+    list_per_page = 50
 
     readonly_fields = (
-        "source_detail",
+        "detected_count",
         "first_seen_at",
         "last_seen_at",
+        "created_at",
+        "updated_at",
+    )
+
+    fieldsets = (
+        (
+            "플랫폼 브랜드 정보",
+            {
+                "fields": (
+                    "source",
+                    "source_brand_id",
+                    "source_brand_name",
+                    "normalized_name",
+                    "source_brand_name_en",
+                    "normalized_name_en",
+                    "source_brand_url",
+                ),
+            },
+        ),
+        (
+            "FEEDIT 브랜드 매핑",
+            {
+                "fields": (
+                    "brand",
+                    "mapping_status",
+                    "mapping_method",
+                    "mapping_confidence",
+                ),
+            },
+        ),
+        (
+            "수집 이력",
+            {
+                "fields": (
+                    "detected_count",
+                    "first_seen_at",
+                    "last_seen_at",
+                    "created_at",
+                    "updated_at",
+                ),
+            },
+        ),
     )
 
     @admin.display(
-        description="Source"
+        description="표준 브랜드",
+        ordering="brand__name",
     )
-    def source_code(
-        self,
-        obj,
-    ):
-        return obj.source.code
+    def brand_name(self, obj):
+        if not obj.brand_id:
+            return "❌ 미매핑"
+
+        return (
+            f"{obj.brand.name} "
+            f"({obj.brand.brand_code})"
+        )
+
+
+# ====================================================

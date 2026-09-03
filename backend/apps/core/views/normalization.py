@@ -15,7 +15,7 @@ from apps.core.models import (
 )
 
 from apps.core.services.normalization import (
-    normalize_musinsa_brands_from_crawl_run,
+    normalize_pending_musinsa_raw_documents,
 )
 
 
@@ -113,11 +113,7 @@ def normalize_brands(
     )
 
     try:
-        result = (
-            normalize_musinsa_brands_from_crawl_run(
-                crawl_run_id=crawl_run.id,
-            )
-        )
+        result = normalize_pending_musinsa_raw_documents()
 
         messages.success(
             request,

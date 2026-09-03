@@ -98,16 +98,16 @@ class DictionaryTerm(models.Model):
 
     class Meta:
         db_table = '"dictionary"."dictionary_term"'
-        verbose_name = "사전 용어"
-        verbose_name_plural = "사전 용어"
-
-        ordering = ["term_type", "term_code"]
 
         constraints = [
             models.UniqueConstraint(
-                fields=["term_type", "normalized_name"],
+                fields=[
+                    "term_type",
+                    "normalized_name",
+                ],
                 name="uq_dict_term_name",
             ),
+
             models.CheckConstraint(
                 condition=Q(
                     term_type__in=[
@@ -122,6 +122,7 @@ class DictionaryTerm(models.Model):
                 ),
                 name="ck_dict_term_type",
             ),
+
             models.CheckConstraint(
                 condition=Q(
                     status__in=[
@@ -132,24 +133,21 @@ class DictionaryTerm(models.Model):
                 ),
                 name="ck_dict_term_status",
             ),
-            models.CheckConstraint(
-                condition=(
-                    Q(last_seen_at__isnull=True)
-                    | Q(first_seen_at__isnull=True)
-                    | Q(last_seen_at__gte=models.F("first_seen_at"))
-                ),
-                name="ck_dict_term_seen",
-            ),
         ]
 
     def __str__(self):
-        return f"[{self.term_type}] {self.canonical_name}"
+        return (
+            f"[{self.term_type}] "
+            f"{self.canonical_name}"
+        )
 
 class TermAlias(models.Model):
 
     class AliasType(models.TextChoices):
         SYNONYM = "SYNONYM", "동의어/유사어"
         PLATFORM = "PLATFORM", "플랫폼 표기"
+        OCR = "OCR", "OCR 표기"
+        TYPO = "TYPO", "오탈자"
         OTHER = "OTHER", "기타"
 
     term = models.ForeignKey(
@@ -159,8 +157,7 @@ class TermAlias(models.Model):
         verbose_name="표준 용어",
     )
 
-    # NULL이면 모든 소스에서 공통으로 사용하는 alias
-    # 값이 있으면 특정 플랫폼/소스에서만 사용하는 alias
+    # NULL이면 모든 소스에서 공통 사용
     source = models.ForeignKey(
         "core.Source",
         on_delete=models.SET_NULL,
@@ -187,57 +184,70 @@ class TermAlias(models.Model):
         choices=AliasType.choices,
         default=AliasType.SYNONYM,
         db_index=True,
-        verbose_name="유형",
+        verbose_name="별칭 유형",
     )
 
     created_at = models.DateTimeField(
         auto_now_add=True,
-        verbose_name="생성일시",
     )
 
     updated_at = models.DateTimeField(
         auto_now=True,
-        verbose_name="수정일시",
     )
 
     class Meta:
         db_table = '"dictionary"."term_alias"'
-        verbose_name = "용어 별칭"
-        verbose_name_plural = "용어 별칭"
 
         constraints = [
-            # 공통 alias(source=NULL) 중복 방지
+            # 공통 alias
             models.UniqueConstraint(
-                fields=["term", "normalized_alias"],
-                condition=Q(source__isnull=True),
+                fields=[
+                    "term",
+                    "normalized_alias",
+                ],
+                condition=Q(
+                    source__isnull=True,
+                ),
                 name="uq_term_alias_global",
             ),
-            # 특정 source alias 중복 방지
+
+            # source별 alias
             models.UniqueConstraint(
-                fields=["term", "normalized_alias", "source"],
-                condition=Q(source__isnull=False),
+                fields=[
+                    "term",
+                    "normalized_alias",
+                    "source",
+                ],
+                condition=Q(
+                    source__isnull=False,
+                ),
                 name="uq_term_alias_source",
             ),
         ]
 
         indexes = [
             models.Index(
-                fields=["normalized_alias"],
+                fields=[
+                    "normalized_alias",
+                ],
                 name="idx_term_alias_norm",
             ),
+
             models.Index(
-                fields=["source", "normalized_alias"],
+                fields=[
+                    "source",
+                    "normalized_alias",
+                ],
                 name="idx_term_alias_src_norm",
-            ),
-            models.Index(
-                fields=["term", "normalized_alias"],
-                name="idx_term_alias_term_norm",
             ),
         ]
 
     def __str__(self):
-        return f"{self.alias} -> {self.term.canonical_name}"
-
+        return (
+            f"{self.alias} "
+            f"-> {self.term.canonical_name}"
+        )
+    
 class Category(models.Model):
 
     class CategoryType(models.TextChoices):
@@ -790,7 +800,6 @@ class TermCandidate(models.Model):
         return self.raw_term
 
 class Brand(models.Model):
-
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", "활성"
         INACTIVE = "INACTIVE", "비활성"
@@ -800,19 +809,21 @@ class Brand(models.Model):
         unique=True,
         null=True,
         blank=True,
+        verbose_name="FEEDIT 브랜드 코드",
     )
 
     name = models.CharField(
         max_length=255,
         null=True,
         blank=True,
+        verbose_name="표준 브랜드명",
     )
 
     english_name = models.CharField(
         max_length=255,
         null=True,
         blank=True,
-        verbose_name="영문명",
+        verbose_name="영문 브랜드명",
     )
 
     country_code = models.CharField(
@@ -902,23 +913,31 @@ class CategoryAlias(models.Model):
 
     
 class BrandSource(models.Model):
-    """
-    외부 플랫폼의 브랜드 엔터티와 FEEDIT 표준 Brand를 연결한다.
 
-    예)
-    MUSINSA / source_brand_id=1234 / "나이키" -> Brand(Nike)
-    KREAM   / source_brand_id=5678 / "Nike"   -> Brand(Nike)
+    class MappingStatus(models.TextChoices):
+        UNMAPPED = "UNMAPPED", "미매핑"
+        AUTO_MAPPED = "AUTO_MAPPED", "자동 매핑"
+        MANUAL_MAPPED = "MANUAL_MAPPED", "수동 매핑"
+        REJECTED = "REJECTED", "제외"
 
-    문자열 alias는 TermAlias가 담당하고,
-    플랫폼 고유 ID 기반 매핑은 이 테이블이 담당한다.
-    """
+    class MappingMethod(models.TextChoices):
+        SOURCE_ID = "SOURCE_ID", "기존 Source ID"
+        EXACT_NAME = "EXACT_NAME", "이름 정확 일치"
+        NORMALIZED_NAME = (
+            "NORMALIZED_NAME",
+            "정규화 이름 일치",
+        )
+        ALIAS = "ALIAS", "별칭 일치"
+        MANUAL = "MANUAL", "수동 매핑"
 
     brand = models.ForeignKey(
         Brand,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="source_mappings",
         verbose_name="표준 브랜드",
-    )
+    )       
 
     source = models.ForeignKey(
         "core.Source",
@@ -934,8 +953,33 @@ class BrandSource(models.Model):
 
     source_brand_name = models.CharField(
         max_length=255,
+        null=True,
+        blank=True,
         db_index=True,
         verbose_name="플랫폼 브랜드명",
+    )
+
+    normalized_name = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="정규화 플랫폼 브랜드명",
+    )
+
+    source_brand_name_en = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="플랫폼 영문 브랜드명",
+    )
+
+    normalized_name_en = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="정규화 플랫폼 영문 브랜드명",
     )
 
     source_brand_url = models.URLField(
@@ -945,69 +989,172 @@ class BrandSource(models.Model):
         verbose_name="플랫폼 브랜드 URL",
     )
 
-    is_official = models.BooleanField(
-        default=False,
-        verbose_name="공식 입점 여부",
+    # -----------------------------------------------------
+    # Mapping metadata
+    # -----------------------------------------------------
+
+    mapping_status = models.CharField(
+        max_length=30,
+        choices=MappingStatus.choices,
+        default=MappingStatus.UNMAPPED,
+        db_index=True,
+        verbose_name="매핑 상태",
+    )
+
+    mapping_method = models.CharField(
+        max_length=30,
+        choices=MappingMethod.choices,
+        null=True,
+        blank=True,
+        verbose_name="매핑 방식",
+    )
+
+    mapping_confidence = models.DecimalField(
+        max_digits=6,
+        decimal_places=5,
+        null=True,
+        blank=True,
+        verbose_name="매핑 신뢰도",
+    )
+
+    # -----------------------------------------------------
+    # Observation metadata
+    # -----------------------------------------------------
+
+    detected_count = models.BigIntegerField(
+        default=1,
+        verbose_name="발견 횟수",
     )
 
     first_seen_at = models.DateTimeField(
         null=True,
         blank=True,
-        verbose_name="최초 관측일",
+        verbose_name="최초 발견일시",
     )
 
     last_seen_at = models.DateTimeField(
         null=True,
         blank=True,
-        verbose_name="최근 관측일",
+        verbose_name="최근 발견일시",
     )
 
     created_at = models.DateTimeField(
         auto_now_add=True,
-        verbose_name="생성일시",
     )
 
     updated_at = models.DateTimeField(
         auto_now=True,
-        verbose_name="수정일시",
     )
 
     class Meta:
         db_table = '"dictionary"."brand_source"'
-        verbose_name = "플랫폼 브랜드 매핑"
-        verbose_name_plural = "플랫폼 브랜드 매핑"
+        verbose_name = "플랫폼 브랜드"
+        verbose_name_plural = "플랫폼 브랜드"
 
         constraints = [
+            # 한 플랫폼 안에서 source_brand_id는 유일
             models.UniqueConstraint(
-                fields=["source", "source_brand_id"],
+                fields=[
+                    "source",
+                    "source_brand_id",
+                ],
                 name="uq_brand_source_src_id",
             ),
+
+            models.CheckConstraint(
+                condition=Q(
+                    mapping_status__in=[
+                        "UNMAPPED",
+                        "AUTO_MAPPED",
+                        "MANUAL_MAPPED",
+                        "REJECTED",
+                    ]
+                ),
+                name="ck_brand_source_mapping_status",
+            ),
+
             models.CheckConstraint(
                 condition=(
                     Q(last_seen_at__isnull=True)
                     | Q(first_seen_at__isnull=True)
-                    | Q(last_seen_at__gte=models.F("first_seen_at"))
+                    | Q(
+                        last_seen_at__gte=models.F(
+                            "first_seen_at"
+                        )
+                    )
                 ),
                 name="ck_brand_source_seen",
+            ),
+
+            # 매핑 상태와 Brand FK의 일관성 보장
+            models.CheckConstraint(
+                condition=(
+                    (
+                        Q(
+                            mapping_status__in=[
+                                "AUTO_MAPPED",
+                                "MANUAL_MAPPED",
+                            ]
+                        )
+                        & Q(
+                            brand__isnull=False,
+                        )
+                    )
+                    |
+                    (
+                        Q(
+                            mapping_status__in=[
+                                "UNMAPPED",
+                                "REJECTED",
+                            ]
+                        )
+                        & Q(
+                            brand__isnull=True,
+                        )
+                    )
+                ),
+                name="ck_brand_source_mapping_consistency",
             ),
         ]
 
         indexes = [
             models.Index(
-                fields=["brand"],
+                fields=[
+                    "brand",
+                ],
                 name="idx_brand_source_brand",
             ),
+
             models.Index(
-                fields=["source", "source_brand_name"],
-                name="idx_brand_source_src_name",
+                fields=[
+                    "source",
+                    "mapping_status",
+                ],
+                name="idx_brand_source_status",
+            ),
+
+            models.Index(
+                fields=[
+                    "source",
+                    "normalized_name",
+                ],
+                name="idx_brand_source_name",
             ),
         ]
 
     def __str__(self):
+        brand_name = (
+            self.brand.name
+            if self.brand_id
+            else "UNMAPPED"
+        )
+
         return (
             f"[{self.source.code}] "
-            f"{self.source_brand_name} -> {self.brand.name}"
+            f"{self.source_brand_name or self.source_brand_id} "
+            f"-> {brand_name}"
         )
+
 
 class MappingCandidate(models.Model):
 

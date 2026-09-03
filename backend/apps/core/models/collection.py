@@ -1,23 +1,12 @@
 from django.db import models
 from django.utils import timezone
 
-
-# ============================================================
-# SOURCE
-# ============================================================
-
+def default_crawl_target_params():
+    return {
+        "limit": 100,
+    }
 
 class Source(models.Model):
-    """
-    외부 데이터 소스 마스터.
-
-    예:
-    - MUSINSA
-    - ZIGZAG
-    - ABLY
-    - KREAM
-    - YOUTUBE
-    """
 
     class SourceType(models.TextChoices):
         COMMERCE = "COMMERCE", "Commerce"
@@ -142,13 +131,13 @@ class CrawlTarget(models.Model):
     )
 
     params = models.JSONField(
-        default=dict,
+        default=default_crawl_target_params,
         blank=True,
     )
 
     interval_minutes = models.PositiveIntegerField(
-        null=True,
-        blank=True,
+        default=1440,
+        help_text="수집 주기(분). 기본값 1440분 = 24시간",
     )
 
     priority = models.PositiveSmallIntegerField(
@@ -222,21 +211,6 @@ class CrawlTarget(models.Model):
 
 
 class CrawlRun(models.Model):
-    """
-    실제 수집 실행 이력.
-
-    CrawlTarget = 무엇을 수집할지
-    CrawlRun    = 실제 한 번의 실행
-
-    예:
-        MUSINSA 여성 아우터 DAILY target
-
-        09/01 → SUCCESS
-        09/02 → SUCCESS
-        09/03 → FAILED
-
-    각각 별도의 CrawlRun으로 남는다.
-    """
 
     class Status(models.TextChoices):
         PENDING = "PENDING", "Pending"
@@ -263,22 +237,20 @@ class CrawlRun(models.Model):
     )
 
     crawl_target = models.ForeignKey(
-        CrawlTarget,
-        on_delete=models.SET_NULL,
+        "CrawlTarget",
+        on_delete=models.CASCADE,
         related_name="crawl_runs",
         null=True,
         blank=True,
+        verbose_name="수집 대상",
     )
+
 
     run_type = models.CharField(
         max_length=50,
         choices=RunType.choices,
     )
 
-    # 실제 실행 대상 문자열
-    #
-    # URL 또는:
-    # "2025-01/F/002"
     target = models.CharField(
         max_length=500,
         null=True,
@@ -429,22 +401,12 @@ class CrawlRun(models.Model):
 
 
 class RawDocument(models.Model):
-    """
-    S3 RAW 객체에 대한 DB pointer.
 
-    JSON 원문 자체는 RDS에 저장하지 않는다.
-
-    실제 데이터:
-        S3
-
-    RDS:
-        S3 bucket/key
-        source
-        external_id
-        hash
-        collected_at
-        crawl_run
-    """
+    class NormalizationStatus(models.TextChoices):
+        PENDING = "PENDING", "정규화 대기"
+        PROCESSING = "PROCESSING", "정규화 중"
+        SUCCESS = "SUCCESS", "성공"
+        FAILED = "FAILED", "실패"
 
     source = models.ForeignKey(
         Source,
@@ -453,25 +415,16 @@ class RawDocument(models.Model):
     )
 
     crawl_run = models.ForeignKey(
-        CrawlRun,
-        on_delete=models.SET_NULL,
+        "CrawlRun",
+        on_delete=models.CASCADE,
         related_name="raw_documents",
-        null=True,
-        blank=True,
+        verbose_name="수집 실행",
     )
 
-    # PRODUCT / RANKING / REVIEW / STORE / VIDEO ...
     document_type = models.CharField(
         max_length=50,
     )
 
-    # 플랫폼 원본 식별자
-    #
-    # KREAM:
-    # 842180
-    #
-    # MUSINSA:
-    # goodsNo
     external_id = models.CharField(
         max_length=255,
         null=True,
@@ -512,6 +465,24 @@ class RawDocument(models.Model):
 
     created_at = models.DateTimeField(
         auto_now_add=True,
+    )
+    normalization_status = models.CharField(
+        max_length=20,
+        choices=NormalizationStatus.choices,
+        default=NormalizationStatus.PENDING,
+        db_index=True,
+        verbose_name="정규화 상태",
+    )
+    normalized_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="정규화 완료일시",
+    )
+
+    normalization_error = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="정규화 오류",
     )
 
     class Meta:
@@ -567,6 +538,13 @@ class RawDocument(models.Model):
                     "-collected_at",
                 ],
                 name="idx_raw_src_collected",
+            ),
+            models.Index(
+                fields=[
+                    "normalization_status",
+                    "id",
+                ],
+                name="idx_rawdoc_norm_status",
             ),
         ]
 
