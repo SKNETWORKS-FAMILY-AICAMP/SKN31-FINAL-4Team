@@ -602,7 +602,19 @@ class ZigzagParser:
         )
 
         return {
+            "id": cls._to_int(
+                data.get("id")
+            ),
+
+            "name": cls._clean_text(
+                data.get("name")
+            ),
+
             "shop": {
+                "name": cls._clean_text(
+                    shop.get("name")
+                    or shop.get("shop_name")
+                ),
                 "domain": cls._clean_text(
                     shop.get("main_domain")
                 ),
@@ -641,10 +653,14 @@ class ZigzagParser:
                 data.get("description")
             ),
 
-            "detail_image_urls": [
-                item["image_url"]
-                for item in detail_content["images"]
-            ],
+            "detail_image_urls": (
+                cls.select_detail_images_for_storage(
+                    [
+                        item["image_url"]
+                        for item in detail_content["images"]
+                    ]
+                )
+            ),
 
             "sales_status":
                 cls._clean_text(
@@ -785,6 +801,20 @@ class ZigzagParser:
     # ============================================================
     # DETAIL CONTENT
     # ============================================================
+
+    @staticmethod
+    def select_detail_images_for_storage(
+        image_urls: list[str],
+    ) -> list[str]:
+        """Keep at most the first 10 and last 10 detail images in L0."""
+
+        if len(image_urls) <= 20:
+            return list(image_urls)
+
+        return [
+            *image_urls[:10],
+            *image_urls[-10:],
+        ]
 
     @classmethod
     def _parse_detail_content(
