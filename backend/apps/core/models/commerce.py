@@ -96,7 +96,6 @@ class Product(models.Model):
     def __str__(self):
         return self.canonical_name
 
-
 class ProductSource(models.Model):
     class MarketType(models.TextChoices):
         RETAIL = "RETAIL", "일반 판매"
@@ -106,12 +105,30 @@ class ProductSource(models.Model):
         ACTIVE = "ACTIVE", "활성"
         INACTIVE = "INACTIVE", "비활성"
 
+    class MappingStatus(models.TextChoices):
+        UNMAPPED = "UNMAPPED", "표준 상품 미매핑"
+        REVIEW = "REVIEW", "검토 중"
+        MAPPED = "MAPPED", "표준 상품 연결 완료"
+        REJECTED = "REJECTED", "제외"
+
+    # ============================================================
+    # FEEDIT 표준 상품
+    # - 초기 적재 시 NULL
+    # - 나중에 동일 상품 판별 후 연결
+    # ============================================================
+
     product = models.ForeignKey(
         Product,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="sources",
         verbose_name="표준 상품",
     )
+
+    # ============================================================
+    # 플랫폼
+    # ============================================================
 
     source = models.ForeignKey(
         "core.Source",
@@ -125,11 +142,66 @@ class ProductSource(models.Model):
         verbose_name="플랫폼 상품 ID",
     )
 
-    market_type = models.CharField(
-        max_length=20,
-        choices=MarketType.choices,
-        default=MarketType.RETAIL,
-        verbose_name="판매 유형",
+    source_name = models.CharField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name="플랫폼 상품명",
+    )
+
+    normalized_name = models.CharField(
+        max_length=500,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="정규화 상품명",
+    )
+
+    # ============================================================
+    # 플랫폼 원본 브랜드 / 카테고리
+    # ============================================================
+
+    source_brand = models.ForeignKey(
+        "core.BrandSource",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="product_sources",
+        verbose_name="플랫폼 브랜드",
+    )
+
+    source_category = models.ForeignKey(
+        "core.CategorySource",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="product_sources",
+        verbose_name="플랫폼 카테고리",
+    )
+
+    # ============================================================
+    # 상품 원본 정보
+    # ============================================================
+
+    style_no = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="스타일/모델 번호",
+    )
+
+    source_name_en = models.CharField(
+        max_length=500,
+        null=True,
+        blank=True,
+        verbose_name="플랫폼 영문 상품명",
+    )
+
+    thumbnail_url = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="대표 이미지 URL",
     )
 
     product_url = models.TextField(
@@ -137,6 +209,42 @@ class ProductSource(models.Model):
         blank=True,
         verbose_name="상품 URL",
     )
+
+    gender_scope = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="성별 범위",
+    )
+
+    attributes = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="플랫폼 상품 속성",
+    )
+
+    # ============================================================
+    # 판매 유형 / 매핑 상태
+    # ============================================================
+
+    market_type = models.CharField(
+        max_length=20,
+        choices=MarketType.choices,
+        default=MarketType.RETAIL,
+        verbose_name="판매 유형",
+    )
+
+    mapping_status = models.CharField(
+        max_length=20,
+        choices=MappingStatus.choices,
+        default=MappingStatus.UNMAPPED,
+        db_index=True,
+        verbose_name="상품 매핑 상태",
+    )
+
+    # ============================================================
+    # 관측 정보
+    # ============================================================
 
     first_seen_at = models.DateTimeField(
         null=True,
@@ -150,10 +258,16 @@ class ProductSource(models.Model):
         verbose_name="최근 확인일시",
     )
 
+    detected_count = models.BigIntegerField(
+        default=1,
+        verbose_name="발견 횟수",
+    )
+
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
         default=Status.ACTIVE,
+        db_index=True,
         verbose_name="상태",
     )
 
@@ -174,15 +288,44 @@ class ProductSource(models.Model):
 
         constraints = [
             models.UniqueConstraint(
-                fields=["source", "source_product_id"],
+                fields=[
+                    "source",
+                    "source_product_id",
+                ],
                 name="uq_product_src",
             ),
         ]
 
         indexes = [
             models.Index(
+                fields=[
+                    "source",
+                    "source_product_id",
+                ],
+                name="idx_prod_src_lookup",
+            ),
+            models.Index(
                 fields=["product"],
                 name="idx_prod_src_prod",
+            ),
+            models.Index(
+                fields=["source_brand"],
+                name="idx_prod_src_brand",
+            ),
+            models.Index(
+                fields=["source_category"],
+                name="idx_prod_src_cat",
+            ),
+            models.Index(
+                fields=[
+                    "source",
+                    "mapping_status",
+                ],
+                name="idx_prod_src_map_status",
+            ),
+            models.Index(
+                fields=["style_no"],
+                name="idx_prod_src_style",
             ),
             models.Index(
                 fields=["market_type"],
@@ -191,7 +334,15 @@ class ProductSource(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.source.code} / {self.source_product_id}"
+        name = (
+            self.source_name
+            or self.source_product_id
+        )
+
+        return (
+            f"[{self.source.code}] "
+            f"{name}"
+        )
 
 
 class ProductSourceSnapshot(models.Model):

@@ -1,0 +1,45 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}{{ candidate.term }} | FEEDIT Admin{% endblock %}
+
+{% block content %}
+{% include "dashboard/components/page_header.html" %}
+
+<section class="panel detail-card">
+    <div class="candidate-top">
+        <div>
+            <span class="type-chip">{{ candidate.term_type }}</span>
+            <h2>{{ candidate.term }}</h2>
+        </div>
+        <span class="decision-chip decision-{{ candidate.decision|lower }}">
+            {{ candidate.decision }}
+        </span>
+    </div>
+
+    <div class="detail-grid">
+        <div>
+            <span>MATCHED TERM</span>
+            <strong>{{ candidate.matched_term }}</strong>
+        </div>
+        <div>
+            <span>SIMILARITY</span>
+            <strong>{{ candidate.similarity }}</strong>
+        </div>
+        <div>
+            <span>COUNT</span>
+            <strong>{{ candidate.count }}</strong>
+        </div>
+    </div>
+
+    <div class="reason-box">
+        <span>MODEL REASON</span>
+        <p>{{ candidate.reason }}</p>
+    </div>
+
+    <div class="candidate-actions">
+        <button class="btn btn-outline">Reject</button>
+        <button class="btn btn-dark">Keep</button>
+        <button class="btn btn-accent">Promote</button>
+    </div>
+</section>
+{% endblock %}

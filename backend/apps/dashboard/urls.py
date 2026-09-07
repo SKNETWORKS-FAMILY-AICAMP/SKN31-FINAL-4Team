@@ -6,31 +6,41 @@ app_name = "dashboard"
 
 
 urlpatterns = [
-    path("", views.home, name="home"),
+    path("", views.dashboard, name="dashboard"),
 
-    # 운영
-    path("collection/", views.collection, name="collection"),
+    path("collection/targets/", views.collection_targets, name="collection_targets"),
+    path("collection/runs/", views.collection_runs, name="collection_runs"),
+    path("collection/raw-documents/", views.raw_documents, name="raw_documents"),
 
-    # 데이터
-    path("data/", views.data, name="data"),
-    path("content/", views.content, name="content"),
+    path("normalization/products/", views.normalized_products, name="normalized_products"),
+    path("normalization/failures/", views.normalization_failures, name="normalization_failures"),
 
-    # 분석
-    path("analysis/", views.analysis, name="analysis"),
-
-    # 품질
-    path("quality/", views.quality, name="quality"),
-
-    # 운영 도구
-    path("tools/import/", views.import_data, name="import"),
-    path("tools/export/", views.export_data, name="export"),
-    path("tools/probe/", views.probe, name="probe"),
-
-    # 설정
-    path("settings/api/", views.api_settings, name="api_settings"),
-    path(
-        "settings/collection/",
-        views.collection_settings,
-        name="collection_settings",
+    path("dictionary/terms/", views.dictionary_terms, name="dictionary_terms"),
+    path("dictionary/candidates/", views.dictionary_candidates, name="dictionary_candidates"),
+    path("dictionary/candidates/<int:pk>/", views.dictionary_candidate_detail, name="dictionary_candidate_detail"),
+        path(
+        "dictionary/brands/",
+        views.brand_sources,
+        name="brand_sources",
     ),
+
+    path(
+        "dictionary/brands/<int:source_id>/map/",
+        views.map_brand_source,
+        name="map_brand_source",
+    ),
+
+    path(
+        "dictionary/brands/<int:source_id>/create/",
+        views.create_brand_from_source,
+        name="create_brand_from_source",
+    ),
+    path("trend/metrics/", views.trend_metrics, name="trend_metrics"),
+
+    path("data/products/", views.products, name="products"),
+    path("data/brands/", views.brands, name="brands"),
+    path("data/categories/", views.categories, name="categories"),
+
+    path("jobs/", views.jobs, name="jobs"),
+    path("system/", views.system_status, name="system_status"),
 ]

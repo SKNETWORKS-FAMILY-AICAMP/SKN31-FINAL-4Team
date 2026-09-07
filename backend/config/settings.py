@@ -26,7 +26,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "apps.core",
-    "apps.dashboard.apps.DashboardConfig",
+    "django.contrib.humanize",
+    "apps.dashboard.apps.AdminDashboardConfig",
     "apps.api.apps.ApiConfig",
 ]
 
@@ -68,6 +69,9 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD"),
         "HOST": os.getenv("DB_HOST"),
         "PORT": os.getenv("DB_PORT", "5432"),
+        "OPTIONS": {
+            "options": '-c search_path=dictionary,"$user",public',
+        },
     }
 }
 

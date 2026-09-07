@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}System Status | FEEDIT Admin{% endblock %}
+
+{% block content %}
+{% include "dashboard/components/page_header.html" %}
+
+<section class="panel">
+    <div class="service-grid">
+        {% for service in services %}
+        <article class="service-card">
+            <div class="service-card-head">
+                <h3>{{ service.name }}</h3>
+                <span class="status-dot status-{{ service.status }}"></span>
+            </div>
+            <p>{{ service.detail }}</p>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

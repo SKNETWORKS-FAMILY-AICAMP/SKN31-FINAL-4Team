@@ -1,47 +1,55 @@
 from __future__ import annotations
 
-from curl_cffi import requests
+import logging
+from typing import Any
+
+import requests
+
+from collection.common.http import DEFAULT_HEADERS
 
 from .constants import (
-    DEFAULT_HEADERS,
-    DEFAULT_RENDER_WAIT_MS,
-    DEFAULT_SCROLL_COUNT,
-    DEFAULT_SCROLL_WAIT_MS,
-    PRODUCT_CARD_SELECTOR,
     REQUEST_TIMEOUT,
+    SEARCH_RESULT_API_URL,
+    ZIGZAG_BASE_URL,
 )
 from .exceptions import ZigzagCollectError
 
 
+logger = logging.getLogger(__name__)
+
+
 class ZigzagClient:
     """
-    ZIGZAG Client.
+    ZIGZAG GraphQL HTTP client.
 
-    PRODUCT:
-    - curl_cffi HTTP 요청
+    책임:
+    - HTTP 세션
+    - GraphQL POST
+    - HTTP/JSON/GraphQL 오류 처리
 
-    RANKING:
-    - Playwright Chromium 렌더링
-
-    저장/S3/DB 처리는 하지 않는다.
+    하지 않는 일:
+    - pagination
+    - 상품 파싱
+    - S3 저장
+    - Django ORM
     """
 
     def __init__(
         self,
         *,
         timeout: int | float | None = None,
-        session=None,
+        session: requests.Session | None = None,
     ):
-        self.timeout = (
-            timeout
-            or REQUEST_TIMEOUT
-        )
+        self.timeout = timeout or REQUEST_TIMEOUT
+        self.session = session or requests.Session()
 
-        self.session = (
-            session
-            or requests.Session(
-                impersonate="chrome",
-            )
+        self.session.headers.update(DEFAULT_HEADERS)
+        self.session.headers.update(
+            {
+                "Content-Type": "application/json",
+                "Origin": ZIGZAG_BASE_URL,
+                "Referer": f"{ZIGZAG_BASE_URL}/",
+            }
         )
 
     def close(self) -> None:
@@ -50,238 +58,70 @@ class ZigzagClient:
     def __enter__(self):
         return self
 
-    def __exit__(
-        self,
-        exc_type,
-        exc,
-        tb,
-    ):
+    def __exit__(self, exc_type, exc, tb):
         self.close()
 
-    # ============================================================
-    # HTML
-    # ============================================================
-
-    def get_html(
+    def post_graphql(
         self,
-        url: str,
         *,
-        params: dict | None = None,
-        referer: str | None = None,
-        headers: dict | None = None,
-    ):
-        request_headers = {
-            **DEFAULT_HEADERS,
-        }
+        query: str,
+        variables: dict[str, Any],
+        url: str = SEARCH_RESULT_API_URL,
+    ) -> dict[str, Any]:
+        response = None
 
-        if referer:
-            request_headers[
-                "Referer"
-            ] = referer
-
-        if headers:
-            request_headers.update(
-                headers
-            )
-
-        return self.get(
-            url,
-            params=params,
-            headers=request_headers,
-        )
-
-    # ============================================================
-    # LOW LEVEL GET
-    # ============================================================
-
-    def get(
-        self,
-        url: str,
-        *,
-        params: dict | None = None,
-        headers: dict | None = None,
-    ):
         try:
-            response = (
-                self.session.get(
-                    url,
-                    params=params,
-                    headers=headers,
-                    timeout=self.timeout,
-                )
+            response = self.session.post(
+                url,
+                json={
+                    "query": query,
+                    "variables": variables,
+                },
+                timeout=self.timeout,
             )
 
             response.raise_for_status()
 
-            return response
+        except requests.RequestException as exc:
+            status_code = getattr(response, "status_code", None)
+            body_preview = None
 
-        except Exception as exc:
-            raise ZigzagCollectError(
-                "ZIGZAG GET 요청 실패: "
-                f"{url} / {exc}"
-            ) from exc
+            if response is not None:
+                try:
+                    body_preview = response.text[:500]
+                except Exception:
+                    body_preview = None
 
-    # ============================================================
-    # PLAYWRIGHT RENDER
-    # ============================================================
-
-    def render_html(
-        self,
-        url: str,
-        *,
-        limit: int | None = None,
-        scroll_count: int = (
-            DEFAULT_SCROLL_COUNT
-        ),
-        wait_ms: int = (
-            DEFAULT_RENDER_WAIT_MS
-        ),
-        scroll_wait_ms: int = (
-            DEFAULT_SCROLL_WAIT_MS
-        ),
-        mobile: bool = True,
-    ) -> str:
-        """
-        JavaScript 렌더링이 필요한 ZIGZAG 목록 페이지를
-        Chromium으로 렌더링한 뒤 최종 HTML을 반환한다.
-        """
-
-        try:
-            from playwright.sync_api import (
-                sync_playwright,
+            logger.exception(
+                "ZIGZAG GraphQL request failed url=%s status=%s body=%r",
+                url,
+                status_code,
+                body_preview,
             )
 
-        except ImportError as exc:
             raise ZigzagCollectError(
-                "Playwright가 설치되어 있지 않습니다. "
-                "`pip install playwright` 후 "
-                "`playwright install chromium`을 "
-                "실행하세요."
+                "ZIGZAG GraphQL 요청 실패: "
+                f"url={url} status={status_code} error={exc}"
             ) from exc
 
         try:
-            with sync_playwright() as playwright:
-                browser = (
-                    playwright.chromium.launch(
-                        headless=True,
-                    )
-                )
+            body = response.json()
 
-                context_options = {
-                    "locale": "ko-KR",
-                    "user_agent": (
-                        DEFAULT_HEADERS[
-                            "User-Agent"
-                        ]
-                    ),
-                }
-
-                if mobile:
-                    context_options.update(
-                        {
-                            "viewport": {
-                                "width": 430,
-                                "height": 932,
-                            },
-                            "is_mobile": True,
-                            "has_touch": True,
-                        }
-                    )
-
-                context = (
-                    browser.new_context(
-                        **context_options
-                    )
-                )
-
-                page = context.new_page()
-
-                page.goto(
-                    url,
-                    wait_until=(
-                        "domcontentloaded"
-                    ),
-                    timeout=int(
-                        self.timeout
-                        * 1000
-                    ),
-                )
-
-                page.wait_for_timeout(
-                    wait_ms
-                )
-
-                previous_count = -1
-                stale_rounds = 0
-
-                for _ in range(
-                    max(
-                        0,
-                        int(scroll_count),
-                    )
-                ):
-                    current_count = (
-                        page.locator(
-                            PRODUCT_CARD_SELECTOR
-                        )
-                        .count()
-                    )
-
-                    if (
-                        limit is not None
-                        and current_count
-                        >= limit
-                    ):
-                        break
-
-                    page.evaluate(
-                        """
-                        window.scrollTo(
-                            0,
-                            document.body.scrollHeight
-                        )
-                        """
-                    )
-
-                    page.wait_for_timeout(
-                        scroll_wait_ms
-                    )
-
-                    next_count = (
-                        page.locator(
-                            PRODUCT_CARD_SELECTOR
-                        )
-                        .count()
-                    )
-
-                    if (
-                        next_count
-                        <= current_count
-                    ):
-                        stale_rounds += 1
-                    else:
-                        stale_rounds = 0
-
-                    previous_count = (
-                        next_count
-                    )
-
-                    # 4회 연속 상품 증가 없음
-                    if stale_rounds >= 4:
-                        break
-
-                html = page.content()
-
-                context.close()
-                browser.close()
-
-                return html
-
-        except ZigzagCollectError:
-            raise
-
-        except Exception as exc:
+        except ValueError as exc:
             raise ZigzagCollectError(
-                "ZIGZAG 브라우저 렌더링 실패: "
-                f"{url} / {exc}"
+                f"ZIGZAG JSON 응답 파싱 실패: {url}"
             ) from exc
+
+        if not isinstance(body, dict):
+            raise ZigzagCollectError(
+                f"ZIGZAG GraphQL 응답이 object가 아닙니다: {url}"
+            )
+
+        errors = body.get("errors")
+
+        if errors:
+            raise ZigzagCollectError(
+                f"ZIGZAG GraphQL 응답 에러: {errors}"
+            )
+
+        return body

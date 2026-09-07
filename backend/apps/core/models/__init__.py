@@ -19,8 +19,8 @@ from .dictionary import (
     TermCandidate,
     Brand,
     BrandSource,
-    CategoryAlias,
-    MappingCandidate,
+    CategorySource,
+    TermCandidateObservation,
 )
 
 from .commerce import *

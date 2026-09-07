@@ -1,0 +1,748 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+
+{% block title %}
+Collection Targets | FEEDIT Admin
+{% endblock %}
+
+{% block content %}
+{% include "dashboard/components/page_header.html" %}
+
+<section class="panel">
+    {% include "dashboard/components/empty_state.html" %}
+
+
+<!-- SUMMARY -->
+
+<section class="run-summary-grid">
+
+    <article class="run-summary-card">
+
+        <span>
+            TOTAL TARGETS
+        </span>
+
+        <strong>
+            {{ summary.total|intcomma }}
+        </strong>
+
+        <small>
+            현재 필터 기준
+        </small>
+
+    </article>
+
+
+    <article class="run-summary-card">
+
+        <span>
+            ACTIVE
+        </span>
+
+        <strong>
+            {{ summary.active|intcomma }}
+        </strong>
+
+        <small>
+            수집 활성화
+        </small>
+
+    </article>
+
+
+    <article class="run-summary-card">
+
+        <span>
+            INACTIVE
+        </span>
+
+        <strong>
+            {{ summary.inactive|intcomma }}
+        </strong>
+
+        <small>
+            수집 중지
+        </small>
+
+    </article>
+
+
+    <article class="run-summary-card">
+
+        <span>
+            LIVE MODE
+        </span>
+
+        <strong>
+            {{ summary.live|intcomma }}
+        </strong>
+
+        <small>
+            실시간 수집
+        </small>
+
+    </article>
+
+</section>
+
+
+<!-- FILTER -->
+
+<section class="panel run-filter-panel">
+
+    <form
+        method="get"
+        class="target-filter-form"
+    >
+
+        <div class="filter-field target-search">
+
+            <label>
+                SEARCH
+            </label>
+
+            <input
+                type="text"
+                name="q"
+                value="{{ search_query }}"
+                placeholder="Target name, URL, Source"
+            >
+
+        </div>
+
+
+        <div class="filter-field">
+
+            <label>
+                SOURCE
+            </label>
+
+            <select name="source">
+
+                <option value="">
+                    All
+                </option>
+
+                {% for source in sources %}
+
+                    <option
+                        value="{{ source.id }}"
+
+                        {% if selected_source == source.id|stringformat:"s" %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ source.code }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-field">
+
+            <label>
+                TARGET TYPE
+            </label>
+
+            <select name="target_type">
+
+                <option value="">
+                    All
+                </option>
+
+                {% for value, label in target_type_choices %}
+
+                    <option
+                        value="{{ value }}"
+
+                        {% if selected_target_type == value %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ label }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-field">
+
+            <label>
+                MODE
+            </label>
+
+            <select name="collection_mode">
+
+                <option value="">
+                    All
+                </option>
+
+                {% for value, label in collection_mode_choices %}
+
+                    <option
+                        value="{{ value }}"
+
+                        {% if selected_collection_mode == value %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ label }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-field">
+
+            <label>
+                STATUS
+            </label>
+
+            <select name="active">
+
+                <option value="">
+                    All
+                </option>
+
+                <option
+                    value="1"
+
+                    {% if selected_active == "1" %}
+                        selected
+                    {% endif %}
+                >
+                    Active
+                </option>
+
+                <option
+                    value="0"
+
+                    {% if selected_active == "0" %}
+                        selected
+                    {% endif %}
+                >
+                    Inactive
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-actions">
+
+            <button
+                type="submit"
+                class="btn btn-dark"
+            >
+                Apply
+            </button>
+
+            <a
+                href="{% url 'dashboard:collection_targets' %}"
+                class="btn btn-outline"
+            >
+                Reset
+            </a>
+
+        </div>
+
+    </form>
+
+</section>
+
+
+<!-- TARGET TABLE -->
+
+<section class="panel">
+
+    <div class="panel-header row-between">
+
+        <div>
+
+            <p>
+                CRAWLER CONFIGURATION
+            </p>
+
+            <h2>
+                Crawl Targets
+            </h2>
+
+        </div>
+
+
+        <span class="count-chip">
+
+            {{ page_obj.paginator.count|intcomma }}
+            TARGETS
+
+        </span>
+
+    </div>
+
+
+    <div class="table-wrap">
+
+        <table class="admin-table target-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>SOURCE</th>
+                    <th>TARGET NAME</th>
+                    <th>TYPE</th>
+                    <th>MODE</th>
+                    <th>STATUS</th>
+                    <th>INTERVAL</th>
+                    <th>PRIORITY</th>
+                    <th>LAST CRAWLED</th>
+                    <th>NEXT CRAWL</th>
+                    <th>ACTION</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+            {% for target in targets %}
+
+                <tr>
+
+                    <td>
+
+                        <strong>
+                            #{{ target.id }}
+                        </strong>
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="source-cell">
+
+                            <strong>
+                                {{ target.source.code }}
+                            </strong>
+
+                            <small>
+                                {{ target.source.name }}
+                            </small>
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="target-cell">
+
+                            <strong>
+
+                                {% if target.name %}
+
+                                    {{ target.name }}
+
+                                {% else %}
+
+                                    Target #{{ target.id }}
+
+                                {% endif %}
+
+                            </strong>
+
+
+                            {% if target.target_url %}
+
+                                <small
+                                    title="{{ target.target_url }}"
+                                >
+
+                                    {{ target.target_url|truncatechars:50 }}
+
+                                </small>
+
+                            {% endif %}
+
+                        </div>
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="type-chip">
+
+                            {{ target.get_target_type_display }}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="
+                                target-mode
+                                target-mode--{{ target.collection_mode|lower }}
+                            "
+                        >
+
+                            {{ target.get_collection_mode_display }}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        {% if target.is_active %}
+
+                            <span class="target-status target-status--active">
+
+                                <i></i>
+                                ACTIVE
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="target-status target-status--inactive">
+
+                                <i></i>
+                                INACTIVE
+
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+
+                        <strong>
+
+                            {{ target.interval_minutes|intcomma }}
+
+                        </strong>
+
+                        <small class="unit-text">
+
+                            min
+
+                        </small>
+
+                    </td>
+
+
+                    <td>
+
+                        <span class="priority-chip">
+
+                            P{{ target.priority }}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        {% if target.last_crawled_at %}
+
+                            <div class="datetime-cell">
+
+                                <strong>
+
+                                    {{ target.last_crawled_at|date:"m-d H:i" }}
+
+                                </strong>
+
+                                <small>
+
+                                    {{ target.last_crawled_at|date:"Y" }}
+
+                                </small>
+
+                            </div>
+
+                        {% else %}
+
+                            <span class="muted">
+                                Never
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+
+                        {% if target.next_crawl_at %}
+
+                            <div class="datetime-cell">
+
+                                <strong>
+
+                                    {{ target.next_crawl_at|date:"m-d H:i" }}
+
+                                </strong>
+
+                                <small>
+
+                                    {{ target.next_crawl_at|date:"Y" }}
+
+                                </small>
+
+                            </div>
+
+                        {% else %}
+
+                            <span class="muted">
+                                -
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+
+                        <div class="target-actions">
+
+                            <button
+                                type="button"
+                                class="btn-icon"
+                                title="Run now"
+                            >
+                                ▶
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="btn-icon"
+                                title="View params"
+                                data-target-toggle="{{ target.id }}"
+                            >
+                                ⋯
+                            </button>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+
+                <!-- DETAIL -->
+
+                <tr
+                    class="run-detail-row"
+                    id="target-detail-{{ target.id }}"
+                >
+
+                    <td colspan="11">
+
+                        <div class="run-detail">
+
+                            <div class="run-detail-grid">
+
+                                <div>
+
+                                    <span>
+                                        TARGET ID
+                                    </span>
+
+                                    <strong>
+                                        {{ target.id }}
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        SOURCE
+                                    </span>
+
+                                    <strong>
+                                        {{ target.source.code }}
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        MODE
+                                    </span>
+
+                                    <strong>
+                                        {{ target.collection_mode }}
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        INTERVAL
+                                    </span>
+
+                                    <strong>
+                                        {{ target.interval_minutes }} min
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            {% if target.target_url %}
+
+                                <div class="run-detail-block">
+
+                                    <span>
+                                        TARGET URL
+                                    </span>
+
+                                    <p>
+                                        {{ target.target_url }}
+                                    </p>
+
+                                </div>
+
+                            {% endif %}
+
+
+                            <div class="run-detail-block">
+
+                                <span>
+                                    PARAMS
+                                </span>
+
+                                <pre>{{ target.params }}</pre>
+
+                            </div>
+
+
+                            <div class="run-detail-block">
+
+                                <span>
+                                    COLLECTION CONFIG
+                                </span>
+
+                                <p>
+                                    Target type:
+                                    {{ target.target_type }}
+                                    /
+                                    Priority:
+                                    {{ target.priority }}
+                                    /
+                                    Active:
+                                    {{ target.is_active }}
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+
+            {% empty %}
+
+                <tr>
+
+                    <td
+                        colspan="11"
+                        class="empty-table-cell"
+                    >
+
+                        등록된 크롤러 타깃이 없습니다.
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- PAGINATION -->
+
+    {% if page_obj.paginator.num_pages > 1 %}
+
+        <div class="pagination">
+
+            {% if page_obj.has_previous %}
+
+                <a
+                    href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&source={{ selected_source }}&target_type={{ selected_target_type }}&collection_mode={{ selected_collection_mode }}&active={{ selected_active }}"
+                >
+                    ← Prev
+                </a>
+
+            {% endif %}
+
+
+            <span>
+
+                {{ page_obj.number }}
+
+                /
+
+                {{ page_obj.paginator.num_pages }}
+
+            </span>
+
+
+            {% if page_obj.has_next %}
+
+                <a
+                    href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&source={{ selected_source }}&target_type={{ selected_target_type }}&collection_mode={{ selected_collection_mode }}&active={{ selected_active }}"
+                >
+                    Next →
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

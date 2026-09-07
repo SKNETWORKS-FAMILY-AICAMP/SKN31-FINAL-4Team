@@ -1,0 +1,119 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}Dashboard | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header dashboard-heading">
+    <div>
+        <p class="page-eyebrow">OVERVIEW</p>
+        <h1>Dashboard</h1>
+        <p class="page-description">FEEDIT 데이터 파이프라인 및 서비스 운영 현황</p>
+    </div>
+    <button class="btn btn-dark">Refresh</button>
+</div>
+
+<section class="stat-grid">
+    <article class="stat-card">
+        <span class="stat-label">COLLECTED TODAY</span>
+        <strong>{{ stats.collected_today|intcomma }}</strong>
+        <small>오늘 수집 데이터</small>
+    </article>
+
+    <article class="stat-card">
+        <span class="stat-label">SUCCESS RATE</span>
+        <strong>{{ stats.success_rate }}%</strong>
+        <small>최근 수집 성공률</small>
+    </article>
+
+    <article class="stat-card">
+        <span class="stat-label">NORMALIZE QUEUE</span>
+        <strong>{{ stats.normalize_pending|intcomma }}</strong>
+        <small>정규화 대기</small>
+    </article>
+
+    <article class="stat-card highlight">
+        <span class="stat-label">TERM CANDIDATES</span>
+        <strong>{{ stats.term_candidates }}</strong>
+        <small>신규 사전 후보</small>
+    </article>
+</section>
+
+<div class="dashboard-grid">
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <p>PIPELINE</p>
+                <h2>Data Processing</h2>
+            </div>
+        </div>
+
+        <div class="pipeline">
+            {% for step in pipeline %}
+            <div class="pipeline-step">
+                <div class="pipeline-dot pipeline-dot--{{ step.status }}"></div>
+                <div class="pipeline-copy">
+                    <span>{{ step.name }}</span>
+                    <strong>{{ step.count|intcomma }}</strong>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <p>SOURCES</p>
+                <h2>Collection Status</h2>
+            </div>
+        </div>
+
+        <div class="source-list">
+            {% for source in sources %}
+            <div class="source-row">
+                <div>
+                    <span class="status-dot status-{{ source.status }}"></span>
+                    {{ source.name }}
+                </div>
+                <strong>{{ source.count|intcomma }}</strong>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<section class="panel recent-errors-panel">
+    <div class="panel-header">
+        <div>
+            <p>MONITORING</p>
+            <h2>Recent Errors</h2>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>TIME</th>
+                    <th>SOURCE</th>
+                    <th>MESSAGE</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for error in recent_errors %}
+                <tr>
+                    <td>{{ error.time }}</td>
+                    <td>{{ error.source }}</td>
+                    <td>{{ error.message }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

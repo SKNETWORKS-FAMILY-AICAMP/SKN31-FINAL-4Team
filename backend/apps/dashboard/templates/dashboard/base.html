@@ -1,0 +1,128 @@
+{% load static humanize %}
+
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}
+        FEEDIT Admin
+        {% endblock %}
+    </title>
+
+    <!-- =====================================================
+         COMMON CSS
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="{% static 'dashboard/css/base.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'dashboard/css/components.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'dashboard/css/dashboard.css' %}"
+    >
+
+
+    <!-- =====================================================
+         PAGE CSS
+         각 페이지에서 필요한 CSS만 추가
+    ====================================================== -->
+
+    {% block extra_css %}
+    {% endblock %}
+</head>
+
+
+<body>
+
+<div class="admin-layout">
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    {% include "dashboard/components/sidebar.html" %}
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <div class="admin-main">
+
+        <!-- HEADER -->
+
+        {% include "dashboard/components/header.html" %}
+
+
+        <!-- CONTENT -->
+
+        <main class="admin-content">
+
+            <!-- Django messages -->
+
+            {% if messages %}
+                <div class="dashboard-messages">
+
+                    {% for message in messages %}
+
+                        <div
+                            class="
+                                dashboard-message
+                                dashboard-message--{{ message.tags|default:'info' }}
+                            "
+                        >
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+            {% endif %}
+
+
+            <!-- PAGE CONTENT -->
+
+            {% block content %}
+            {% endblock %}
+
+        </main>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     COMMON JS
+====================================================== -->
+
+<script
+    src="{% static 'dashboard/js/admin.js' %}"
+></script>
+
+
+<!-- =====================================================
+     PAGE JS
+====================================================== -->
+
+{% block extra_js %}
+{% endblock %}
+
+</body>
+
+</html>

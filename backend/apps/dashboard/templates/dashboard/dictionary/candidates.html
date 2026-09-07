@@ -1,0 +1,62 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Dictionary Candidates | FEEDIT Admin{% endblock %}
+
+{% block content %}
+{% include "dashboard/components/page_header.html" %}
+
+<section class="panel">
+    <div class="panel-header row-between">
+        <div>
+            <p>REFINE QUEUE</p>
+            <h2>Candidate Review</h2>
+        </div>
+        <span class="count-chip">{{ candidates|length }} SAMPLE</span>
+    </div>
+
+    <div class="candidate-list">
+        {% for candidate in candidates %}
+        <article class="candidate-card">
+            <div class="candidate-top">
+                <div>
+                    <span class="type-chip">{{ candidate.term_type }}</span>
+                    <h3>{{ candidate.term }}</h3>
+                </div>
+                <span class="decision-chip decision-{{ candidate.decision|lower }}">
+                    {{ candidate.decision }}
+                </span>
+            </div>
+
+            <div class="candidate-metrics">
+                <div>
+                    <span>MATCH</span>
+                    <strong>{{ candidate.matched_term }}</strong>
+                </div>
+                <div>
+                    <span>SIMILARITY</span>
+                    <strong>{{ candidate.similarity }}</strong>
+                </div>
+                <div>
+                    <span>COUNT</span>
+                    <strong>{{ candidate.count }}</strong>
+                </div>
+            </div>
+
+            <div class="reason-box">
+                <span>REASON</span>
+                <p>{{ candidate.reason }}</p>
+            </div>
+
+            <div class="candidate-actions">
+                <a class="btn btn-outline" href="{% url 'dashboard:dictionary_candidate_detail' candidate.id %}">
+                    Detail
+                </a>
+                <button class="btn btn-outline">Reject</button>
+                <button class="btn btn-dark">Keep</button>
+                <button class="btn btn-accent">Promote</button>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

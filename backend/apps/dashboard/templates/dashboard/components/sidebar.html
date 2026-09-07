@@ -1,0 +1,32 @@
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        FEEDIT <span>ADMIN</span>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="{% url 'dashboard:dashboard' %}" class="nav-main">Dashboard</a>
+
+        <div class="sidebar-group">
+            <p>DATA PIPELINE</p>
+            <a href="{% url 'dashboard:collection_targets' %}">Collection Targets</a>
+            <a href="{% url 'dashboard:collection_runs' %}">Collection Runs</a>
+            <a href="{% url 'dashboard:normalized_products' %}">Normalization</a>
+            <a href="{% url 'dashboard:dictionary_candidates' %}">Dictionary</a>
+            <a href="{% url 'dashboard:trend_metrics' %}">Trend</a>
+        </div>
+
+        <div class="sidebar-group">
+            <p>DATABASE</p>
+            <a href="{% url 'dashboard:products' %}">Products</a>
+            <a href="{% url 'dashboard:brands' %}">Brands</a>
+            <a href="{% url 'dashboard:categories' %}">Categories</a>
+            <a href="{% url 'dashboard:raw_documents' %}">Raw Documents</a>
+        </div>
+
+        <div class="sidebar-group">
+            <p>OPERATIONS</p>
+            <a href="{% url 'dashboard:jobs' %}">Jobs</a>
+            <a href="{% url 'dashboard:system_status' %}">System</a>
+        </div>
+    </nav>
+</aside>

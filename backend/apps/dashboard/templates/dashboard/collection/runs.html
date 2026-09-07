@@ -1,0 +1,646 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+
+{% block title %}
+Collection Runs | FEEDIT Admin
+{% endblock %}
+
+
+{% block content %}
+
+{% include "dashboard/components/page_header.html" %}
+
+
+<!-- =====================================================
+ SUMMARY
+===================================================== -->
+
+<section class="run-summary-grid">
+
+    <article class="run-summary-card">
+        <span>TOTAL RUNS</span>
+        <strong>{{ summary.total|intcomma }}</strong>
+        <small>검색 조건 기준</small>
+    </article>
+
+    <article class="run-summary-card">
+        <span>RUNNING</span>
+        <strong>{{ summary.running|intcomma }}</strong>
+        <small>현재 실행 중</small>
+    </article>
+
+    <article class="run-summary-card">
+        <span>SUCCESS</span>
+        <strong>{{ summary.success|intcomma }}</strong>
+        <small>정상 완료</small>
+    </article>
+
+    <article class="run-summary-card run-summary-card--danger">
+        <span>FAILED</span>
+        <strong>{{ summary.failed|intcomma }}</strong>
+        <small>실패 작업</small>
+    </article>
+
+</section>
+
+
+<!-- =====================================================
+ FILTER
+===================================================== -->
+
+<section class="panel run-filter-panel">
+
+    <form
+        method="get"
+        class="run-filter-form"
+    >
+
+        <div class="filter-field filter-search">
+
+            <label>
+                SEARCH
+            </label>
+
+            <input
+                type="text"
+                name="q"
+                value="{{ search_query }}"
+                placeholder="Target, Source, Error, Task ID"
+            >
+
+        </div>
+
+
+        <div class="filter-field">
+
+            <label>
+                SOURCE
+            </label>
+
+            <select name="source">
+
+                <option value="">
+                    All
+                </option>
+
+                {% for source in sources %}
+
+                    <option
+                        value="{{ source.id }}"
+                        {% if selected_source == source.id|stringformat:"s" %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ source.code }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-field">
+
+            <label>
+                STATUS
+            </label>
+
+            <select name="status">
+
+                <option value="">
+                    All
+                </option>
+
+                {% for value, label in status_choices %}
+
+                    <option
+                        value="{{ value }}"
+                        {% if selected_status == value %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ label }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-field">
+
+            <label>
+                RUN TYPE
+            </label>
+
+            <select name="run_type">
+
+                <option value="">
+                    All
+                </option>
+
+                {% for value, label in run_type_choices %}
+
+                    <option
+                        value="{{ value }}"
+                        {% if selected_run_type == value %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ label }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-actions">
+
+            <button
+                type="submit"
+                class="btn btn-dark"
+            >
+                Apply
+            </button>
+
+            <a
+                href="{% url 'dashboard:collection_runs' %}"
+                class="btn btn-outline"
+            >
+                Reset
+            </a>
+
+        </div>
+
+    </form>
+
+</section>
+
+
+<!-- =====================================================
+ TABLE
+===================================================== -->
+
+<section class="panel">
+
+    <div class="panel-header row-between">
+
+        <div>
+            <p>COLLECTION HISTORY</p>
+            <h2>Recent Runs</h2>
+        </div>
+
+        <span class="count-chip">
+            {{ page_obj.paginator.count|intcomma }} RUNS
+        </span>
+
+    </div>
+
+
+    <div class="table-wrap">
+
+        <table class="admin-table runs-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>RUN</th>
+                    <th>SOURCE</th>
+                    <th>TARGET</th>
+                    <th>TYPE</th>
+                    <th>STATUS</th>
+
+                    <th class="number-cell">
+                        DISCOVERED
+                    </th>
+
+                    <th class="number-cell">
+                        SUCCESS
+                    </th>
+
+                    <th class="number-cell">
+                        FAILED
+                    </th>
+
+                    <th>STARTED</th>
+                    <th>DURATION</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+            {% for run in runs %}
+
+                <tr
+                    class="run-row"
+                    data-run-row="{{ run.id }}"
+                >
+
+                    <!-- RUN ID -->
+                    <td>
+
+                        <button
+                            type="button"
+                            class="run-id-button"
+                            data-run-toggle="{{ run.id }}"
+                        >
+                            #{{ run.id }}
+                        </button>
+
+                    </td>
+
+
+                    <!-- SOURCE -->
+                    <td>
+
+                        <div class="source-cell">
+
+                            <strong>
+                                {{ run.source.code }}
+                            </strong>
+
+                            <small>
+                                {{ run.source.name }}
+                            </small>
+
+                        </div>
+
+                    </td>
+
+
+                    <!-- TARGET -->
+                    <td>
+
+                        <div class="target-cell">
+
+                            {% if run.crawl_target %}
+
+                                <strong>
+                                    {% if run.crawl_target.name %}
+                                        {{ run.crawl_target.name }}
+                                    {% else %}
+                                        Target #{{ run.crawl_target.id }}
+                                    {% endif %}
+                                </strong>
+
+                                <small>
+                                    {{ run.crawl_target.target_type }}
+                                </small>
+
+                            {% elif run.target %}
+
+                                <strong>
+                                    {{ run.target|truncatechars:40 }}
+                                </strong>
+
+                            {% else %}
+
+                                <span class="muted">
+                                    -
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+                    </td>
+
+
+                    <!-- RUN TYPE -->
+                    <td>
+
+                        <span class="type-chip">
+                            {{ run.run_type }}
+                        </span>
+
+                    </td>
+
+
+                    <!-- STATUS -->
+                    <td>
+
+                        <span
+                            class="
+                                run-status
+                                run-status--{{ run.status|lower }}
+                            "
+                        >
+                            <i></i>
+
+                            {{ run.get_status_display }}
+
+                        </span>
+
+                    </td>
+
+
+                    <!-- DISCOVERED -->
+                    <td class="number-cell">
+
+                        {{ run.discovered_count|intcomma }}
+
+                    </td>
+
+
+                    <!-- SUCCESS -->
+                    <td class="number-cell success-number">
+
+                        {{ run.success_count|intcomma }}
+
+                    </td>
+
+
+                    <!-- FAILURE -->
+                    <td class="number-cell">
+
+                        {% if run.failure_count %}
+
+                            <span class="failure-number">
+                                {{ run.failure_count|intcomma }}
+                            </span>
+
+                        {% else %}
+
+                            0
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- STARTED -->
+                    <td>
+
+                        {% if run.started_at %}
+
+                            <div class="datetime-cell">
+
+                                <strong>
+                                    {{ run.started_at|date:"m-d H:i:s" }}
+                                </strong>
+
+                                <small>
+                                    {{ run.started_at|date:"Y" }}
+                                </small>
+
+                            </div>
+
+                        {% else %}
+
+                            <span class="muted">
+                                -
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- DURATION -->
+                    <td>
+
+                        {% if run.started_at and run.finished_at %}
+
+                            <span
+                                class="duration-value"
+                                data-start="{{ run.started_at|date:'c' }}"
+                                data-end="{{ run.finished_at|date:'c' }}"
+                            >
+                                -
+                            </span>
+
+                        {% elif run.status == "RUNNING" %}
+
+                            <span class="duration-live">
+                                RUNNING
+                            </span>
+
+                        {% else %}
+
+                            -
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+
+                <!-- =====================================
+                EXPANDED DETAIL
+                ====================================== -->
+
+                <tr
+                    class="run-detail-row"
+                    id="run-detail-{{ run.id }}"
+                >
+
+                    <td colspan="10">
+
+                        <div class="run-detail">
+
+                            <div class="run-detail-grid">
+
+                                <div>
+
+                                    <span>
+                                        CELERY TASK ID
+                                    </span>
+
+                                    <strong>
+                                        {{ run.celery_task_id|default:"-" }}
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        CREATED
+                                    </span>
+
+                                    <strong>
+                                        {{ run.created_at|date:"Y-m-d H:i:s" }}
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        FINISHED
+                                    </span>
+
+                                    <strong>
+                                        {% if run.finished_at %}
+                                            {{ run.finished_at|date:"Y-m-d H:i:s" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        RUN TYPE
+                                    </span>
+
+                                    <strong>
+                                        {{ run.get_run_type_display }}
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            {% if run.target %}
+
+                                <div class="run-detail-block">
+
+                                    <span>
+                                        TARGET
+                                    </span>
+
+                                    <p>
+                                        {{ run.target }}
+                                    </p>
+
+                                </div>
+
+                            {% endif %}
+
+
+                            {% if run.params %}
+
+                                <div class="run-detail-block">
+
+                                    <span>
+                                        PARAMS
+                                    </span>
+
+                                    <pre>{{ run.params }}</pre>
+
+                                </div>
+
+                            {% endif %}
+
+
+                            {% if run.error_code or run.error_message %}
+
+                                <div class="run-error-box">
+
+                                    <div>
+
+                                        <span>
+                                            ERROR CODE
+                                        </span>
+
+                                        <strong>
+                                            {{ run.error_code|default:"UNKNOWN" }}
+                                        </strong>
+
+                                    </div>
+
+                                    <p>
+                                        {{ run.error_message|default:"No error message." }}
+                                    </p>
+
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+
+            {% empty %}
+
+                <tr>
+
+                    <td
+                        colspan="10"
+                        class="empty-table-cell"
+                    >
+
+                        조건에 해당하는 수집 실행 이력이 없습니다.
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- =====================================================
+    PAGINATION
+    ====================================================== -->
+
+    {% if page_obj.paginator.num_pages > 1 %}
+
+        <div class="pagination">
+
+            {% if page_obj.has_previous %}
+
+                <a
+                    href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&status={{ selected_status }}&source={{ selected_source }}&run_type={{ selected_run_type }}"
+                >
+                    ← Prev
+                </a>
+
+            {% endif %}
+
+
+            <span>
+
+                {{ page_obj.number }}
+
+                /
+
+                {{ page_obj.paginator.num_pages }}
+
+            </span>
+
+
+            {% if page_obj.has_next %}
+
+                <a
+                    href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&status={{ selected_status }}&source={{ selected_source }}&run_type={{ selected_run_type }}"
+                >
+                    Next →
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

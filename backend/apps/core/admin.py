@@ -1,259 +1,143 @@
+# backend/apps/core/admin.py
+
 from django.contrib import admin, messages
-from apps.core.tasks import run_live_target
-from .models import *
+from django.apps import apps
+from django.db import models
+from django.urls import path, reverse
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
+from django.utils.html import format_html
 
-@admin.register(Source)
-class SourceAdmin(admin.ModelAdmin):
-    list_display = (
-        "code", "name", "source_type", "collection_method",
-        "status", "crawl_interval_minutes", "requests_per_minute", "updated_at",
-    )
-    list_filter = ("source_type", "collection_method", "status")
-    search_fields = ("code", "name", "base_url")
-    ordering = ("code",)
+from apps.core.models import (
+    Brand,
+    BrandSource,
+)
 
 
-@admin.register(CrawlTarget)
-class CrawlTargetAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "source",
-        "target_type",
-        "name",
-        "is_active",
-        "last_crawled_at",
-        "created_at",
-    )
+# ============================================================
+# COMMON ADMIN
+# ============================================================
 
-    list_filter = (
-        "source",
-        "target_type",
-        "is_active",
-    )
 
-    search_fields = (
-        "name",
-        "target_key",
-        "target_url",
-        "source__code",
-    )
-
-    list_select_related = (
-        "source",
-    )
-
-    ordering = (
-        "source",
-        "id",
-    )
-
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-        "last_crawled_at",
-    )
+class FeeditModelAdmin(admin.ModelAdmin):
+    """
+    core 앱의 모델을 기본 Django Admin에서
+    최대한 편하게 확인하기 위한 공통 Admin.
+    """
 
     list_per_page = 50
-    
-@admin.register(CrawlRun)
-class CrawlRunAdmin(admin.ModelAdmin):
+    save_on_top = True
 
-    list_display = (
-        "id",
-        "target_name",
-        "source",
-        "run_type",
-        "status",
-        "discovered_count",
-        "success_count",
-        "failure_count",
-        "started_at",
-        "finished_at",
-    )
+    def get_list_display(self, request):
+        field_names = []
 
-    list_filter = (
-        "source",
-        "run_type",
-        "status",
-    )
+        for field in self.model._meta.fields:
+            if isinstance(
+                field,
+                (
+                    models.JSONField,
+                    models.TextField,
+                    models.BinaryField,
+                ),
+            ):
+                continue
 
-    search_fields = (
-        "id",
-        "crawl_target__name",
-        "target",
-        "source__code",
-        "celery_task_id",
-        "error_message",
-    )
+            field_names.append(field.name)
 
-    @admin.display(
-        description="Target name",
-        ordering="crawl_target__name",
-    )
-    def target_name(self, obj):
-        if obj.crawl_target:
-            return (
-                obj.crawl_target.name
-                or str(obj.crawl_target)
-            )
+        if "id" in field_names:
+            field_names.remove("id")
+            field_names.insert(0, "id")
 
-        return "-"
-    
+        return field_names[:8]
 
-@admin.register(RawDocument)
-class RawDocumentAdmin(admin.ModelAdmin):
+    def get_search_fields(self, request):
+        search_fields = []
 
-    list_display = (
-        "id",
-        "crawl_run",
-        "source_name",
-        "document_type",
-        "normalization_status",
-        "normalized_at",
-        "short_s3_key",
-        "error_summary",
-    )
+        preferred = [
+            "name",
+            "code",
+            "title",
+            "external_id",
+            "source_category_id",
+            "source_category_name",
+            "source_brand_id",
+            "source_brand_name",
+            "normalized_name",
+            "source_key",
+            "source_name",
+        ]
 
-    list_filter = (
-        "normalization_status",
-        "document_type",
-        "crawl_run__source",
-    )
+        model_fields = {
+            field.name: field
+            for field in self.model._meta.fields
+        }
 
-    search_fields = (
-        "s3_bucket",
-        "s3_key",
-        "crawl_run__source__code",
-    )
+        for field_name in preferred:
+            field = model_fields.get(field_name)
 
-    list_select_related = (
-        "crawl_run",
-        "crawl_run__source",
-    )
+            if isinstance(
+                field,
+                (
+                    models.CharField,
+                    models.TextField,
+                ),
+            ):
+                search_fields.append(field_name)
 
-    ordering = (
-        "-id",
-    )
+        return search_fields
 
-    list_per_page = 50
+    def get_list_filter(self, request):
+        candidates = [
+            "source",
+            "status",
+            "mapping_status",
+            "mapping_type",
+            "category_type",
+            "document_type",
+            "source_type",
+            "run_type",
+        ]
 
-    readonly_fields = (
-        "crawl_run",
-        "s3_bucket",
-        "s3_key",
-        "document_type",
-        "normalization_status",
-        "normalized_at",
-        "normalization_error",
-    )
+        model_fields = {
+            field.name
+            for field in self.model._meta.fields
+        }
 
-    @admin.display(
-        description="출처",
-        ordering="crawl_run__source__code",
-    )
-    def source_name(self, obj):
-        return (
-            obj.crawl_run.source.code
-            if obj.crawl_run_id
-            and obj.crawl_run.source_id
-            else "-"
-        )
+        return [
+            field
+            for field in candidates
+            if field in model_fields
+        ]
 
-    @admin.display(
-        description="S3 Key",
-    )
-    def short_s3_key(self, obj):
-        if not obj.s3_key:
-            return "-"
-
-        if len(obj.s3_key) <= 80:
-            return obj.s3_key
-
-        return (
-            "..."
-            + obj.s3_key[-77:]
-        )
-
-    @admin.display(
-        description="정규화 오류",
-    )
-    def error_summary(self, obj):
-        if not obj.normalization_error:
-            return "-"
-
-        error = str(
-            obj.normalization_error
-        )
-
-        if len(error) <= 80:
-            return error
-
-        return error[:77] + "..."
-
-@admin.register(Brand)
-class BrandAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "brand_code",
-        "name",
-        "english_name",
-        "status",
-    )
-
-    list_filter = (
-        "status",
-    )
-
-    search_fields = (
-        "brand_code",
-        "name",
-        "english_name",
-    )
-
-    ordering = (
-        "name",
-    )
-
-    list_per_page = 50
-
-
-# =========================================================
-# 플랫폼 브랜드
-# =========================================================
-
-
-class BrandMappingFilter(
-    admin.SimpleListFilter
-):
-    title = "매핑 여부"
-    parameter_name = "brand_mapping"
-
-    def lookups(
+    def get_readonly_fields(
         self,
         request,
-        model_admin,
+        obj=None,
     ):
-        return (
-            ("mapped", "매핑 완료"),
-            ("unmapped", "미매핑"),
-        )
+        candidates = [
+            "created_at",
+            "updated_at",
+            "collected_at",
+        ]
 
-    def queryset(
-        self,
-        request,
-        queryset,
-    ):
-        if self.value() == "mapped":
-            return queryset.filter(
-                brand__isnull=False,
-            )
+        model_fields = {
+            field.name
+            for field in self.model._meta.fields
+        }
 
-        if self.value() == "unmapped":
-            return queryset.filter(
-                brand__isnull=True,
-            )
+        return [
+            field
+            for field in candidates
+            if field in model_fields
+        ]
 
-        return queryset
+
+# ============================================================
+# BRAND SOURCE ADMIN
+# ============================================================
 
 
 @admin.register(BrandSource)
@@ -265,18 +149,15 @@ class BrandSourceAdmin(admin.ModelAdmin):
         "source_brand_id",
         "source_brand_name",
         "source_brand_name_en",
-        "brand_name",
-        "mapping_status",
-        "mapping_method",
         "detected_count",
-        "last_seen_at",
+        "mapping_status",
+        "mapped_brand",
+        "promote_button",
     )
 
     list_filter = (
         "source",
-        BrandMappingFilter,
         "mapping_status",
-        "mapping_method",
     )
 
     search_fields = (
@@ -285,88 +166,282 @@ class BrandSourceAdmin(admin.ModelAdmin):
         "source_brand_name_en",
         "normalized_name",
         "normalized_name_en",
-        "brand__brand_code",
-        "brand__name",
-        "brand__english_name",
-    )
-
-    raw_id_fields = (
-        "brand",
-        "source",
-    )
-
-    list_select_related = (
-        "brand",
-        "source",
     )
 
     ordering = (
-        "source",
-        "source_brand_name",
+        "-detected_count",
+        "-last_seen_at",
     )
 
     list_per_page = 50
 
     readonly_fields = (
+        "source",
+        "source_brand_id",
+        "source_brand_name",
+        "source_brand_name_en",
+        "normalized_name",
+        "normalized_name_en",
         "detected_count",
         "first_seen_at",
         "last_seen_at",
-        "created_at",
-        "updated_at",
-    )
-
-    fieldsets = (
-        (
-            "플랫폼 브랜드 정보",
-            {
-                "fields": (
-                    "source",
-                    "source_brand_id",
-                    "source_brand_name",
-                    "normalized_name",
-                    "source_brand_name_en",
-                    "normalized_name_en",
-                    "source_brand_url",
-                ),
-            },
-        ),
-        (
-            "FEEDIT 브랜드 매핑",
-            {
-                "fields": (
-                    "brand",
-                    "mapping_status",
-                    "mapping_method",
-                    "mapping_confidence",
-                ),
-            },
-        ),
-        (
-            "수집 이력",
-            {
-                "fields": (
-                    "detected_count",
-                    "first_seen_at",
-                    "last_seen_at",
-                    "created_at",
-                    "updated_at",
-                ),
-            },
-        ),
     )
 
     @admin.display(
-        description="표준 브랜드",
-        ordering="brand__name",
+        description="FEEDIT 브랜드"
     )
-    def brand_name(self, obj):
-        if not obj.brand_id:
-            return "❌ 미매핑"
+    def mapped_brand(
+        self,
+        obj,
+    ):
+        if obj.brand_id is None:
+            return "-"
 
-        return (
-            f"{obj.brand.name} "
-            f"({obj.brand.brand_code})"
+        return obj.brand.name
+
+    @admin.display(
+        description="작업"
+    )
+    def promote_button(
+        self,
+        obj,
+    ):
+        if obj.brand_id is not None:
+            return "매핑 완료"
+
+        url = reverse(
+            "admin:brand_source_promote",
+            args=[obj.pk],
+        )
+
+        return format_html(
+            '<a class="button" href="{}">'
+            "브랜드 등록"
+            "</a>",
+            url,
+        )
+
+    def get_urls(self):
+        urls = super().get_urls()
+
+        custom_urls = [
+            path(
+                "<int:source_id>/promote/",
+                self.admin_site.admin_view(
+                    self.promote_brand
+                ),
+                name="brand_source_promote",
+            ),
+        ]
+
+        return custom_urls + urls
+
+    def promote_brand(
+        self,
+        request,
+        source_id,
+    ):
+        brand_source = get_object_or_404(
+            BrandSource,
+            pk=source_id,
+        )
+
+        if brand_source.brand_id is not None:
+            messages.warning(
+                request,
+                "이미 FEEDIT 브랜드에 매핑되어 있습니다.",
+            )
+
+            return redirect(
+                "admin:core_brandsource_changelist"
+            )
+
+        if request.method == "POST":
+
+            action = request.POST.get(
+                "action"
+            )
+
+            # ----------------------------------------
+            # 기존 브랜드 연결
+            # ----------------------------------------
+            if action == "map_existing":
+
+                brand_id = request.POST.get(
+                    "brand_id"
+                )
+
+                brand = get_object_or_404(
+                    Brand,
+                    pk=brand_id,
+                )
+
+                brand_source.brand = brand
+                brand_source.mapping_status = (
+                    BrandSource
+                    .MappingStatus
+                    .AUTO_MAPPED
+                )
+
+                brand_source.mapping_method = (
+                    BrandSource
+                    .MappingMethod
+                    .SOURCE_ID
+                )
+
+                brand_source.mapping_confidence = 1
+
+                brand_source.save(
+                    update_fields=[
+                        "brand",
+                        "mapping_status",
+                        "mapping_method",
+                        "mapping_confidence",
+                        "updated_at",
+                    ]
+                )
+
+                messages.success(
+                    request,
+                    f"{brand_source.source_brand_name} "
+                    f"→ {brand.name} 매핑 완료",
+                )
+
+                return redirect(
+                    "admin:core_brandsource_changelist"
+                )
+
+            # ----------------------------------------
+            # 신규 브랜드 생성
+            # ----------------------------------------
+            if action == "create_new":
+
+                brand_code = (
+                    request.POST.get(
+                        "brand_code"
+                    )
+                    or ""
+                ).strip()
+
+                name = (
+                    request.POST.get(
+                        "name"
+                    )
+                    or ""
+                ).strip()
+
+                english_name = (
+                    request.POST.get(
+                        "english_name"
+                    )
+                    or ""
+                ).strip()
+
+                if not brand_code or not name:
+                    messages.error(
+                        request,
+                        "브랜드 코드와 브랜드명은 필수입니다.",
+                    )
+
+                else:
+                    brand = Brand.objects.create(
+                        brand_code=brand_code,
+                        name=name,
+                        english_name=(
+                            english_name
+                            or None
+                        ),
+                    )
+
+                    brand_source.brand = brand
+                    brand_source.mapping_status = (
+                        BrandSource
+                        .MappingStatus
+                        .AUTO_MAPPED
+                    )
+
+                    brand_source.mapping_method = (
+                        BrandSource
+                        .MappingMethod
+                        .SOURCE_ID
+                    )
+
+                    brand_source.mapping_confidence = 1
+
+                    brand_source.save(
+                        update_fields=[
+                            "brand",
+                            "mapping_status",
+                            "mapping_method",
+                            "mapping_confidence",
+                            "updated_at",
+                        ]
+                    )
+
+                    messages.success(
+                        request,
+                        f"{brand.name} 신규 등록 및 매핑 완료",
+                    )
+
+                    return redirect(
+                        "admin:core_brandsource_changelist"
+                    )
+
+        brands = (
+            Brand.objects
+            .order_by("name")
+        )
+
+        context = {
+            **self.admin_site.each_context(
+                request
+            ),
+            "title": "플랫폼 브랜드 등록 / 매핑",
+            "brand_source": brand_source,
+            "brands": brands,
+        }
+
+        return render(
+            request,
+            "admin/core/brandsource/promote.html",
+            context,
         )
 
 
-# ====================================================
+# ============================================================
+# REGISTER ALL CORE MODELS
+# BrandSource는 위에서 커스텀 등록했으므로 제외
+# ============================================================
+
+
+core_app = apps.get_app_config(
+    "core"
+)
+
+custom_registered_models = {
+    BrandSource,
+}
+
+
+for model in core_app.get_models():
+
+    if model in custom_registered_models:
+        continue
+
+    try:
+        admin.site.register(
+            model,
+            FeeditModelAdmin,
+        )
+
+    except admin.sites.AlreadyRegistered:
+        pass
+
+
+# ============================================================
+# ADMIN SITE TITLE
+# ============================================================
+
+admin.site.site_header = "FEEDIT Admin"
+admin.site.site_title = "FEEDIT"
+admin.site.index_title = "FEEDIT 데이터 관리"
