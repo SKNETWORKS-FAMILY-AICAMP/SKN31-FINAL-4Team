@@ -1,0 +1,92 @@
+/* ============================================================
+   메인 랜딩 페이지
+   레퍼런스: https://pamidordesign.com
+   · 오프화이트 지면 위 잉크 블랙. 색은 이 둘뿐이고 코랄은 로고에만.
+   · 대문자/큰 선언문이 스크롤을 따라 한 단어씩 물든다.
+   · 검정 알약 버튼.
+   레퍼런스의 색 테마를 그대로 이어받는다.
+   ============================================================ */
+:root{
+  --paper:#f1efea;         /* 오프화이트 지면 */
+  --pink-0:#0a0a0a;        /* 잉크 */
+  --pink-1:rgba(10,10,10,.62);
+  --pink-2:rgba(10,10,10,.34);
+  --pink-3:rgba(10,10,10,.12);
+  /* 사이드바 — 지면(#f1efea, 웜 뉴트럴)과 같은 색상환에 놓인 짙은 잉크.
+     순수 검정(#0a0a0a)은 오프화이트 옆에서 차갑게 튄다. */
+  --side:#1c1a17;
+  --side-2:#141210;      /* 사이드바보다 한 단계 더 가라앉은 톤 */
+}
+/* 메인 모드 — 덱을 접고 세로 스크롤을 연다 */
+body.mainmode{overflow-y:auto;overflow-x:hidden;background:var(--paper)}
+body.mainmode .deck,body.mainmode .wash,body.mainmode .ftr,
+body.mainmode .replay,body.mainmode .markStage,
+body.mainmode .jump{opacity:0 !important;pointer-events:none}
+body.mainmode .grain{opacity:.028;mix-blend-mode:multiply}
+
+.mainpage{
+  position:relative;z-index:3;background:var(--paper);color:var(--pink-0);
+  opacity:0;visibility:hidden;transition:opacity .8s var(--ease),visibility .8s;
+  letter-spacing:-.022em;
+}
+body.mainmode .mainpage{opacity:1;visibility:visible}
+.mainpage ::selection{background:var(--pink-0);color:var(--paper)}
+.mwrap{width:min(1320px,90vw);margin:0 auto}
+
+/* ── 상단바 · 5탭 ───────────────────────────────────── */
+.mHead{
+  position:sticky;top:0;z-index:20;background:rgba(241,239,234,.88);
+  backdrop-filter:blur(20px) saturate(180%);
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  padding:14px min(5vw,54px);border-bottom:1px solid var(--pink-3);
+}
+/* 심볼은 크게, 워드마크는 살짝. 사이는 좁히되 광학 여백은 남긴다(겹치지 않는다). */
+.mLogo{display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;cursor:none}
+.mLogo svg{width:26px;height:26px;flex:0 0 auto;overflow:visible}
+.mLogo b{
+  font-family:var(--logo);font-weight:600;font-size:19.5px;white-space:nowrap;
+  letter-spacing:calc(var(--logo-ls) * -1);margin-right:var(--logo-ls);
+}
+.mLogo b i{font-style:normal;color:var(--coral)}
+/* 탭 — 비활성은 글자만. 선택되면 밑줄이 왼쪽에서 그어지고 글자가 굵어진다. */
+.mNav{display:flex;gap:clamp(16px,2.2vw,32px);background:none;padding:0}
+.mNav button{
+  position:relative;display:inline-grid;place-items:center;
+  color:var(--pink-2);font-size:13.5px;letter-spacing:-.018em;cursor:none;
+  padding:7px 1px 9px;background:none;border-radius:0;white-space:nowrap;
+  transition:color .34s var(--ease);
+}
+/* 굵은 상태의 폭을 미리 잡아 두어 선택할 때 옆 탭이 밀리지 않는다 */
+.mNav button::before{
+  content:attr(data-t);grid-area:1/1;font-weight:600;visibility:hidden;pointer-events:none;
+}
+.mNav button span{grid-area:1/1;transition:font-weight .3s var(--ease)}
+.mNav button::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:2px;border-radius:2px;
+  background:var(--coral);transform:scaleX(0);transform-origin:100% 50%;
+  transition:transform .52s var(--ease),background .3s;
+}
+.mNav button:hover{color:var(--pink-1)}
+.mNav button:hover::after{transform:scaleX(1);transform-origin:0 50%;background:rgba(255,107,74,.38)}
+.mNav button.on{color:var(--pink-0)}
+.mNav button.on span{font-weight:600}
+.mNav button.on::after{transform:scaleX(1);transform-origin:0 50%;background:var(--coral)}
+.mHeadR{display:flex;align-items:center;gap:8px}
+.pill{
+  display:inline-flex;align-items:center;gap:9px;cursor:none;
+  background:var(--pink-0);color:var(--paper);border-radius:999px;
+  padding:10px 18px;font-size:13px;letter-spacing:-.015em;white-space:nowrap;
+  transition:transform .4s var(--ease),background .3s,color .3s;
+}
+.pill i{font-style:normal;transition:transform .4s var(--ease)}
+.pill:hover{transform:translateY(-2px)}
+.pill:hover i{transform:translateX(4px)}
+.pill.big{padding:17px 30px;font-size:15px}
+.pill.ghost{background:none;color:var(--pink-1);box-shadow:inset 0 0 0 1px var(--pink-3)}
+.pill.ghost:hover{color:var(--pink-0)}
+
+/* ── 뷰 전환 ────────────────────────────────────────── */
+.view{display:none}
+.view.on{display:block}
+/* 홈은 챗 화면 하나로 끝나므로 푸터를 두지 않는다 */
+body.athome .mFoot{display:none}

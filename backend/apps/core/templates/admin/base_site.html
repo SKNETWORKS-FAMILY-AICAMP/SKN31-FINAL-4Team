@@ -1,0 +1,94 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+
+{% block title %}
+{% if subtitle %}{{ subtitle }} | {% endif %}
+{{ title }} | FEEDiT Admin
+{% endblock %}
+
+
+{% block extrastyle %}
+{{ block.super }}
+
+<style>
+    #branding {
+        width: 100%;
+    }
+
+    .feedit-admin-header {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+    }
+
+    .feedit-admin-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .feedit-admin-nav a {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--header-link-color);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 7px 11px;
+        border-radius: 6px;
+        font-size: 13px;
+        text-decoration: none;
+    }
+
+    .feedit-admin-nav a:hover {
+        background: rgba(255, 255, 255, 0.16);
+    }
+</style>
+
+{% endblock %}
+
+
+{% block branding %}
+
+<div class="feedit-admin-header">
+
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}">
+            FEEDiT Admin
+        </a>
+    </h1>
+
+    <nav class="feedit-admin-nav">
+
+        <a href="{% url 'admin:index' %}">
+            Dashboard
+        </a>
+
+        <a href="/admin/normalization/">
+            정제 관리
+        </a>
+
+        <a href="/admin/core/crawltarget/">
+            Crawl Target
+        </a>
+
+        <a href="/admin/core/crawlrun/">
+            Crawl Run
+        </a>
+
+        <a href="/admin/core/rawdocument/">
+            RAW
+        </a>
+
+        <a href="/admin/core/mappingcandidate/">
+            매핑 후보
+        </a>
+
+        <a href="/admin/core/brand/">
+            브랜드
+        </a>
+
+    </nav>
+
+</div>
+
+{% endblock %}

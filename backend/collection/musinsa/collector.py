@@ -1,58 +1,45 @@
-# collection/musinsa/collector.py
+from __future__ import annotations
 
 import re
-from urllib.parse import (
-    parse_qs,
-    urljoin,
-    urlparse,
-)
+from urllib.parse import parse_qs, urljoin, urlparse
 
-import requests
 from bs4 import BeautifulSoup
 
-from collection.core.http import (
-    DEFAULT_HEADERS,
-)
-
+from .client import MusinsaClient
 from .constants import (
-    ARCHIVE_CATEGORIES_API_URL,
-    ARCHIVE_GOODS_API_URL,
+    DEFAULT_REVIEW_PAGE_SIZE,
     LIKE_API_URL,
-    LIKE_BATCH_SIZE,
     MUSINSA_BASE_URL,
+    OPTIONS_API_URL,
     PRODUCT_BASE_URL,
     RANKING_API_URL,
-    REQUEST_TIMEOUT,
+    REVIEW_LIST_API_URL,
+    REVIEW_SUMMARY_API_URL,
     STAT_API_URL,
     TAG_API_URL,
 )
-
+from .exceptions import MusinsaCollectError
+from .images import normalize_image_url
 from .parser import MusinsaParser
-
-
-class MusinsaCollectError(Exception):
-    """무신사 HTTP/API 수집 실패 시 사용하는 예외."""
-
-    pass
 
 
 class MusinsaCollector:
     """
-    무신사 수집 전용 Collector.
+    MUSINSA source-level collector.
 
-    책임:
-    - 상품 URL 발견
-    - 상품 상세 HTML 수집
-    - MusinsaParser 실행
-    - 태그 / 통계 / 좋아요 API 수집
-    - 현재 랭킹 상품 URL 수집
-    - 월간 랭킹 Archive API 수집
+    PRODUCT:
+    - 상품/브랜드/가격/통계
+    - 상품 갤러리 이미지
+    - 상세페이지 이미지/HTML
+    - 옵션
+    - 리뷰 요약/본문
 
-    하지 않는 일:
-    - Django ORM 저장
-    - CrawlJob 생성/수정
-    - Celery 상태 변경
-    - observed_at 결정
+    RANKING:
+    - 랭킹 scope
+    - 랭킹 상품 목록
+    - 각 상품 상세 수집
+
+    저장(S3/DB), Celery, FEEDIT 정규화는 하지 않는다.
     """
 
     PRODUCT_PATTERN = re.compile(r"/products/(\d+)")
@@ -61,328 +48,205 @@ class MusinsaCollector:
         self,
         *,
         timeout: int | float | None = None,
-        session: requests.Session | None = None,
+        session=None,
     ):
-        self.timeout = timeout or REQUEST_TIMEOUT
-
-        self.session = session or requests.Session()
-
-        self.session.headers.update(DEFAULT_HEADERS)
-
-    # ============================================================
-    # CONTEXT MANAGER
-    # ============================================================
-
-    def close(
-        self,
-    ):
-        self.session.close()
-
-    def __enter__(
-        self,
-    ):
-        return self
-
-    def __exit__(
-        self,
-        exc_type,
-        exc,
-        tb,
-    ):
-        self.close()
-
-    # ============================================================
-    # COMMON REQUEST
-    # ============================================================
-
-    def fetch(
-        self,
-        url: str,
-        *,
-        params: dict | None = None,
-        headers: dict | None = None,
-    ) -> requests.Response:
-        try:
-            response = self.session.get(
-                url,
-                params=params,
-                headers=headers,
-                timeout=self.timeout,
-            )
-
-            response.raise_for_status()
-
-            return response
-
-        except requests.RequestException as exc:
-            raise MusinsaCollectError(f"GET 요청 실패: " f"{url} / {exc}") from exc
-
-    def _get_json(
-        self,
-        url: str,
-        *,
-        params: dict | None = None,
-        headers: dict | None = None,
-    ) -> dict:
-        response = self.fetch(
-            url,
-            params=params,
-            headers=headers,
+        self.client = MusinsaClient(
+            timeout=timeout,
+            session=session,
         )
 
-        try:
-            body = response.json()
-        except ValueError as exc:
-            raise MusinsaCollectError(
-                "JSON 응답 파싱 실패: " f"{response.url}"
-            ) from exc
+    def close(self) -> None:
+        self.client.close()
 
-        if not isinstance(
-            body,
-            dict,
-        ):
-            raise MusinsaCollectError(
-                "JSON 응답 형식이 " f"object가 아닙니다: {response.url}"
-            )
+    def __enter__(self):
+        return self
 
-        return body
+    def __exit__(self, exc_type, exc, tb):
+        self.close()
 
     # ============================================================
     # PRODUCT URL DISCOVERY
     # ============================================================
 
-    def discover_product_urls(
-        self,
-        target_url: str,
-    ) -> list[str]:
+    def discover_product_urls(self, target_url: str) -> list[str]:
         if not target_url:
             return []
 
-        # 상품 상세
         if self.PRODUCT_PATTERN.search(target_url):
             return [self._normalize_product_url(target_url)]
 
-        # 랭킹
         if "/ranking" in target_url:
-            return self.discover_ranking_products(target_url)
+            return [
+                item["product_url"]
+                for item in self.discover_ranking(target_url)
+            ]
 
-        # 일반 HTML
-        response = self.fetch(target_url)
+        response = self.client.get_html(target_url)
+        soup = BeautifulSoup(response.text, "html.parser")
 
-        soup = BeautifulSoup(
-            response.text,
-            "html.parser",
-        )
+        result: list[str] = []
+        seen: set[str] = set()
 
-        urls = []
-        seen = set()
-
-        for tag in soup.find_all(
-            "a",
-            href=True,
-        ):
+        for tag in soup.find_all("a", href=True):
             href = tag.get("href")
 
-            if not href:
+            if not href or not self.PRODUCT_PATTERN.search(href):
                 continue
 
-            if not self.PRODUCT_PATTERN.search(href):
-                continue
-
-            product_url = urljoin(
-                response.url,
-                href,
+            product_url = self._normalize_product_url(
+                urljoin(response.url, href)
             )
-
-            product_url = self._normalize_product_url(product_url)
 
             if product_url in seen:
                 continue
 
             seen.add(product_url)
+            result.append(product_url)
 
-            urls.append(product_url)
-
-        return urls
+        return result
 
     # ============================================================
-    # PRODUCT DETAIL
+    # PRODUCT
     # ============================================================
 
     def collect_product(
         self,
         url: str,
+        *,
+        ranking_context: dict | None = None,
+        collect_options: bool = True,
+        collect_reviews: bool = True,
+        review_limit: int = DEFAULT_REVIEW_PAGE_SIZE,
     ) -> dict:
         product_url = self._normalize_product_url(url)
 
-        response = self.fetch(product_url)
-
+        response = self.client.get_html(product_url)
         parsed = MusinsaParser.parse_product(response.text)
 
-        product_data = parsed.get("product") or {}
+        product = parsed.get("product") or {}
+        snapshot = parsed.get("snapshot") or {}
+        meta = parsed.get("meta") or {}
 
-        snapshot_data = parsed.get("snapshot") or {}
-
-        meta_data = parsed.get("meta") or {}
-
-        goods_no = self._to_int(product_data.get("goods_no"))
+        goods_no = self._to_int(product.get("goods_no"))
 
         if goods_no is None:
             raise MusinsaCollectError(
-                "상품번호를 확인할 수 없습니다: " f"{product_url}"
+                f"상품번호를 찾을 수 없습니다: {product_url}"
             )
 
-        # --------------------------------------------------------
-        # TAG API
-        # --------------------------------------------------------
-
+        # tags
         try:
             tags = self.collect_tags(goods_no)
+            if tags is not None:
+                product["tags"] = tags
         except MusinsaCollectError:
-            tags = None
+            pass
 
-        # API 성공 시 덮어쓰고,
-        # API 실패 시 parser의 __NEXT_DATA__ 태그 유지
-        if tags is not None:
-            product_data["tags"] = tags
-
-        # --------------------------------------------------------
-        # STAT API
-        # --------------------------------------------------------
-
+        # stat
         try:
-            stat = self.collect_stat(goods_no)
+            snapshot.update(self.collect_stat(goods_no))
         except MusinsaCollectError:
-            stat = {
-                "view_count": None,
-                "sales_count": None,
-            }
+            snapshot["view_count"] = None
+            snapshot["sales_count"] = None
 
-        snapshot_data["view_count"] = stat.get("view_count")
+        # like
+        try:
+            snapshot["like_count"] = self.collect_like_count(goods_no)
+        except MusinsaCollectError:
+            snapshot["like_count"] = None
 
-        snapshot_data["sales_count"] = stat.get("sales_count")
+        # review summary
+        try:
+            review_summary = self.collect_review_summary(goods_no)
 
-        # 좋아요는 여러 상품 batch 처리
-        snapshot_data["like_count"] = None
+            if review_summary.get("total_count") is not None:
+                snapshot["review_count"] = review_summary["total_count"]
 
-        # --------------------------------------------------------
-        # META
-        # --------------------------------------------------------
+            if review_summary.get("satisfaction_score") is not None:
+                snapshot["satisfaction_score"] = review_summary[
+                    "satisfaction_score"
+                ]
+        except MusinsaCollectError:
+            review_summary = None
 
-        meta_data.update(
+        # review items
+        review_items: list[dict] = []
+
+        if collect_reviews:
+            try:
+                review_items = self.collect_reviews(
+                    goods_no,
+                    limit=review_limit,
+                )
+            except MusinsaCollectError:
+                review_items = []
+
+        # options
+        options = None
+
+        if collect_options:
+            try:
+                options = self.collect_options(goods_no)
+            except MusinsaCollectError:
+                options = None
+
+        meta.update(
             {
-                "request_url": (product_url),
-                "final_url": (response.url),
-                "http_status": (response.status_code),
-                "content_type": (response.headers.get("Content-Type")),
+                "request_url": product_url,
+                "final_url": response.url,
+                "http_status": response.status_code,
+                "content_type": response.headers.get("Content-Type"),
             }
         )
 
-        parsed["product"] = product_data
-
-        parsed["snapshot"] = snapshot_data
-
-        parsed["meta"] = meta_data
-
-        return parsed
-
-    def collect_products(
-        self,
-        urls: list[str],
-        *,
-        collect_likes: bool = True,
-    ) -> list[dict]:
-        results = []
-
-        for url in urls:
-            result = self.collect_product(url)
-
-            results.append(result)
-
-        if not collect_likes or not results:
-            return results
-
-        goods_nos = [
-            item["product"]["goods_no"]
-            for item in results
-            if (item.get("product") and item["product"].get("goods_no") is not None)
-        ]
-
-        try:
-            like_counts = self.collect_like_counts(goods_nos)
-        except MusinsaCollectError:
-            like_counts = {}
-
-        for item in results:
-            goods_no = item["product"].get("goods_no")
-
-            item["snapshot"]["like_count"] = like_counts.get(goods_no)
-
-        return results
-
-    # ============================================================
-    # TAG API
-    # ============================================================
-
-    def collect_tags(
-        self,
-        goods_no: int,
-    ) -> list[str] | None:
-        url = TAG_API_URL.format(goods_no=goods_no)
-
-        body = self._get_json(
-            url,
-            headers={
-                "Referer": (PRODUCT_BASE_URL.format(goods_no=goods_no)),
+        return {
+            "brand": parsed.get("brand"),
+            "product": product,
+            "snapshot": snapshot,
+            "options": options,
+            "reviews": {
+                "summary": review_summary,
+                "items": review_items,
             },
+            "ranking_context": ranking_context,
+            "meta": meta,
+        }
+
+    # ============================================================
+    # TAG
+    # ============================================================
+
+    def collect_tags(self, goods_no: int) -> list[str] | None:
+        body = self.client.get_json(
+            TAG_API_URL.format(goods_no=goods_no),
+            referer=PRODUCT_BASE_URL.format(goods_no=goods_no),
         )
 
         data = body.get("data") or {}
-
-        if not isinstance(
-            data,
-            dict,
-        ):
-            return None
-
         tags = data.get("tags")
 
-        if not isinstance(
-            tags,
-            list,
-        ):
+        if not isinstance(tags, list):
             return None
 
-        cleaned = [
-            str(tag).strip() for tag in tags if (tag is not None and str(tag).strip())
+        result = [
+            str(tag).strip()
+            for tag in tags
+            if tag is not None and str(tag).strip()
         ]
 
-        return list(dict.fromkeys(cleaned)) or None
+        return list(dict.fromkeys(result)) or None
 
     # ============================================================
-    # STAT API
+    # STAT
     # ============================================================
 
-    def collect_stat(
-        self,
-        goods_no: int,
-    ) -> dict:
-        url = STAT_API_URL.format(goods_no=goods_no)
-
-        body = self._get_json(
-            url,
-            headers={
-                "Referer": (PRODUCT_BASE_URL.format(goods_no=goods_no)),
-            },
+    def collect_stat(self, goods_no: int) -> dict:
+        body = self.client.get_json(
+            STAT_API_URL.format(goods_no=goods_no),
+            referer=PRODUCT_BASE_URL.format(goods_no=goods_no),
         )
 
         data = body.get("data") or {}
-
-        if not isinstance(
-            data,
-            dict,
-        ):
-            data = {}
 
         return {
             "view_count": self._to_int(data.get("pageViewTotal")),
@@ -390,502 +254,332 @@ class MusinsaCollector:
         }
 
     # ============================================================
-    # LIKE API
+    # LIKE
     # ============================================================
 
-    def _collect_like_batch(
-        self,
-        goods_nos: list[int],
-    ) -> dict[int, int | None]:
-        if not goods_nos:
-            return {}
+    def collect_like_count(self, goods_no: int) -> int | None:
+        body = self.client.post_json(
+            LIKE_API_URL,
+            json={"relationIds": [goods_no]},
+            headers={
+                "Origin": MUSINSA_BASE_URL,
+                "Referer": f"{MUSINSA_BASE_URL}/",
+            },
+        )
 
-        relation_ids = [int(goods_no) for goods_no in goods_nos]
-
-        try:
-            response = self.session.post(
-                LIKE_API_URL,
-                json={
-                    "relationIds": (relation_ids),
-                },
-                headers={
-                    "Origin": (MUSINSA_BASE_URL),
-                    "Referer": (f"{MUSINSA_BASE_URL}/"),
-                },
-                timeout=self.timeout,
-            )
-
-            response.raise_for_status()
-
-        except requests.RequestException as exc:
-            raise MusinsaCollectError("좋아요 API 요청 실패: " f"{exc}") from exc
-
-        try:
-            body = response.json()
-        except ValueError as exc:
-            raise MusinsaCollectError("좋아요 API JSON 파싱 실패") from exc
-
-        if not isinstance(
-            body,
-            dict,
-        ):
-            return {}
-
-        contents = body.get("data", {}).get("contents", {})
-
-        if not isinstance(
-            contents,
-            dict,
-        ):
-            return {}
-
-        items = contents.get("items") or []
-
-        if not isinstance(
-            items,
-            list,
-        ):
-            return {}
-
-        result = {}
+        items = (
+            ((body.get("data") or {}).get("contents") or {}).get("items")
+            or []
+        )
 
         for item in items:
-            if not isinstance(
-                item,
-                dict,
-            ):
+            if not isinstance(item, dict):
                 continue
 
             relation_id = self._to_int(item.get("relationId"))
 
-            if relation_id is None:
-                continue
+            if relation_id == goods_no:
+                return self._to_int(item.get("count"))
 
-            result[relation_id] = self._to_int(item.get("count"))
-
-        return result
-
-    def collect_like_counts(
-        self,
-        goods_nos: list[int],
-    ) -> dict[int, int | None]:
-        if not goods_nos:
-            return {}
-
-        normalized_goods_nos = []
-
-        for goods_no in goods_nos:
-            value = self._to_int(goods_no)
-
-            if value is not None:
-                normalized_goods_nos.append(value)
-
-        normalized_goods_nos = list(dict.fromkeys(normalized_goods_nos))
-
-        result = {}
-
-        for start in range(
-            0,
-            len(normalized_goods_nos),
-            LIKE_BATCH_SIZE,
-        ):
-            batch = normalized_goods_nos[start : start + LIKE_BATCH_SIZE]
-
-            batch_result = self._collect_like_batch(batch)
-
-            result.update(batch_result)
-
-        return result
+        return None
 
     # ============================================================
-    # CURRENT RANKING
+    # OPTIONS
     # ============================================================
 
-    def discover_ranking_items(
-        self,
-        target_url: str,
-    ) -> list[dict]:
-        """
-        현재 무신사 랭킹 API에서 상품 + 랭킹 문맥을 함께 반환한다.
-
-        반환 예:
-        [
-            {
-                "rank": 1,
-                "product_url": "...",
-                "ranking_period": "DAILY",
-                "ranking_gender": "M",
-                "ranking_category_depth1_code": "001000",
-                "ranking_age_band": "AGE_BAND_MINOR",
+    def collect_options(self, goods_no: int) -> dict | None:
+        body = self.client.get_json(
+            OPTIONS_API_URL.format(goods_no=goods_no),
+            params={
+                "goodsSaleType": "SALE",
+                "optKindCd": "CLOTHES",
             },
-            ...
-        ]
-        """
-
-        parsed_url = urlparse(target_url)
-        query = parse_qs(parsed_url.query)
-
-        ranking_period = query.get(
-            "period",
-            ["DAILY"],
-        )[0]
-
-        ranking_gender = query.get(
-            "gf",
-            ["A"],
-        )[0]
-
-        ranking_category_code = query.get(
-            "categoryCode",
-            [""],
-        )[0]
-
-        ranking_age_band = query.get(
-            "ageBand",
-            ["AGE_BAND_ALL"],
-        )[0]
-
-        params = {
-            "storeCode": query.get(
-                "storeCode",
-                ["musinsa"],
-            )[0],
-            "subPan": query.get(
-                "subPan",
-                ["product"],
-            )[0],
-            "sectionId": query.get(
-                "sectionId",
-                ["200"],
-            )[0],
-            "gf": ranking_gender,
-            "contentsId": query.get(
-                "contentsId",
-                [""],
-            )[0],
-            "categoryCode": ranking_category_code,
-            "ageBand": ranking_age_band,
-            # 기존 코드에 빠져있던 값
-            "period": ranking_period,
-        }
-
-        body = self._get_json(
-            RANKING_API_URL,
-            params=params,
-            headers={
-                "Referer": target_url,
-            },
+            referer=PRODUCT_BASE_URL.format(goods_no=goods_no),
         )
 
-        modules = body.get("data", {}).get("modules", [])
+        data = body.get("data")
 
-        if not isinstance(
-            modules,
-            list,
-        ):
+        # RAW 단계에서는 API data를 최대한 그대로 보존.
+        return data if isinstance(data, dict) else None
+
+    # ============================================================
+    # REVIEWS
+    # ============================================================
+
+    def collect_review_summary(self, goods_no: int) -> dict:
+        body = self.client.get_json(
+            REVIEW_SUMMARY_API_URL.format(goods_no=goods_no),
+            referer=PRODUCT_BASE_URL.format(goods_no=goods_no),
+        )
+
+        data = (
+            body.get("data")
+            if isinstance(body.get("data"), dict)
+            else {}
+        )
+
+        return {
+            "total_count": self._to_int(data.get("totalCount")),
+            "general_count": self._to_int(data.get("generalCount")),
+            "photo_count": self._to_int(data.get("photoCount")),
+            "satisfaction_score": data.get("satisfactionScore"),
+        }
+
+    def collect_reviews(
+        self,
+        goods_no: int,
+        *,
+        limit: int = DEFAULT_REVIEW_PAGE_SIZE,
+        sort: str = "up_cnt_desc",
+    ) -> list[dict]:
+        if limit <= 0:
             return []
 
-        results = []
-        seen = set()
+        page_size = min(limit, 100)
+        page = 0
+        result: list[dict] = []
 
-        # API가 보내준 상품 순서가 현재 랭킹 순서.
-        # 실제 rank 값이 item 안에 있으면 그것을 우선하고,
-        # 없으면 순서를 rank로 사용한다.
+        while len(result) < limit:
+            body = self.client.get_json(
+                REVIEW_LIST_API_URL,
+                params={
+                    "page": page,
+                    "pageSize": page_size,
+                    "goodsNo": goods_no,
+                    "sort": sort,
+                    "selectedSimilarNo": goods_no,
+                    "myFilter": "false",
+                    "hasPhoto": "false",
+                    "isExperience": "false",
+                },
+                referer=PRODUCT_BASE_URL.format(goods_no=goods_no),
+            )
+
+            data = (
+                body.get("data")
+                if isinstance(body.get("data"), dict)
+                else {}
+            )
+
+            items = data.get("list") or []
+
+            if not items:
+                break
+
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+
+                profile = (
+                    item.get("userProfileInfo")
+                    if isinstance(item.get("userProfileInfo"), dict)
+                    else {}
+                )
+
+                survey = (
+                    item.get("reviewSurveySatisfaction")
+                    if isinstance(
+                        item.get("reviewSurveySatisfaction"),
+                        dict,
+                    )
+                    else {}
+                )
+
+                survey_values: dict = {}
+
+                for question in survey.get("questions") or []:
+                    if not isinstance(question, dict):
+                        continue
+
+                    answers = question.get("answers") or []
+
+                    values = [
+                        answer.get("answerShortText")
+                        for answer in answers
+                        if (
+                            isinstance(answer, dict)
+                            and answer.get("answerShortText")
+                        )
+                    ]
+
+                    attribute = question.get("attribute")
+
+                    if attribute and values:
+                        survey_values[attribute] = values
+
+                images: list[str] = []
+
+                for image in item.get("images") or []:
+                    if not isinstance(image, dict):
+                        continue
+
+                    image_url = normalize_image_url(
+                        image.get("imageUrl")
+                    )
+
+                    if image_url:
+                        images.append(image_url)
+
+                result.append(
+                    {
+                        "review_id": item.get("no"),
+                        "review_type": item.get("type"),
+                        "content": item.get("content"),
+                        "grade": item.get("grade"),
+                        "goods_option": item.get("goodsOption"),
+                        "like_count": item.get("likeCount"),
+                        "created_at": item.get("createDate"),
+                        "images": images,
+                        "reviewer": {
+                            "sex": profile.get("reviewSex"),
+                            "height": profile.get("userHeight"),
+                            "weight": profile.get("userWeight"),
+                        },
+                        "survey": survey_values,
+                    }
+                )
+
+                if len(result) >= limit:
+                    break
+
+            page_info = (
+                data.get("page")
+                if isinstance(data.get("page"), dict)
+                else {}
+            )
+
+            total_pages = page_info.get("totalPages")
+            page += 1
+
+            if total_pages is not None and page >= total_pages:
+                break
+
+        return result[:limit]
+
+    # ============================================================
+    # RANKING
+    # ============================================================
+
+    def discover_ranking(self, target_url: str) -> list[dict]:
+        query = parse_qs(
+            urlparse(target_url).query,
+            keep_blank_values=True,
+        )
+
+        period = query.get("period", ["DAILY"])[0]
+        gender = query.get("gf", ["A"])[0]
+        category_code = query.get("categoryCode", [""])[0]
+        age_band = query.get("ageBand", ["AGE_BAND_ALL"])[0]
+
+        body = self.client.get_json(
+            RANKING_API_URL,
+            params={
+                "storeCode": query.get("storeCode", ["musinsa"])[0],
+                "sectionId": query.get("sectionId", ["200"])[0],
+                "contentsId": query.get("contentsId", [""])[0],
+                "subPan": query.get("subPan", ["product"])[0],
+                "gf": gender,
+                "categoryCode": category_code,
+                "ageBand": age_band,
+                "period": period,
+            },
+            referer=target_url,
+        )
+
+        modules = (
+            (body.get("data") or {}).get("modules")
+            or []
+        )
+
+        result: list[dict] = []
+        seen: set[int] = set()
         fallback_rank = 1
 
         for module in modules:
-
-            if not isinstance(
-                module,
-                dict,
+            if (
+                not isinstance(module, dict)
+                or module.get("type") != "MULTICOLUMN"
             ):
                 continue
 
-            if module.get("type") != "MULTICOLUMN":
-                continue
-
-            items = module.get("items") or []
-
-            if not isinstance(
-                items,
-                list,
-            ):
-                continue
-
-            for item in items:
-
-                if not isinstance(
-                    item,
-                    dict,
-                ):
+            for item in module.get("items") or []:
+                if not isinstance(item, dict):
                     continue
 
-                onclick = item.get("onClick") or {}
+                onclick = (
+                    item.get("onClick")
+                    if isinstance(item.get("onClick"), dict)
+                    else {}
+                )
 
-                if not isinstance(
-                    onclick,
-                    dict,
-                ):
+                goods_no = self._extract_goods_no(
+                    onclick.get("url")
+                )
+
+                if goods_no is None or goods_no in seen:
                     continue
 
-                product_url = onclick.get("url")
+                seen.add(goods_no)
 
-                if not product_url:
-                    continue
+                rank = (
+                    self._to_int(item.get("rank"))
+                    or fallback_rank
+                )
 
-                if not self.PRODUCT_PATTERN.search(product_url):
-                    continue
-
-                product_url = self._normalize_product_url(product_url)
-
-                if product_url in seen:
-                    continue
-
-                seen.add(product_url)
-
-                # 응답에 명시적인 rank가 있으면 우선 사용.
-                rank = self._to_int(item.get("rank"))
-
-                if rank is None:
-                    rank = fallback_rank
-
-                results.append(
+                result.append(
                     {
                         "rank": rank,
-                        "product_url": (product_url),
-                        "ranking_period": (ranking_period),
-                        "ranking_gender": (ranking_gender),
-                        "ranking_category_depth1_code": (ranking_category_code or None),
-                        # 아직 Snapshot 모델에 필드가 없다면
-                        # Pipeline meta 용도로만 유지.
-                        "ranking_age_band": (ranking_age_band),
+                        "goods_no": goods_no,
+                        "product_url": PRODUCT_BASE_URL.format(
+                            goods_no=goods_no
+                        ),
+                        "ranking_period": period,
+                        "ranking_gender": gender,
+                        "ranking_category_code": (
+                            category_code or None
+                        ),
+                        "ranking_age_band": age_band,
                     }
                 )
 
                 fallback_rank += 1
 
-        return results
-
-    def discover_ranking_products(
-        self,
-        target_url: str,
-    ) -> list[str]:
-        """
-        기존 코드와의 호환성을 위한 wrapper.
-
-        기존 호출부에서 URL 목록만 필요할 때 사용.
-        """
-
-        ranking_items = self.discover_ranking_items(target_url)
-
-        return [item["product_url"] for item in ranking_items]
-
-    # ============================================================
-    # ARCHIVE RANKING
-    # ============================================================
-
-    def collect_archive_categories(
-        self,
-        *,
-        year_month: str,
-        gender_code: str,
-    ) -> list[dict]:
-        body = self._get_json(
-            ARCHIVE_CATEGORIES_API_URL,
-            params={
-                "yearMonth": (year_month),
-                "gf": (gender_code),
-            },
-        )
-
-        data = body.get("data") or {}
-
-        if not isinstance(
-            data,
-            dict,
-        ):
-            return []
-
-        items = data.get("list") or []
-
-        if not isinstance(
-            items,
-            list,
-        ):
-            return []
-
-        return items
-
-    def collect_archive_ranking(
-        self,
-        *,
-        year_month: str,
-        gender_code: str,
-        category_code: str,
-    ) -> list[dict]:
-        body = self._get_json(
-            ARCHIVE_GOODS_API_URL,
-            params={
-                "yearMonth": (year_month),
-                "gf": (gender_code),
-                "category": (category_code),
-            },
-        )
-
-        data = body.get("data") or {}
-
-        if not isinstance(
-            data,
-            dict,
-        ):
-            return []
-
-        items = data.get("list") or []
-
-        if not isinstance(
-            items,
-            list,
-        ):
-            return []
-
-        result = []
-
-        for item in items:
-            if not isinstance(
-                item,
-                dict,
-            ):
-                continue
-
-            goods_no = self._to_int(item.get("goodsNo"))
-
-            rank = self._to_int(item.get("rank"))
-
-            if goods_no is None or rank is None:
-                continue
-
-            result.append(
-                {
-                    "rank": rank,
-                    "goods_no": (goods_no),
-                    "goods_name": (item.get("goodsName")),
-                    "brand": (item.get("brand")),
-                    "brand_name": (item.get("brandName")),
-                    "image_url": (item.get("imageUrl")),
-                    "is_permanent_stopped": (
-                        self._to_bool(
-                            item.get("isPermanentStopped"),
-                            default=False,
-                        )
-                    ),
-                    "product_url": (PRODUCT_BASE_URL.format(goods_no=goods_no)),
-                    # archive 요청 문맥
-                    "ranking_year_month": (year_month),
-                    "ranking_gender": (gender_code),
-                    "ranking_category_code": (category_code),
-                }
-            )
-
         return result
 
     # ============================================================
-    # UTIL
+    # UTILS
     # ============================================================
 
     @classmethod
-    def _normalize_product_url(
-        cls,
-        url: str,
-    ) -> str:
-        absolute_url = urljoin(
-            MUSINSA_BASE_URL,
-            url,
-        )
+    def _normalize_product_url(cls, url: str) -> str:
+        absolute = urljoin(MUSINSA_BASE_URL, url)
+        match = cls.PRODUCT_PATTERN.search(absolute)
 
-        match = cls.PRODUCT_PATTERN.search(absolute_url)
+        if match:
+            return PRODUCT_BASE_URL.format(
+                goods_no=match.group(1)
+            )
+
+        return absolute.split("?")[0]
+
+    @classmethod
+    def _extract_goods_no(cls, url) -> int | None:
+        if not url:
+            return None
+
+        match = cls.PRODUCT_PATTERN.search(str(url))
 
         if not match:
-            return absolute_url.split("?")[0]
+            return None
 
-        goods_no = match.group(1)
-
-        return PRODUCT_BASE_URL.format(goods_no=goods_no)
+        return int(match.group(1))
 
     @staticmethod
-    def _to_int(
-        value,
-    ) -> int | None:
-        if value is None or isinstance(
-            value,
-            bool,
-        ):
+    def _to_int(value) -> int | None:
+        if value is None or isinstance(value, bool):
             return None
-
-        if isinstance(
-            value,
-            int,
-        ):
-            return value
-
-        if isinstance(
-            value,
-            float,
-        ):
-            return int(value)
-
-        text = str(value).strip()
-
-        if not text:
-            return None
-
-        text = text.replace(",", "").replace("원", "").replace("%", "").strip()
 
         try:
-            return int(float(text))
-        except (
-            TypeError,
-            ValueError,
-        ):
+            return int(float(value))
+        except (TypeError, ValueError):
             return None
-
-    @staticmethod
-    def _to_bool(
-        value,
-        *,
-        default: bool = False,
-    ) -> bool:
-        if value is None:
-            return default
-
-        if isinstance(
-            value,
-            bool,
-        ):
-            return value
-
-        if isinstance(
-            value,
-            (int, float),
-        ):
-            return bool(value)
-
-        text = str(value).strip().lower()
-
-        if text in {
-            "true",
-            "1",
-            "yes",
-            "y",
-        }:
-            return True
-
-        if text in {
-            "false",
-            "0",
-            "no",
-            "n",
-            "",
-        }:
-            return False
-
-        return default

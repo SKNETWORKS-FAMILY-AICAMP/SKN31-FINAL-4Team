@@ -1,0 +1,105 @@
+/* ============================================================
+   설명 페이지
+   레퍼런스: https://shaunscholtz.com
+   · 니어블랙 위에 화면을 가득 채우는 그라디언트 워시가 구간마다 색을 바꾼다
+   · 화면 안쪽에 라운드 사각 프레임
+   · 세로로 스크롤하면 패널이 옆으로 흐른다
+   레퍼런스의 색 테마(스틸블루 → 러스트 → 앰버)를 그대로 이어받는다.
+   ============================================================ */
+body.loaded{overflow:hidden}
+body.loaded .stage,body.loaded .gauge{display:none}
+/* 상단 메타는 로딩 화면의 것이다. 로딩이 끝나면 같이 물러난다. */
+.meta{transition:opacity .5s var(--ease),visibility .5s}
+body.loaded .meta{opacity:0;visibility:hidden;pointer-events:none}
+
+.site{position:relative;z-index:2;opacity:0;pointer-events:none;transition:opacity .8s var(--ease)}
+.site.on{opacity:1;pointer-events:auto}
+
+/* 화면 전체를 덮는 그라디언트 워시 — 구간마다 색이 바뀐다
+   로딩 중에는 반드시 꺼져 있어야 한다. 켜져 있으면 로딩 스테이지를 덮어버린다. */
+.wash{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:#0a0a0a;opacity:0;visibility:hidden;
+  transition:opacity .9s var(--ease);
+}
+.wash.on{opacity:1;visibility:visible}
+.wash{transition:opacity 1.4s var(--ease)}
+.heroLight{
+  position:fixed;inset:0;z-index:0;background:#f6f8fa;pointer-events:none;opacity:0;
+}
+/* 00 이 하얘지면 로고와 안내도 잉크색으로 뒤집힌다 */
+.idSym .fl,.idSym .fr,.idWord,.hero .hint{
+  transition:fill .9s var(--ease),stroke .9s var(--ease),color .9s var(--ease)}
+body.lightHero .idSym .fl{fill:#0a0a0a}
+body.lightHero .idSym .fr{stroke:#0a0a0a}
+.idSym .dt{transition:stroke .9s var(--ease)}
+body.lightHero .idWord{color:#0a0a0a}
+
+body.lightHero .hero .hint{color:rgba(10,10,10,.5)}
+body.lightHero .hero .hint .bar{background:linear-gradient(180deg,rgba(10,10,10,.55),transparent)}
+.wash i{
+  position:absolute;inset:-20%;display:block;opacity:0;
+  will-change:opacity;filter:blur(40px);
+}
+/* 안쪽 라운드 프레임 */
+
+/* 좌하단 */
+.ftr{
+  position:fixed;left:48px;bottom:40px;z-index:6;display:flex;align-items:center;gap:16px;
+  font-family:var(--num);font-size:12px;letter-spacing:.22em;color:rgba(255,255,255,.8);
+  font-feature-settings:'tnum' 1,'zero' 0;
+}
+.ftr .dots{display:flex;gap:7px}
+.ftr .dots i{
+  width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.24);
+  transition:background .35s,transform .35s;
+}
+.ftr .dots i.on{background:var(--coral);transform:scale(1.35)}
+
+/* 우상단 — 설명을 건너뛰고 바로 메인으로. 01~05 에서만 뜬다. */
+.jump{
+  position:fixed;right:48px;top:36px;z-index:7;cursor:none;
+  display:inline-flex;align-items:center;gap:9px;
+  padding:11px 20px;border-radius:999px;white-space:nowrap;
+  font-family:var(--logo);font-weight:600;font-size:13px;letter-spacing:-.01em;
+  color:rgba(255,255,255,.92);background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.22);
+  -webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);
+  opacity:0;transform:translateY(-8px);pointer-events:none;
+  transition:opacity .5s var(--ease),transform .5s var(--ease),
+             background .35s,border-color .35s,color .35s;
+}
+.jump.on{opacity:1;transform:translateY(0);pointer-events:auto}
+.jump i{                        /* 코랄 점 — 로고의 i 점과 같은 신호 */
+  font-style:normal;width:5px;height:5px;border-radius:1px;
+  background:var(--coral);flex:0 0 auto;
+}
+.jump u{text-decoration:none;display:inline-block;transition:transform .4s var(--ease)}
+.jump:hover{background:var(--coral);border-color:var(--coral);color:#fff}
+.jump:hover i{background:#fff}
+.jump:hover u{transform:translateX(4px)}
+/* 밝은 지면(02·03·04)에서는 잉크색으로 뒤집는다 */
+.jump.onlight{color:rgba(12,20,28,.86);background:rgba(12,20,28,.045);
+  border-color:rgba(12,20,28,.16)}
+.jump.onlight:hover{background:var(--coral);border-color:var(--coral);color:#fff}
+
+/* ── 로딩 직후 히어로 : 여기서 "스크롤을 내려보세요" 가 뜨고
+      그대로 아래로 내리면 가로 패널로 이어진다 ── */
+.panel.hero{align-items:center;justify-content:center;padding:0;text-align:center}
+.hero .wm{
+  font-family:var(--logo);font-weight:600;font-size:clamp(44px,8vw,104px);
+  letter-spacing:calc(var(--logo-ls) * -1);margin-right:var(--logo-ls);line-height:1;
+}
+.hero .wm em{font-style:normal;color:var(--coral)}
+/* 로고는 화면 정중앙. 안내는 그 아래 정중앙에만 둔다. */
+.hero .hint{
+  position:absolute;left:50%;bottom:64px;transform:translateX(-50%);
+  font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:rgba(255,255,255,.5);
+  display:flex;flex-direction:column-reverse;align-items:center;gap:12px;
+  white-space:nowrap;
+}
+.hero .hint .bar{
+  width:1px;height:40px;background:linear-gradient(180deg,rgba(255,255,255,.6),transparent);
+  animation:cue 2s var(--ease) infinite;
+}
+@keyframes cue{0%,100%{opacity:.2;transform:scaleY(.4)}50%{opacity:1;transform:scaleY(1)}}

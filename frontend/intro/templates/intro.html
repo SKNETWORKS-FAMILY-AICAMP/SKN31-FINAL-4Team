@@ -1,0 +1,163 @@
+<!--
+  참고용 사본 — 실제로 렌더링되는 파일이 아닙니다.
+  이 프로젝트는 Vite 기반 SPA라 화면은 root의 index.html 하나로 동작하고,
+  브라우저 JS 라우터(app-shell/static/js/router.js)가 화면 전환을 담당합니다.
+  아래 마크업은 intro 앱(인트로 로딩·스크롤 덱, index.html 1-154행)이 사용하는 부분을 index.html에서 그대로 옮겨 온 것으로,
+  Django 스타일 폴더 구성에 맞춰 정리해 둔 참고 사본입니다.
+  실제로 수정하려면 반드시 root의 index.html을 고쳐야 합니다.
+-->
+
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FEEDiT</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<!-- Roboto Flex = 영문 · 로고(Semibold 600) · Space Grotesk = 연대 숫자 -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="https://cdn.jsdelivr.net/npm/animejs@4.5.0/dist/bundles/anime.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
+<link rel="stylesheet" href="/main.css">
+</head>
+<body class="">
+
+<!-- ===== 상단 메타 ===== -->
+<div class="meta">
+  <span class="brand">
+    <span>FEED<span class="dotI">ı<span class="tit"></span></span>T</span>
+  </span>
+  <span>FASHION TREND INTELLIGENCE</span>
+  <button class="skip" id="skip">SKIP →</button>
+</div>
+
+<!-- ===== 로딩 스테이지 ===== -->
+<div class="stage" id="stage" style="filter: blur(0px)">
+  <div class="word" id="word">
+    <span class="half" id="halfL">FEED</span>
+    <span class="slot" id="slot"></span>
+    <span class="half" id="halfR">iT</span>
+  </div>
+</div>
+
+<!-- ===== 하단 중앙 연대 게이지 ===== -->
+<div class="gauge" id="gauge">
+  <div class="yr"><b id="gY">2026</b><span id="gM">AUG</span></div>
+  <div class="rail"><i id="gRail"></i></div>
+  <div class="ends"><span>2000 JAN</span><span>2026 AUG</span></div>
+</div>
+
+<!-- ===== 설명 페이지 ===== -->
+<div class="wash" id="wash"></div>
+<!-- 로고 화면(00)을 덮는 흰 지면. 로딩의 검정에서 서서히 물들고,
+     01 로 넘어가면 걷혀 화보 패널이 드러난다. -->
+<div class="heroLight" id="heroLight"></div>
+<div class="markStage" id="markStage">
+  <div class="idLock" id="idLock">
+    <svg class="idSym" id="idSym" viewBox="0 0 120 120" aria-hidden="true">
+      <path class="fr" d="M88 32V80C88 84.4183 84.4183 88 80 88H32V32H88Z" style="transform-origin: 50% 50%"></path>
+      <path class="fl" d="M49.8546 77V42.92H71.9826V47.672H52.3026L55.0386 44.84V60.488L52.3026 58.04H71.1186V62.648H52.3026L55.0386 60.2V77H49.8546Z" style="transform-origin: 50% 50%"></path>
+      <path class="dt" d="M91 29V39H81V29H91Z" style="transform-origin: 86px 34px"></path>
+    </svg>
+  </div>
+</div>
+<div class="site" id="site">
+
+  <footer class="ftr">
+    <span class="dots" id="dots"></span>
+    <span id="panelNo">01 / 06</span>
+  </footer>
+
+  <button class="jump" id="jumpBtn" type="button"><i></i>바로 시작 <u>→</u></button>
+
+  <!-- 한 번의 스크롤 = 한 페이지. 스프링으로 통통 넘어간다 -->
+  <div class="deck" id="hstage">
+    <div class="hsticky">
+      <div class="htrack" id="htrack">
+
+        <section class="panel hero" id="hero">
+          <span class="hint"><span class="bar"></span>SCROLL</span>
+        </section>
+
+        <section class="panel">
+          <div class="pbg"><div class="ph" data-shots="a"></div>
+            <div class="scrim"></div><div class="lift"></div><div class="vig"></div></div>
+          
+          
+          
+          
+        <div class="copy"><span class="no">01 — WHAT IT IS</span><h2>스크롤 속 패션을,<br>하나의 <em>트렌드</em>로.</h2><p>매거진보다 빠르고, 피드보다 선명하게.<br>
+             무신사·지그재그·유튜브·틱톡에 흩어진 신호를 모아<br>
+             지금 무엇이 오고 무엇이 가는지 한 줄로 정리합니다.</p><div class="tags"><span>TREND INTELLIGENCE</span><span>K-FASHION</span><span>SINCE 2026</span></div></div></section>
+
+        <section class="panel">
+          <div class="pbg collbg">
+            <div class="collStage" id="collStage"></div>
+            <div class="collCap" id="collCap"></div>
+          </div>
+          
+          
+          
+          
+        <div class="copy"><span class="no">02 — COLLECT</span><h2>여섯 앱 대신,<br>하나면 <em>충분합니다</em>.</h2><p>옮겨 다닐 필요 없이,<br>
+             한 화면에서 끝납니다.</p><div class="tags"><span>9 SOURCES</span><span>6H REFRESH</span><span>124K / DAY</span></div></div></section>
+
+        <section class="panel a3">
+          <div class="pbg anzbg"><div class="anzStage" id="anzStage"></div></div>
+          
+          
+          
+          
+        <div class="copy"><span class="no">03 — ANALYZE</span><h2>무엇이 뜨는지,<br>언제 <em>꺼지는지</em>.</h2><p>언급이 늘어도 반응이 나쁜 키워드는 걸러내고,<br>
+             정점을 지난 시점과 남은 기간을 같이 봅니다.</p><div class="tags"><span>RISING / FALLING</span><span>LIFECYCLE</span><span>INFLECTION</span></div></div></section>
+
+        <section class="panel hasvis">
+          <div class="pbg decbg"></div>
+          
+          
+          
+          
+          <div class="pvis" id="itm"></div>
+        <div class="copy"><span class="no">04 — DECIDE</span><h2>고민은 그만.<br><em>투표</em>로 정하세요.</h2><p>취향이 겹치는 사람들이 24시간 안에,<br>
+             트렌드 지표까지 얹어서 답합니다.</p><div class="tags"><span>살!말?</span><span>TASTE MATCH</span><span>24H</span></div></div></section>
+
+        <section class="panel">
+          <div class="pbg"><div class="ph" data-shots="b"></div>
+            <div class="scrim"></div><div class="lift"></div><div class="vig"></div></div>
+          
+          
+          
+          
+        <div class="copy"><span class="no">05 — FOR WHOM</span><h2>브랜드 MD부터<br>옷 좋아하는 <em>사람</em>까지.</h2><p>다음 시즌 발주를 앞둔 MD,<br>
+             무드보드에 근거가 필요한 디자이너,<br>
+             재고를 잡기 전인 셀렉트샵,<br>
+             그리고 오늘 뭘 살지 고민인 사람.</p><div class="tags"><span>MD</span><span>DESIGNER</span><span>BUYER</span><span>EVERYONE</span></div></div></section>
+
+        <section class="panel" id="panelStart">
+          <div class="pbg startbg">
+            <div class="startIn">
+              <span class="stMark" id="stMark"><svg viewBox="0 0 120 120" aria-hidden="true">
+                <path d="M88 32V80C88 84.4183 84.4183 88 80 88H32V32H88Z" fill="none" stroke="#0a0a0a" stroke-width="4"></path><path d="M49.8546 77V42.92H71.9826V47.672H52.3026L55.0386 44.84V60.488L52.3026 58.04H71.1186V62.648H52.3026L55.0386 60.2V77H49.8546Z" fill="#0a0a0a"></path><path d="M91 29V39H81V29H91Z" fill="#ff6b4a" stroke="#f4f6f8" stroke-width="2"></path></svg>
+                </span>
+              <span class="stSlot">
+                <span class="stBar" id="stBar"><i></i></span>
+                <button class="stCta" id="startBtn">지금 시작하세요 <span>→</span></button>
+              </span>
+            </div>
+          </div>
+        <div class="copy"></div></section>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="replay" id="again">↺ 로딩 다시 보기</button>
+
+<!-- ============================================================
+     메인 랜딩 페이지 (pamidordesign 레퍼런스 · 오프화이트 + 블랙)
+     ============================================================ -->
+<main class="mainpage" id="mainpage">
+

@@ -1,0 +1,247 @@
+<!--
+  참고용 사본 — 실제로 렌더링되는 파일이 아닙니다.
+  이 프로젝트는 Vite 기반 SPA라 화면은 root의 index.html 하나로 동작하고,
+  브라우저 JS 라우터(app-shell/static/js/router.js)가 화면 전환을 담당합니다.
+  아래 마크업은 account 앱(로그인/회원가입/마이페이지, 계정 모달 6종 — index.html 620-765, 774-862행)이 사용하는 부분을 index.html에서 그대로 옮겨 온 것으로,
+  Django 스타일 폴더 구성에 맞춰 정리해 둔 참고 사본입니다.
+  실제로 수정하려면 반드시 root의 index.html을 고쳐야 합니다.
+-->
+
+<!-- 620-642행: v-login -->
+  <section class="view acct" id="v-login">
+    <div class="authWrap"><div class="authCard">
+      <div class="authEyebrow">Welcome back</div>
+      <h1 class="authTitle">로그인</h1>
+      <p class="authSub">취향이 맞는 사람들의 투표와 트렌드 리포트를 계속 이어보세요.</p>
+      <button class="googleBtn" id="googleLoginBtn" type="button"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10.1-2 13.7-5.3l-6.3-5.3C29.4 35.4 26.8 36 24 36c-5.2 0-9.6-3.1-11.3-7.6l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.3 5.3C40.9 36 44 30.6 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>Google로 계속하기</button>
+      <div class="divider">또는 아이디로 로그인</div>
+      <form class="authForm" id="loginForm" novalidate>
+        <div class="cField">
+          <label class="cLabel" for="loginId">아이디</label>
+          <input class="cInput" id="loginId" type="text" placeholder="아이디를 입력하세요" autocomplete="username">
+        </div>
+        <div class="cField">
+          <label class="cLabel" for="loginPw">비밀번호</label>
+          <input class="cInput" id="loginPw" type="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password">
+        </div>
+        <p class="fieldMsg err" id="loginErr" style="display:none;margin-bottom:14px">아이디와 비밀번호를 모두 입력해주세요.</p>
+        <a class="miniLink" href="#" onclick="return false">비밀번호를 잊으셨나요?</a>
+        <button type="submit" class="pill authSubmit">로그인</button>
+      </form>
+      <p class="authFoot">아직 계정이 없으신가요? <a href="#" data-v="signup">회원가입</a></p>
+    </div></div>
+  </section>
+
+<!-- 645-698행: v-signup -->
+  <section class="view acct" id="v-signup">
+    <div class="authWrap"><div class="authCard wide">
+      <div class="authEyebrow">Join FEEDiT</div>
+      <h1 class="authTitle">회원가입</h1>
+      <p class="authSub">30초면 가입 완료. 취향 태그를 등록하면 추천과 살!말? 세그먼트가 바로 맞춰집니다.</p>
+      <button class="googleBtn" id="googleSignupBtn" type="button"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10.1-2 13.7-5.3l-6.3-5.3C29.4 35.4 26.8 36 24 36c-5.2 0-9.6-3.1-11.3-7.6l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.3 5.3C40.9 36 44 30.6 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>Google로 계속하기</button>
+      <div class="divider">또는 아이디로 가입</div>
+      <form class="authForm" id="signupForm" novalidate>
+        <div class="cField">
+          <label class="cLabel" for="suId">아이디</label>
+          <input class="cInput" id="suId" type="text" placeholder="영문/숫자 4~16자" autocomplete="username">
+          <p class="fieldMsg" id="suIdMsg"></p>
+        </div>
+        <div class="cField">
+          <label class="cLabel" for="suNickname">닉네임</label>
+          <input class="cInput" id="suNickname" type="text" placeholder="다른 사람에게 보여질 이름 (2~12자)" autocomplete="nickname">
+        </div>
+        <div class="cRow2">
+          <div class="cField">
+            <label class="cLabel" for="suPw">비밀번호</label>
+            <input class="cInput" id="suPw" type="password" placeholder="8자 이상" autocomplete="new-password">
+          </div>
+          <div class="cField">
+            <label class="cLabel" for="suPw2">비밀번호 확인</label>
+            <input class="cInput" id="suPw2" type="password" placeholder="다시 입력" autocomplete="new-password">
+          </div>
+        </div>
+        <p class="fieldMsg" id="suPwMsg"></p>
+        <div class="cField">
+          <label class="cLabel" for="suBirth">생년월일</label>
+          <input class="cInput" id="suBirth" type="date">
+        </div>
+        <!-- 체형 — 살!말? 세그먼트를 나눌 때 쓰인다 -->
+        <div class="cField">
+          <label class="cLabel">체형 <span>추천·살!말? 세그먼트에 쓰여요</span></label>
+          <div class="cPair">
+            <span class="cUnit"><input class="cInput" id="suHeight" type="number" inputmode="numeric"
+              min="120" max="220" placeholder="키"><em>cm</em></span>
+            <span class="cUnit"><input class="cInput" id="suWeight" type="number" inputmode="numeric"
+              min="30" max="200" placeholder="몸무게"><em>kg</em></span>
+          </div>
+          <p class="fieldMsg" id="suBodyMsg"></p>
+        </div>
+        <div class="cField">
+          <label class="cLabel">즐겨입는 스타일 <span>복수 선택 가능</span></label>
+          <div class="chipRow" id="styleChips"></div>
+          <p class="styleHint">선택한 스타일은 추천과 살!말? 노출 세그먼트에 반영돼요.</p>
+        </div>
+        <p class="fieldMsg err" id="signupErr" style="display:none;margin-top:14px"></p>
+        <button type="submit" class="pill authSubmit">가입하기</button>
+      </form>
+      <p class="authFoot">이미 계정이 있으신가요? <a href="#" data-v="login">로그인</a></p>
+    </div></div>
+  </section>
+
+<!-- 701-765행: v-mypage -->
+  <section class="view acct" id="v-mypage">
+    <div class="wrap myWrap" id="myView">
+      <div class="pageHead">
+        <h1>마이페이지</h1>
+        <p>가입 시 선택한 정보와 취향 설정을 기반으로 추천과 살!말? 노출이 매일 갱신됩니다.</p>
+      </div>
+      <div class="myGrid">
+        <div class="myCol">
+          <div class="panel profilePanel">
+            <!-- 아바타 자체를 눌러 바꾼다. 연필은 오른쪽 아래 모서리에 붙는다 -->
+            <div class="avatarWrap">
+              <div class="avatarCircle" id="avatarInitial">혁</div>
+              <button type="button" class="avatarEdit" id="avatarEditBtn" title="아이콘 변경" aria-label="아이콘 변경">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4.5 16.5h3.2L18.9 5.3a1.9 1.9 0 0 0-2.7-2.7L5 13.8v2.7z"/>
+                  <path d="M14.7 4.1l2.2 2.2"/>
+                  <path d="M4 20.6h16"/>
+                </svg>
+              </button>
+            </div>
+            <!-- 등급은 뱃지가 아니라 경험치 바가 말한다. 바 색은 현재 레벨을 따라간다 -->
+            <div class="xpWrap" id="xpWrap">
+              <div class="xpTop">
+                <span class="xpLv" id="xpLv">Lv.1</span>
+                <span class="xpNum" id="xpNum">0 / 100 XP</span>
+              </div>
+              <div class="xpBar"><i id="xpFill"></i></div>
+              <div class="xpNext" id="xpNext"></div>
+            </div>
+            <div class="profileName" id="profileName">혁진</div>
+            <div class="profileEmail" id="profileEmail">hyeokjin@feedit.co.kr</div>
+            <button type="button" class="editProfileBtn" id="editProfileBtn">회원 정보 수정</button>
+            <div class="statRow">
+              <button type="button" class="statCell" id="statSavedBtn"><div class="n" id="statSavedN">0</div><div class="l">저장</div></button>
+              <button type="button" class="statCell" id="statVotedBtn"><div class="n" id="statVotedN">0</div><div class="l">투표</div></button>
+              <button type="button" class="statCell" id="statBadgeBtn"><div class="n" id="statBadgeN">0</div><div class="l">뱃지</div></button>
+            </div>
+            <button type="button" class="leaveBtn" id="leaveBtn">회원 탈퇴</button>
+          </div>
+          <div class="panel">
+            <div class="panelHead"><h3>필터</h3></div>
+            <div class="formRow">
+              <label>이런 스타일이 좋아요 <span>복수 선택</span></label>
+              <div class="chipRow" id="styleWrap"></div>
+            </div>
+            <div class="formRow">
+              <label>추천 성향 <span>안정 ↔ 실험</span></label>
+              <input type="range" class="rangeSlider" id="myRange" min="0" max="100" value="38">
+              <div class="rangeLab"><span>무난템 · 국밥템</span><span>하이엔드 · 실험적</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="myCol">
+          <div class="panel">
+            <div class="panelHead"><h3>오늘의 추천</h3><span class="sub" id="recSub">매칭도 순</span></div>
+            <div class="recGrid" id="recGrid"></div>
+          </div>
+          <div class="panel">
+            <div class="panelHead"><h3>무난템 · 국밥템</h3><span class="sub">실패 확률이 낮은 기본 아이템</span></div>
+            <div class="recGrid" id="basicGrid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<!-- 774-862행: 계정 모달 6종(editModal 등) -->
+<!-- ── 계정 화면 모달 3종 ── -->
+<div class="acctModal" id="editModal">
+  <div class="modalCard">
+    <div class="modalHead"><h3>회원 정보 수정</h3>
+      <button type="button" class="modalClose" id="editModalClose" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <form id="editProfileForm" novalidate>
+      <div class="cField" style="margin-bottom:16px">
+        <label class="cLabel" for="editNickname">닉네임</label>
+        <input class="cInput" id="editNickname" type="text" placeholder="2~12자">
+      </div>
+      <div class="cRow2">
+        <div class="cField">
+          <label class="cLabel" for="editPw">새 비밀번호<span>변경 시에만 작성</span></label>
+          <input class="cInput" id="editPw" type="password" placeholder="8자 이상" autocomplete="new-password">
+        </div>
+        <div class="cField">
+          <label class="cLabel" for="editPw2">새 비밀번호 확인</label>
+          <input class="cInput" id="editPw2" type="password" placeholder="다시 입력" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="cField" style="margin:16px 0 0">
+        <label class="cLabel" for="editBirth">생년월일</label>
+        <input class="cInput" id="editBirth" type="date">
+      </div>
+      <div class="cField" style="margin:16px 0 0">
+        <label class="cLabel">체형</label>
+        <div class="cPair">
+          <span class="cUnit"><input class="cInput" id="editHeight" type="number" inputmode="numeric"
+            min="120" max="220" placeholder="키"><em>cm</em></span>
+          <span class="cUnit"><input class="cInput" id="editWeight" type="number" inputmode="numeric"
+            min="30" max="200" placeholder="몸무게"><em>kg</em></span>
+        </div>
+      </div>
+      <p class="fieldMsg err" id="editModalErr" style="display:none;margin-top:12px"></p>
+      <div class="modalBtns">
+        <button type="button" class="pill ghost" id="editModalCancel">취소</button>
+        <button type="submit" class="pill">저장하기</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="acctModal" id="savedModal">
+  <div class="modalCard wide">
+    <div class="modalHead"><h3>저장한 아이템</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="itemGrid" id="savedGrid"></div>
+  </div>
+</div>
+<div class="acctModal" id="votedModal">
+  <div class="modalCard wide">
+    <div class="modalHead"><h3>투표한 카드</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="itemGrid" id="votedGrid"></div>
+  </div>
+</div>
+<div class="acctModal" id="badgeModal">
+  <div class="modalCard wide">
+    <div class="modalHead"><h3>내 뱃지</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <!-- 컬렉션 뱃지. 등급(Lv)은 아바타 링이 맡으니 여기 섞지 않는다. -->
+    <div class="bgSummary">
+      <div class="bsLabel"><b id="bgCount">0</b> / <span id="bgTotal">0</span>개 획득</div>
+      <div class="bgBar"><i id="bgBar"></i></div>
+    </div>
+    <div class="bgDetail" id="bgDetail"></div>
+    <div class="bgGrid" id="badgeGrid"></div>
+  </div>
+</div>
+<div class="acctModal" id="avatarModal">
+  <div class="modalCard">
+    <div class="modalHead"><h3>아이콘 변경</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="avaPick" id="avaPick"></div>
+  </div>
+</div>
+<div class="acctModal" id="leaveModal">
+  <div class="modalCard">
+    <div class="modalHead"><h3>회원 탈퇴</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p class="leaveCopy">탈퇴하면 저장한 아이템과 투표 이력, 모은 뱃지가 모두 사라집니다.<br>
+      되돌릴 수 없습니다.</p>
+    <div class="modalBtns">
+      <button type="button" class="pill ghost" data-close-modal>남아 있을게요</button>
+      <button type="button" class="pill danger" id="leaveConfirm">탈퇴하겠습니다</button>
+    </div>
+  </div>
+</div>
+
+<div class="grain"></div>

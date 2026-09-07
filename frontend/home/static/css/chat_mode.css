@@ -1,0 +1,77 @@
+/* ══════════════ 살!말? 챗봇 모드 ══════════════
+   구조는 그대로 두고 "지면만 뒤집는다".
+   Icon 등급 뱃지에서 쓴 언어 — 잉크 바탕 + 브랜드 빛이 테두리를 한 바퀴 — 를
+   챗바에 그대로 옮겨와, 모드가 바뀌었다는 걸 한눈에 알게 한다. */
+:root{
+  --sm-ground:#17150f;      /* 살!말? 지면 — 지면(#f1efea)과 같은 색상환의 짙은 잉크 */
+  --sm-ground2:#100e0a;
+  --sm-tx:#f3efe6;
+  --sm-tx1:rgba(243,239,230,.66);
+  --sm-tx2:rgba(243,239,230,.38);
+  --sm-line:rgba(243,239,230,.14);
+}
+/* 전환 중 색이 튀지 않게 지면 전체가 같은 리듬으로 물든다 */
+
+/* ── 챗바 — 색은 그대로 두고, 테두리를 도는 빛으로만 모드를 알린다 ── */
+
+/* 테두리를 도는 빛 — Icon 등급과 같은 문법.
+   전환 직후엔 세 바퀴를 감속하며 돌고, 그 속도 그대로 상주 회전으로 넘어간다.
+   ── 끊기지 않게 만드는 규칙 ──
+   1) 상주 회전(rkSpin)은 기본 규칙에 항상 걸어두고 play-state 로만 재우고 깨운다.
+      애니메이션을 붙였다 뗐다 하면 각도가 0도로 튀기 때문이다.
+   2) 진입 스윕(rkSweep)은 1080deg(=0deg)에서 끝나고, 그 순간의 각속도가
+      상주 회전(360deg/7s)과 같아지도록 이징을 맞춰 위치·속도가 이어진다.
+   3) 나갈 땐 빛을 즉시 끄지 않는다. 계속 돌면서 0.7초에 걸쳐 잦아든다(smOut). */
+:root{ --rkOut:cubic-bezier(.04,.42,.6,.953) }
+@keyframes rkSweep{to{--rka:1080deg}}
+.chatbar{position:relative;isolation:isolate}
+.chatbar::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;padding:1.4px;
+  pointer-events:none;opacity:0;transition:opacity .7s var(--ease);
+  animation:rkSpin 7s linear infinite;animation-play-state:paused;
+  background:conic-gradient(from var(--rka),
+    transparent 0 40%,rgba(255,107,74,.20) 52%,rgba(255,107,74,.72) 64%,
+    #ff4a1c 73%,rgba(255,107,74,.72) 82%,rgba(255,107,74,.20) 94%,transparent 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+}
+#v-home.smMode .chatbar::before{opacity:1;animation-play-state:running}
+#v-home.smSweep .chatbar::before{animation:rkSweep 2.45s var(--rkOut) 1;animation-play-state:running}
+/* 챗바 밖으로 아무것도 새어 나가지 않게 — 광택 잔상이 좌하단에 남던 원인 */
+.chatbar{overflow:hidden}
+/* 토글 버튼이 제자리에서 한 바퀴 돌 수 있게 홈 챗바에만 깊이를 준다 */
+#v-home .chatbar{perspective:760px}
+
+/* ── 모드 토글 버튼 ── */
+.salmalBtn{position:relative;overflow:hidden;min-width:104px;justify-content:center}
+.salmalBtn .lbl{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.salmalBtn .ic{display:inline-block;font-style:normal;transition:transform .7s var(--ease)}
+/* 버튼은 테두리 빛을 두지 않는다. 모드가 바뀐 신호는
+   [제자리 한 바퀴 회전 + 코랄로 물드는 것] 으로 충분하다. */
+/* 들어올 땐 곧바로 켜진다 */
+#v-home.smSweep .chatbar::before{opacity:1;transition:opacity .12s linear}
+/* 나갈 땐 끄지 않는다 — 계속 돌면서 0.7초에 걸쳐 잦아든다 */
+#v-home.smOut .chatbar::before{animation-play-state:running}
+#v-home.smMode .salmalBtn{
+  background:var(--coral);color:#fff;box-shadow:inset 0 0 0 1px var(--coral);
+}
+#v-home.smMode .salmalBtn:hover{background:#ff8464;box-shadow:inset 0 0 0 1px #ff8464}
+#v-home.smMode .salmalBtn .ic{transform:rotate(180deg)}
+/* 눌린 순간 버튼에서 링이 한 번 퍼진다 */
+.salmalBtn .rip{
+  position:absolute;left:50%;top:50%;width:8px;height:8px;border-radius:50%;
+  transform:translate(-50%,-50%) scale(1);pointer-events:none;
+  box-shadow:0 0 0 1.5px rgba(255,107,74,.55);opacity:0;
+}
+
+/* 지면도 챗바도 건드리지 않는다. 색이 바뀌는 건 버튼 하나뿐이고,
+   문구·칩은 모션으로 교체된다. */
+#v-home .salmalBtn{
+  transition:background-color .62s var(--ease),color .62s var(--ease),
+             box-shadow .62s var(--ease),border-color .62s var(--ease);
+}
+
+@media(prefers-reduced-motion:reduce){
+  .chatbar::before{animation:none!important}
+}

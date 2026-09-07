@@ -1,0 +1,34 @@
+/* ══════════════ 살!말? ══════════════ */
+.mSalmal{background:#fff;border-top:1px solid var(--pink-3);border-bottom:1px solid var(--pink-3)}
+.smIn{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr);gap:clamp(26px,4vw,64px);
+  align-items:center;padding:clamp(46px,7vh,84px) 0}
+.smFig{position:relative;aspect-ratio:4/5;overflow:hidden;border-radius:6px;background:#e8e4dd}
+.smFig img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.2)}
+.smFig .tagp{position:absolute;left:14px;bottom:14px;background:rgba(255,255,255,.92);
+  backdrop-filter:blur(10px);border-radius:99px;padding:9px 14px;font-size:12.5px}
+.smVote{margin-top:22px}
+.smBar{height:42px;border-radius:99px;overflow:hidden;display:flex;background:var(--pink-3)}
+.smBar i{display:flex;align-items:center;height:100%;width:0;overflow:hidden;
+  font-family:var(--num);font-size:12px;letter-spacing:.08em;font-feature-settings:'tnum' 1,'zero' 0;
+  white-space:nowrap}
+/* 좁은 조각의 숫자는 감추지 않고 tight 로 밖에 흘려 보낸다 (아래 참조) */
+.smBar i span{transition:opacity .3s var(--ease)}
+.smBar .buy{background:var(--coral);color:#fff;padding-left:16px}
+.smBar .no{background:var(--pink-0);color:var(--paper);justify-content:flex-end;padding-right:16px}
+.smBtns{display:flex;gap:9px;margin-top:14px}
+.smBtns button{flex:1;border-radius:999px;padding:14px;font-size:14px;cursor:none;
+  box-shadow:inset 0 0 0 1px var(--pink-3);color:var(--pink-1);transition:all .35s var(--ease)}
+.smBtns button:hover{color:var(--pink-0);box-shadow:inset 0 0 0 1px var(--pink-0)}
+.smBtns button.picked{background:var(--pink-0);color:var(--paper);box-shadow:none}
+.smBtns button.picked.buy{background:var(--coral)}
+.smMeta{margin-top:12px;font-family:var(--num);font-size:10px;letter-spacing:.18em;
+  color:var(--pink-2);font-feature-settings:'zero' 0}
+.smFeed{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.smCard{background:#fff;border:1px solid var(--pink-3);border-radius:9px;overflow:hidden}
+.smCard .im{aspect-ratio:4/3;overflow:hidden;background:#e8e4dd}
+.smCard .im img{width:100%;height:100%;object-fit:cover;filter:grayscale(.2)}
+.smCard .bd{padding:14px 16px}
+.smCard .bd b{display:block;font-size:13.5px;font-weight:500;letter-spacing:-.025em}
+.smCard .bd .mini{height:6px;border-radius:99px;display:flex;overflow:hidden;margin:11px 0 8px;background:var(--pink-3)}
+.smCard .bd .mini i{display:block;height:100%;background:var(--coral)}
+.smCard .bd span{font-family:var(--num);font-size:10px;letter-spacing:.14em;color:var(--pink-2)}

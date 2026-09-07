@@ -1,0 +1,97 @@
+<!--
+  참고용 사본 — 실제로 렌더링되는 파일이 아닙니다.
+  이 프로젝트는 Vite 기반 SPA라 화면은 root의 index.html 하나로 동작하고,
+  브라우저 JS 라우터(app-shell/static/js/router.js)가 화면 전환을 담당합니다.
+  아래 마크업은 home 앱(홈 화면, 챗봇 팝업 — index.html 185-236, 586-618행)이 사용하는 부분을 index.html에서 그대로 옮겨 온 것으로,
+  Django 스타일 폴더 구성에 맞춰 정리해 둔 참고 사본입니다.
+  실제로 수정하려면 반드시 root의 index.html을 고쳐야 합니다.
+-->
+
+<!-- 185-236행: v-home -->
+  <section class="view on" id="v-home">
+    <div class="chatStage">
+      <div class="mwrap heroGrid">
+        <div class="heroL">
+          <div class="mKicker"><b>BETA</b> 패션 트렌드 AI 에이전트</div>
+          <h1 class="mStatement" id="mState">
+            <span class="ln">스크롤 속 패션을,</span>
+            <span class="ln">하나의 <em class="ul">트렌드</em>로.</span>
+          </h1>
+          <p>매거진보다 빠르고, 피드보다 선명하게.</p>
+        </div>
+
+        <div class="heroR">
+          <div class="hot" id="hot">
+            <!-- 라벨과 목록을 한 덩어리로 묶어 바 위에 올려 둔다.
+                 아래가 고정이라 목록이 자라면 라벨이 같이 밀려 올라간다. -->
+            <div class="hotTop">
+              <span class="lbl"><u>HOT</u> TREND TOP 10</span>
+              <div class="hotList" id="hotList"></div>
+            </div>
+            <button class="hotBar" id="hotBar">
+              <span class="hotRoll" id="hotRoll"></span>
+              <span class="cv">▾</span>
+            </button>
+          </div>
+
+          <div class="chatWrap">
+            <div class="chatbar">
+              <button class="salmalBtn" id="smToggle" type="button" aria-pressed="false"><span class="lbl"><i class="ic">◑</i><span class="tx">살!말?</span></span></button>
+              <div class="cfield">
+                <div class="ghostQ" id="ghostQ">
+                  <span class="spark">✧</span>
+                  <span class="qline" id="qline"></span>
+                </div>
+                <input type="text" id="mInput" autocomplete="off">
+              </div>
+              <button class="sendBtn" id="mSend" aria-label="보내기">→</button>
+            </div>
+          </div>
+          <div class="chips" id="mChips"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 대화 스레드 : 질문을 던지면 여기에 쌓인다 -->
+    <div class="threadWrap" id="threadWrap">
+      <div class="mwrap">
+        <div class="thread" id="thread"></div>
+        <button class="pill ghost" id="newChat" style="margin:26px auto 0;display:flex">↺ 새 대화</button>
+      </div>
+    </div>
+  </section>
+
+<!-- 586-618행: 챗봇 팝업(cpOverlay) -->
+<!-- ===== 챗봇 팝업 (일반 모드 / 살말 모드 공용 — 프로필·대화 목록만 갈아입는다) ===== -->
+<div class="modalOverlay cpOverlay" id="cpOverlay">
+  <div class="modalShell cpShell">
+    <div class="cpBox" id="cpBox">
+      <aside class="cpSide">
+        <div class="cpProfile">
+          <div class="cpAv" id="cpAv"></div>
+          <div class="cpProfileText">
+            <b id="cpName">일반 모드</b>
+            <p id="cpDesc"></p>
+          </div>
+        </div>
+        <button type="button" class="cpNewBtn" id="cpNewBtn"><i>＋</i>새로운 대화</button>
+        <div class="cpListLabel">대화 목록</div>
+        <div class="cpList" id="cpList"></div>
+      </aside>
+      <div class="cpMain">
+        <div class="cpThreadWrap" id="cpThreadWrap">
+          <div class="cpEmpty"><p id="cpEmptyText">궁금한 걸 물어보세요.</p></div>
+          <div class="thread cpThread" id="cpThread"></div>
+        </div>
+        <div class="cpInputRow">
+          <textarea id="cpInput" rows="1" placeholder="궁금한 점을 질문해 주세요." autocomplete="off"></textarea>
+          <button class="cpSend" id="cpSend" aria-label="보내기">→</button>
+        </div>
+      </div>
+    </div>
+    <button class="modalClose" id="cpClose" aria-label="닫기">×</button>
+  </div>
+</div>
+
+
+
