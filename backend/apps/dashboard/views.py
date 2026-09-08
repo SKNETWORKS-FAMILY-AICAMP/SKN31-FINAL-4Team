@@ -1,9 +1,13 @@
 
 from __future__ import annotations
+
+import json
+import boto3
+
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q
-from django.http import HttpRequest
+from django.http import HttpRequest,Http404, JsonResponse
 from django.shortcuts import (
     get_object_or_404,
     redirect,
@@ -11,7 +15,7 @@ from django.shortcuts import (
 )
 from django.core.paginator import Paginator
 from .services.dashboard_service import get_dashboard_context
-from apps.core.models import CrawlTarget, Source, BrandSource, Brand
+from apps.core.models import CrawlTarget, Source,CrawlRun,RawDocument, BrandSource, Brand, Category, Style
 
 def dashboard(request):
     return render(
@@ -138,11 +142,244 @@ def collection_targets(request):
 
 
 def collection_runs(request):
-    return _simple_page(
+    """
+    Collection Run 목록
+
+    - 최근 수집 실행 이력
+    - 성공 / 실패 / 실행중 통계
+    - Source / Status / Run Type 필터
+    - 검색
+    - 각 Run에서 생성된 RawDocument 연결
+    """
+
+    # =========================================================
+    # QUERY PARAMS
+    # =========================================================
+
+    search_query = request.GET.get("q", "").strip()
+    selected_source = request.GET.get("source", "").strip()
+    selected_status = request.GET.get("status", "").strip()
+    selected_run_type = request.GET.get("run_type", "").strip()
+
+    # =========================================================
+    # BASE QUERYSET
+    # =========================================================
+
+    runs_qs = (
+        CrawlRun.objects
+        .select_related(
+            "source",
+            "crawl_target",
+        )
+        .order_by("-created_at")
+    )
+
+    # =========================================================
+    # SEARCH
+    # =========================================================
+
+    if search_query:
+
+        runs_qs = runs_qs.filter(
+
+            Q(target__icontains=search_query)
+
+            | Q(source__code__icontains=search_query)
+
+            | Q(source__name__icontains=search_query)
+
+            | Q(error_code__icontains=search_query)
+
+            | Q(error_message__icontains=search_query)
+
+            | Q(celery_task_id__icontains=search_query)
+
+            | Q(crawl_target__name__icontains=search_query)
+
+        )
+
+    # =========================================================
+    # SOURCE FILTER
+    # =========================================================
+
+    if selected_source:
+        runs_qs = runs_qs.filter(
+            source_id=selected_source
+        )
+
+    # =========================================================
+    # STATUS FILTER
+    # =========================================================
+
+    if selected_status:
+        runs_qs = runs_qs.filter(
+            status=selected_status
+        )
+
+    # =========================================================
+    # RUN TYPE FILTER
+    # =========================================================
+
+    if selected_run_type:
+        runs_qs = runs_qs.filter(
+            run_type=selected_run_type
+        )
+
+    # =========================================================
+    # SUMMARY
+    # 현재 필터 조건 기준
+    # =========================================================
+
+    summary = {
+        "total": runs_qs.count(),
+
+        "running": runs_qs.filter(
+            status="RUNNING"
+        ).count(),
+
+        "success": runs_qs.filter(
+            status="SUCCESS"
+        ).count(),
+
+        "failed": runs_qs.filter(
+            status="FAILED"
+        ).count(),
+    }
+
+    # =========================================================
+    # PAGINATION
+    # =========================================================
+
+    paginator = Paginator(
+        runs_qs,
+        30,
+    )
+
+    page_number = request.GET.get("page")
+
+    page_obj = paginator.get_page(
+        page_number
+    )
+
+    runs = list(page_obj.object_list)
+
+    # =========================================================
+    # RAW DOCUMENT 연결
+    #
+    # RawDocument.crawl_run FK를 기준으로
+    # 현재 페이지의 Run에 해당하는 문서만 가져옴
+    # =========================================================
+
+    run_ids = [
+        run.id
+        for run in runs
+    ]
+
+    raw_documents_by_run = {}
+
+    if run_ids:
+
+        raw_documents = (
+            RawDocument.objects
+            .filter(
+                crawl_run_id__in=run_ids
+            )
+            .order_by(
+                "-collected_at"
+            )
+        )
+
+        for document in raw_documents:
+
+            raw_documents_by_run.setdefault(
+                document.crawl_run_id,
+                []
+            ).append(
+                document
+            )
+
+    # =========================================================
+    # Run 객체에 RawDocument 정보 임시 부착
+    #
+    # DB 저장하는 것 아님.
+    # template에서 사용하기 위한 attribute.
+    # =========================================================
+
+    for run in runs:
+
+        documents = raw_documents_by_run.get(
+            run.id,
+            [],
+        )
+
+        run.raw_documents = documents
+
+        run.raw_document_count = len(
+            documents
+        )
+
+        # 상세화면에 너무 많이 뿌리지 않도록
+        # 최근 5개만 preview
+        run.raw_document_preview = documents[:5]
+
+    # =========================================================
+    # FILTER OPTIONS
+    # =========================================================
+
+    sources = (
+        Source.objects
+        .all()
+        .order_by("code")
+    )
+
+    status_choices = (
+        CrawlRun._meta
+        .get_field("status")
+        .choices
+    )
+
+    run_type_choices = (
+        CrawlRun._meta
+        .get_field("run_type")
+        .choices
+    )
+
+    # =========================================================
+    # CONTEXT
+    # =========================================================
+
+    context = {
+
+        "page_title": "Collection Runs",
+
+        "page_description":
+            "크롤링 및 수집 실행 이력을 확인합니다.",
+
+        "runs": runs,
+
+        "page_obj": page_obj,
+
+        "summary": summary,
+
+        "sources": sources,
+
+        "status_choices": status_choices,
+
+        "run_type_choices": run_type_choices,
+
+        "search_query": search_query,
+
+        "selected_source": selected_source,
+
+        "selected_status": selected_status,
+
+        "selected_run_type": selected_run_type,
+    }
+
+    return render(
         request,
         "dashboard/collection/runs.html",
-        "Collection Runs",
-        "크롤링 및 수집 실행 이력을 확인합니다.",
+        context,
     )
 
 
@@ -308,140 +545,178 @@ def system_status(request):
     }
     return render(request, "dashboard/system/status.html", context)
 
+
+def _sync_brand_source_count(brand):
+    """Brand.source_count를 실제 연결된 플랫폼 수 기준으로 동기화."""
+    if brand is None:
+        return
+
+    count = (
+        BrandSource.objects
+        .filter(brand=brand)
+        .values("source_id")
+        .distinct()
+        .count()
+    )
+
+    if brand.source_count != count:
+        brand.source_count = count
+        brand.save(
+            update_fields=[
+                "source_count",
+                "updated_at",
+            ]
+        )
+
+
+def _parse_list_input(value):
+    """쉼표 입력 -> JSONField용 list[str]"""
+    if value is None:
+        return None
+
+    if isinstance(value, (list, tuple)):
+        raw_values = value
+    else:
+        raw_values = str(value).split(",")
+
+    result = []
+    seen = set()
+
+    for item in raw_values:
+        item = str(item).strip()
+        if not item or item in seen:
+            continue
+        seen.add(item)
+        result.append(item)
+
+    return result or None
+
+
+def _brand_categories():
+    return (
+        Category.objects
+        .filter(
+            category_type=Category.CategoryType.BRAND,
+            status=Category.Status.ACTIVE,
+        )
+        .order_by("sort_order", "name")
+    )
+
+
 def brand_sources(
     request: HttpRequest,
 ):
-
     # --------------------------------------------------------
     # FILTER
     # --------------------------------------------------------
-
-    status = request.GET.get(
-        "status",
-        "unmapped",
-    )
-
-    source_id = request.GET.get(
-        "source",
-    )
-
-    q = (
-        request.GET.get(
-            "q",
-            "",
-        )
-        .strip()
-    )
+    status = request.GET.get("status", "unmapped")
+    source_id = request.GET.get("source", "")
+    q = request.GET.get("q", "").strip()
 
     queryset = (
         BrandSource.objects
-        .select_related(
-            "source",
-            "brand",
-        )
+        .select_related("source", "brand")
+        .prefetch_related("styles")
         .all()
     )
 
-    # 기본값 = 미매핑
     if status == "unmapped":
         queryset = queryset.filter(
             brand__isnull=True,
+            mapping_status=BrandSource.MappingStatus.UNMAPPED,
         )
-
     elif status == "mapped":
+        queryset = queryset.filter(brand__isnull=False)
+    elif status == "excluded":
         queryset = queryset.filter(
-            brand__isnull=False,
+            mapping_status=BrandSource.MappingStatus.EXCLUDED
         )
 
     if source_id:
-        queryset = queryset.filter(
-            source_id=source_id,
-        )
+        queryset = queryset.filter(source_id=source_id)
 
     if q:
         queryset = queryset.filter(
-            Q(
-                source_brand_name__icontains=q
-            )
-            | Q(
-                source_brand_name_en__icontains=q
-            )
-            | Q(
-                source_brand_id__icontains=q
-            )
+            Q(name__icontains=q)
+            | Q(english_name__icontains=q)
+            | Q(source_brand_id__icontains=q)
+            | Q(brand__name__icontains=q)
+            | Q(brand__english_name__icontains=q)
+            | Q(brand__brand_code__icontains=q)
         )
 
-    # 핵심:
-    # 발견횟수 높은 순
     queryset = queryset.order_by(
         "-detected_count",
         "-last_seen_at",
     )
 
+    # UI용 안전한 문자열 속성 준비
+    rows = list(queryset[:500])
+    for item in rows:
+        item.ui_target_gender = ", ".join(
+            str(v) for v in (item.target_gender or [])
+        )
+        item.ui_target_age = ", ".join(
+            str(v) for v in (item.target_age or [])
+        )
+        item.ui_style_ids = ",".join(
+            str(v) for v in item.styles.values_list("term_id", flat=True)
+        )
+        item.ui_style_names = ", ".join(
+            str(v) for v in item.styles.all()
+        )
+
     # --------------------------------------------------------
     # SUMMARY
     # --------------------------------------------------------
-
-    all_unmapped = (
-        BrandSource.objects
-        .filter(
-            brand__isnull=True,
-        )
-    )
+    all_sources = BrandSource.objects.all()
 
     summary = {
-        "unmapped": (
-            all_unmapped.count()
-        ),
-
-        "review": (
-            all_unmapped
-            .filter(
-                detected_count__gte=5,
-            )
-            .count()
-        ),
-
-        "priority": (
-            all_unmapped
-            .filter(
-                detected_count__gte=20,
-            )
-            .count()
-        ),
-
-        "mapped": (
-            BrandSource.objects
-            .filter(
-                brand__isnull=False,
-            )
-            .count()
-        ),
+        "total": all_sources.count(),
+        "unmapped": all_sources.filter(
+            brand__isnull=True,
+            mapping_status=BrandSource.MappingStatus.UNMAPPED,
+        ).count(),
+        "review": all_sources.filter(
+            brand__isnull=True,
+            mapping_status=BrandSource.MappingStatus.UNMAPPED,
+            detected_count__gte=5,
+        ).count(),
+        "priority": all_sources.filter(
+            brand__isnull=True,
+            mapping_status=BrandSource.MappingStatus.UNMAPPED,
+            detected_count__gte=20,
+        ).count(),
+        "mapped": all_sources.filter(
+            brand__isnull=False,
+        ).count(),
+        "excluded": all_sources.filter(
+            mapping_status=BrandSource.MappingStatus.EXCLUDED,
+        ).count(),
     }
 
-    # 기존 Brand 연결 모달용
     brands = (
         Brand.objects
-        .order_by(
-            "name",
-        )
+        .filter(status=Brand.Status.ACTIVE)
+        .order_by("name")
     )
 
-    sources = (
-        Source.objects
-        .order_by(
-            "name",
-        )
-    )
+    sources = Source.objects.order_by("name")
 
     context = {
-        "brand_sources": queryset[:500],
+        "brand_sources": rows,
         "brands": brands,
+        "brand_categories": _brand_categories(),
+        "styles": (
+            Style.objects
+            .select_related("term")
+            .all()
+            .order_by("term__canonical_name")
+        ),
         "sources": sources,
         "summary": summary,
-
         "selected_status": status,
-        "selected_source": source_id,
+        "selected_source": str(source_id) if source_id else "",
         "search_query": q,
     }
 
@@ -453,7 +728,7 @@ def brand_sources(
 
 
 # ============================================================
-# EXISTING BRAND MAPPING
+# EXISTING BRAND MAPPING / REMAPPING
 # ============================================================
 
 
@@ -462,54 +737,35 @@ def map_brand_source(
     request: HttpRequest,
     source_id: int,
 ):
-
     if request.method != "POST":
-        return redirect(
-            "dashboard:brand_sources"
-        )
+        return redirect("dashboard:brand_sources")
 
     brand_source = get_object_or_404(
-        BrandSource,
+        BrandSource.objects.select_related("brand"),
         pk=source_id,
     )
 
-    brand_id = request.POST.get(
-        "brand_id",
-    )
+    brand_id = request.POST.get("brand_id")
 
     if not brand_id:
         messages.error(
             request,
             "매핑할 FEEDIT 브랜드를 선택해주세요.",
         )
-
-        return redirect(
-            "dashboard:brand_sources"
-        )
+        return redirect("dashboard:brand_sources")
 
     brand = get_object_or_404(
         Brand,
         pk=brand_id,
+        status=Brand.Status.ACTIVE,
     )
+
+    old_brand = brand_source.brand
 
     brand_source.brand = brand
-
-    # MANUAL enum이 있으면 사용하고
-    # 아직 없다면 기존 enum으로 fallback
-    brand_source.mapping_status = getattr(
-        BrandSource.MappingStatus,
-        "MANUAL_MAPPED",
-        BrandSource.MappingStatus.AUTO_MAPPED,
-    )
-
-    brand_source.mapping_method = getattr(
-        BrandSource.MappingMethod,
-        "MANUAL",
-        BrandSource.MappingMethod.SOURCE_ID,
-    )
-
+    brand_source.mapping_status = BrandSource.MappingStatus.MANUAL_MAPPED
+    brand_source.mapping_method = BrandSource.MappingMethod.MANUAL
     brand_source.mapping_confidence = 1
-
     brand_source.save(
         update_fields=[
             "brand",
@@ -520,21 +776,19 @@ def map_brand_source(
         ]
     )
 
+    _sync_brand_source_count(old_brand)
+    _sync_brand_source_count(brand)
+
     messages.success(
         request,
-        (
-            f"{brand_source.source_brand_name} "
-            f"→ {brand.name} 매핑 완료"
-        ),
+        f"{brand_source.name or brand_source.source_brand_id} → {brand.name} 매핑 완료",
     )
 
-    return redirect(
-        "dashboard:brand_sources"
-    )
+    return redirect("dashboard:brand_sources")
 
 
 # ============================================================
-# CREATE NEW FEEDIT BRAND
+# CREATE / PROMOTE FEEDIT BRAND
 # ============================================================
 
 
@@ -543,123 +797,177 @@ def create_brand_from_source(
     request: HttpRequest,
     source_id: int,
 ):
-
     if request.method != "POST":
-        return redirect(
-            "dashboard:brand_sources"
-        )
+        return redirect("dashboard:brand_sources")
 
     brand_source = get_object_or_404(
-        BrandSource,
+        BrandSource.objects.prefetch_related("styles"),
         pk=source_id,
     )
 
-    brand_code = (
-        request.POST.get(
-            "brand_code",
-            "",
-        )
-        .strip()
-    )
-
-    name = (
-        request.POST.get(
-            "name",
-            "",
-        )
-        .strip()
-    )
-
+    # --------------------------------------------------------
+    # INPUT (비어 있으면 BrandSource 값 승계)
+    # --------------------------------------------------------
+    brand_code = request.POST.get("brand_code", "").strip()
+    name = request.POST.get("name", "").strip() or (brand_source.name or "")
     english_name = (
-        request.POST.get(
-            "english_name",
-            "",
-        )
-        .strip()
+        request.POST.get("english_name", "").strip()
+        or brand_source.english_name
+        or ""
     )
+    image_url = (
+        request.POST.get("image_url", "").strip()
+        or brand_source.image_url
+        or ""
+    )
+    country_code = (
+        request.POST.get("country_code", "").strip().upper()
+        or (brand_source.country_code or "").upper()
+    )
+    description = (
+        request.POST.get("description", "").strip()
+        or brand_source.description
+        or ""
+    )
+    website_url = (
+        request.POST.get("website_url", "").strip()
+        or brand_source.website_url
+        or ""
+    )
+
+    target_gender = _parse_list_input(
+        request.POST.get("target_gender", "")
+    )
+    if target_gender is None:
+        target_gender = brand_source.target_gender
+
+    target_age = _parse_list_input(
+        request.POST.get("target_age", "")
+    )
+    if target_age is None:
+        target_age = brand_source.target_age
+
+    category_id = request.POST.get("category_id", "").strip()
+    status = request.POST.get("status", "").strip()
+    is_verified = request.POST.get("is_verified") == "on"
+
+    # --------------------------------------------------------
+    # BRAND CODE
+    # --------------------------------------------------------
+    if brand_code:
+        brand_code = (
+            brand_code
+            .upper()
+            .replace(" ", "_")
+            .replace("-", "_")
+        )
+
+        while "__" in brand_code:
+            brand_code = brand_code.replace("__", "_")
+
+        if not brand_code.startswith("BRAND_"):
+            brand_code = f"BRAND_{brand_code}"
 
     if not brand_code:
-        messages.error(
-            request,
-            "브랜드 코드는 필수입니다.",
-        )
-
-        return redirect(
-            "dashboard:brand_sources"
-        )
+        messages.error(request, "브랜드 코드는 필수입니다.")
+        return redirect("dashboard:brand_sources")
 
     if not name:
-        messages.error(
-            request,
-            "브랜드명은 필수입니다.",
-        )
-
-        return redirect(
-            "dashboard:brand_sources"
-        )
+        messages.error(request, "표준 브랜드명은 필수입니다.")
+        return redirect("dashboard:brand_sources")
 
     # --------------------------------------------------------
-    # 중복 방지
+    # CATEGORY
     # --------------------------------------------------------
+    category = None
 
-    existing = (
-        Brand.objects
-        .filter(
-            Q(
-                brand_code__iexact=brand_code
-            )
-            | Q(
-                name__iexact=name
-            )
+    if category_id:
+        category = (
+            _brand_categories()
+            .filter(pk=category_id)
+            .first()
         )
-        .first()
+
+        if category is None:
+            messages.error(
+                request,
+                "유효하지 않은 브랜드 카테고리입니다.",
+            )
+            return redirect("dashboard:brand_sources")
+
+    # --------------------------------------------------------
+    # STATUS
+    # --------------------------------------------------------
+    valid_statuses = {
+        value for value, _ in Brand.Status.choices
+    }
+
+    if status not in valid_statuses:
+        status = Brand.Status.ACTIVE
+
+    # --------------------------------------------------------
+    # DUPLICATE CHECK
+    # --------------------------------------------------------
+    duplicate_query = (
+        Q(brand_code__iexact=brand_code)
+        | Q(name__iexact=name)
     )
 
-    if existing:
+    if english_name:
+        duplicate_query |= Q(
+            english_name__iexact=english_name
+        )
 
+    existing = Brand.objects.filter(duplicate_query).first()
+
+    if existing:
         messages.warning(
             request,
             (
-                f"비슷한 FEEDIT 브랜드가 이미 존재합니다: "
-                f"{existing.name}. "
-                f"신규 생성 대신 기존 브랜드 매핑을 사용해주세요."
+                "비슷한 FEEDIT 브랜드가 이미 존재합니다: "
+                f"{existing.name} ({existing.brand_code}). "
+                "신규 생성 대신 기존 브랜드 매핑을 사용해주세요."
             ),
         )
-
-        return redirect(
-            "dashboard:brand_sources"
-        )
+        return redirect("dashboard:brand_sources")
 
     # --------------------------------------------------------
-    # CREATE
+    # CREATE BRAND
     # --------------------------------------------------------
-
     brand = Brand.objects.create(
         brand_code=brand_code,
         name=name,
-        english_name=(
-            english_name
-            or None
-        ),
+        english_name=english_name or None,
+        image_url=image_url or None,
+        category=category,
+        country_code=country_code or None,
+        description=description or None,
+        target_gender=target_gender,
+        target_age=target_age,
+        website_url=website_url or None,
+        is_verified=is_verified,
+        source_count=0,
+        status=status,
     )
 
-    # Source → Brand 연결
+    # 선택한 스타일이 있으면 우선, 없으면 Source 스타일 승계
+    style_ids = request.POST.getlist("style_ids")
+
+    if style_ids:
+        selected_styles = Style.objects.filter(term_id__in=style_ids)
+        brand.styles.set(selected_styles)
+    else:
+        brand.styles.set(brand_source.styles.all())
+
+    # --------------------------------------------------------
+    # SOURCE -> BRAND
+    # --------------------------------------------------------
+    old_brand = brand_source.brand
+
     brand_source.brand = brand
-
-    brand_source.mapping_status = getattr(
-        BrandSource.MappingStatus,
-        "MANUAL_MAPPED",
-        BrandSource.MappingStatus.AUTO_MAPPED,
-    )
-
-    brand_source.mapping_method = getattr(
-        BrandSource.MappingMethod,
-        "MANUAL",
-        BrandSource.MappingMethod.SOURCE_ID,
-    )
-
+    brand_source.mapping_status = BrandSource.MappingStatus.MANUAL_MAPPED
+    brand_source.mapping_method = BrandSource.MappingMethod.MANUAL
     brand_source.mapping_confidence = 1
-
     brand_source.save(
         update_fields=[
             "brand",
@@ -670,14 +978,168 @@ def create_brand_from_source(
         ]
     )
 
+    _sync_brand_source_count(old_brand)
+    _sync_brand_source_count(brand)
+
+    category_name = category.name if category else "미지정"
+
     messages.success(
         request,
         (
-            f"{brand.name} FEEDIT 브랜드 생성 및 "
-            f"{brand_source.source} 매핑 완료"
+            f"{brand.name} ({brand.brand_code}) FEEDIT 브랜드 승격 완료 / "
+            f"카테고리: {category_name} / {brand_source.source} 매핑 완료"
         ),
     )
 
-    return redirect(
-        "dashboard:brand_sources"
+    return redirect("dashboard:brand_sources")
+
+
+# ============================================================
+# UNMAP
+# ============================================================
+
+
+@transaction.atomic
+def unmap_brand_source(
+    request: HttpRequest,
+    source_id: int,
+):
+    if request.method != "POST":
+        return redirect("dashboard:brand_sources")
+
+    brand_source = get_object_or_404(
+        BrandSource.objects.select_related("brand"),
+        pk=source_id,
+    )
+
+    old_brand = brand_source.brand
+
+    brand_source.brand = None
+    brand_source.mapping_status = BrandSource.MappingStatus.UNMAPPED
+    brand_source.mapping_method = None
+    brand_source.mapping_confidence = None
+    brand_source.save(
+        update_fields=[
+            "brand",
+            "mapping_status",
+            "mapping_method",
+            "mapping_confidence",
+            "updated_at",
+        ]
+    )
+
+    _sync_brand_source_count(old_brand)
+
+    messages.success(
+        request,
+        f"{brand_source.name or brand_source.source_brand_id} 매핑 해제 완료",
+    )
+
+    return redirect("dashboard:brand_sources")
+
+
+# ============================================================
+# EXCLUDE
+# ============================================================
+
+
+@transaction.atomic
+def exclude_brand_source(
+    request: HttpRequest,
+    source_id: int,
+):
+    if request.method != "POST":
+        return redirect("dashboard:brand_sources")
+
+    brand_source = get_object_or_404(
+        BrandSource.objects.select_related("brand"),
+        pk=source_id,
+    )
+
+    old_brand = brand_source.brand
+
+    brand_source.brand = None
+    brand_source.mapping_status = BrandSource.MappingStatus.EXCLUDED
+    brand_source.mapping_method = BrandSource.MappingMethod.MANUAL
+    brand_source.mapping_confidence = None
+    brand_source.save(
+        update_fields=[
+            "brand",
+            "mapping_status",
+            "mapping_method",
+            "mapping_confidence",
+            "updated_at",
+        ]
+    )
+
+    _sync_brand_source_count(old_brand)
+
+    messages.success(
+        request,
+        f"{brand_source.name or brand_source.source_brand_id} 제외 처리 완료",
+    )
+
+    return redirect("dashboard:brand_sources")
+
+
+def raw_document_json(request, pk):
+
+    document = get_object_or_404(
+        RawDocument,
+        pk=pk,
+    )
+
+    if not document.s3_key:
+
+        raise Http404(
+            "S3 object key가 없습니다."
+        )
+
+    bucket = (
+        document.s3_bucket
+        or settings.AWS_STORAGE_BUCKET_NAME
+    )
+
+    s3 = boto3.client(
+        "s3",
+        region_name=getattr(
+            settings,
+            "AWS_REGION",
+            "ap-northeast-2",
+        ),
+    )
+
+    try:
+
+        response = s3.get_object(
+            Bucket=bucket,
+            Key=document.s3_key,
+        )
+
+        body = (
+            response["Body"]
+            .read()
+            .decode("utf-8")
+        )
+
+        data = json.loads(
+            body
+        )
+
+    except Exception as exc:
+
+        raise Http404(
+            f"S3 Raw JSON 조회 실패: {exc}"
+        )
+
+    return JsonResponse(
+        data,
+        safe=not isinstance(
+            data,
+            list,
+        ),
+        json_dumps_params={
+            "ensure_ascii": False,
+            "indent": 2,
+        },
     )

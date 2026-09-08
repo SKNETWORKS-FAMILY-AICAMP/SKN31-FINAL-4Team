@@ -1,1137 +1,1117 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any
+from django.db import transaction
+from django.utils import timezone
 
-from apps.core.models import Brand
+from apps.core.models import (
+    BrandSource,
+    CategorySource,
+    ProductSource,
+)
+
+from analysis.normalization.common import (
+    build_brand_source_payload,
+    clean_list,
+    clean_text,
+    find_brand_exact,
+    find_styles,
+    normalize_product_name,
+)
 
 
 class ZigzagNormalizer:
-    source_code = "ZIGZAG"
 
-    # 보세 / 비브랜드 쇼핑몰 fallback
-    non_brand_code = "BRAND_NON_BRAND_SHOP"
-
-    # =========================================================
-    # RANKING NORMALIZE
-    # =========================================================
-
-    def normalize_ranking(
+    def __init__(
         self,
-        raw: dict[str, Any],
         *,
-        observed_at: datetime | str | None = None,
-    ) -> dict[str, Any]:
+        source,
+    ):
+        self.source = source
 
-        ranking = raw.get("ranking") or {}
-        ranking_items = ranking.get("items") or []
+    # ============================================================
+    # BRAND / STORE PAYLOAD
+    # ============================================================
 
-        detail_items = self._detail_items(raw)
+    @staticmethod
+    def extract_brand_payload(
+        shop_data: dict | None,
+    ) -> dict:
 
-        details_by_id: dict[str, dict[str, Any]] = {}
-        detail_order: list[str] = []
-
-        for detail in detail_items:
-
-            source_uid = self._detail_source_uid(
-                detail
-            )
-
-            if (
-                source_uid
-                and source_uid not in details_by_id
-            ):
-                details_by_id[source_uid] = detail
-                detail_order.append(source_uid)
-
-        products: list[dict[str, Any]] = []
-        seen_ids: set[str] = set()
-
-        # -----------------------------------------------------
-        # 1. ranking 순서 우선
-        # -----------------------------------------------------
-
-        for ranking_item in ranking_items:
-
-            if not isinstance(
-                ranking_item,
-                dict,
-            ):
-                continue
-
-            source_uid = (
-                self._ranking_source_uid(
-                    ranking_item
-                )
-            )
-
-            if (
-                not source_uid
-                or source_uid in seen_ids
-            ):
-                continue
-
-            seen_ids.add(
-                source_uid
-            )
-
-            products.append(
-                self.normalize_product(
-                    details_by_id.get(
-                        source_uid
-                    ),
-                    ranking_item=ranking_item,
-                    observed_at=(
-                        observed_at
-                        or raw.get(
-                            "collected_at"
-                        )
-                    ),
-                )
-            )
-
-        # -----------------------------------------------------
-        # 2. ranking에는 없고 detail에만 있는 상품
-        # -----------------------------------------------------
-
-        for source_uid in detail_order:
-
-            if source_uid in seen_ids:
-                continue
-
-            seen_ids.add(
-                source_uid
-            )
-
-            products.append(
-                self.normalize_product(
-                    details_by_id[
-                        source_uid
-                    ],
-                    observed_at=(
-                        observed_at
-                        or raw.get(
-                            "collected_at"
-                        )
-                    ),
-                )
-            )
-
-        return {
-            "source": self.source_code,
-            "entity_type": "RANKING",
-            "products": products,
-        }
-
-    # =========================================================
-    # PRODUCT NORMALIZE
-    # =========================================================
-
-    def normalize_product(
-        self,
-        raw_product: dict[str, Any] | None,
-        *,
-        ranking_item: dict[str, Any] | None = None,
-        observed_at: datetime | str | None = None,
-    ) -> dict[str, Any]:
-
-        raw_product = (
-            raw_product
-            or {}
-        )
-
-        ranking_item = (
-            ranking_item
-            or {}
-        )
-
-        product = (
-            raw_product.get(
-                "product"
-            )
-            or raw_product
-        )
-
-        # -----------------------------------------------------
-        # SOURCE PRODUCT ID
-        # -----------------------------------------------------
-
-        source_uid = (
-            self._detail_source_uid(
-                raw_product
-            )
-            or self._ranking_source_uid(
-                ranking_item
-            )
-        )
-
-        if not source_uid:
-
-            raise ValueError(
-                "ZIGZAG normalize failed: "
-                "source product ID not found."
-            )
-
-        # -----------------------------------------------------
-        # SHOP
-        # -----------------------------------------------------
+        if not isinstance(
+            shop_data,
+            dict,
+        ):
+            shop_data = {}
 
         shop_info = (
-            self._extract_shop(
-                product=product,
-                raw_product=raw_product,
-                ranking_item=ranking_item,
+            shop_data.get(
+                "shop_information"
             )
+            if isinstance(
+                shop_data.get(
+                    "shop_information"
+                ),
+                dict,
+            )
+            else {}
         )
 
-        # -----------------------------------------------------
-        # BRAND
-        # -----------------------------------------------------
+        # 경우에 따라 shop_data 자체가
+        # shop_information일 수도 있음
+        if not shop_info:
+            shop_info = shop_data
 
-        brand_info = (
-            self._resolve_brand(
-                shop_name=shop_info[
-                    "shop_name"
-                ]
+        # --------------------------------------------------------
+        # ID / NAME
+        # --------------------------------------------------------
+
+        shop_id = (
+            shop_info.get("id")
+            or shop_info.get(
+                "shop_id"
             )
-        )
-
-        # -----------------------------------------------------
-        # CATEGORY
-        # -----------------------------------------------------
-
-        (
-            source_category_path,
-            source_category_name,
-            source_category_code,
-        ) = self._category(
-            product,
-            raw_product,
-        )
-
-        # -----------------------------------------------------
-        # PRICING
-        # -----------------------------------------------------
-
-        pricing = (
-            product.get(
-                "pricing"
+            or shop_data.get(
+                "shop_id"
             )
-            or raw_product.get(
-                "pricing"
-            )
-            or raw_product.get(
-                "snapshot"
-            )
-            or {}
-        )
-
-        regular_price = (
-            self._first_value(
-                pricing.get(
-                    "calculated_regular_price"
-                ),
-                pricing.get(
-                    "regular_price"
-                ),
-            )
-        )
-
-        sale_price = (
-            self._first_value(
-                pricing.get(
-                    "final_sale_price"
-                ),
-                pricing.get(
-                    "sale_price"
-                ),
-                ranking_item.get(
-                    "list_price"
-                ),
-                ranking_item.get(
-                    "price"
-                ),
-            )
-        )
-
-        store_sale_price = (
-            self._first_value(
-                pricing.get(
-                    "store_sale_price"
-                )
-            )
-        )
-
-        discount_rate = (
-            self._first_value(
-                pricing.get(
-                    "final_discount_rate"
-                ),
-                pricing.get(
-                    "discount_rate"
-                ),
-                ranking_item.get(
-                    "list_discount_rate"
-                ),
-                ranking_item.get(
-                    "discount"
-                ),
-            )
-        )
-
-        # -----------------------------------------------------
-        # BASIC
-        # -----------------------------------------------------
-
-        name = (
-            self._first_value(
-                product.get(
-                    "name"
-                ),
-                raw_product.get(
-                    "name"
-                ),
-                ranking_item.get(
-                    "name"
-                ),
-            )
-        )
-
-        source_url = (
-            self._first_value(
-                raw_product.get(
-                    "source_url"
-                ),
-                raw_product.get(
-                    "product_url"
-                ),
-                ranking_item.get(
-                    "product_url"
-                ),
-            )
-        )
-
-        thumbnail_url = (
-            self._first_value(
-                product.get(
-                    "thumbnail_url"
-                ),
-                product.get(
-                    "image_url"
-                ),
-                raw_product.get(
-                    "thumbnail_url"
-                ),
-                ranking_item.get(
-                    "image_url"
-                ),
-            )
-        )
-
-        sales_status = (
-            self._first_value(
-                product.get(
-                    "sales_status"
-                ),
-                raw_product.get(
-                    "sales_status"
-                ),
-            )
-        )
-
-        # -----------------------------------------------------
-        # RESULT
-        # -----------------------------------------------------
-
-        return {
-            # SOURCE
-            "source":
-                self.source_code,
-
-            "source_uid":
-                source_uid,
-
-            "source_url":
-                source_url,
-
-            "product_key":
-                (
-                    f"s:"
-                    f"{self.source_code}:"
-                    f"{source_uid}"
-                ),
-
-            # MATCH
-            "match_method":
-                "self",
-
-            "match_score":
-                0.0,
-
-            # PRODUCT
-            "name":
-                name,
-
-            "normalized_name":
-                self._normalize_text(
-                    name
-                ),
-
-            "thumbnail_url":
-                thumbnail_url,
-
-            # -------------------------------------------------
-            # FEEDIT CANONICAL BRAND
-            # -------------------------------------------------
-
-            "brand_id":
-                brand_info[
-                    "brand_id"
-                ],
-
-            "brand_code":
-                brand_info[
-                    "brand_code"
-                ],
-
-            "brand_name":
-                brand_info[
-                    "brand_name"
-                ],
-
-            "brand_match_method":
-                brand_info[
-                    "brand_match_method"
-                ],
-
-            # -------------------------------------------------
-            # ZIGZAG SOURCE SHOP
-            # -------------------------------------------------
-
-            "brand": {
-                "source_brand_id":
-                    shop_info[
-                        "source_brand_id"
-                    ],
-
-                "source_brand_name":
-                    shop_info[
-                        "shop_name"
-                    ],
-
-                "source_brand_name_en":
-                    None,
-
-                "source_brand_url":
-                    None,
-            },
-
-            "shop_name":
-                shop_info[
-                    "shop_name"
-                ],
-
-            "shop_domain":
-                shop_info[
-                    "shop_domain"
-                ],
-
-            "shop_bookmark_count":
-                shop_info[
-                    "shop_bookmark_count"
-                ],
-
-            # -------------------------------------------------
-            # SOURCE CATEGORY
-            # -------------------------------------------------
-
-            "source_category_path":
-                source_category_path,
-
-            "source_category_name":
-                source_category_name,
-
-            "source_category_code":
-                source_category_code,
-
-            # -------------------------------------------------
-            # SNAPSHOT
-            # -------------------------------------------------
-
-            "regular_price":
-                self._as_number(
-                    regular_price
-                ),
-
-            "sale_price":
-                self._as_number(
-                    sale_price
-                ),
-
-            "store_sale_price":
-                self._as_number(
-                    store_sale_price
-                ),
-
-            "discount_rate":
-                self._as_number(
-                    discount_rate
-                ),
-
-            "rank":
-                self._as_int(
-                    ranking_item.get(
-                        "rank"
-                    )
-                ),
-
-            "ranking_category_id":
-                self._first_value(
-                    ranking_item.get(
-                        "ranking_category_id"
-                    )
-                ),
-
-            "review_score":
-                self._as_number(
-                    ranking_item.get(
-                        "review_score"
-                    )
-                ),
-
-            "review_count":
-                self._as_int(
-                    ranking_item.get(
-                        "review_count"
-                    )
-                ),
-
-            "sales_status":
-                sales_status,
-
-            "observed_at":
-                self._first_value(
-                    raw_product.get(
-                        "collected_at"
-                    ),
-                    observed_at,
-                ),
-        }
-
-    # =========================================================
-    # BRAND RESOLVE
-    # =========================================================
-
-    def _resolve_brand(
-        self,
-        *,
-        shop_name: str | None,
-    ) -> dict[str, Any]:
-
-        matched_brand = None
-
-        if shop_name:
-
-            clean_name = (
-                str(
-                    shop_name
-                )
-                .strip()
-            )
-
-            if clean_name:
-
-                # -------------------------------------------------
-                # 1. 한국어 / 표준 브랜드명 EXACT
-                # -------------------------------------------------
-
-                matched_brand = (
-                    Brand.objects
-                    .filter(
-                        name=clean_name
-                    )
-                    .first()
-                )
-
-                # -------------------------------------------------
-                # 2. 영어 브랜드명 EXACT
-                # -------------------------------------------------
-
-                if (
-                    matched_brand
-                    is None
-                ):
-
-                    matched_brand = (
-                        Brand.objects
-                        .filter(
-                            english_name__iexact=(
-                                clean_name
-                            )
-                        )
-                        .first()
-                    )
-
-        # -----------------------------------------------------
-        # MATCH SUCCESS
-        # -----------------------------------------------------
-
-        if matched_brand is not None:
-
-            return {
-                "brand_id":
-                    matched_brand.id,
-
-                "brand_code":
-                    matched_brand.brand_code,
-
-                "brand_name":
-                    matched_brand.name,
-
-                "brand_match_method":
-                    "EXACT_SHOP_NAME",
-            }
-
-        # -----------------------------------------------------
-        # NON BRAND FALLBACK
-        # -----------------------------------------------------
-
-        non_brand = (
-            Brand.objects
-            .filter(
-                brand_code=(
-                    self.non_brand_code
-                )
-            )
-            .first()
-        )
-
-        if non_brand is None:
-
-            raise RuntimeError(
-                "FEEDIT fallback Brand "
-                f"'{self.non_brand_code}' "
-                "not found."
-            )
-
-        return {
-            "brand_id":
-                non_brand.id,
-
-            "brand_code":
-                non_brand.brand_code,
-
-            "brand_name":
-                non_brand.name,
-
-            "brand_match_method":
-                "NON_BRAND_FALLBACK",
-        }
-
-    # =========================================================
-    # SHOP EXTRACT
-    # =========================================================
-
-    def _extract_shop(
-        self,
-        *,
-        product: dict[str, Any],
-        raw_product: dict[str, Any],
-        ranking_item: dict[str, Any],
-    ) -> dict[str, Any]:
-
-        shop = (
-            product.get(
-                "shop"
-            )
-            or {}
-        )
-
-        legacy_shop = (
-            product.get(
-                "brand"
-            )
-            or raw_product.get(
-                "brand"
-            )
-            or {}
-        )
-
-        shop_domain = (
-            self._first_value(
-                shop.get(
-                    "domain"
-                ),
-                shop.get(
-                    "main_domain"
-                ),
-                legacy_shop.get(
-                    "shop_domain"
-                ),
-                legacy_shop.get(
-                    "domain"
-                ),
+            or shop_data.get(
+                "store_id"
             )
         )
 
         shop_name = (
-            self._first_value(
-                ranking_item.get(
-                    "shop_name"
-                ),
-                ranking_item.get(
-                    "brand"
-                ),
-                shop.get(
-                    "name"
-                ),
-                legacy_shop.get(
-                    "name_ko"
-                ),
-                legacy_shop.get(
-                    "name"
-                ),
+            shop_info.get("name")
+            or shop_info.get(
+                "shop_name"
+            )
+            or shop_data.get(
+                "shop_name"
+            )
+            or shop_data.get(
+                "store_name"
             )
         )
 
-        shop_bookmark_count = (
-            self._first_value(
-                shop.get(
-                    "bookmark_count"
-                ),
-                legacy_shop.get(
-                    "bookmark_count"
-                ),
+        # --------------------------------------------------------
+        # LOGO
+        # --------------------------------------------------------
+
+        logo_data = (
+            shop_info.get(
+                "logo_image"
             )
         )
 
-        return {
-            "source_brand_id":
-                (
-                    str(
-                        shop_domain
-                    )
-                    if shop_domain
-                    else None
-                ),
-
-            "shop_name":
-                (
-                    str(
-                        shop_name
-                    ).strip()
-                    if shop_name
-                    else None
-                ),
-
-            "shop_domain":
-                (
-                    str(
-                        shop_domain
-                    ).strip()
-                    if shop_domain
-                    else None
-                ),
-
-            "shop_bookmark_count":
-                self._as_int(
-                    shop_bookmark_count
-                ),
-        }
-
-    # =========================================================
-    # DETAIL
-    # =========================================================
-
-    @staticmethod
-    def _detail_items(
-        raw: dict[str, Any],
-    ) -> list[dict[str, Any]]:
-
-        products = (
-            raw.get(
-                "products"
-            )
-        )
+        logo_url = None
 
         if isinstance(
-            products,
-            list,
-        ):
-
-            return [
-                item
-                for item in products
-                if isinstance(
-                    item,
-                    dict,
-                )
-            ]
-
-        if isinstance(
-            raw.get(
-                "product"
-            ),
+            logo_data,
             dict,
         ):
 
-            return [
-                raw
-            ]
-
-        return []
-
-    @staticmethod
-    def _detail_source_uid(
-        detail: dict[str, Any],
-    ) -> str | None:
-
-        product = (
-            detail.get(
-                "product"
-            )
-            or {}
-        )
-
-        value = (
-            ZigzagNormalizer
-            ._first_value(
-                detail.get(
-                    "source_product_id"
-                ),
-                detail.get(
-                    "source_uid"
-                ),
-                detail.get(
-                    "product_id"
-                ),
-                product.get(
-                    "id"
-                ),
-            )
-        )
-
-        if value is None:
-            return None
-
-        return str(
-            value
-        )
-
-    # =========================================================
-    # RANKING ID
-    # =========================================================
-
-    @staticmethod
-    def _ranking_source_uid(
-        item: dict[str, Any],
-    ) -> str | None:
-
-        value = (
-            ZigzagNormalizer
-            ._first_value(
-                item.get(
-                    "product_id"
-                ),
-                item.get(
-                    "source_product_id"
-                ),
-            )
-        )
-
-        if value is None:
-            return None
-
-        return str(
-            value
-        )
-
-    # =========================================================
-    # CATEGORY
-    # =========================================================
-
-    @staticmethod
-    def _category(
-        product: dict[str, Any],
-        raw_product: dict[str, Any],
-    ) -> tuple[
-        list[str],
-        str | None,
-        str | None,
-    ]:
-
-        path = (
-            product.get(
-                "category_path"
-            )
-            or raw_product.get(
-                "category_path"
-            )
-            or []
-        )
-
-        code = (
-            product.get(
-                "category_code"
-            )
-            or raw_product.get(
-                "category_code"
-            )
-        )
-
-        # -----------------------------------------------------
-        # NEW FORMAT
-        # -----------------------------------------------------
-
-        if path:
-
-            normalized_path = [
-                str(
-                    value
-                ).strip()
-
-                for value
-                in path
-
-                if (
-                    value is not None
-                    and str(
-                        value
-                    ).strip()
-                )
-            ]
-
-            return (
-                normalized_path,
-
-                (
-                    normalized_path[
-                        -1
-                    ]
-                    if normalized_path
-                    else None
-                ),
-
-                (
-                    str(
-                        code
-                    )
-                    if code
-                    else None
-                ),
+            url_data = (
+                logo_data.get("url")
             )
 
-        # -----------------------------------------------------
-        # LEGACY FORMAT
-        # -----------------------------------------------------
-
-        legacy = (
-            product.get(
-                "category"
-            )
-            or raw_product.get(
-                "category"
-            )
-            or {}
-        )
-
-        legacy_path = [
-            (
-                legacy.get(
-                    f"depth{depth}_name"
-                )
-                or legacy.get(
-                    f"depth{depth}"
-                )
-            )
-
-            for depth
-            in range(
-                1,
-                5,
-            )
-        ]
-
-        normalized_path = [
-            str(
-                value
-            ).strip()
-
-            for value
-            in legacy_path
-
-            if (
-                value is not None
-                and str(
-                    value
-                ).strip()
-            )
-        ]
-
-        legacy_code = (
-            legacy.get(
-                "category_code"
-            )
-            or legacy.get(
-                "code"
-            )
-        )
-
-        return (
-            normalized_path,
-
-            ZigzagNormalizer
-            .get_deepest_category(
-                legacy
-            ),
-
-            (
-                str(
-                    legacy_code
-                )
-                if legacy_code
-                else None
-            ),
-        )
-
-    @staticmethod
-    def get_deepest_category(
-        category: dict[str, Any],
-    ) -> str | None:
-
-        for depth in range(
-            4,
-            0,
-            -1,
-        ):
-
-            value = (
-                category.get(
-                    f"depth{depth}_name"
-                )
-                or category.get(
-                    f"depth{depth}"
-                )
-            )
-
-            if (
-                value
-                and str(
-                    value
-                ).strip()
+            if isinstance(
+                url_data,
+                dict,
             ):
 
-                return str(
-                    value
-                ).strip()
+                logo_url = (
+                    url_data.get(
+                        "normal"
+                    )
+                    or url_data.get(
+                        "dark"
+                    )
+                )
 
-        return None
+            elif isinstance(
+                url_data,
+                str,
+            ):
+                logo_url = url_data
 
-    # =========================================================
-    # UTILS
-    # =========================================================
+            if not logo_url:
 
-    @staticmethod
-    def _first_value(
-        *values: Any,
-    ) -> Any:
+                logo_url = (
+                    logo_data.get(
+                        "normal"
+                    )
+                    or logo_data.get(
+                        "image_url"
+                    )
+                )
 
-        return next(
-            (
-                value
+        elif isinstance(
+            logo_data,
+            str,
+        ):
+            logo_url = logo_data
 
-                for value
-                in values
+        # 대표 이미지가 있으면 대표이미지 우선,
+        # 없으면 로고
+        image_url = (
+            shop_info.get(
+                "typical_image_url"
+            )
+            or logo_url
+        )
 
-                if (
-                    value is not None
-                    and value != ""
+        # --------------------------------------------------------
+        # STYLE
+        # --------------------------------------------------------
+
+        styles = clean_list(
+            shop_info.get(
+                "style_list"
+            )
+        )
+
+        # --------------------------------------------------------
+        # AGE
+        # --------------------------------------------------------
+
+        ages = clean_list(
+            shop_info.get(
+                "age_list"
+            )
+        )
+
+        # --------------------------------------------------------
+        # GENDER
+        # --------------------------------------------------------
+
+        genders = clean_list(
+            shop_info.get(
+                "gender_list"
+            )
+            or shop_info.get(
+                "target_gender"
+            )
+        )
+
+        # --------------------------------------------------------
+        # DOMAIN
+        # --------------------------------------------------------
+
+        domain = clean_text(
+            shop_info.get(
+                "main_domain"
+            )
+            or shop_data.get(
+                "main_domain"
+            )
+        )
+
+        profile_url = None
+
+        if domain:
+
+            profile_url = (
+                f"https://zigzag.kr/{domain}"
+            )
+
+        # --------------------------------------------------------
+        # ATTRIBUTES
+        # --------------------------------------------------------
+
+        attributes = {
+
+            "main_domain": domain,
+
+            "is_brand": (
+                shop_data.get(
+                    "is_brand"
+                )
+                if "is_brand"
+                in shop_data
+                else shop_info.get(
+                    "is_brand"
                 )
             ),
-            None,
+
+            "logo_image": (
+                shop_info.get(
+                    "logo_image"
+                )
+            ),
+
+            "typical_image_url": (
+                shop_info.get(
+                    "typical_image_url"
+                )
+            ),
+
+            "representative_info": (
+                shop_info.get(
+                    "representative_info"
+                )
+            ),
+
+            "representative_coupon_v2": (
+                shop_info.get(
+                    "representative_coupon_v2"
+                )
+            ),
+        }
+
+        return build_brand_source_payload(
+
+            source_brand_id=(
+                shop_id
+            ),
+
+            name=(
+                shop_name
+            ),
+
+            english_name=(
+                shop_info.get(
+                    "english_name"
+                )
+            ),
+
+            image_url=(
+                image_url
+            ),
+
+            country_code=(
+                shop_info.get(
+                    "country_code"
+                )
+            ),
+
+            description=(
+                shop_info.get(
+                    "comment"
+                )
+                or shop_info.get(
+                    "description"
+                )
+            ),
+
+            target_gender=(
+                genders
+            ),
+
+            target_age=(
+                ages
+            ),
+
+            style_values=(
+                styles
+            ),
+
+            website_url=(
+                shop_info.get(
+                    "website_url"
+                )
+            ),
+
+            source_profile_url=(
+                profile_url
+            ),
+
+            attributes=(
+                attributes
+            ),
         )
 
-    @staticmethod
-    def _normalize_text(
-        value: Any,
-    ) -> str:
+    # ============================================================
+    # BRAND
+    # ============================================================
 
-        return " ".join(
-            str(
-                value
-                or ""
+    @transaction.atomic
+    def normalize_brand(
+        self,
+        shop_data: dict | None,
+    ) -> dict:
+
+        payload = (
+            self.extract_brand_payload(
+                shop_data
             )
-            .lower()
-            .split()
         )
 
-    @staticmethod
-    def _as_int(
-        value: Any,
-    ) -> int | None:
+        source_brand_id = (
+            payload[
+                "source_brand_id"
+            ]
+        )
+
+        name = payload["name"]
 
         if (
-            value is None
-            or value == ""
+            source_brand_id is None
+            and name is None
         ):
-            return None
+            return {
+                "matched": False,
+                "matched_by": (
+                    "NO_BRAND"
+                ),
+                "brand": None,
+                "brand_source": None,
+            }
 
-        try:
+        # 지그재그 ranking 중 일부는
+        # shop_id 없이 shop_name만 들어오는 경우 대응
+        if source_brand_id is None:
 
-            return int(
-                str(
-                    value
-                )
-                .replace(
-                    ",",
-                    "",
+            source_brand_id = (
+                f"NAME:{name}"
+            )
+
+        brand = find_brand_exact(
+            name=name,
+            english_name=(
+                payload[
+                    "english_name"
+                ]
+            ),
+        )
+
+        now = timezone.now()
+
+        brand_source = (
+            BrandSource.objects
+            .select_related(
+                "brand"
+            )
+            .filter(
+                source=self.source,
+                source_brand_id=(
+                    source_brand_id
+                ),
+            )
+            .first()
+        )
+
+        created = False
+
+        if brand_source is None:
+
+            brand_source = (
+                BrandSource.objects.create(
+
+                    brand=brand,
+
+                    source=self.source,
+
+                    source_brand_id=(
+                        source_brand_id
+                    ),
+
+                    name=(
+                        name
+                        or source_brand_id
+                    ),
+
+                    english_name=(
+                        payload[
+                            "english_name"
+                        ]
+                    ),
+
+                    source_brand_name_en=(
+                        payload[
+                            "english_name"
+                        ]
+                    ),
+
+                    image_url=(
+                        payload[
+                            "image_url"
+                        ]
+                    ),
+
+                    country_code=(
+                        payload[
+                            "country_code"
+                        ]
+                    ),
+
+                    description=(
+                        payload[
+                            "description"
+                        ]
+                    ),
+
+                    target_gender=(
+                        payload[
+                            "target_gender"
+                        ]
+                    ),
+
+                    target_age=(
+                        payload[
+                            "target_age"
+                        ]
+                    ),
+
+                    website_url=(
+                        payload[
+                            "website_url"
+                        ]
+                    ),
+
+                    source_profile_url=(
+                        payload[
+                            "source_profile_url"
+                        ]
+                    ),
+
+                    attributes=(
+                        payload[
+                            "attributes"
+                        ]
+                    ),
+
+                    mapping_status=(
+                        BrandSource
+                        .MappingStatus
+                        .AUTO_MAPPED
+
+                        if brand
+
+                        else BrandSource
+                        .MappingStatus
+                        .UNMAPPED
+                    ),
+
+                    mapping_method=(
+                        BrandSource
+                        .MappingMethod
+                        .EXACT_NAME
+
+                        if brand
+
+                        else None
+                    ),
+
+                    mapping_confidence=(
+                        1
+                        if brand
+                        else None
+                    ),
+
+                    detected_count=1,
+
+                    first_seen_at=now,
+
+                    last_seen_at=now,
                 )
             )
 
-        except (
-            TypeError,
-            ValueError,
-        ):
+            created = True
 
+        else:
+
+            # 이미 관리자가 매핑한 Brand는
+            # 새 자동매칭으로 덮어쓰지 않음
+            existing_brand = (
+                brand_source.brand
+            )
+
+            brand_source.name = (
+                name
+                or brand_source.name
+            )
+
+            brand_source.english_name = (
+                payload[
+                    "english_name"
+                ]
+            )
+
+            brand_source.source_brand_name_en = (
+                payload[
+                    "english_name"
+                ]
+            )
+
+            # 값 있을 때만 기존 상세값 보존/갱신
+            if payload["image_url"]:
+                brand_source.image_url = (
+                    payload[
+                        "image_url"
+                    ]
+                )
+
+            if payload[
+                "country_code"
+            ]:
+                brand_source.country_code = (
+                    payload[
+                        "country_code"
+                    ]
+                )
+
+            if payload[
+                "description"
+            ]:
+                brand_source.description = (
+                    payload[
+                        "description"
+                    ]
+                )
+
+            if payload[
+                "target_gender"
+            ]:
+                brand_source.target_gender = (
+                    payload[
+                        "target_gender"
+                    ]
+                )
+
+            if payload[
+                "target_age"
+            ]:
+                brand_source.target_age = (
+                    payload[
+                        "target_age"
+                    ]
+                )
+
+            if payload[
+                "website_url"
+            ]:
+                brand_source.website_url = (
+                    payload[
+                        "website_url"
+                    ]
+                )
+
+            if payload[
+                "source_profile_url"
+            ]:
+                brand_source.source_profile_url = (
+                    payload[
+                        "source_profile_url"
+                    ]
+                )
+
+            # attributes merge
+            attrs = (
+                brand_source.attributes
+                if isinstance(
+                    brand_source.attributes,
+                    dict,
+                )
+                else {}
+            )
+
+            attrs.update(
+                payload["attributes"]
+            )
+
+            brand_source.attributes = (
+                attrs
+            )
+
+            brand_source.last_seen_at = (
+                now
+            )
+
+            brand_source.detected_count = (
+                (
+                    brand_source
+                    .detected_count
+                )
+                or 0
+            ) + 1
+
+            if existing_brand is None:
+
+                brand_source.brand = (
+                    brand
+                )
+
+                if brand:
+
+                    brand_source.mapping_status = (
+                        BrandSource
+                        .MappingStatus
+                        .AUTO_MAPPED
+                    )
+
+                    brand_source.mapping_method = (
+                        BrandSource
+                        .MappingMethod
+                        .EXACT_NAME
+                    )
+
+                    brand_source.mapping_confidence = 1
+
+                else:
+
+                    brand_source.mapping_status = (
+                        BrandSource
+                        .MappingStatus
+                        .UNMAPPED
+                    )
+
+                    brand_source.mapping_method = None
+
+                    brand_source.mapping_confidence = None
+
+            brand_source.save()
+
+        # --------------------------------------------------------
+        # STYLE MAPPING
+        # --------------------------------------------------------
+
+        style_values = (
+            payload[
+                "style_values"
+            ]
+        )
+
+        if style_values:
+
+            styles = find_styles(
+                style_values
+            )
+
+            # source에서 명시적으로 style_list가
+            # 관측된 경우에는 그 결과로 맞춘다.
+            brand_source.styles.set(
+                styles
+            )
+
+        return {
+
+            "created": created,
+
+            "matched": (
+                brand_source.brand_id
+                is not None
+            ),
+
+            "matched_by": (
+                brand_source.mapping_method
+                or "UNMAPPED"
+            ),
+
+            "brand": (
+                brand_source.brand
+            ),
+
+            "brand_source": (
+                brand_source
+            ),
+        }
+
+    # ============================================================
+    # CATEGORY SOURCE
+    # ============================================================
+
+    def get_category_source(
+        self,
+        category_id,
+    ):
+
+        category_id = clean_text(
+            category_id
+        )
+
+        if not category_id:
             return None
 
-    @staticmethod
-    def _as_number(
-        value: Any,
-    ) -> int | float | None:
+        return (
+            CategorySource.objects
+            .select_related(
+                "category"
+            )
+            .filter(
+                source=self.source,
+                source_category_id=(
+                    category_id
+                ),
+            )
+            .first()
+        )
 
-        if (
-            value is None
-            or value == ""
+    # ============================================================
+    # PRODUCT
+    # ============================================================
+
+    @transaction.atomic
+    def normalize_product_source(
+        self,
+        product_data: dict,
+        *,
+        inherited_category_id=None,
+    ) -> dict:
+
+        if not isinstance(
+            product_data,
+            dict,
         ):
-            return None
+            raise ValueError(
+                "product_data는 dict여야 합니다."
+            )
 
-        try:
+        # --------------------------------------------------------
+        # PRODUCT ID
+        # --------------------------------------------------------
 
-            number = float(
-                str(
-                    value
+        source_product_id = clean_text(
+            product_data.get(
+                "product_id"
+            )
+            or product_data.get(
+                "productId"
+            )
+            or product_data.get(
+                "item_id"
+            )
+            or product_data.get(
+                "itemId"
+            )
+            or product_data.get(
+                "goods_id"
+            )
+            or product_data.get(
+                "goodsId"
+            )
+            or product_data.get(
+                "id"
+            )
+        )
+
+        if not source_product_id:
+            raise ValueError(
+                "지그재그 product id가 없습니다."
+            )
+
+        # --------------------------------------------------------
+        # PRODUCT NAME
+        # --------------------------------------------------------
+
+        source_name = clean_text(
+            product_data.get(
+                "product_name"
+            )
+            or product_data.get(
+                "productName"
+            )
+            or product_data.get(
+                "name"
+            )
+            or product_data.get(
+                "title"
+            )
+        )
+
+        # --------------------------------------------------------
+        # SHOP
+        # --------------------------------------------------------
+
+        shop_data = {}
+
+        nested_shop = (
+            product_data.get("shop")
+            or product_data.get("store")
+            or product_data.get("seller")
+        )
+
+        if isinstance(
+            nested_shop,
+            dict,
+        ):
+            shop_data.update(
+                nested_shop
+            )
+
+        # flat 값도 합침
+        for key in [
+            "shop_id",
+            "shop_name",
+            "store_id",
+            "store_name",
+            "is_brand",
+            "main_domain",
+            "shop_information",
+        ]:
+
+            if (
+                key in product_data
+                and key not in shop_data
+            ):
+                shop_data[key] = (
+                    product_data[key]
                 )
-                .replace(
-                    ",",
-                    "",
+
+        brand_result = (
+            self.normalize_brand(
+                shop_data
+            )
+        )
+
+        source_brand = (
+            brand_result.get(
+                "brand_source"
+            )
+        )
+
+        # --------------------------------------------------------
+        # CATEGORY
+        # --------------------------------------------------------
+
+        category_id = clean_text(
+            product_data.get(
+                "sub_category_id"
+            )
+            or product_data.get(
+                "leaf_category_id"
+            )
+            or product_data.get(
+                "category_id"
+            )
+            or inherited_category_id
+        )
+
+        source_category = (
+            self.get_category_source(
+                category_id
+            )
+        )
+
+        # --------------------------------------------------------
+        # IMAGE / URL
+        # --------------------------------------------------------
+
+        thumbnail_url = clean_text(
+            product_data.get(
+                "thumbnail_url"
+            )
+            or product_data.get(
+                "thumbnail"
+            )
+            or product_data.get(
+                "image_url"
+            )
+            or product_data.get(
+                "imageUrl"
+            )
+        )
+
+        product_url = clean_text(
+            product_data.get(
+                "product_url"
+            )
+            or product_data.get(
+                "productUrl"
+            )
+            or product_data.get(
+                "url"
+            )
+        )
+
+        # --------------------------------------------------------
+        # ATTRIBUTES
+        # --------------------------------------------------------
+
+        attributes = {
+
+            "shop_id": (
+                shop_data.get(
+                    "shop_id"
                 )
-                .replace(
-                    "%",
-                    "",
+                or shop_data.get(
+                    "id"
+                )
+            ),
+
+            "shop_name": (
+                shop_data.get(
+                    "shop_name"
+                )
+                or shop_data.get(
+                    "name"
+                )
+            ),
+
+            "category_id": (
+                category_id
+            ),
+
+            "regular_price": (
+                product_data.get(
+                    "regular_price"
+                )
+                or product_data.get(
+                    "original_price"
+                )
+            ),
+
+            "sale_price": (
+                product_data.get(
+                    "sale_price"
+                )
+                or product_data.get(
+                    "price"
+                )
+            ),
+
+            "discount_rate": (
+                product_data.get(
+                    "discount_rate"
+                )
+            ),
+
+            "review_count": (
+                product_data.get(
+                    "review_count"
+                )
+            ),
+
+            "rating": (
+                product_data.get(
+                    "rating"
+                )
+            ),
+        }
+
+        now = timezone.now()
+
+        product_source, created = (
+            ProductSource.objects
+            .get_or_create(
+
+                source=self.source,
+
+                source_product_id=(
+                    source_product_id
+                ),
+
+                defaults={
+
+                    "product": None,
+
+                    "source_brand": (
+                        source_brand
+                    ),
+
+                    "source_category": (
+                        source_category
+                    ),
+
+                    "source_name": (
+                        source_name
+                    ),
+
+                    "normalized_name": (
+                        normalize_product_name(
+                            source_name
+                        )
+                    ),
+
+                    "thumbnail_url": (
+                        thumbnail_url
+                    ),
+
+                    "product_url": (
+                        product_url
+                    ),
+
+                    "attributes": (
+                        attributes
+                    ),
+
+                    "market_type": (
+                        ProductSource
+                        .MarketType
+                        .RETAIL
+                    ),
+
+                    "mapping_status": (
+                        ProductSource
+                        .MappingStatus
+                        .UNMAPPED
+                    ),
+
+                    "first_seen_at": (
+                        now
+                    ),
+
+                    "last_seen_at": (
+                        now
+                    ),
+
+                    "detected_count": 1,
+
+                    "status": (
+                        ProductSource
+                        .Status
+                        .ACTIVE
+                    ),
+                },
+            )
+        )
+
+        if not created:
+
+            product_source.source_brand = (
+                source_brand
+            )
+
+            product_source.source_category = (
+                source_category
+            )
+
+            product_source.source_name = (
+                source_name
+            )
+
+            product_source.normalized_name = (
+                normalize_product_name(
+                    source_name
                 )
             )
 
-        except (
-            TypeError,
-            ValueError,
-        ):
-
-            return None
-
-        if number.is_integer():
-            return int(
-                number
+            product_source.thumbnail_url = (
+                thumbnail_url
             )
 
-        return number
+            product_source.product_url = (
+                product_url
+            )
+
+            product_source.attributes = (
+                attributes
+            )
+
+            product_source.last_seen_at = (
+                now
+            )
+
+            product_source.detected_count = (
+                (
+                    product_source
+                    .detected_count
+                )
+                or 0
+            ) + 1
+
+            product_source.save()
+
+        return {
+
+            "created": created,
+
+            "product_source": (
+                product_source
+            ),
+
+            "brand_result": (
+                brand_result
+            ),
+
+            "source_category": (
+                source_category
+            ),
+        }

@@ -53,19 +53,31 @@ class MusinsaNormalizer:
             or brand_data.get("brand_id")
         )
 
-        source_brand_name = clean_text(
+        name = clean_text(
             brand_data.get("name_ko")
             or brand_data.get("brand_name")
             or brand_data.get("name_en")
         )
 
-        source_brand_name_en = clean_text(
+        english_name = clean_text(
             brand_data.get("name_en")
+        )
+
+        image_url = clean_text(
+            brand_data.get("logo_url")
+        )
+
+        country_code = clean_text(
+            brand_data.get("nation_code")
+        )
+
+        description = clean_text(
+            brand_data.get("description")
         )
 
         if (
             source_brand_id is None
-            and source_brand_name is None
+            and name is None
         ):
             return {
                 "matched": False,
@@ -75,20 +87,10 @@ class MusinsaNormalizer:
                 "source_brand": None,
             }
 
-        # 브랜드 코드가 없는 예외 케이스에서는
-        # 정규화 이름을 source id fallback으로 사용.
+        # 무신사는 보통 brand_code가 존재한다.
+        # 예외적으로 없으면 이름을 source 식별자로 사용한다.
         if source_brand_id is None:
-            source_brand_id = normalize_brand_name(
-                source_brand_name
-            )
-
-        normalized_name = normalize_brand_name(
-            source_brand_name
-        )
-
-        normalized_name_en = normalize_brand_name(
-            source_brand_name_en
-        )
+            source_brand_id = f"NAME:{name}"
 
         now = timezone.now()
 
@@ -102,131 +104,163 @@ class MusinsaNormalizer:
             .first()
         )
 
-        if brand_source is not None:
-            brand_source.source_brand_name = (
-                source_brand_name
-            )
-            brand_source.normalized_name = (
-                normalized_name
-            )
-            brand_source.source_brand_name_en = (
-                source_brand_name_en
-            )
-            brand_source.normalized_name_en = (
-                normalized_name_en
-            )
-            brand_source.last_seen_at = now
-            brand_source.detected_count = (
-                (brand_source.detected_count or 0)
-                + 1
-            )
-
-            # 이미 FEEDIT Brand에 매핑된 source면
-            # 기존 연결을 우선 보존한다.
-            if brand_source.brand_id is not None:
-                if (
-                    brand_source.mapping_status
-                    == BrandSource.MappingStatus.UNMAPPED
-                ):
-                    brand_source.mapping_status = (
-                        BrandSource.MappingStatus.AUTO_MAPPED
-                    )
-
-                if not brand_source.mapping_method:
-                    brand_source.mapping_method = (
-                        BrandSource.MappingMethod.SOURCE_ID
-                    )
-
-                brand_source.save()
-
-                return {
-                    "matched": True,
-                    "matched_by": "SOURCE_ID",
-                    "brand": brand_source.brand,
-                    "brand_source": brand_source,
-                    "source_brand": {
-                        "id": source_brand_id,
-                        "name": source_brand_name,
-                        "name_en": source_brand_name_en,
-                        "normalized_name": normalized_name,
-                    },
-                }
-
         brand = self._find_brand(
-            normalized_name=normalized_name,
-            normalized_name_en=normalized_name_en,
+            name=name,
+            english_name=english_name,
         )
 
-        if brand_source is not None:
-            if brand is not None:
-                brand_source.brand = brand
-                brand_source.mapping_status = (
-                    BrandSource.MappingStatus.AUTO_MAPPED
-                )
-                brand_source.mapping_method = (
-                    BrandSource.MappingMethod.NORMALIZED_NAME
-                )
-                brand_source.mapping_confidence = 1
-            else:
-                brand_source.brand = None
-                brand_source.mapping_status = (
-                    BrandSource.MappingStatus.UNMAPPED
-                )
-                brand_source.mapping_method = None
-                brand_source.mapping_confidence = None
+        attributes = {}
 
-            brand_source.save()
+        nation_name = brand_data.get(
+            "nation_name"
+        )
+        since_year = brand_data.get(
+            "since_year"
+        )
 
-        else:
+        if nation_name is not None:
+            attributes["nation_name"] = nation_name
+
+        if since_year is not None:
+            attributes["since_year"] = since_year
+
+        if brand_source is None:
             brand_source = BrandSource.objects.create(
                 brand=brand,
                 source=self.source,
                 source_brand_id=source_brand_id,
-                source_brand_name=source_brand_name,
-                normalized_name=normalized_name,
-                source_brand_name_en=source_brand_name_en,
-                normalized_name_en=normalized_name_en,
+                name=(
+                    name
+                    or source_brand_id
+                ),
+                english_name=english_name,
+                image_url=image_url,
+                country_code=country_code,
+                description=description,
+                target_gender=None,
+                target_age=None,
+                website_url=None,
+                source_profile_url=None,
+                attributes=attributes or None,
                 mapping_status=(
                     BrandSource.MappingStatus.AUTO_MAPPED
                     if brand is not None
                     else BrandSource.MappingStatus.UNMAPPED
                 ),
                 mapping_method=(
-                    BrandSource.MappingMethod.NORMALIZED_NAME
+                    BrandSource.MappingMethod.EXACT_NAME
                     if brand is not None
                     else None
                 ),
                 mapping_confidence=(
-                    1 if brand is not None else None
+                    1
+                    if brand is not None
+                    else None
                 ),
                 detected_count=1,
                 first_seen_at=now,
                 last_seen_at=now,
             )
 
+            created = True
+
+        else:
+            created = False
+
+            # 새 수집값이 NULL이면 기존 프로필을 지우지 않는다.
+            if name:
+                brand_source.name = name
+
+            if english_name:
+                brand_source.english_name = english_name
+
+            if image_url:
+                brand_source.image_url = image_url
+
+            if country_code:
+                brand_source.country_code = country_code
+
+            if description:
+                brand_source.description = description
+
+            existing_attributes = (
+                brand_source.attributes
+                if isinstance(brand_source.attributes, dict)
+                else {}
+            )
+            existing_attributes.update(attributes)
+            brand_source.attributes = (
+                existing_attributes
+                or None
+            )
+
+            brand_source.last_seen_at = now
+            brand_source.detected_count = (
+                (brand_source.detected_count or 0)
+                + 1
+            )
+
+            # 이미 연결된 FEEDIT Brand는 보존한다.
+            # 미매핑 상태일 때만 exact-name 자동 매핑을 시도한다.
+            if brand_source.brand_id is None:
+                if brand is not None:
+                    brand_source.brand = brand
+                    brand_source.mapping_status = (
+                        BrandSource.MappingStatus.AUTO_MAPPED
+                    )
+                    brand_source.mapping_method = (
+                        BrandSource.MappingMethod.EXACT_NAME
+                    )
+                    brand_source.mapping_confidence = 1
+                else:
+                    brand_source.mapping_status = (
+                        BrandSource.MappingStatus.UNMAPPED
+                    )
+                    brand_source.mapping_method = None
+                    brand_source.mapping_confidence = None
+
+            brand_source.save()
+
         return {
-            "matched": brand is not None,
-            "matched_by": (
-                "NORMALIZED_NAME"
-                if brand is not None
-                else "UNMAPPED"
+            "created": created,
+            "matched": (
+                brand_source.brand_id
+                is not None
             ),
-            "brand": brand,
+            "matched_by": (
+                brand_source.mapping_method
+                or "UNMAPPED"
+            ),
+            "brand": brand_source.brand,
             "brand_source": brand_source,
             "source_brand": {
                 "id": source_brand_id,
-                "name": source_brand_name,
-                "name_en": source_brand_name_en,
-                "normalized_name": normalized_name,
+                "name": name,
+                "name_en": english_name,
+                "image_url": image_url,
+                "country_code": country_code,
             },
         }
 
     @staticmethod
     def _find_brand(
         *,
-        normalized_name: str | None,
-        normalized_name_en: str | None,
+        name: str | None,
+        english_name: str | None,
     ) -> Brand | None:
+
+        name_key = normalize_brand_name(
+            name
+        )
+        english_key = normalize_brand_name(
+            english_name
+        )
+
+        if (
+            not name_key
+            and not english_key
+        ):
+            return None
 
         brands = (
             Brand.objects
@@ -244,34 +278,26 @@ class MusinsaNormalizer:
         matches = []
 
         for brand in brands:
-            brand_name = normalize_brand_name(
+            brand_name_key = normalize_brand_name(
                 brand.name
             )
-            brand_name_en = normalize_brand_name(
+            brand_english_key = normalize_brand_name(
                 brand.english_name
             )
 
-            matched = False
+            keys = {
+                value
+                for value in (
+                    brand_name_key,
+                    brand_english_key,
+                )
+                if value
+            }
 
             if (
-                normalized_name
-                and brand_name == normalized_name
+                name_key in keys
+                or english_key in keys
             ):
-                matched = True
-
-            if (
-                normalized_name_en
-                and brand_name_en == normalized_name_en
-            ):
-                matched = True
-
-            if (
-                normalized_name
-                and brand_name_en == normalized_name
-            ):
-                matched = True
-
-            if matched:
                 matches.append(brand)
 
         if len(matches) != 1:

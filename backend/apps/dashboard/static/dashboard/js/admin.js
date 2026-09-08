@@ -126,3 +126,54 @@ document.querySelectorAll("[data-target-toggle]").forEach((button) => {
     });
 
 });
+
+<script>
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const input = document.getElementById(
+            "brand_code"
+        );
+
+        if (!input) {
+            return;
+        }
+
+        input.addEventListener(
+            "blur",
+            function () {
+
+                let value = (
+                    input.value
+                    || ""
+                ).trim();
+
+                if (!value) {
+                    return;
+                }
+
+                value = (
+                    value
+                    .toUpperCase()
+                    .replace(/\s+/g, "_")
+                    .replace(/-+/g, "_")
+                );
+
+                if (
+                    !value.startsWith(
+                        "BRAND_"
+                    )
+                ) {
+                    value = (
+                        "BRAND_"
+                        + value
+                    );
+                }
+
+                input.value = value;
+            }
+        );
+    }
+);
+</script>

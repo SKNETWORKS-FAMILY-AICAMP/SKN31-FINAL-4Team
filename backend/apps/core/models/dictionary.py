@@ -987,17 +987,17 @@ class Brand(models.Model):
         INACTIVE = "INACTIVE", "비활성"
 
     brand_code = models.CharField(
-        max_length=150,
+        max_length=100,
         unique=True,
-        null=True,
-        blank=True,
-        verbose_name="FEEDIT 브랜드 코드",
+        db_index=True,
+        help_text="FEEDIT 표준 브랜드 코드. ex) BRAND_NIKE",
     )
 
     name = models.CharField(
         max_length=255,
         null=True,
         blank=True,
+        db_index=True,
         verbose_name="표준 브랜드명",
     )
 
@@ -1008,13 +1008,12 @@ class Brand(models.Model):
         verbose_name="영문 브랜드명",
     )
 
-    country_code = models.CharField(
-        max_length=10,
-        null=True,
+    image_url = models.URLField(
+        max_length=1000,
         blank=True,
-        verbose_name="국가 코드",
+        null=True,
+        help_text="브랜드 대표 이미지 또는 로고",
     )
-
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -1022,13 +1021,49 @@ class Brand(models.Model):
         blank=True,
         related_name="brands",
         limit_choices_to={"category_type": "BRAND"},
-        verbose_name="브랜드 카테고리",
+        help_text="FEEDIT 브랜드 카테고리",
     )
-
-    description = models.TextField(
-        null=True,
+    country_code = models.CharField(
+        max_length=10,
         blank=True,
-        verbose_name="설명",
+        null=True,
+        db_index=True,
+        help_text="KR / US / JP / FR 등",
+    )
+    description = models.TextField(
+        blank=True,
+        null=True,
+        help_text="브랜드 소개 / 컨셉 / 슬로건",
+    )
+    target_gender = models.JSONField(
+        blank=True,
+        null=True,
+        help_text='ex) ["WOMEN", "MEN", "UNISEX"]',
+    )
+    target_age = models.JSONField(
+        blank=True,
+        null=True,
+        help_text='ex) ["20", "25", "30"]',
+    )
+    styles = models.ManyToManyField(
+        "Style",
+        blank=True,
+        related_name="brands",
+        help_text="FEEDIT 표준 스타일",
+    )
+    website_url = models.URLField(
+        max_length=1000,
+        blank=True,
+        null=True,
+    )
+    is_verified = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="관리자가 표준 브랜드 정보를 검수했는지 여부",
+    )
+    source_count = models.PositiveIntegerField(
+        default=0,
+        help_text="현재 연결된 플랫폼 BrandSource 수",
     )
 
     status = models.CharField(
@@ -1047,7 +1082,8 @@ class Brand(models.Model):
         ordering = ["name"]
 
     def __str__(self):
-        return self.name
+        return f"[{self.brand_code}] {self.name}"
+
     
 class CategorySource(models.Model):
 
@@ -1173,124 +1209,135 @@ class BrandSource(models.Model):
         UNMAPPED = "UNMAPPED", "미매핑"
         AUTO_MAPPED = "AUTO_MAPPED", "자동 매핑"
         MANUAL_MAPPED = "MANUAL_MAPPED", "수동 매핑"
-        REJECTED = "REJECTED", "제외"
+        EXCLUDED = "EXCLUDED", "제외"
 
     class MappingMethod(models.TextChoices):
-        SOURCE_ID = "SOURCE_ID", "기존 Source ID"
-        EXACT_NAME = "EXACT_NAME", "이름 정확 일치"
-        NORMALIZED_NAME = (
-            "NORMALIZED_NAME",
-            "정규화 이름 일치",
-        )
-        ALIAS = "ALIAS", "별칭 일치"
-        MANUAL = "MANUAL", "수동 매핑"
+        SOURCE_ID = "SOURCE_ID", "Source ID"
+        EXACT_NAME = "EXACT_NAME", "정확 이름"
+        ALIAS = "ALIAS", "Alias"
+        SIMILARITY = "SIMILARITY", "유사도"
+        MANUAL = "MANUAL", "수동"
 
     brand = models.ForeignKey(
         Brand,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="source_mappings",
-        verbose_name="표준 브랜드",
+        related_name="brand_sources",
     )       
 
     source = models.ForeignKey(
-        "core.Source",
+        "Source",
         on_delete=models.CASCADE,
         related_name="brand_sources",
-        verbose_name="출처",
     )
 
     source_brand_id = models.CharField(
         max_length=255,
-        verbose_name="플랫폼 브랜드 ID",
+        help_text="플랫폼 브랜드/스토어 고유 ID",
     )
 
-    source_brand_name = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
+    name = models.CharField(
+        max_length=200,
         db_index=True,
-        verbose_name="플랫폼 브랜드명",
-    )
-
-    normalized_name = models.CharField(
-        max_length=255,
         null=True,
         blank=True,
-        db_index=True,
-        verbose_name="정규화 플랫폼 브랜드명",
+        help_text="플랫폼에서 수집한 브랜드명",
     )
 
-    source_brand_name_en = models.CharField(
-        max_length=255,
-        null=True,
+    english_name = models.CharField(
+        max_length=200,
         blank=True,
-        verbose_name="플랫폼 영문 브랜드명",
-    )
-
-    normalized_name_en = models.CharField(
-        max_length=255,
         null=True,
-        blank=True,
-        db_index=True,
-        verbose_name="정규화 플랫폼 영문 브랜드명",
     )
-
-    source_brand_url = models.URLField(
+    image_url = models.URLField(
         max_length=1000,
-        null=True,
         blank=True,
-        verbose_name="플랫폼 브랜드 URL",
+        null=True,
+        help_text="플랫폼에서 제공한 대표 이미지/로고",
     )
 
-    # -----------------------------------------------------
-    # Mapping metadata
-    # -----------------------------------------------------
+    country_code = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+    description = models.TextField(
+        blank=True,
+        null=True,
+        help_text="플랫폼에서 제공한 브랜드 소개/문구",
+    )
+    target_gender = models.JSONField(
+        blank=True,
+        null=True,
+    )
+
+    target_age = models.JSONField(
+        blank=True,
+        null=True,
+    )
+    styles = models.ManyToManyField(
+        "Style",
+        blank=True,
+        related_name="brand_sources",
+    )
+
+    website_url = models.URLField(
+        max_length=1000,
+        blank=True,
+        null=True,
+    )
+    source_profile_url = models.URLField(
+        max_length=1000,
+        blank=True,
+        null=True,
+        help_text="플랫폼 브랜드/스토어 페이지",
+    )
+    attributes = models.JSONField(
+        blank=True,
+        null=True,
+        help_text="플랫폼별 추가 원본 정보",
+    )
 
     mapping_status = models.CharField(
         max_length=30,
         choices=MappingStatus.choices,
         default=MappingStatus.UNMAPPED,
         db_index=True,
-        verbose_name="매핑 상태",
     )
 
     mapping_method = models.CharField(
         max_length=30,
         choices=MappingMethod.choices,
-        null=True,
         blank=True,
-        verbose_name="매핑 방식",
+        null=True,
     )
 
     mapping_confidence = models.DecimalField(
-        max_digits=6,
-        decimal_places=5,
-        null=True,
+        max_digits=5,
+        decimal_places=4,
         blank=True,
-        verbose_name="매핑 신뢰도",
+        null=True,
     )
 
-    # -----------------------------------------------------
-    # Observation metadata
-    # -----------------------------------------------------
+    # ========================================================
+    # OBSERVATION
+    # ========================================================
 
-    detected_count = models.BigIntegerField(
-        default=1,
-        verbose_name="발견 횟수",
+    detected_count = models.PositiveIntegerField(
+        default=0,
     )
 
     first_seen_at = models.DateTimeField(
-        null=True,
         blank=True,
-        verbose_name="최초 발견일시",
+        null=True,
     )
 
     last_seen_at = models.DateTimeField(
-        null=True,
         blank=True,
-        verbose_name="최근 발견일시",
+        null=True,
+        db_index=True,
     )
 
     created_at = models.DateTimeField(
@@ -1303,109 +1350,19 @@ class BrandSource(models.Model):
 
     class Meta:
         db_table = '"dictionary"."brand_source"'
-        verbose_name = "플랫폼 브랜드"
-        verbose_name_plural = "플랫폼 브랜드"
 
         constraints = [
-            # 한 플랫폼 안에서 source_brand_id는 유일
             models.UniqueConstraint(
                 fields=[
                     "source",
                     "source_brand_id",
                 ],
-                name="uq_brand_source_src_id",
-            ),
-
-            models.CheckConstraint(
-                condition=Q(
-                    mapping_status__in=[
-                        "UNMAPPED",
-                        "AUTO_MAPPED",
-                        "MANUAL_MAPPED",
-                        "REJECTED",
-                    ]
-                ),
-                name="ck_brand_source_mapping_status",
-            ),
-
-            models.CheckConstraint(
-                condition=(
-                    Q(last_seen_at__isnull=True)
-                    | Q(first_seen_at__isnull=True)
-                    | Q(
-                        last_seen_at__gte=models.F(
-                            "first_seen_at"
-                        )
-                    )
-                ),
-                name="ck_brand_source_seen",
-            ),
-
-            # 매핑 상태와 Brand FK의 일관성 보장
-            models.CheckConstraint(
-                condition=(
-                    (
-                        Q(
-                            mapping_status__in=[
-                                "AUTO_MAPPED",
-                                "MANUAL_MAPPED",
-                            ]
-                        )
-                        & Q(
-                            brand__isnull=False,
-                        )
-                    )
-                    |
-                    (
-                        Q(
-                            mapping_status__in=[
-                                "UNMAPPED",
-                                "REJECTED",
-                            ]
-                        )
-                        & Q(
-                            brand__isnull=True,
-                        )
-                    )
-                ),
-                name="ck_brand_source_mapping_consistency",
-            ),
-        ]
-
-        indexes = [
-            models.Index(
-                fields=[
-                    "brand",
-                ],
-                name="idx_brand_source_brand",
-            ),
-
-            models.Index(
-                fields=[
-                    "source",
-                    "mapping_status",
-                ],
-                name="idx_brand_source_status",
-            ),
-
-            models.Index(
-                fields=[
-                    "source",
-                    "normalized_name",
-                ],
-                name="idx_brand_source_name",
+                name="uq_brand_source_source_brand_id",
             ),
         ]
 
     def __str__(self):
-        brand_name = (
-            self.brand.name
-            if self.brand_id
-            else "UNMAPPED"
-        )
-
         return (
             f"[{self.source.code}] "
-            f"{self.source_brand_name or self.source_brand_id} "
-            f"-> {brand_name}"
+            f"{self.name}"
         )
