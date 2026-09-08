@@ -7,5 +7,8 @@ from .crawl import (
 )
 
 from .content import (
+    upsert_youtube_comments,
+    upsert_youtube_content_item,
+    upsert_youtube_content_items,
     upsert_youtube_content_profile,
 )

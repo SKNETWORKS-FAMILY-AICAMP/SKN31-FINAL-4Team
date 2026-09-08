@@ -130,28 +130,69 @@ def run_live_target(
         # ====================================================
 
         profile_id = None
+        video_result = None
 
         if (
             target.source.code.upper() == "YOUTUBE"
             and result["entity_type"] == "CREATOR"
         ):
-            platform_data = result.get(
-                "platform_data"
+            platform_data = (
+                result.get("platform_data")
+                or {}
             )
 
-            if platform_data:
+            # 구버전 payload는 profile dict 자체가
+            # platform_data로 들어온다.
+            profile_data = (
+                platform_data.get("profile")
+                or (
+                    platform_data
+                    if platform_data.get("channel_id")
+                    else None
+                )
+            )
+
+            videos = (
+                platform_data.get("videos")
+                or []
+            )
+
+            if profile_data:
                 from apps.core.services.content import (
+                    upsert_youtube_content_items,
                     upsert_youtube_content_profile,
                 )
 
                 profile = (
                     upsert_youtube_content_profile(
                         source=target.source,
-                        data=platform_data,
+                        data=profile_data,
                     )
                 )
 
                 profile_id = profile.id
+
+                if videos:
+                    video_result = (
+                        upsert_youtube_content_items(
+                            source=target.source,
+                            videos=videos,
+                            profile=profile,
+                            observed_at=(
+                                platform_data.get(
+                                    "collected_at"
+                                )
+                            ),
+                        )
+                    )
+
+                    if video_result["failure_count"]:
+                        logger.warning(
+                            "YouTube 영상 적재 일부 실패. "
+                            "target_id=%s failed=%s",
+                            target.id,
+                            video_result["failure_count"],
+                        )
 
         # ====================================================
         # 4. RUN SUCCESS
@@ -213,6 +254,16 @@ def run_live_target(
                 0,
             ),
             "content_profile_id": profile_id,
+            "content_item_count": (
+                video_result["success_count"]
+                if video_result
+                else 0
+            ),
+            "content_item_failed": (
+                video_result["failure_count"]
+                if video_result
+                else 0
+            ),
         }
 
     except Exception as exc:
