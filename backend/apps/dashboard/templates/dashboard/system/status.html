@@ -1,21 +1,110 @@
 {% extends "dashboard/base.html" %}
+{% load humanize %}
 
-{% block title %}System Status | FEEDIT Admin{% endblock %}
+{% block title %}시스템 상태 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}{% include "dashboard/components/admin_page_css.html" %}
+<style>
+.svc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+.svc {
+    background: #fff; border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; position: relative; overflow: hidden;
+}
+.svc::after { content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 100%; }
+.svc.healthy::after { background: #1f9e6e; }
+.svc.warning::after { background: #c98a1b; }
+.svc.danger::after { background: #b23b3b; }
+.svc.idle::after { background: rgba(10,10,10,.15); }
+.svc.idle .svc-detail { color: var(--tx3); }
+.svc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.svc-head h3 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
+.svc-detail { font-size: 12.5px; font-weight: 600; margin-bottom: 6px; }
+.svc.healthy .svc-detail { color: #157a53; }
+.svc.warning .svc-detail { color: #8a5f10; }
+.svc.danger .svc-detail { color: #a33232; }
+.svc-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 12px;
+}
+.svc-bar-label { font-size: 12.5px; color: var(--tx3); }
+
+.svc-meta {
+    font-family: var(--mono); font-size: 11px; line-height: 1.6; color: var(--tx3);
+    word-break: break-all;
+}
+</style>
+{% endblock %}
+
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_system.html" %}{% endblock %}
 
 {% block content %}
-{% include "dashboard/components/page_header.html" %}
+<div class="adm-page">
 
-<section class="panel">
-    <div class="service-grid">
-        {% for service in services %}
-        <article class="service-card">
-            <div class="service-card-head">
-                <h3>{{ service.name }}</h3>
-                <span class="status-dot status-{{ service.status }}"></span>
-            </div>
-            <p>{{ service.detail }}</p>
-        </article>
-        {% endfor %}
+<div class="page-header">
+    <div>
+        <p class="page-eyebrow">SYSTEM</p>
+        <h1 class="adm-title">시스템 상태</h1>
+        <p class="adm-sub">{{ page_description }}</p>
     </div>
-</section>
+</div>
+
+<div class="adm-cards">
+    <div class="adm-card">
+        <span>정상</span>
+        <strong class="ok">{{ summary.healthy }}/{{ summary.total }}</strong>
+        <small>구성 요소</small>
+    </div>
+    <div class="adm-card">
+        <span>장애</span>
+        <strong {% if summary.down %}class="bad"{% endif %}>{{ summary.down }}</strong>
+        <small>연결 실패</small>
+    </div>
+    <div class="adm-card">
+        <span>확인 시각</span>
+        <strong style="font-size:20px;">{{ checked_at|date:"H:i:s" }}</strong>
+        <small>새로고침 시 재확인</small>
+    </div>
+</div>
+
+<div class="svc-bar">
+    <span class="svc-bar-label">구성 요소 {{ summary.total }}개</span>
+    {% if checked_workers %}
+    <a href="{% url 'dashboard:system_status' %}" class="adm-btn ghost sm">다시 확인</a>
+    {% else %}
+    <a href="?workers=1" class="adm-btn ghost sm">워커 동작 확인</a>
+    {% endif %}
+</div>
+
+<div class="svc-grid" style="margin-bottom:16px;">
+    {% for service in services %}
+    <div class="svc {{ service.status }}">
+        <div class="svc-head">
+            <h3>{{ service.name }}</h3>
+            {% if service.status == 'healthy' %}<span class="adm-badge ok">정상</span>
+            {% elif service.status == 'warning' %}<span class="adm-badge warn">주의</span>
+            {% elif service.status == 'idle' %}<span class="adm-badge off">미확인</span>
+            {% else %}<span class="adm-badge bad">장애</span>{% endif %}
+        </div>
+        <p class="svc-detail">{{ service.detail }}</p>
+        <p class="svc-meta">{{ service.meta }}</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>DATA</p>
+        <h2>적재 규모</h2>
+    </div>
+    <div class="adm-kv">
+        <div><span>원본 문서</span><strong>{{ counts.raw_documents|intcomma }}</strong></div>
+        <div><span>플랫폼 상품</span><strong>{{ counts.product_sources|intcomma }}</strong></div>
+        <div><span>콘텐츠</span><strong>{{ counts.content_items|intcomma }}</strong></div>
+        <div><span>텍스트 문서</span><strong>{{ counts.text_documents|intcomma }}</strong></div>
+        <div><span>수집 대상</span><strong>{{ counts.crawl_targets|intcomma }}</strong></div>
+        <div><span>사전 용어</span><strong>{{ counts.dictionary_terms|intcomma }}</strong></div>
+    </div>
+</div>
+
+</div>
 {% endblock %}

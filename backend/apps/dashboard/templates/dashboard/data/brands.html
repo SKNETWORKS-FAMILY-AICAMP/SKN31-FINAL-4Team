@@ -1,10 +1,65 @@
 {% extends "dashboard/base.html" %}
-
-{% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
+{% load static humanize %}
+{% block title %}브랜드 | FEEDIT Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_dictionary.html" %}{% endblock %}
 
 {% block content %}
-{% include "dashboard/components/page_header.html" %}
-<section class="panel">
-    {% include "dashboard/components/empty_state.html" %}
-</section>
+<div class="page-header">
+    <div>
+        <p class="eyebrow">FEEDIT ADMIN</p>
+        <h2 class="page-title">브랜드</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="nz-cards">
+    <div class="nz-card"><span class="nz-label">표준 브랜드</span><strong class="nz-value">{{ summary.total|intcomma }}</strong><span class="nz-caption">BRAND</span></div>
+    <div class="nz-card"><span class="nz-label">활성</span><strong class="nz-value ok">{{ summary.active|intcomma }}</strong><span class="nz-caption">ACTIVE</span></div>
+    <div class="nz-card"><span class="nz-label">검수 완료</span><strong class="nz-value">{{ summary.verified|intcomma }}</strong><span class="nz-caption">VERIFIED</span></div>
+    <div class="nz-card"><span class="nz-label">플랫폼 연결됨</span><strong class="nz-value">{{ summary.linked|intcomma }}</strong><span class="nz-caption">source_count &gt; 0</span></div>
+    <div class="nz-card"><span class="nz-label">플랫폼 브랜드</span><strong class="nz-value">{{ summary.brand_source|intcomma }}</strong><span class="nz-caption">BRAND SOURCE</span></div>
+</div>
+
+<form method="get" class="nz-filter">
+    <select name="status">
+        <option value="">전체 상태</option>
+        {% for value, label in status_choices %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="verified">
+        <option value="">검수 전체</option>
+        <option value="1" {% if selected_verified == "1" %}selected{% endif %}>검수 완료</option>
+        <option value="0" {% if selected_verified == "0" %}selected{% endif %}>미검수</option>
+    </select>
+    <input type="text" name="q" value="{{ search_query }}" placeholder="브랜드명 / 영문명 / 코드 / 국가 검색">
+    <button type="submit">검색</button>
+    <a href="{% url 'dashboard:brands' %}" class="nz-reset">초기화</a>
+</form>
+
+<p class="nz-count">조회 결과 <b>{{ filtered_count|intcomma }}</b>건</p>
+
+<div class="nz-table-card">
+<table class="nz-table">
+    <colgroup><col style="width:56px"><col style="width:180px"><col style="width:160px"><col style="width:170px"><col style="width:60px"><col style="width:88px"><col style="width:78px"><col style="width:74px"></colgroup>
+    <thead><tr><th></th><th>브랜드명</th><th>영문명</th><th>브랜드 코드</th><th>국가</th><th>연결 플랫폼</th><th>검수</th><th>상태</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+        <tr>
+            <td>{% if row.image_url %}<img src="{{ row.image_url }}" alt="" style="width:34px;height:34px;object-fit:contain;border-radius:6px;">{% endif %}</td>
+            <td><strong class="nz-name">{{ row.name|default:"-" }}</strong>{% if row.category %}<span class="nz-sub2">{{ row.category.name }}</span>{% endif %}</td>
+            <td class="nz-ellip">{{ row.english_name|default:"-" }}</td>
+            <td class="mono nz-ellip">{{ row.brand_code }}</td>
+            <td class="mono">{{ row.country_code|default:"-" }}</td>
+            <td class="mono"><strong>{{ row.source_count }}</strong></td>
+            <td>{% if row.is_verified %}<span class="nz-badge ok">완료</span>{% else %}<span class="nz-badge off">미검수</span>{% endif %}</td>
+            <td>{% if row.status == 'ACTIVE' %}<span class="nz-badge ok">활성</span>{% else %}<span class="nz-badge off">{{ row.status }}</span>{% endif %}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="8" class="nz-empty">조건에 맞는 브랜드가 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% include "dashboard/components/pagination_nz.html" %}
 {% endblock %}

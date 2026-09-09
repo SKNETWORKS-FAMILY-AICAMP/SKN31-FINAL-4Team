@@ -1,0 +1,13 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="nz-pagination">
+    {% if page_obj.has_previous %}
+    <a href="?{{ qs }}page={{ page_obj.previous_page_number }}">← 이전</a>
+    {% else %}<span class="off">← 이전</span>{% endif %}
+
+    <span class="nz-page">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+    <a href="?{{ qs }}page={{ page_obj.next_page_number }}">다음 →</a>
+    {% else %}<span class="off">다음 →</span>{% endif %}
+</div>
+{% endif %}

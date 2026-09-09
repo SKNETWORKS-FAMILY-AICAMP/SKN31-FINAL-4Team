@@ -1,62 +1,76 @@
 {% extends "dashboard/base.html" %}
-
-{% block title %}Dictionary Candidates | FEEDIT Admin{% endblock %}
+{% load static humanize %}
+{% block title %}용어 후보 | FEEDIT Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_dictionary.html" %}{% endblock %}
 
 {% block content %}
-{% include "dashboard/components/page_header.html" %}
-
-<section class="panel">
-    <div class="panel-header row-between">
-        <div>
-            <p>REFINE QUEUE</p>
-            <h2>Candidate Review</h2>
-        </div>
-        <span class="count-chip">{{ candidates|length }} SAMPLE</span>
+<div class="page-header">
+    <div>
+        <p class="eyebrow">FEEDIT ADMIN</p>
+        <h2 class="page-title">용어 후보</h2>
+        <p class="sub">{{ page_description }}</p>
     </div>
+</div>
 
-    <div class="candidate-list">
-        {% for candidate in candidates %}
-        <article class="candidate-card">
-            <div class="candidate-top">
-                <div>
-                    <span class="type-chip">{{ candidate.term_type }}</span>
-                    <h3>{{ candidate.term }}</h3>
-                </div>
-                <span class="decision-chip decision-{{ candidate.decision|lower }}">
-                    {{ candidate.decision }}
-                </span>
-            </div>
+<div class="nz-cards">
+    <div class="nz-card"><span class="nz-label">전체 후보</span><strong class="nz-value">{{ summary.total|intcomma }}</strong><span class="nz-caption">TERM CANDIDATE</span></div>
+    <div class="nz-card"><span class="nz-label">검토 대기</span><strong class="nz-value warn">{{ summary.pending|intcomma }}</strong><span class="nz-caption">PENDING</span></div>
+    <div class="nz-card"><span class="nz-label">신규 용어</span><strong class="nz-value ok">{{ summary.new_term|intcomma }}</strong><span class="nz-caption">NEW TERM</span></div>
+    <div class="nz-card"><span class="nz-label">별칭</span><strong class="nz-value">{{ summary.alias|intcomma }}</strong><span class="nz-caption">ALIAS</span></div>
+    <div class="nz-card"><span class="nz-label">제외</span><strong class="nz-value">{{ summary.reject|intcomma }}</strong><span class="nz-caption">REJECT</span></div>
+</div>
 
-            <div class="candidate-metrics">
-                <div>
-                    <span>MATCH</span>
-                    <strong>{{ candidate.matched_term }}</strong>
-                </div>
-                <div>
-                    <span>SIMILARITY</span>
-                    <strong>{{ candidate.similarity }}</strong>
-                </div>
-                <div>
-                    <span>COUNT</span>
-                    <strong>{{ candidate.count }}</strong>
-                </div>
-            </div>
+<form method="get" class="nz-filter">
+    <select name="suggested_type">
+        <option value="">전체 유형</option>
+        {% for value, label in type_choices %}<option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="decision">
+        <option value="">전체 판정</option>
+        {% for value, label in decision_choices %}<option value="{{ value }}" {% if selected_decision == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="status">
+        <option value="">전체 상태</option>
+        {% for value, label in status_choices %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <input type="text" name="q" value="{{ search_query }}" placeholder="후보 용어 / 판정 사유 검색">
+    <button type="submit">검색</button>
+    <a href="{% url 'dashboard:dictionary_candidates' %}" class="nz-reset">초기화</a>
+</form>
 
-            <div class="reason-box">
-                <span>REASON</span>
-                <p>{{ candidate.reason }}</p>
-            </div>
+<p class="nz-count">조회 결과 <b>{{ filtered_count|intcomma }}</b>건</p>
 
-            <div class="candidate-actions">
-                <a class="btn btn-outline" href="{% url 'dashboard:dictionary_candidate_detail' candidate.id %}">
-                    Detail
-                </a>
-                <button class="btn btn-outline">Reject</button>
-                <button class="btn btn-dark">Keep</button>
-                <button class="btn btn-accent">Promote</button>
-            </div>
-        </article>
-        {% endfor %}
-    </div>
-</section>
+<div class="nz-table-card">
+<table class="nz-table">
+    <colgroup><col style="width:180px"><col style="width:92px"><col style="width:82px"><col style="width:74px"><col style="width:180px"><col style="width:88px"><col><col style="width:74px"></colgroup>
+    <thead><tr><th>후보 용어</th><th>추천 유형</th><th>발견</th><th>출처</th><th>가장 유사한 용어</th><th>판정</th><th>판정 사유</th><th></th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+        <tr>
+            <td><strong class="nz-name">{{ row.raw_term }}</strong><span class="nz-sub2">{{ row.last_seen_at|date:"Y-m-d" }}</span></td>
+            <td>{% if row.suggested_type %}<span class="nz-plat">{{ row.suggested_type }}</span>{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="mono"><strong>{{ row.detected_count|intcomma }}</strong></td>
+            <td class="mono">{{ row.source_count }}</td>
+            <td>
+                {% if row.nearest_term %}{{ row.nearest_term.canonical_name }}<span class="nz-sub2 mono">유사도 {{ row.similarity_score|default:"-" }}</span>
+                {% else %}<span class="nz-none">-</span>{% endif %}
+            </td>
+            <td>
+                {% if row.decision == 'NEW_TERM' %}<span class="nz-badge ok">신규</span>
+                {% elif row.decision == 'ALIAS' %}<span class="nz-badge warn">별칭</span>
+                {% elif row.decision == 'REJECT' %}<span class="nz-badge off">제외</span>
+                {% else %}<span class="nz-badge off">미판정</span>{% endif %}
+            </td>
+            <td><span class="nz-ellip" title="{{ row.decision_reason }}">{{ row.decision_reason|default:"-" }}</span></td>
+            <td><a href="{% url 'dashboard:dictionary_candidate_detail' row.id %}" class="nz-reset">상세</a></td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="8" class="nz-empty">용어 후보가 없습니다. 용어 추출 파이프라인을 먼저 실행하세요.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% include "dashboard/components/pagination_nz.html" %}
 {% endblock %}

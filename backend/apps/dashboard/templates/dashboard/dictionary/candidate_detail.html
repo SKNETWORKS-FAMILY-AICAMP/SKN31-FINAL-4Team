@@ -1,45 +1,60 @@
 {% extends "dashboard/base.html" %}
-
-{% block title %}{{ candidate.term }} | FEEDIT Admin{% endblock %}
+{% load static humanize %}
+{% block title %}{{ candidate.raw_term }} | FEEDIT Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_dictionary.html" %}{% endblock %}
 
 {% block content %}
-{% include "dashboard/components/page_header.html" %}
-
-<section class="panel detail-card">
-    <div class="candidate-top">
-        <div>
-            <span class="type-chip">{{ candidate.term_type }}</span>
-            <h2>{{ candidate.term }}</h2>
-        </div>
-        <span class="decision-chip decision-{{ candidate.decision|lower }}">
-            {{ candidate.decision }}
-        </span>
+<div class="page-header">
+    <div>
+        <p class="eyebrow"><a href="{% url 'dashboard:dictionary_candidates' %}" class="nz-reset">← 용어 후보</a></p>
+        <h2 class="page-title">{{ candidate.raw_term }}</h2>
+        <p class="sub">
+            {% if candidate.suggested_type %}{{ candidate.suggested_type }} · {% endif %}
+            발견 {{ candidate.detected_count|intcomma }}회 · 출처 {{ candidate.source_count }}곳
+        </p>
     </div>
+</div>
 
-    <div class="detail-grid">
-        <div>
-            <span>MATCHED TERM</span>
-            <strong>{{ candidate.matched_term }}</strong>
-        </div>
-        <div>
-            <span>SIMILARITY</span>
-            <strong>{{ candidate.similarity }}</strong>
-        </div>
-        <div>
-            <span>COUNT</span>
-            <strong>{{ candidate.count }}</strong>
-        </div>
-    </div>
+<div class="nz-cards">
+    <div class="nz-card"><span class="nz-label">판정</span><strong class="nz-value" style="font-size:20px;">{{ candidate.get_decision_display }}</strong><span class="nz-caption">{{ candidate.decision }}</span></div>
+    <div class="nz-card"><span class="nz-label">처리 상태</span><strong class="nz-value" style="font-size:20px;">{{ candidate.get_status_display }}</strong><span class="nz-caption">{{ candidate.status }}</span></div>
+    <div class="nz-card"><span class="nz-label">유사 용어</span><strong class="nz-value" style="font-size:20px;">{% if candidate.nearest_term %}{{ candidate.nearest_term.canonical_name }}{% else %}-{% endif %}</strong><span class="nz-caption">유사도 {{ candidate.similarity_score|default:"-" }}</span></div>
+    <div class="nz-card"><span class="nz-label">관측 수</span><strong class="nz-value">{{ observation_count|intcomma }}</strong><span class="nz-caption">OBSERVATION</span></div>
+</div>
 
-    <div class="reason-box">
-        <span>MODEL REASON</span>
-        <p>{{ candidate.reason }}</p>
-    </div>
+{% if candidate.decision_reason or candidate.note %}
+<div class="nz-reasons">
+    {% if candidate.decision_reason %}
+    <p class="nz-reasons-title">자동 판정 사유</p>
+    <div class="nz-reason"><span class="nz-reason-t">{{ candidate.decision_reason }}</span></div>
+    {% endif %}
+    {% if candidate.note %}
+    <p class="nz-reasons-title" style="margin-top:14px;">검토 메모</p>
+    <div class="nz-reason"><span class="nz-reason-t">{{ candidate.note }}</span></div>
+    {% endif %}
+</div>
+{% endif %}
 
-    <div class="candidate-actions">
-        <button class="btn btn-outline">Reject</button>
-        <button class="btn btn-dark">Keep</button>
-        <button class="btn btn-accent">Promote</button>
-    </div>
-</section>
+<p class="nz-count">관측 문맥 <b>{{ observation_count|intcomma }}</b>건 중 최근 50건</p>
+
+<div class="nz-table-card">
+<table class="nz-table">
+    <colgroup><col style="width:118px"><col style="width:96px"><col style="width:150px"><col style="width:150px"><col></colgroup>
+    <thead><tr><th>발견일시</th><th>플랫폼</th><th>데이터 유형</th><th>발견 표현</th><th>원본 문맥</th></tr></thead>
+    <tbody>
+    {% for obs in observations %}
+        <tr>
+            <td class="nz-date">{{ obs.detected_at|date:"Y-m-d H:i" }}</td>
+            <td>{% if obs.source %}<span class="nz-plat">{{ obs.source.code }}</span>{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td><span class="nz-badge off">{{ obs.source_type }}</span></td>
+            <td><strong>{{ obs.detected_phrase }}</strong></td>
+            <td><span class="nz-ellip" title="{{ obs.raw_text }}">{{ obs.raw_text|truncatechars:120 }}</span></td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5" class="nz-empty">관측 기록이 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
 {% endblock %}

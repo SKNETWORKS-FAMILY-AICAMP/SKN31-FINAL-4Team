@@ -1,0 +1,128 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}트렌드 지표 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/analytics.css' %}">
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_analytics.html" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">ANALYTICS</p>
+        <h2 class="page-title">트렌드 지표</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="nz-cards">
+    <div class="nz-card">
+        <span class="nz-label">지표 행</span>
+        <strong class="nz-value">{{ summary.metric_rows|intcomma }}</strong>
+        <span class="nz-caption">TermMetricDaily</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">연관 지표 행</span>
+        <strong class="nz-value">{{ summary.assoc_rows|intcomma }}</strong>
+        <span class="nz-caption">TermAssocDaily</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">집계 기준일</span>
+        <strong class="nz-value">{{ latest_date|date:"m-d"|default:"-" }}</strong>
+        <span class="nz-caption">최근 집계</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">사전 용어</span>
+        <strong class="nz-value">{{ summary.terms|intcomma }}</strong>
+        <span class="nz-caption">DictionaryTerm</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">분석 문서</span>
+        <strong class="nz-value">{{ summary.documents|intcomma }}</strong>
+        <span class="nz-caption">TextDocument</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">콘텐츠</span>
+        <strong class="nz-value">{{ summary.content_items|intcomma }}</strong>
+        <span class="nz-caption">ContentItem</span>
+    </div>
+</div>
+
+{% if not summary.metric_rows %}
+<div class="nz-blank">
+    <strong>아직 집계된 트렌드 지표가 없습니다.</strong>
+    <p>트렌드 지표는 <code>analysis.term_metric_daily</code> 테이블을 읽습니다. 이 테이블은 사전 매칭 결과를 일자별로 집계해 채워지는데, 집계 작업이 아직 한 번도 실행되지 않았습니다.</p>
+    <p class="nz-blank-steps">채우려면: ① 사전 별칭 보강 → ② 댓글 정규화(TextDocument 적재) → ③ 용어 매칭 및 일자별 집계</p>
+</div>
+{% else %}
+
+<div class="an-grid">
+    <div class="an-panel">
+        <h3 class="an-title">트렌드 점수 상위</h3>
+        <ul class="an-bars">
+            {% for row in top_trend %}
+            <li>
+                <span class="an-bar-name" title="{{ row.term.canonical_name }}">{{ row.term.canonical_name }}</span>
+                <span class="an-bar-track"><i style="width: {{ row.pct }}%;"></i></span>
+                <span class="an-bar-val">{{ row.trend_score|floatformat:2 }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="an-panel">
+        <h3 class="an-title">언급 수 상위</h3>
+        <ul class="an-bars">
+            {% for row in top_mention %}
+            <li>
+                <span class="an-bar-name" title="{{ row.term.canonical_name }}">{{ row.term.canonical_name }}</span>
+                <span class="an-bar-track"><i class="alt" style="width: {{ row.pct }}%;"></i></span>
+                <span class="an-bar-val">{{ row.mention_count|intcomma }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+{% if by_type %}
+<div class="nz-chipbar">
+    <span class="nz-chipbar-label">용어 유형별</span>
+    {% for row in by_type %}
+    <span class="nz-chip">{{ row.term__term_type }} <b>{{ row.n|intcomma }}</b></span>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if top_assoc %}
+<h3 class="an-section">연관 용어 상위</h3>
+<div class="nz-table-card">
+<table class="nz-table">
+    <colgroup><col><col><col style="width:110px"><col style="width:100px"><col style="width:100px"></colgroup>
+    <thead>
+        <tr><th>기준 용어</th><th>연관 용어</th><th class="ta-r">동시 언급</th><th class="ta-r">연관도</th><th class="ta-r">신뢰도</th></tr>
+    </thead>
+    <tbody>
+        {% for row in top_assoc %}
+        <tr>
+            <td><strong class="nz-name">{{ row.source_term.canonical_name }}</strong></td>
+            <td>{{ row.target_term.canonical_name }}</td>
+            <td class="ta-r mono">{{ row.cooccurrence_count|intcomma }}</td>
+            <td class="ta-r mono">{{ row.association_score|floatformat:3 }}</td>
+            <td class="ta-r mono">{{ row.confidence|floatformat:3 }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+
+{% endif %}
+
+{% endblock %}

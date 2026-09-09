@@ -1,10 +1,69 @@
 {% extends "dashboard/base.html" %}
-
-{% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
+{% load static humanize %}
+{% block title %}사전 용어 | FEEDIT Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_dictionary.html" %}{% endblock %}
 
 {% block content %}
-{% include "dashboard/components/page_header.html" %}
-<section class="panel">
-    {% include "dashboard/components/empty_state.html" %}
-</section>
+<div class="page-header">
+    <div>
+        <p class="eyebrow">FEEDIT ADMIN</p>
+        <h2 class="page-title">사전 용어</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="nz-cards">
+    <div class="nz-card"><span class="nz-label">전체 용어</span><strong class="nz-value">{{ summary.total|intcomma }}</strong><span class="nz-caption">DICTIONARY TERM</span></div>
+    <div class="nz-card"><span class="nz-label">활성</span><strong class="nz-value ok">{{ summary.active|intcomma }}</strong><span class="nz-caption">ACTIVE</span></div>
+    <div class="nz-card"><span class="nz-label">별칭</span><strong class="nz-value {% if not summary.alias %}bad{% endif %}">{{ summary.alias|intcomma }}</strong><span class="nz-caption">TERM ALIAS</span></div>
+    <div class="nz-card"><span class="nz-label">임베딩</span><strong class="nz-value">{{ summary.embedded|intcomma }}</strong><span class="nz-caption">VECTOR</span></div>
+</div>
+
+<div class="nz-chipbar">
+    <span class="nz-chipbar-label">유형별</span>
+    {% for row in by_type %}<span class="nz-chip">{{ row.term_type }} <b>{{ row.n }}</b></span>{% endfor %}
+</div>
+
+<form method="get" class="nz-filter">
+    <select name="term_type">
+        <option value="">전체 유형</option>
+        {% for value, label in type_choices %}<option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="status">
+        <option value="">전체 상태</option>
+        {% for value, label in status_choices %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <input type="text" name="q" value="{{ search_query }}" placeholder="용어명 / 영문명 / 코드 / 별칭 검색">
+    <button type="submit">검색</button>
+    <a href="{% url 'dashboard:dictionary_terms' %}" class="nz-reset">초기화</a>
+</form>
+
+<p class="nz-count">조회 결과 <b>{{ filtered_count|intcomma }}</b>건</p>
+
+<div class="nz-table-card">
+<table class="nz-table">
+    <colgroup><col style="width:64px"><col style="width:92px"><col style="width:190px"><col style="width:170px"><col><col style="width:78px"><col style="width:86px"></colgroup>
+    <thead><tr><th>ID</th><th>유형</th><th>표준 용어명</th><th>영문명</th><th>별칭</th><th>임베딩</th><th>상태</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+        <tr>
+            <td class="mono">{{ row.id }}</td>
+            <td><span class="nz-plat">{{ row.term_type }}</span></td>
+            <td><strong class="nz-name">{{ row.canonical_name }}</strong><span class="nz-sub2 mono">{{ row.term_code|default:"-" }}</span></td>
+            <td class="nz-ellip">{{ row.english_name|default:"-" }}</td>
+            <td>
+                {% for a in row.aliases.all %}<span class="nz-chip" style="font-size:11px;padding:2px 8px;">{{ a.alias }}</span> {% empty %}<span class="nz-none">없음</span>{% endfor %}
+            </td>
+            <td>{% if row.has_embedding %}<span class="nz-badge ok">있음</span>{% else %}<span class="nz-badge off">없음</span>{% endif %}</td>
+            <td>{% if row.status == 'ACTIVE' %}<span class="nz-badge ok">활성</span>{% else %}<span class="nz-badge off">{{ row.status }}</span>{% endif %}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="7" class="nz-empty">조건에 맞는 용어가 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% include "dashboard/components/pagination_nz.html" %}
 {% endblock %}

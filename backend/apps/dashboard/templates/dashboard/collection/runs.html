@@ -1,12 +1,283 @@
 {% extends "dashboard/base.html" %}
-{% load humanize %}
+{% load static humanize %}
 
 {% block title %}
 Collection Runs | FEEDIT Admin
 {% endblock %}
 
+{% block extra_css %}
+<style>
+/* ============================================================
+   COLLECTION RUNS — 페이지 전용 스타일
+   외부 CSS 로드가 불안정해 템플릿에 직접 둔다.
+   모든 규칙은 .runs-page 안으로 한정해 다른 페이지에 영향이 없다.
+   ============================================================ */
 
+.runs-page { max-width: 1100px; }
+
+/* ---------- 페이지 헤더 ---------- */
+.runs-page .page-header {
+    display: block;
+    margin-bottom: 24px;
+}
+.runs-page .page-eyebrow {
+    margin: 0 0 10px;
+    color: var(--tx3);
+    font-family: var(--num);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .18em;
+}
+.runs-page .page-header h1 {
+    margin: 0;
+    font-size: 30px;
+    line-height: 1.3;
+    letter-spacing: -.03em;
+}
+.runs-page .page-description {
+    margin: 10px 0 0;
+    color: var(--tx2);
+    font-size: 13.5px;
+    line-height: 1.6;
+}
+
+/* ---------- 요약 카드 ---------- */
+.runs-page .run-summary-grid {
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.runs-page .run-summary-card {
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid var(--line);
+}
+.runs-page .run-summary-card span {
+    font-size: 9.5px;
+    letter-spacing: .12em;
+    line-height: 1.4;
+}
+.runs-page .run-summary-card strong {
+    margin: 10px 0 4px;
+    font-size: 26px;
+    line-height: 1.15;
+    letter-spacing: -.03em;
+}
+.runs-page .run-summary-card small {
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+/* ---------- 패널 (필터 / 표) ---------- */
+.runs-page .panel {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px 22px;
+}
+.runs-page .run-filter-panel {
+    margin-bottom: 16px;
+    padding: 18px 22px;
+}
+.runs-page .run-filter-form { gap: 12px; }
+.runs-page .filter-field label {
+    margin-bottom: 7px;
+    font-size: 9.5px;
+    letter-spacing: .12em;
+    line-height: 1.4;
+}
+.runs-page .filter-field input,
+.runs-page .filter-field select {
+    width: 100%;
+    height: 38px;
+}
+.runs-page .filter-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* ---------- 버튼 ---------- */
+.runs-page .btn {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 18px;
+    border-radius: 9px;
+    font-size: 13px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.runs-page .btn-dark {
+    background: var(--ink);
+    color: #fff;
+    border: 1px solid var(--ink);
+    font-weight: 600;
+}
+.runs-page .btn-dark:hover { background: #000; }
+.runs-page .btn-outline {
+    background: #fff;
+    color: var(--tx2);
+    border: 1px solid var(--line);
+    text-decoration: none;
+}
+.runs-page .btn-outline:hover { color: var(--tx); border-color: var(--tx3); }
+
+/* ---------- 패널 헤더 ---------- */
+.runs-page .panel-header {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line2);
+}
+.runs-page .panel-header p {
+    margin: 0 0 6px;
+    color: var(--tx3);
+    font-family: var(--num);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .16em;
+    line-height: 1.4;
+}
+.runs-page .panel-header h2 {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.35;
+    letter-spacing: -.02em;
+}
+.runs-page .row-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+.runs-page .count-chip {
+    min-height: 24px;
+    padding: 0 11px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    background: #f0efec;
+}
+
+/* ---------- 표 ---------- */
+.runs-page .table-wrap { overflow-x: auto; }
+.runs-page .runs-table {
+    table-layout: fixed;
+    width: 100%;
+}
+.runs-page .admin-table thead th {
+    padding: 0 8px 12px;
+    font-size: 9.5px;
+    letter-spacing: .1em;
+    line-height: 1.4;
+    white-space: nowrap;
+    color: var(--tx3);
+    border-bottom: 1px solid var(--line);
+}
+.runs-page .admin-table tbody td {
+    padding: 13px 8px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--line2);
+}
+.runs-page .admin-table tbody tr:last-child td { border-bottom: 0; }
+.runs-page .run-row:hover { background: rgba(10, 10, 10, .022); }
+
+.runs-page .target-cell { min-width: 0; }
+.runs-page .source-cell strong,
+.runs-page .target-cell strong,
+.runs-page .datetime-cell strong {
+    display: block;
+    font-size: 12.5px;
+    line-height: 1.45;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.runs-page .source-cell small,
+.runs-page .target-cell small,
+.runs-page .datetime-cell small {
+    display: block;
+    margin-top: 3px;
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: var(--tx3);
+}
+
+.runs-page .run-id-button {
+    padding: 4px 9px;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 700;
+    background: #f4f3f0;
+}
+.runs-page .run-id-button:hover { background: #e8e6e1; }
+.runs-page .run-id-button.active { background: var(--ink); color: #fff; }
+
+.runs-page .type-chip {
+    min-height: 22px;
+    padding: 0 8px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    background: #f0efec;
+}
+.runs-page .run-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.runs-page .number-cell,
+.runs-page th.number-cell {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.runs-page .duration-value,
+.runs-page .duration-live {
+    font-size: 11.5px;
+    white-space: nowrap;
+}
+
+/* ---------- 페이지네이션 ---------- */
+.runs-page .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line2);
+    font-size: 12.5px;
+}
+.runs-page .pagination a {
+    color: var(--tx2);
+    text-decoration: none;
+}
+.runs-page .pagination a:hover { color: var(--tx); }
+
+/* ---------- 상세 펼침 ---------- */
+.runs-page .run-detail { padding: 16px 12px 20px; }
+.runs-page .run-detail-grid { gap: 14px; }
+
+.runs-page .empty-table-cell {
+    padding: 40px 10px;
+    text-align: center;
+    color: var(--tx3);
+}
+</style>
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_collection.html" %}
+{% endblock %}
 {% block content %}
+
+<div class="runs-page">
 
 {% include "dashboard/components/page_header.html" %}
 
@@ -50,10 +321,7 @@ Collection Runs | FEEDIT Admin
 
 <section class="panel run-filter-panel">
 
-    <form
-        method="get"
-        class="run-filter-form"
-    >
+    <form method="get" class="run-filter-form">
 
         <div class="filter-field filter-search">
 
@@ -61,12 +329,7 @@ Collection Runs | FEEDIT Admin
                 SEARCH
             </label>
 
-            <input
-                type="text"
-                name="q"
-                value="{{ search_query }}"
-                placeholder="Target, Source, Error, Task ID"
-            >
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Target, Source, Error, Task ID">
 
         </div>
 
@@ -85,14 +348,9 @@ Collection Runs | FEEDIT Admin
 
                 {% for source in sources %}
 
-                    <option
-                        value="{{ source.id }}"
-                        {% if selected_source == source.id|stringformat:"s" %}
-                            selected
-                        {% endif %}
-                    >
-                        {{ source.code }}
-                    </option>
+                <option value="{{ source.id }}" {% if selected_source == source.id|stringformat:"s" %} selected {% endif %}>
+                    {{ source.code }}
+                </option>
 
                 {% endfor %}
 
@@ -115,14 +373,9 @@ Collection Runs | FEEDIT Admin
 
                 {% for value, label in status_choices %}
 
-                    <option
-                        value="{{ value }}"
-                        {% if selected_status == value %}
-                            selected
-                        {% endif %}
-                    >
-                        {{ label }}
-                    </option>
+                <option value="{{ value }}" {% if selected_status == value %} selected {% endif %}>
+                    {{ label }}
+                </option>
 
                 {% endfor %}
 
@@ -145,14 +398,9 @@ Collection Runs | FEEDIT Admin
 
                 {% for value, label in run_type_choices %}
 
-                    <option
-                        value="{{ value }}"
-                        {% if selected_run_type == value %}
-                            selected
-                        {% endif %}
-                    >
-                        {{ label }}
-                    </option>
+                <option value="{{ value }}" {% if selected_run_type == value %} selected {% endif %}>
+                    {{ label }}
+                </option>
 
                 {% endfor %}
 
@@ -163,18 +411,12 @@ Collection Runs | FEEDIT Admin
 
         <div class="filter-actions">
 
-            <button
-                type="submit"
-                class="btn btn-dark"
-            >
-                Apply
+            <button type="submit" class="btn btn-dark">
+                적용
             </button>
 
-            <a
-                href="{% url 'dashboard:collection_runs' %}"
-                class="btn btn-outline"
-            >
-                Reset
+            <a href="{% url 'dashboard:collection_runs' %}" class="btn btn-outline">
+                초기화
             </a>
 
         </div>
@@ -194,11 +436,11 @@ Collection Runs | FEEDIT Admin
 
         <div>
             <p>COLLECTION HISTORY</p>
-            <h2>Recent Runs</h2>
+            <h2>최근 실행 이력</h2>
         </div>
 
         <span class="count-chip">
-            {{ page_obj.paginator.count|intcomma }} RUNS
+            {{ page_obj.paginator.count|intcomma }}건
         </span>
 
     </div>
@@ -207,6 +449,13 @@ Collection Runs | FEEDIT Admin
     <div class="table-wrap">
 
         <table class="admin-table runs-table">
+
+            <colgroup>
+                <col style="width:62px"><col style="width:98px"><col style="width:170px">
+                <col style="width:78px"><col style="width:100px">
+                <col style="width:86px"><col style="width:76px"><col style="width:68px">
+                <col style="width:104px"><col style="width:96px">
+            </colgroup>
 
             <thead>
 
@@ -240,22 +489,15 @@ Collection Runs | FEEDIT Admin
 
             <tbody>
 
-            {% for run in runs %}
+                {% for run in runs %}
 
-                <tr
-                    class="run-row"
-                    data-run-row="{{ run.id }}"
-                >
+                <tr class="run-row" data-run-row="{{ run.id }}">
 
                     <!-- RUN ID -->
                     <td>
 
-                        <button
-                            type="button"
-                            class="run-id-button"
-                            data-run-toggle="{{ run.id }}"
-                        >
-                            #{{ run.id }}
+                        <button type="button" class="run-id-button" data-run-toggle="{{ run.id }}">
+                            {{ run.id }}
                         </button>
 
                     </td>
@@ -286,29 +528,29 @@ Collection Runs | FEEDIT Admin
 
                             {% if run.crawl_target %}
 
-                                <strong>
-                                    {% if run.crawl_target.name %}
-                                        {{ run.crawl_target.name }}
-                                    {% else %}
-                                        Target #{{ run.crawl_target.id }}
-                                    {% endif %}
-                                </strong>
+                            <strong>
+                                {% if run.crawl_target.name %}
+                                {{ run.crawl_target.name }}
+                                {% else %}
+                                Target {{ run.crawl_target.id }}
+                                {% endif %}
+                            </strong>
 
-                                <small>
-                                    {{ run.crawl_target.target_type }}
-                                </small>
+                            <small>
+                                {{ run.crawl_target.target_type }}
+                            </small>
 
                             {% elif run.target %}
 
-                                <strong>
-                                    {{ run.target|truncatechars:40 }}
-                                </strong>
+                            <strong>
+                                {{ run.target|truncatechars:40 }}
+                            </strong>
 
                             {% else %}
 
-                                <span class="muted">
-                                    -
-                                </span>
+                            <span class="muted">
+                                -
+                            </span>
 
                             {% endif %}
 
@@ -330,12 +572,10 @@ Collection Runs | FEEDIT Admin
                     <!-- STATUS -->
                     <td>
 
-                        <span
-                            class="
+                        <span class="
                                 run-status
                                 run-status--{{ run.status|lower }}
-                            "
-                        >
+                            ">
                             <i></i>
 
                             {{ run.get_status_display }}
@@ -366,13 +606,13 @@ Collection Runs | FEEDIT Admin
 
                         {% if run.failure_count %}
 
-                            <span class="failure-number">
-                                {{ run.failure_count|intcomma }}
-                            </span>
+                        <span class="failure-number">
+                            {{ run.failure_count|intcomma }}
+                        </span>
 
                         {% else %}
 
-                            0
+                        0
 
                         {% endif %}
 
@@ -384,23 +624,23 @@ Collection Runs | FEEDIT Admin
 
                         {% if run.started_at %}
 
-                            <div class="datetime-cell">
+                        <div class="datetime-cell">
 
-                                <strong>
-                                    {{ run.started_at|date:"m-d H:i:s" }}
-                                </strong>
+                            <strong>
+                                {{ run.started_at|date:"Y-m-d" }}
+                            </strong>
 
-                                <small>
-                                    {{ run.started_at|date:"Y" }}
-                                </small>
+                            <small>
+                                {{ run.started_at|date:"H:i:s" }}
+                            </small>
 
-                            </div>
+                        </div>
 
                         {% else %}
 
-                            <span class="muted">
-                                -
-                            </span>
+                        <span class="muted">
+                            -
+                        </span>
 
                         {% endif %}
 
@@ -412,23 +652,20 @@ Collection Runs | FEEDIT Admin
 
                         {% if run.started_at and run.finished_at %}
 
-                            <span
-                                class="duration-value"
-                                data-start="{{ run.started_at|date:'c' }}"
-                                data-end="{{ run.finished_at|date:'c' }}"
-                            >
-                                -
-                            </span>
+                        <span class="duration-value" data-start="{{ run.started_at|date:'c' }}"
+                            data-end="{{ run.finished_at|date:'c' }}">
+                            -
+                        </span>
 
                         {% elif run.status == "RUNNING" %}
 
-                            <span class="duration-live">
-                                RUNNING
-                            </span>
+                        <span class="duration-live">
+                            RUNNING
+                        </span>
 
                         {% else %}
 
-                            -
+                        -
 
                         {% endif %}
 
@@ -441,10 +678,7 @@ Collection Runs | FEEDIT Admin
                 EXPANDED DETAIL
                 ====================================== -->
 
-                <tr
-                    class="run-detail-row"
-                    id="run-detail-{{ run.id }}"
-                >
+                <tr class="run-detail-row" style="display:none;" id="run-detail-{{ run.id }}">
 
                     <td colspan="10">
 
@@ -486,9 +720,9 @@ Collection Runs | FEEDIT Admin
 
                                     <strong>
                                         {% if run.finished_at %}
-                                            {{ run.finished_at|date:"Y-m-d H:i:s" }}
+                                        {{ run.finished_at|date:"Y-m-d H:i:s" }}
                                         {% else %}
-                                            -
+                                        -
                                         {% endif %}
                                     </strong>
 
@@ -512,57 +746,57 @@ Collection Runs | FEEDIT Admin
 
                             {% if run.target %}
 
-                                <div class="run-detail-block">
+                            <div class="run-detail-block">
 
-                                    <span>
-                                        TARGET
-                                    </span>
+                                <span>
+                                    TARGET
+                                </span>
 
-                                    <p>
-                                        {{ run.target }}
-                                    </p>
+                                <p>
+                                    {{ run.target }}
+                                </p>
 
-                                </div>
+                            </div>
 
                             {% endif %}
 
 
                             {% if run.params %}
 
-                                <div class="run-detail-block">
+                            <div class="run-detail-block">
 
-                                    <span>
-                                        PARAMS
-                                    </span>
+                                <span>
+                                    PARAMS
+                                </span>
 
-                                    <pre>{{ run.params }}</pre>
+                                <pre>{{ run.params }}</pre>
 
-                                </div>
+                            </div>
 
                             {% endif %}
 
 
                             {% if run.error_code or run.error_message %}
 
-                                <div class="run-error-box">
+                            <div class="run-error-box">
 
-                                    <div>
+                                <div>
 
-                                        <span>
-                                            ERROR CODE
-                                        </span>
+                                    <span>
+                                        ERROR CODE
+                                    </span>
 
-                                        <strong>
-                                            {{ run.error_code|default:"UNKNOWN" }}
-                                        </strong>
-
-                                    </div>
-
-                                    <p>
-                                        {{ run.error_message|default:"No error message." }}
-                                    </p>
+                                    <strong>
+                                        {{ run.error_code|default:"UNKNOWN" }}
+                                    </strong>
 
                                 </div>
+
+                                <p>
+                                    {{ run.error_message|default:"No error message." }}
+                                </p>
+
+                            </div>
 
                             {% endif %}
 
@@ -573,14 +807,11 @@ Collection Runs | FEEDIT Admin
                 </tr>
 
 
-            {% empty %}
+                {% empty %}
 
                 <tr>
 
-                    <td
-                        colspan="10"
-                        class="empty-table-cell"
-                    >
+                    <td colspan="10" class="empty-table-cell">
 
                         조건에 해당하는 수집 실행 이력이 없습니다.
 
@@ -588,7 +819,7 @@ Collection Runs | FEEDIT Admin
 
                 </tr>
 
-            {% endfor %}
+                {% endfor %}
 
             </tbody>
 
@@ -603,44 +834,64 @@ Collection Runs | FEEDIT Admin
 
     {% if page_obj.paginator.num_pages > 1 %}
 
-        <div class="pagination">
+    <div class="pagination">
 
-            {% if page_obj.has_previous %}
+        {% if page_obj.has_previous %}
 
-                <a
-                    href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&status={{ selected_status }}&source={{ selected_source }}&run_type={{ selected_run_type }}"
-                >
-                    ← Prev
-                </a>
+        <a
+            href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&status={{ selected_status }}&source={{ selected_source }}&run_type={{ selected_run_type }}">
+            ← 이전
+        </a>
 
-            {% endif %}
-
-
-            <span>
-
-                {{ page_obj.number }}
-
-                /
-
-                {{ page_obj.paginator.num_pages }}
-
-            </span>
+        {% endif %}
 
 
-            {% if page_obj.has_next %}
+        <span>
 
-                <a
-                    href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&status={{ selected_status }}&source={{ selected_source }}&run_type={{ selected_run_type }}"
-                >
-                    Next →
-                </a>
+            {{ page_obj.number }}
 
-            {% endif %}
+            /
 
-        </div>
+            {{ page_obj.paginator.num_pages }}
+
+        </span>
+
+
+        {% if page_obj.has_next %}
+
+        <a
+            href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&status={{ selected_status }}&source={{ selected_source }}&run_type={{ selected_run_type }}">
+            다음 →
+        </a>
+
+        {% endif %}
+
+    </div>
 
     {% endif %}
 
 </section>
+
+
+</div><!-- /.runs-page -->
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleButtons = document.querySelectorAll('[data-run-toggle]');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const runId = this.getAttribute('data-run-toggle');
+                const detailRow = document.getElementById('run-detail-' + runId);
+                if (detailRow.style.display === 'table-row') {
+                    detailRow.style.display = 'none';
+                    this.classList.remove('active');
+                } else {
+                    detailRow.style.display = 'table-row';
+                    this.classList.add('active');
+                }
+            });
+        });
+    });
+</script>
 
 {% endblock %}

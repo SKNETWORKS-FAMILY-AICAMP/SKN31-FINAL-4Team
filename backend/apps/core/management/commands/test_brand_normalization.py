@@ -128,7 +128,10 @@ class Command(BaseCommand):
                 (
                     f"{item.source.code} | "
                     f"{item.source_brand_id} | "
-                    f"{item.source_brand_name} "
+                    # BrandSource.source_brand_name -> name 으로 필드명 변경됨 (2026-09-09)
+                    # name 이 비어 있을 수 있어 source_brand_id 로 폴백한다.
+                    # f"{item.source_brand_name} "
+                    f"{item.name or item.source_brand_id} "
                     f"-> {item.brand.name}"
                 )
             )

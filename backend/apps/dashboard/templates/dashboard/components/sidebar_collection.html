@@ -1,0 +1,11 @@
+{% with u=request.resolver_match.url_name %}
+<aside class="sub-sidebar">
+    <p>COLLECTION</p>
+    <a href="{% url 'dashboard:platform_status' %}"     {% if u == 'platform_status' %}class="active"{% endif %}>플랫폼별 현황</a>
+    <a href="{% url 'dashboard:collection_targets' %}"  {% if u == 'collection_targets' %}class="active"{% endif %}>타겟 URL 관리</a>
+    <a href="{% url 'dashboard:run_crawl' %}"           {% if u == 'run_crawl' %}class="active"{% endif %}>수동 크롤링 실행</a>
+    <a href="{% url 'dashboard:collection_runs' %}"     {% if u == 'collection_runs' %}class="active"{% endif %}>크롤링 진행 로그</a>
+    <a href="{% url 'dashboard:crawl_rules' %}"         {% if u == 'crawl_rules' %}class="active"{% endif %}>크롤링 규칙</a>
+    <a href="{% url 'dashboard:robots_check' %}"        {% if u == 'robots_check' %}class="active"{% endif %}>robots.txt 확인</a>
+</aside>
+{% endwith %}

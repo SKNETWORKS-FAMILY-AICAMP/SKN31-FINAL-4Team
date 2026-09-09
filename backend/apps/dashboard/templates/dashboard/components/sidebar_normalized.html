@@ -1,0 +1,16 @@
+{% with u=request.resolver_match.url_name %}
+<aside class="sub-sidebar">
+    <p>NORMALIZED</p>
+    <a href="{% url 'dashboard:normalized_products' %}"     {% if u == 'normalized_products' %}class="active"{% endif %}>정규화 성공</a>
+    <a href="{% url 'dashboard:normalization_failures' %}"  {% if u == 'normalization_failures' %}class="active"{% endif %}>정규화 실패</a>
+
+    <p style="margin-top:22px;">BY PLATFORM</p>
+    <a href="{% url 'dashboard:normalized_musinsa' %}"      {% if u == 'normalized_musinsa' %}class="active"{% endif %}>무신사</a>
+    <a href="{% url 'dashboard:normalized_zigzag' %}"       {% if u == 'normalized_zigzag' %}class="active"{% endif %}>지그재그</a>
+    <a href="{% url 'dashboard:normalized_ably' %}"         {% if u == 'normalized_ably' %}class="active"{% endif %}>에이블리</a>
+    <a href="{% url 'dashboard:normalized_musinsa_used' %}" {% if u == 'normalized_musinsa_used' %}class="active"{% endif %}>무신사 USED</a>
+    <a href="{% url 'dashboard:normalized_kream' %}"        {% if u == 'normalized_kream' %}class="active"{% endif %}>크림</a>
+    <a href="{% url 'dashboard:normalized_youtube' %}"      {% if u == 'normalized_youtube' %}class="active"{% endif %}>유튜브</a>
+    <a href="{% url 'dashboard:normalized_naver' %}"        {% if u == 'normalized_naver' %}class="active"{% endif %}>네이버</a>
+</aside>
+{% endwith %}

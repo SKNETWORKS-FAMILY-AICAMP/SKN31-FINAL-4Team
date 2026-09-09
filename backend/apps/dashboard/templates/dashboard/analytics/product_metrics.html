@@ -1,0 +1,134 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}상품별 지표 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/analytics.css' %}">
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_analytics.html" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">ANALYTICS</p>
+        <h2 class="page-title">상품별 지표</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="nz-cards">
+    <div class="nz-card">
+        <span class="nz-label">플랫폼 상품</span>
+        <strong class="nz-value">{{ summary.product_source|intcomma }}</strong>
+        <span class="nz-caption">ProductSource</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">스냅샷 보유</span>
+        <strong class="nz-value ok">{{ summary.with_snapshot|intcomma }}</strong>
+        <span class="nz-caption">지표가 있는 상품</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">스냅샷 행</span>
+        <strong class="nz-value">{{ summary.snapshot_rows|intcomma }}</strong>
+        <span class="nz-caption">ProductSourceSnapshot</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">리셀 스냅샷</span>
+        <strong class="nz-value">{{ summary.resale_rows|intcomma }}</strong>
+        <span class="nz-caption">ResaleSnapshot</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">최근 관측</span>
+        <strong class="nz-value">{{ summary.latest_observed|date:"m-d"|default:"-" }}</strong>
+        <span class="nz-caption">observed_at</span>
+    </div>
+</div>
+
+{% if not summary.snapshot_rows %}
+<div class="nz-blank">
+    <strong>아직 상품 스냅샷이 없습니다.</strong>
+    <p>가격·순위·리뷰 지표는 <code>commerce.product_source_snapshot</code>에서 옵니다. 상품 수집은 됐지만 스냅샷 적재는 아직 실행되지 않았습니다.</p>
+</div>
+{% endif %}
+
+<form method="get" class="nz-filter">
+    <select name="source">
+        <option value="">전체 플랫폼</option>
+        {% for src in sources %}
+        <option value="{{ src.id }}" {% if selected_source == src.id|stringformat:"s" %}selected{% endif %}>{{ src.label }}</option>
+        {% endfor %}
+    </select>
+    <select name="order">
+        {% for value, label in order_choices %}
+        <option value="{{ value }}" {% if selected_order == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <input type="text" name="q" value="{{ search_query }}" placeholder="상품명 / 브랜드 / 상품 ID">
+    <button type="submit">검색</button>
+    <a href="{% url 'dashboard:product_metrics' %}" class="nz-reset">초기화</a>
+</form>
+
+<p class="nz-count">조회 결과 <b>{{ filtered_count|intcomma }}</b>건</p>
+
+<div class="nz-table-card">
+<table class="nz-table nz-lg">
+    <colgroup>
+        <col style="width:66px"><col style="width:78px"><col style="width:78px"><col><col style="width:120px">
+        <col style="width:96px"><col style="width:96px"><col style="width:74px">
+        <col style="width:70px"><col style="width:82px"><col style="width:70px">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>플랫폼</th>
+            <th>이미지</th>
+            <th>상품명</th>
+            <th>브랜드</th>
+            <th class="ta-r">정가</th>
+            <th class="ta-r">판매가</th>
+            <th class="ta-r">할인</th>
+            <th class="ta-r">평점</th>
+            <th class="ta-r">리뷰</th>
+            <th class="ta-r">순위</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td class="mono">{{ row.id }}</td>
+            <td><span class="nz-plat">{{ row.source.code }}</span></td>
+            {% include "dashboard/components/thumb_cell.html" with url=row.thumbnail_url w=64 h=82 %}
+            <td>
+                {% if row.product_url %}
+                <a class="nz-name" href="{{ row.product_url }}" target="_blank" rel="noopener" title="{{ row.source_name }}">{{ row.source_name|default:"-" }}</a>
+                {% else %}
+                <strong class="nz-name" title="{{ row.source_name }}">{{ row.source_name|default:"-" }}</strong>
+                {% endif %}
+                <span class="nz-sub2">{{ row.source_product_id }}</span>
+            </td>
+            <td>{% if row.source_brand %}{{ row.source_brand.name|default:"-" }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            {% with s=row.latest_snapshot %}
+            <td class="ta-r mono">{% if s and s.list_price %}{{ s.list_price|floatformat:0|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if s and s.sale_price %}{{ s.sale_price|floatformat:0|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if s and s.discount_rate %}<span class="an-dc">{{ s.discount_rate|floatformat:0 }}%</span>{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if s and s.rating %}{{ s.rating|floatformat:1 }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if s and s.review_count %}{{ s.review_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if s and s.rank_position %}{{ s.rank_position }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            {% endwith %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="11" class="nz-empty">조건에 맞는 상품이 없습니다.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% include "dashboard/components/pagination_qs.html" %}
+
+{% endblock %}

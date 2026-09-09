@@ -1,0 +1,126 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+
+{% block title %}크롤링 규칙 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}{% include "dashboard/components/admin_page_css.html" %}{% endblock %}
+
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_collection.html" %}{% endblock %}
+
+{% block content %}
+<div class="adm-page">
+
+<div class="page-header">
+    <div>
+        <p class="page-eyebrow">COLLECTION</p>
+        <h1 class="adm-title">크롤링 규칙</h1>
+        <p class="adm-sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="adm-cards">
+    <div class="adm-card">
+        <span>수집 대상</span><strong>{{ summary.total|intcomma }}</strong><small>CrawlTarget</small>
+    </div>
+    <div class="adm-card">
+        <span>활성</span><strong class="ok">{{ summary.active|intcomma }}</strong><small>is_active</small>
+    </div>
+    <div class="adm-card">
+        <span>자동 수집</span><strong>{{ summary.live|intcomma }}</strong><small>LIVE 모드</small>
+    </div>
+    <div class="adm-card">
+        <span>실행 대기</span><strong {% if summary.due %}class="warn"{% endif %}>{{ summary.due|intcomma }}</strong><small>주기 도래</small>
+    </div>
+</div>
+
+{% if summary.due %}
+<div class="adm-alert">
+    실행 시각이 지난 대상이 <b>{{ summary.due }}건</b> 있습니다.
+    Celery beat와 워커가 떠 있어야 자동으로 처리되며, 현재는 컨테이너가 없어 대기 상태로 남습니다.
+    수동 크롤링 실행 페이지에서 직접 돌릴 수 있습니다.
+</div>
+{% endif %}
+
+{% if beat_schedule %}
+<div class="adm-panel">
+    <div class="adm-panel-head"><p>BEAT SCHEDULE</p><h2>주기 작업 정의</h2></div>
+    <table class="adm-table">
+        <colgroup><col style="width:260px"><col><col style="width:120px"></colgroup>
+        <thead><tr><th>이름</th><th>태스크</th><th class="r">주기(초)</th></tr></thead>
+        <tbody>
+            {% for job in beat_schedule %}
+            <tr>
+                <td class="strong">{{ job.name }}</td>
+                <td class="mono">{{ job.task }}</td>
+                <td class="r">{{ job.schedule }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if by_interval %}
+<div class="adm-chips">
+    {% for row in by_interval %}
+    <span class="adm-chip">{{ row.interval_minutes }}분 주기 · {{ row.n }}건</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>TARGET RULES</p>
+        <h2>대상별 규칙</h2>
+    </div>
+
+    <div class="adm-chips">
+        <a class="adm-chip {% if not selected_source %}active{% endif %}" href="{% url 'dashboard:crawl_rules' %}">전체</a>
+        {% for src in sources %}
+        <a class="adm-chip {% if selected_source == src.id|stringformat:'s' %}active{% endif %}" href="?source={{ src.id }}">{{ src.label }}</a>
+        {% endfor %}
+    </div>
+
+    <table class="adm-table">
+        <colgroup>
+            <col style="width:56px"><col style="width:86px"><col>
+            <col style="width:88px"><col style="width:78px"><col style="width:74px">
+            <col style="width:66px"><col style="width:110px">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>ID</th><th>플랫폼</th><th>대상</th><th>유형</th>
+                <th>모드</th><th class="r">주기(분)</th><th class="r">우선</th><th>다음 실행</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td class="mono">{{ row.id }}</td>
+                <td>{{ row.source.code }}</td>
+                <td class="strong" title="{{ row.name }}">
+                    {{ row.name }}
+                    {% if not row.is_active %}<span class="adm-badge off" style="margin-left:6px;">비활성</span>{% endif %}
+                </td>
+                <td><span class="adm-badge">{{ row.target_type }}</span></td>
+                <td>
+                    {% if row.collection_mode == 'LIVE' %}<span class="adm-badge ok">LIVE</span>
+                    {% else %}<span class="adm-badge off">{{ row.collection_mode }}</span>{% endif %}
+                </td>
+                <td class="r">{{ row.interval_minutes|intcomma }}</td>
+                <td class="r">{{ row.priority }}</td>
+                <td class="dim">
+                    {% if row.is_due %}<span class="adm-badge warn">대기 중</span>
+                    {% elif row.next_crawl_at %}{{ row.next_crawl_at|date:"m-d H:i" }}
+                    {% else %}-{% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="adm-empty">등록된 수집 대상이 없습니다.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</div>
+{% endblock %}

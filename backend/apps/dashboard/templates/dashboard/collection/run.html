@@ -1,0 +1,434 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+
+{% block title %}수동 크롤링 실행 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}{% include "dashboard/components/admin_page_css.html" %}
+<style>
+/* 대상 선택 */
+.pick-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+.pick-bar input[type=text] {
+    flex: 1; min-width: 200px; height: 34px; padding: 0 11px;
+    border: 1px solid var(--line); border-radius: 9px; background: #fff; font-size: 13px;
+}
+.pick-count { font-size: 12.5px; color: var(--tx2); margin-left: auto; white-space: nowrap; }
+.pick-count b { color: var(--tx); font-weight: 700; }
+
+.pick {
+    border: 1px solid var(--line); border-radius: 10px;
+    max-height: 260px; overflow-y: auto; background: #fdfdfc;
+}
+.pick-group + .pick-group { border-top: 1px solid var(--line2); }
+.pick-gtitle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 14px; background: #f7f6f3; position: sticky; top: 0; z-index: 1;
+    border-bottom: 1px solid var(--line2);
+}
+.pick-gtitle label {
+    display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+    font-family: var(--num); font-size: 10.5px; font-weight: 700; letter-spacing: .1em;
+    color: var(--tx2);
+}
+.pick-toggle {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 3px 6px; margin: -3px -6px; border-radius: 6px;
+    background: none; border: 0; cursor: pointer; color: var(--tx3);
+}
+.pick-toggle:hover { background: rgba(10,10,10,.06); color: var(--tx2); }
+.pick-gcount { font-size: 11px; font-variant-numeric: tabular-nums; }
+.pick-gcount.has { color: var(--tx); font-weight: 700; }
+.pick-caret {
+    width: 7px; height: 7px; display: block;
+    border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg) translate(-1px, -1px);
+    transition: transform .18s var(--ease);
+}
+.pick-group.collapsed .pick-caret { transform: rotate(-45deg) translate(-1px, 1px); }
+.pick-group.collapsed .pick-items { display: none; }
+/* 가로 공간을 살려 여러 열로 흘린다. 한 줄에 하나씩 쌓이면
+   목록이 불필요하게 길어진다. */
+.pick-items {
+    padding: 6px 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 1px 4px;
+}
+.pick-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px; cursor: pointer; font-size: 12.5px; line-height: 1.35;
+    border-radius: 6px; min-width: 0;
+}
+.pick-item:hover { background: rgba(10,10,10,.045); }
+.pick-item.hide { display: none; }
+.pick-item.off .pick-name { color: var(--tx3); }
+.pick-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.pick-item input[type=checkbox] { flex-shrink: 0; margin: 0; }
+.pick-off {
+    font-style: normal; font-size: 10px; color: var(--tx3);
+    border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; flex-shrink: 0;
+}
+.pick-run { margin-top: 14px; }
+.pick-hint { font-size: 12px; color: var(--tx3); align-self: center; }
+
+.cons-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.cons-target { font-size: 12px; font-weight: 500; color: var(--tx3); margin-left: 6px; }
+.cons-tools { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.cons-check { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--tx2); cursor: pointer; }
+.cons-tools select { height: 30px; padding: 0 9px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 12px; }
+.cons {
+    background: #171614; border-radius: 10px; padding: 14px 16px;
+    font-family: var(--mono); font-size: 12px; line-height: 1.75;
+    height: 340px; overflow-y: auto; color: #d8d5cf;
+}
+.cons-line { display: grid; grid-template-columns: 62px 66px 160px 1fr; gap: 10px; padding: 1px 0; }
+.cons-line.hide { display: none; }
+.cons-t { color: #6e6a63; }
+.cons-l { font-weight: 700; }
+.lv-INFO { color: #6fb2f0; }
+.lv-WARNING { color: #e0b352; }
+.lv-ERROR, .lv-CRITICAL { color: #ef7d7d; }
+.lv-DEBUG { color: #7f7a72; }
+.cons-n { color: #8f8a82; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cons-m { white-space: pre-wrap; word-break: break-word; color: #e6e3dd; }
+.cons-idle { color: #6e6a63; }
+@media (max-width: 900px) {
+    .cons-line { grid-template-columns: 58px 60px 1fr; }
+    .cons-n { display: none; }
+}
+</style>
+{% endblock %}
+
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_collection.html" %}{% endblock %}
+
+{% block content %}
+<div class="adm-page">
+
+<div class="page-header">
+    <div>
+        <p class="page-eyebrow">COLLECTION</p>
+        <h1 class="adm-title">수동 크롤링 실행</h1>
+        <p class="adm-sub">{{ page_description }}</p>
+    </div>
+</div>
+
+{% if messages %}
+<div class="adm-msgs">
+    {% for message in messages %}
+    <div class="adm-alert {% if message.tags == 'error' %}bad{% elif message.tags == 'success' %}info{% endif %}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="adm-cards">
+    <div class="adm-card">
+        <span>수집 대상</span>
+        <strong>{{ summary.target_total|intcomma }}</strong>
+        <small>CrawlTarget 전체</small>
+    </div>
+    <div class="adm-card">
+        <span>활성 대상</span>
+        <strong class="ok">{{ summary.target_active|intcomma }}</strong>
+        <small>is_active = true</small>
+    </div>
+    <div class="adm-card">
+        <span>수동 실행</span>
+        <strong>{{ summary.manual_runs|intcomma }}</strong>
+        <small>MANUAL 실행 이력</small>
+    </div>
+    <div class="adm-card">
+        <span>실행 중</span>
+        <strong {% if summary.running %}class="warn"{% endif %}>{{ summary.running|intcomma }}</strong>
+        <small>RUNNING 상태</small>
+    </div>
+</div>
+
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>RUN NOW</p>
+        <h2>대상 선택 후 실행</h2>
+        <p class="adm-note">
+            Celery 워커 컨테이너가 없어 <b>즉시 실행</b>은 웹 프로세스에서 직접 처리됩니다.
+            대상이 크면 응답까지 시간이 걸릴 수 있습니다. <b>큐 등록</b>은 워커가 떠 있을 때만 실제로 처리됩니다.
+        </p>
+    </div>
+
+    <form method="post" id="runForm">
+        {% csrf_token %}
+
+        <div class="pick-bar">
+            <input type="text" id="pickSearch" placeholder="대상 이름으로 거르기">
+            <button type="button" class="adm-btn ghost sm" id="pickAll">보이는 항목 전체 선택</button>
+            <button type="button" class="adm-btn ghost sm" id="pickNone">선택 해제</button>
+            <span class="pick-count"><b id="pickN">0</b>개 선택됨</span>
+        </div>
+
+        <div class="pick">
+            {% regroup targets by source.code as groups %}
+            {% for group in groups %}
+            <div class="pick-group">
+                <div class="pick-gtitle">
+                    <label>
+                        <input type="checkbox" class="pick-gall">
+                        {{ group.grouper|lower }}
+                    </label>
+                    <button type="button" class="pick-toggle" aria-expanded="true">
+                        <span class="pick-gcount">{{ group.list|length }}</span>
+                        <i class="pick-caret"></i>
+                    </button>
+                </div>
+                <div class="pick-items">
+                    {% for target in group.list %}
+                    <label class="pick-item{% if not target.is_active %} off{% endif %}"
+                           data-name="{{ target.name|lower }} {{ target.source.code|lower }}">
+                        <input type="checkbox" name="target" value="{{ target.id }}">
+                        <span class="pick-name" title="{{ target.name }}">{{ target.name }}</span>
+                        {% if not target.is_active %}<em class="pick-off">비활성</em>{% endif %}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <p class="adm-empty">등록된 수집 대상이 없습니다.</p>
+            {% endfor %}
+        </div>
+
+        <div class="adm-form pick-run">
+            <div class="adm-field">
+                <label>실행 방식</label>
+                <select name="mode">
+                    <option value="sync">즉시 실행</option>
+                    <option value="queue">큐에 등록</option>
+                </select>
+            </div>
+            <button type="submit" class="adm-btn" id="runBtn">실행</button>
+            <span class="pick-hint">선택한 순서와 무관하게 플랫폼·이름 순으로 하나씩 실행됩니다.</span>
+        </div>
+    </form>
+</div>
+
+<div class="adm-panel">
+    <div class="adm-panel-head cons-head">
+        <div>
+            <p>CONSOLE</p>
+            <h2>진행 기록{% if console_target %} <span class="cons-target">{{ console_target }}</span>{% endif %}</h2>
+        </div>
+        <div class="cons-tools">
+            <label class="cons-check"><input type="checkbox" id="consAuto" checked> 따라 내려가기</label>
+            <select id="consLevel">
+                <option value="">전체</option>
+                <option value="INFO">INFO</option>
+                <option value="WARNING">WARNING</option>
+                <option value="ERROR">ERROR</option>
+            </select>
+            <button type="button" class="adm-btn ghost sm" id="consClear">지우기</button>
+        </div>
+    </div>
+
+    <div class="cons" id="cons">
+        {% for line in console_lines %}
+        <div class="cons-line" data-level="{{ line.level }}">
+            <span class="cons-t">{{ line.time }}</span>
+            <span class="cons-l lv-{{ line.level }}">{{ line.level }}</span>
+            <span class="cons-n">{{ line.logger }}</span>
+            <span class="cons-m">{{ line.message }}</span>
+        </div>
+        {% empty %}
+        <div class="cons-idle">대상을 선택하고 실행하면 진행 기록이 여기에 표시됩니다.</div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>RECENT</p>
+        <h2>최근 수동 실행</h2>
+    </div>
+
+    <table class="adm-table">
+        <colgroup>
+            <col style="width:62px"><col style="width:96px"><col>
+            <col style="width:100px"><col style="width:84px"><col style="width:76px"><col style="width:104px">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>RUN</th><th>플랫폼</th><th>대상</th>
+                <th>상태</th><th class="r">발견</th><th class="r">성공</th><th>실행 시각</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for run in recent_runs %}
+            <tr>
+                <td class="mono">{{ run.id }}</td>
+                <td>{{ run.source.code }}</td>
+                <td class="strong">{% if run.crawl_target %}{{ run.crawl_target.name }}{% else %}{{ run.target|default:"-" }}{% endif %}</td>
+                <td>
+                    {% if run.status == 'SUCCESS' %}<span class="adm-badge ok">성공</span>
+                    {% elif run.status == 'FAILED' %}<span class="adm-badge bad">실패</span>
+                    {% elif run.status == 'RUNNING' %}<span class="adm-badge warn">실행 중</span>
+                    {% else %}<span class="adm-badge off">{{ run.status }}</span>{% endif %}
+                </td>
+                <td class="r">{{ run.discovered_count|intcomma }}</td>
+                <td class="r">{{ run.success_count|intcomma }}</td>
+                <td class="dim">{{ run.started_at|date:"m-d H:i:s"|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="adm-empty">수동 실행 이력이 없습니다.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</div>
+
+<script>
+(function () {
+    var box = document.getElementById('cons');
+    if (!box) return;
+
+    var auto = document.getElementById('consAuto');
+    var level = document.getElementById('consLevel');
+    var clear = document.getElementById('consClear');
+
+    function scrollDown() {
+        if (auto && auto.checked) box.scrollTop = box.scrollHeight;
+    }
+
+    if (level) {
+        level.addEventListener('change', function () {
+            var want = this.value;
+            box.querySelectorAll('.cons-line').forEach(function (line) {
+                var lv = line.getAttribute('data-level');
+                var hit = !want
+                    || lv === want
+                    || (want === 'ERROR' && lv === 'CRITICAL');
+                line.classList.toggle('hide', !hit);
+            });
+            scrollDown();
+        });
+    }
+
+    if (clear) {
+        clear.addEventListener('click', function () {
+            box.innerHTML = '<div class="cons-idle">지웠습니다. 다시 실행하면 새 기록이 쌓입니다.</div>';
+        });
+    }
+
+    // ---------- 대상 다중 선택 ----------
+    var form = document.getElementById('runForm');
+    if (form) {
+        var boxes = function () {
+            return Array.prototype.slice.call(
+                form.querySelectorAll('.pick-item input[type=checkbox]')
+            );
+        };
+        var visible = function () {
+            return boxes().filter(function (b) {
+                return !b.closest('.pick-item').classList.contains('hide');
+            });
+        };
+        var counter = document.getElementById('pickN');
+
+        function refresh() {
+            var n = boxes().filter(function (b) { return b.checked; }).length;
+            if (counter) counter.textContent = n;
+
+            // 그룹 헤더 체크박스 상태 동기화
+            form.querySelectorAll('.pick-group').forEach(function (group) {
+                var all = group.querySelector('.pick-gall');
+                if (!all) return;
+                var items = Array.prototype.slice.call(
+                    group.querySelectorAll('.pick-item input[type=checkbox]')
+                );
+                var on = items.filter(function (b) { return b.checked; }).length;
+                all.checked = on > 0 && on === items.length;
+                all.indeterminate = on > 0 && on < items.length;
+
+                // 접혀 있어도 몇 개 골랐는지 보이게 한다.
+                var count = group.querySelector('.pick-gcount');
+                if (count) {
+                    count.textContent = on ? on + ' / ' + items.length : items.length;
+                    count.classList.toggle('has', on > 0);
+                }
+            });
+        }
+
+        // 그룹 접기 / 펴기
+        form.querySelectorAll('.pick-toggle').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var group = btn.closest('.pick-group');
+                var collapsed = group.classList.toggle('collapsed');
+                btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            });
+        });
+
+        form.addEventListener('change', function (e) {
+            if (e.target.classList.contains('pick-gall')) {
+                var group = e.target.closest('.pick-group');
+                group.querySelectorAll('.pick-item input[type=checkbox]')
+                    .forEach(function (b) { b.checked = e.target.checked; });
+            }
+            refresh();
+        });
+
+        var search = document.getElementById('pickSearch');
+        if (search) {
+            search.addEventListener('input', function () {
+                var want = this.value.trim().toLowerCase();
+                form.querySelectorAll('.pick-item').forEach(function (item) {
+                    var hit = !want
+                        || (item.getAttribute('data-name') || '').indexOf(want) !== -1;
+                    item.classList.toggle('hide', !hit);
+                });
+                // 항목이 모두 숨겨진 그룹은 헤더도 숨기고,
+                // 검색 중에는 결과가 보이도록 접힌 그룹을 펴 준다.
+                form.querySelectorAll('.pick-group').forEach(function (group) {
+                    var shown = group.querySelectorAll('.pick-item:not(.hide)').length;
+                    group.style.display = shown ? '' : 'none';
+                    if (want && shown) {
+                        group.classList.remove('collapsed');
+                        var btn = group.querySelector('.pick-toggle');
+                        if (btn) btn.setAttribute('aria-expanded', 'true');
+                    }
+                });
+            });
+        }
+
+        var all = document.getElementById('pickAll');
+        if (all) {
+            all.addEventListener('click', function () {
+                visible().forEach(function (b) { b.checked = true; });
+                refresh();
+            });
+        }
+
+        var none = document.getElementById('pickNone');
+        if (none) {
+            none.addEventListener('click', function () {
+                boxes().forEach(function (b) { b.checked = false; });
+                refresh();
+            });
+        }
+
+        form.addEventListener('submit', function (e) {
+            var picked = boxes().filter(function (b) { return b.checked; });
+            if (!picked.length) {
+                e.preventDefault();
+                alert('실행할 대상을 하나 이상 선택해주세요.');
+                return;
+            }
+            var btn = document.getElementById('runBtn');
+            if (btn) { btn.disabled = true; btn.textContent = '실행 중...'; }
+            box.innerHTML =
+                '<div class="cons-line"><span class="cons-t">--:--:--</span>' +
+                '<span class="cons-l lv-INFO">INFO</span><span class="cons-n">dashboard</span>' +
+                '<span class="cons-m">' + picked.length +
+                '건 실행 중입니다. 완료되면 전체 기록이 표시됩니다.</span></div>';
+        });
+
+        refresh();
+    }
+
+    scrollDown();
+})();
+</script>
+{% endblock %}

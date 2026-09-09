@@ -1,0 +1,121 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}용어별 지표 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/analytics.css' %}">
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_analytics.html" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">ANALYTICS</p>
+        <h2 class="page-title">용어별 지표</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="nz-cards">
+    <div class="nz-card">
+        <span class="nz-label">지표 행</span>
+        <strong class="nz-value">{{ summary.metric_rows|intcomma }}</strong>
+        <span class="nz-caption">TermMetricDaily</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">집계된 용어</span>
+        <strong class="nz-value">{{ summary.measured_terms|intcomma }}</strong>
+        <span class="nz-caption">지표가 있는 용어</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">전체 용어</span>
+        <strong class="nz-value">{{ summary.terms|intcomma }}</strong>
+        <span class="nz-caption">DictionaryTerm</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">별칭</span>
+        <strong class="nz-value {% if not summary.aliases %}bad{% endif %}">{{ summary.aliases|intcomma }}</strong>
+        <span class="nz-caption">TermAlias</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">집계 일수</span>
+        <strong class="nz-value">{{ summary.dates|intcomma }}</strong>
+        <span class="nz-caption">metric_date 종류</span>
+    </div>
+</div>
+
+{% if not summary.metric_rows %}
+<div class="nz-blank">
+    <strong>아직 집계된 용어 지표가 없습니다.</strong>
+    <p>아래 표는 사전 용어 자체는 보여주되, 언급 수 등 지표 칸은 집계 전이라 비어 있습니다.</p>
+</div>
+{% endif %}
+
+<form method="get" class="nz-filter">
+    <select name="term_type">
+        <option value="">전체 유형</option>
+        {% for value in term_types %}
+        <option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+    </select>
+    <select name="metric_date">
+        <option value="">전체 기준일</option>
+        {% for d in dates %}
+        <option value="{{ d|date:'Y-m-d' }}" {% if selected_date == d|date:'Y-m-d' %}selected{% endif %}>{{ d|date:"Y-m-d" }}</option>
+        {% endfor %}
+    </select>
+    <input type="text" name="q" value="{{ search_query }}" placeholder="용어 검색">
+    <button type="submit">검색</button>
+    <a href="{% url 'dashboard:term_metrics' %}" class="nz-reset">초기화</a>
+</form>
+
+<p class="nz-count">조회 결과 <b>{{ filtered_count|intcomma }}</b>건</p>
+
+<div class="nz-table-card">
+<table class="nz-table">
+    <colgroup>
+        <col style="width:66px"><col><col style="width:96px"><col style="width:100px">
+        <col style="width:92px"><col style="width:86px"><col style="width:80px"><col style="width:92px"><col style="width:92px">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>용어</th>
+            <th>유형</th>
+            <th>기준일</th>
+            <th class="ta-r">언급 수</th>
+            <th class="ta-r">문서 수</th>
+            <th class="ta-r">플랫폼</th>
+            <th class="ta-r">증가율</th>
+            <th class="ta-r">트렌드 점수</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td class="mono">{{ row.id }}</td>
+            <td><strong class="nz-name">{{ row.term_text }}</strong></td>
+            <td><span class="nz-plat">{{ row.term_type|default:"-" }}</span></td>
+            <td class="nz-date">{% if row.metric_date %}{{ row.metric_date|date:"Y-m-d" }}{% else %}<span class="nz-none">미집계</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.metric_date %}{{ row.mention_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.metric_date %}{{ row.document_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.metric_date %}{{ row.source_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.growth_rate is not None %}{{ row.growth_rate|floatformat:2 }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.trend_score is not None %}{{ row.trend_score|floatformat:2 }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" class="nz-empty">조건에 맞는 용어가 없습니다.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% include "dashboard/components/pagination_qs.html" %}
+
+{% endblock %}

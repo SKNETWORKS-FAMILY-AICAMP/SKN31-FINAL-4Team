@@ -1,0 +1,140 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+
+{% block title %}robots.txt | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}{% include "dashboard/components/admin_page_css.html" %}{% endblock %}
+
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_collection.html" %}{% endblock %}
+
+{% block content %}
+<div class="adm-page">
+
+<div class="page-header">
+    <div>
+        <p class="page-eyebrow">COLLECTION</p>
+        <h1 class="adm-title">robots.txt</h1>
+        <p class="adm-sub">{{ page_description }}</p>
+    </div>
+</div>
+
+{% if messages %}
+<div class="adm-msgs">
+    {% for message in messages %}
+    <div class="adm-alert {% if message.tags == 'error' %}bad{% else %}info{% endif %}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if error %}
+<div class="adm-alert bad">{{ error }}</div>
+{% endif %}
+
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>REGISTER</p>
+        <h2>사이트 등록</h2>
+        <p class="adm-note">
+            도메인을 입력하고 robots.txt 파일을 올리거나 내용을 붙여넣습니다.
+            저장 위치는 <code>s3://{{ bucket|default:"(버킷 미설정)" }}/{{ prefix }}&lt;도메인&gt;.txt</code> 입니다.
+        </p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="upload">
+
+        <div class="adm-form" style="margin-bottom:12px;">
+            <div class="adm-field grow">
+                <label>사이트 도메인</label>
+                <input type="text" name="host" placeholder="www.musinsa.com" required>
+            </div>
+            <div class="adm-field grow">
+                <label>robots.txt 파일</label>
+                <input type="file" name="robots_file" accept=".txt,text/plain">
+            </div>
+        </div>
+
+        <div class="adm-field" style="margin-bottom:12px;">
+            <label>또는 내용 붙여넣기</label>
+            <textarea name="robots_text" placeholder="User-agent: *&#10;Disallow: /admin/&#10;Crawl-delay: 1"></textarea>
+        </div>
+
+        <button type="submit" class="adm-btn">저장</button>
+    </form>
+</div>
+
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>REGISTERED SITES</p>
+        <h2>등록된 사이트 {{ entries|length }}곳</h2>
+    </div>
+
+    <table class="adm-table">
+        <colgroup><col><col style="width:96px"><col style="width:150px"><col style="width:150px"></colgroup>
+        <thead>
+            <tr><th>도메인</th><th class="r">크기</th><th>최종 수정</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td class="strong">{{ entry.host }}</td>
+                <td class="r">{{ entry.size|intcomma }} B</td>
+                <td class="dim">{{ entry.updated_at|date:"Y-m-d H:i" }}</td>
+                <td style="text-align:right;">
+                    <a class="adm-btn ghost sm" href="?host={{ entry.host }}">내용 보기</a>
+                    <form method="post" style="display:inline;" onsubmit="return confirm('{{ entry.host }} 의 robots.txt를 삭제할까요?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="host" value="{{ entry.host }}">
+                        <button type="submit" class="adm-btn danger sm">삭제</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="adm-empty">등록된 사이트가 없습니다. 위에서 추가해주세요.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if selected_host and content %}
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>PARSED</p>
+        <h2>{{ selected_host }}</h2>
+        <p class="adm-note">User-agent 그룹별로 규칙을 분리했습니다. 우리 크롤러가 지켜야 할 경로를 확인하세요.</p>
+    </div>
+
+    <table class="adm-table" style="margin-bottom:20px;">
+        <colgroup><col style="width:200px"><col style="width:110px"><col></colgroup>
+        <thead>
+            <tr><th>User-agent</th><th>규칙</th><th>경로 / 값</th></tr>
+        </thead>
+        <tbody>
+            {% for group in parsed %}
+                {% for rule in group.rules %}
+                <tr>
+                    <td class="strong">{% if forloop.first %}{{ group.agents|join:", " }}{% endif %}</td>
+                    <td>
+                        {% if rule.field == 'disallow' %}<span class="adm-badge bad">Disallow</span>
+                        {% elif rule.field == 'allow' %}<span class="adm-badge ok">Allow</span>
+                        {% elif rule.field == 'crawl-delay' %}<span class="adm-badge warn">Delay</span>
+                        {% else %}<span class="adm-badge off">Sitemap</span>{% endif %}
+                    </td>
+                    <td class="mono">{{ rule.value|default:"(전체 허용)" }}</td>
+                </tr>
+                {% endfor %}
+            {% empty %}
+            <tr><td colspan="3" class="adm-empty">해석할 규칙이 없습니다.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="adm-panel-head"><p>RAW</p><h2>원본</h2></div>
+    <pre class="adm-code">{{ content }}</pre>
+</div>
+{% endif %}
+
+</div>
+{% endblock %}

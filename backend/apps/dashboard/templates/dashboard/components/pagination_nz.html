@@ -1,0 +1,13 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="nz-pagination">
+    {% if page_obj.has_previous %}
+    <a href="?{% if selected_source %}source={{ selected_source }}&{% endif %}{% if selected_mapping %}mapping={{ selected_mapping }}&{% endif %}{% if selected_type %}document_type={{ selected_type }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}page={{ page_obj.previous_page_number }}">← 이전</a>
+    {% else %}<span class="off">← 이전</span>{% endif %}
+
+    <span class="nz-page">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+    <a href="?{% if selected_source %}source={{ selected_source }}&{% endif %}{% if selected_mapping %}mapping={{ selected_mapping }}&{% endif %}{% if selected_type %}document_type={{ selected_type }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}page={{ page_obj.next_page_number }}">다음 →</a>
+    {% else %}<span class="off">다음 →</span>{% endif %}
+</div>
+{% endif %}

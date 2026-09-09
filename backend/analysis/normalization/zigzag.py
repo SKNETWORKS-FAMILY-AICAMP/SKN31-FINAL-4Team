@@ -414,11 +414,17 @@ class ZigzagNormalizer:
                         ]
                     ),
 
-                    source_brand_name_en=(
-                        payload[
-                            "english_name"
-                        ]
-                    ),
+                    # BrandSource.source_brand_name_en -> english_name 으로 통합됨 (2026-09-09)
+                    # 바로 위에서 같은 값을 이미 넘기므로 중복이고,
+                    # 존재하지 않는 필드라 BrandSource() got unexpected
+                    # keyword arguments 로 죽는다.
+                    # 이름만 english_name 으로 바꾸면 인자가 중복되어
+                    # SyntaxError: keyword argument repeated 가 난다.
+                    # source_brand_name_en=(
+                    #     payload[
+                    #         "english_name"
+                    #     ]
+                    # ),
 
                     image_url=(
                         payload[
@@ -525,11 +531,13 @@ class ZigzagNormalizer:
                 ]
             )
 
-            brand_source.source_brand_name_en = (
-                payload[
-                    "english_name"
-                ]
-            )
+            # BrandSource.source_brand_name_en -> english_name 으로 통합됨 (2026-09-09)
+            # 바로 위에서 이미 대입하므로 중복. 존재하지 않는 필드다.
+            # brand_source.source_brand_name_en = (
+            #     payload[
+            #         "english_name"
+            #     ]
+            # )
 
             # 값 있을 때만 기존 상세값 보존/갱신
             if payload["image_url"]:

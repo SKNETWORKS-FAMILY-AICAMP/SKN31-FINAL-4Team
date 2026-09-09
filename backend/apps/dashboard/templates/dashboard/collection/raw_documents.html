@@ -1,10 +1,236 @@
 {% extends "dashboard/base.html" %}
 
+{% block sub_sidebar %}
+<aside class="sub-sidebar">
+    <p>RAW DATA</p>
+    <a href="{% url 'dashboard:raw_documents' %}" class="active">원본 데이터 목록</a>
+</aside>
+{% endblock %}
+
 {% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
 
 {% block content %}
-{% include "dashboard/components/page_header.html" %}
-<section class="panel">
-    {% include "dashboard/components/empty_state.html" %}
+<div class="page-header">
+    <div>
+        <h2 style="margin: 0; letter-spacing: -1px; font-size: 24px;">S3 원본 데이터 목록 (Raw Documents)</h2>
+        <p class="sub" style="margin-top: 8px; font-size: 13px; color: var(--tx2);">원본 데이터 관리</p>
+    </div>
+</div>
+
+<section class="panel" style="padding: 30px;">
+    <!-- PLATFORM FILTERS -->
+    <style>
+        .filter-pills a.btn {
+            text-decoration: none;
+            color: var(--tx1);
+            background-color: white;
+            font-size: 13px;
+            padding: 7px 16px;
+        }
+        .filter-pills a.btn.pri {
+            color: white;
+            background-color: var(--ink);
+            border-color: var(--ink);
+        }
+
+        /* 표: 행 높이 통일 + 간격 축소 */
+        .raw-table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+        .raw-table th,
+        .raw-table td {
+            vertical-align: middle;
+            padding: 9px 10px;
+            font-size: 12px;
+            line-height: 1.4;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .raw-table th {
+            font-size: 11px;
+            letter-spacing: .04em;
+            color: var(--tx2);
+            font-weight: 600;
+            text-align: left;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 10px;
+        }
+        .raw-table tbody tr:hover { background: #fafafa; }
+
+        .raw-chip {
+            display: inline-block;
+            padding: 2px 8px;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--tx2);
+            background: white;
+            white-space: nowrap;
+        }
+        .raw-plat {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #f0f0ee;
+            color: #333;
+            white-space: nowrap;
+        }
+        .raw-uri {
+            display: block;
+            font-size: 11px;
+            color: var(--tx2);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .raw-uri + .raw-uri { margin-top: 2px; }
+        .raw-uri a { color: #111; text-decoration: none; }
+        .raw-uri a:hover { text-decoration: underline; }
+
+        .raw-act { text-align: right; white-space: nowrap; }
+        .raw-act .btn {
+            font-size: 11px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+    </style>
+    <div class="filter-pills" style="display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap;">
+        <a href="?source=" class="btn {% if not selected_source %}pri{% else %}btn-outline{% endif %}" style="border-radius: 999px;">전체</a>
+        {% for src in sources %}
+        <a href="?source={{ src.id }}" class="btn {% if selected_source|stringformat:'s' == src.id|stringformat:'s' %}pri{% else %}btn-outline{% endif %}" style="border-radius: 999px;">
+            {{ src.label }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap" style="overflow-x: auto;">
+        <table class="raw-table">
+            <colgroup>
+                <col style="width: 58px;">
+                <col style="width: 96px;">
+                <col style="width: 104px;">
+                <col style="width: 116px;">
+                <col style="width: 58px;">
+                <col style="width: 96px;">
+                <col>
+                <col style="width: 156px;">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>플랫폼</th>
+                    <th>문서 유형</th>
+                    <th>수집일시</th>
+                    <th>HTTP</th>
+                    <th>정규화</th>
+                    <th>S3 URI / URL</th>
+                    <th style="text-align: right;">ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                <tr>
+                    <td style="font-weight: 700;">{{ doc.id }}</td>
+                    <td><span class="raw-plat">{{ doc.platform_label }}</span></td>
+                    <td><span class="raw-chip">{{ doc.document_type|default:"-" }}</span></td>
+                    <td style="color: #111;">{{ doc.collected_at|date:"Y-m-d H:i" }}</td>
+                    <td style="font-weight: 600;">{{ doc.http_status|default:"-" }}</td>
+                    <td>
+                        <span class="raw-chip">
+                            {% if doc.normalization_status == 'PENDING' %}정규화 대기
+                            {% elif doc.normalization_status == 'SUCCESS' %}완료
+                            {% elif doc.normalization_status == 'FAILED' %}실패
+                            {% else %}{{ doc.normalization_status|default:"정규화 대기" }}{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="raw-uri" title="{{ doc.s3_key }}">{{ doc.s3_key|default:"-" }}</span>
+                        {% if doc.source_url %}
+                        <span class="raw-uri">
+                            <a href="{{ doc.source_url }}" target="_blank" title="{{ doc.source_url }}">{{ doc.source_url }}</a>
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="raw-act">
+                        <button class="btn btn-outline" onclick="previewDocument({{ doc.id }})">내용 보기</button>
+                        <a href="{% url 'dashboard:raw_document_download' doc.id %}" class="btn" style="background: #222; color: white;">다운로드</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 60px 0; color: var(--tx2);">
+                        조건에 맞는 원본 데이터가 없습니다.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&source={{ selected_source }}">← Prev</a>
+        {% endif %}
+        <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&source={{ selected_source }}">Next →</a>
+        {% endif %}
+    </div>
+
 </section>
+
+<!-- PREVIEW MODAL -->
+<div id="previewModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+    <div style="background: white; width: 90%; max-width: 900px; max-height: 85vh; border-radius: 16px; display: flex; flex-direction: column; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+        <div style="padding: 24px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0; font-size: 18px; letter-spacing: -0.5px;">S3 원본 데이터 미리보기</h3>
+                <p style="margin: 4px 0 0; font-size: 12px; color: var(--tx2);">최적화를 위해 파일의 앞부분 5KB만 표시됩니다.</p>
+            </div>
+            <button onclick="closePreview()" style="background: none; border: none; font-size: 28px; line-height: 1; cursor: pointer; color: var(--tx2);">&times;</button>
+        </div>
+        <div style="padding: 24px; overflow-y: auto; flex: 1;">
+            <pre id="previewContent" style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; margin: 0; font-family: 'D2Coding', 'Consolas', monospace;">Loading...</pre>
+        </div>
+        <div style="padding: 20px 24px; border-top: 1px solid var(--line); text-align: right; background: #fafafa; border-radius: 0 0 16px 16px;">
+            <button class="btn btn-outline" onclick="closePreview()" style="border-radius: 8px; padding: 8px 24px;">닫기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewDocument(id) {
+    document.getElementById('previewModal').style.display = 'flex';
+    document.getElementById('previewContent').innerText = '데이터를 불러오는 중입니다...';
+    
+    fetch(`/admin-dashboard/collection/raw-documents/${id}/preview/`)
+        .then(res => res.json())
+        .then(data => {
+            if(data.error) {
+                document.getElementById('previewContent').innerText = '불러오기 실패: ' + data.error;
+            } else {
+                document.getElementById('previewContent').innerText = data.content;
+            }
+        })
+        .catch(err => {
+            document.getElementById('previewContent').innerText = '네트워크 오류: ' + err;
+        });
+}
+
+function closePreview() {
+    document.getElementById('previewModal').style.display = 'none';
+}
+
+// 모달 바깥 클릭시 닫기
+document.getElementById('previewModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePreview();
+    }
+});
+</script>
 {% endblock %}

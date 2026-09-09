@@ -1,10 +1,65 @@
 {% extends "dashboard/base.html" %}
-
-{% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
+{% load static humanize %}
+{% block title %}상품 | FEEDIT Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_dictionary.html" %}{% endblock %}
 
 {% block content %}
-{% include "dashboard/components/page_header.html" %}
-<section class="panel">
-    {% include "dashboard/components/empty_state.html" %}
-</section>
+<div class="page-header">
+    <div>
+        <p class="eyebrow">FEEDIT ADMIN</p>
+        <h2 class="page-title">상품</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="nz-cards">
+    <div class="nz-card"><span class="nz-label">표준 상품</span><strong class="nz-value">{{ summary.total|intcomma }}</strong><span class="nz-caption">PRODUCT</span></div>
+    <div class="nz-card"><span class="nz-label">플랫폼 상품</span><strong class="nz-value">{{ summary.product_source|intcomma }}</strong><span class="nz-caption">PRODUCT SOURCE</span></div>
+    <div class="nz-card"><span class="nz-label">표준 연결됨</span><strong class="nz-value ok">{{ summary.mapped|intcomma }}</strong><span class="nz-caption">MAPPED</span></div>
+    <div class="nz-card"><span class="nz-label">미연결</span><strong class="nz-value {% if summary.unmapped %}warn{% endif %}">{{ summary.unmapped|intcomma }}</strong><span class="nz-caption">UNMAPPED</span></div>
+</div>
+
+{% if not summary.total %}
+<div class="nz-reasons">
+    <p class="nz-reasons-title">표준 상품이 아직 없습니다</p>
+    <div class="nz-reason">
+        <span class="nz-reason-t">
+            플랫폼 상품 {{ summary.product_source|intcomma }}건이 수집돼 있지만, 여러 플랫폼의 같은 상품을 하나로 묶는
+            상품 매핑이 아직 실행되지 않았습니다. 매핑이 돌면 여기에 표준 상품이 쌓입니다.
+        </span>
+    </div>
+</div>
+{% endif %}
+
+<form method="get" class="nz-filter">
+    <input type="text" name="q" value="{{ search_query }}" placeholder="상품명 / 브랜드 검색">
+    <button type="submit">검색</button>
+    <a href="{% url 'dashboard:products' %}" class="nz-reset">초기화</a>
+</form>
+
+<p class="nz-count">조회 결과 <b>{{ filtered_count|intcomma }}</b>건</p>
+
+<div class="nz-table-card">
+<table class="nz-table">
+    <colgroup><col style="width:64px"><col><col style="width:160px"><col style="width:150px"><col style="width:96px"><col style="width:74px"></colgroup>
+    <thead><tr><th>ID</th><th>상품명</th><th>브랜드</th><th>카테고리</th><th>연결 플랫폼</th><th>상태</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+        <tr>
+            <td class="mono">{{ row.id }}</td>
+            <td><strong class="nz-name">{{ row.canonical_name }}</strong><span class="nz-sub2">{{ row.normalized_name }}</span></td>
+            <td class="nz-ellip">{% if row.brand %}{{ row.brand.name }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="nz-ellip">{% if row.category %}{{ row.category.name }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="mono"><strong>{{ row.source_n }}</strong></td>
+            <td>{% if row.status == 'ACTIVE' %}<span class="nz-badge ok">활성</span>{% else %}<span class="nz-badge off">{{ row.status }}</span>{% endif %}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="6" class="nz-empty">표준 상품이 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% include "dashboard/components/pagination_nz.html" %}
 {% endblock %}

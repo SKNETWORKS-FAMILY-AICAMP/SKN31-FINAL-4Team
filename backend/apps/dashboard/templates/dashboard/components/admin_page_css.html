@@ -1,0 +1,157 @@
+<style>
+/* ============================================================
+   관리자 공통 페이지 스타일 (.adm-page 스코프)
+   외부 CSS 로드가 불안정해 템플릿에 직접 둔다.
+   ============================================================ */
+
+.adm-page { max-width: 1100px; }
+
+.adm-page .page-header { display: block; margin-bottom: 24px; }
+.adm-page .page-eyebrow {
+    margin: 0 0 10px; color: var(--tx3); font-family: var(--num);
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+}
+.adm-page .page-header h1,
+.adm-page .adm-title {
+    margin: 0; font-size: 30px; line-height: 1.3; letter-spacing: -.03em;
+}
+.adm-page .page-description,
+.adm-page .adm-sub {
+    margin: 10px 0 0; color: var(--tx2); font-size: 13.5px; line-height: 1.6;
+}
+
+/* 카드 */
+.adm-cards {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin-bottom: 18px;
+}
+.adm-card {
+    background: #fff; border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px;
+}
+.adm-card span {
+    display: block; color: var(--tx3); font-family: var(--num);
+    font-size: 9.5px; font-weight: 700; letter-spacing: .12em; line-height: 1.4;
+}
+.adm-card strong {
+    display: block; margin: 10px 0 4px; font-size: 26px;
+    line-height: 1.15; letter-spacing: -.03em;
+}
+.adm-card strong.ok { color: var(--ok); }
+.adm-card strong.bad { color: var(--bad); }
+.adm-card strong.warn { color: var(--warn); }
+.adm-card small { color: var(--tx2); font-size: 11px; line-height: 1.5; }
+
+/* 패널 */
+.adm-panel {
+    background: #fff; border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 22px; margin-bottom: 16px;
+}
+.adm-panel-head { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line2); }
+.adm-panel-head p {
+    margin: 0 0 6px; color: var(--tx3); font-family: var(--num);
+    font-size: 10px; font-weight: 700; letter-spacing: .16em; line-height: 1.4;
+}
+.adm-panel-head h2 { margin: 0; font-size: 18px; line-height: 1.35; letter-spacing: -.02em; }
+.adm-panel-head .adm-note { margin: 8px 0 0; color: var(--tx2); font-size: 12.5px; line-height: 1.6; }
+
+/* 표 */
+.adm-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.adm-table thead th {
+    padding: 0 8px 12px; text-align: left; color: var(--tx3);
+    font-family: var(--num); font-size: 9.5px; font-weight: 700;
+    letter-spacing: .1em; line-height: 1.4; white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+}
+.adm-table tbody td {
+    padding: 12px 8px; font-size: 12.5px; line-height: 1.5;
+    vertical-align: middle; border-bottom: 1px solid var(--line2);
+    overflow: hidden; text-overflow: ellipsis;
+}
+.adm-table tbody tr:last-child td { border-bottom: 0; }
+.adm-table tbody tr:hover { background: rgba(10,10,10,.022); }
+.adm-table .r { text-align: right; font-variant-numeric: tabular-nums; }
+.adm-table th.r { text-align: right; }
+.adm-table .mono { font-family: var(--mono); font-size: 11.5px; }
+.adm-table .strong { font-weight: 600; }
+.adm-table .dim { color: var(--tx3); }
+.adm-empty { padding: 36px 8px; text-align: center; color: var(--tx3); }
+
+/* 배지 */
+.adm-badge {
+    display: inline-flex; align-items: center; gap: 5px; min-height: 22px;
+    padding: 0 9px; border-radius: 999px; font-size: 10.5px; font-weight: 700;
+    background: #f0efec; color: var(--tx2); white-space: nowrap;
+}
+.adm-badge.ok { background: #e3f4ec; color: #157a53; }
+.adm-badge.bad { background: #f8e4e4; color: #a33232; }
+.adm-badge.warn { background: #fbf0d9; color: #8a5f10; }
+.adm-badge.off { background: #f0efec; color: var(--tx3); }
+
+/* 폼 */
+.adm-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.adm-field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.adm-field.grow { flex: 1; min-width: 220px; }
+.adm-field label {
+    color: var(--tx3); font-family: var(--num); font-size: 9.5px;
+    font-weight: 700; letter-spacing: .12em;
+}
+.adm-field input[type=text],
+.adm-field input[type=file],
+.adm-field select,
+.adm-field textarea {
+    height: 38px; padding: 0 11px; border: 1px solid var(--line);
+    border-radius: 9px; background: #fff; font-size: 13px;
+}
+.adm-field textarea { height: auto; min-height: 96px; padding: 10px 11px; line-height: 1.6; font-family: var(--mono); font-size: 12px; }
+.adm-field input[type=file] { padding: 7px 10px; font-size: 12px; }
+
+.adm-btn {
+    height: 38px; display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 18px; border-radius: 9px; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--ink); background: var(--ink); color: #fff;
+    text-decoration: none; white-space: nowrap; cursor: pointer;
+}
+.adm-btn:hover { background: #000; }
+.adm-btn.ghost { background: #fff; color: var(--tx2); border-color: var(--line); font-weight: 500; }
+.adm-btn.ghost:hover { color: var(--tx); border-color: var(--tx3); }
+.adm-btn.danger { background: #fff; color: #a33232; border-color: #e6c9c9; font-weight: 500; }
+.adm-btn.danger:hover { background: #fdf4f4; }
+.adm-btn.sm { height: 28px; padding: 0 11px; font-size: 11.5px; }
+
+/* 알림 / 코드 */
+.adm-alert {
+    padding: 14px 16px; border-radius: 10px; font-size: 12.5px; line-height: 1.65;
+    background: #fbf0d9; color: #7a5510; border: 1px solid #f0dfba; margin-bottom: 16px;
+}
+.adm-alert.bad { background: #f9eaea; color: #8f3030; border-color: #eed3d3; }
+.adm-alert.info { background: #eef3fa; color: #2f5b93; border-color: #d8e3f2; }
+.adm-alert code { font-family: var(--mono); font-size: 11.5px; }
+
+.adm-code {
+    margin: 0; padding: 14px 16px; border-radius: 10px; background: #f7f6f3;
+    border: 1px solid var(--line2); font-family: var(--mono); font-size: 12px;
+    line-height: 1.7; white-space: pre-wrap; word-break: break-all;
+    max-height: 420px; overflow: auto;
+}
+
+.adm-kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+.adm-kv > div { min-width: 0; }
+.adm-kv span {
+    display: block; color: var(--tx3); font-family: var(--num);
+    font-size: 9.5px; font-weight: 700; letter-spacing: .12em; margin-bottom: 6px;
+}
+.adm-kv strong {
+    display: block; font-size: 13px; font-weight: 600; line-height: 1.5;
+    overflow: hidden; text-overflow: ellipsis;
+}
+
+.adm-msgs { margin-bottom: 16px; display: grid; gap: 8px; }
+.adm-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.adm-chip {
+    padding: 5px 11px; border-radius: 999px; background: #fff;
+    border: 1px solid var(--line); font-size: 12px; color: var(--tx2);
+    text-decoration: none;
+}
+.adm-chip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+</style>

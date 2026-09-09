@@ -1,0 +1,136 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+
+{% block title %}Platform Status | FEEDIT Admin{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_collection.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 25px;">
+    <div>
+        <p style="font-size:11.5px; color:var(--tx3); margin-bottom:4px; font-weight:600; text-transform:uppercase;">FEEDIT ADMIN</p>
+        <h2 style="font-size:26px; margin:0 0 6px; font-weight:700; letter-spacing:-0.5px;">Platform Status</h2>
+        <p class="sub" style="font-size:13px; color:var(--tx2); margin:0;">플랫폼별 수집 현황을 한눈에 확인합니다.</p>
+    </div>
+</div>
+
+<style>
+    .ps-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 26px; }
+    .ps-card { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
+    .ps-card .k { font-size: 12px; color: var(--tx2); margin-bottom: 8px; }
+    .ps-card .v { font-size: 30px; font-weight: 700; letter-spacing: -1px; line-height: 1.1; }
+    .ps-card .n { font-size: 11px; color: var(--tx3); margin-top: 6px; }
+
+    .ps-table { width: 100%; border-collapse: collapse; }
+    .ps-table th, .ps-table td {
+        padding: 11px 12px;
+        font-size: 12.5px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+    }
+    .ps-table th {
+        font-size: 11px; letter-spacing: .04em; color: var(--tx2);
+        font-weight: 600; text-align: left;
+    }
+    .ps-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .ps-table th.num { text-align: right; }
+    .ps-table tbody tr:hover { background: #fafafa; }
+
+    .ps-plat { font-weight: 700; }
+    .ps-code { font-size: 11px; color: var(--tx3); }
+    .ps-chip {
+        display: inline-block; padding: 2px 8px; border-radius: 4px;
+        font-size: 11px; background: #f0f0ee; color: #333;
+    }
+    .ps-ok   { color: #1c7a62; font-weight: 600; }
+    .ps-bad  { color: #b04a3c; font-weight: 600; }
+    .ps-zero { color: var(--tx3); }
+</style>
+
+<section class="panel" style="padding: 30px;">
+
+    <div class="ps-cards">
+        <div class="ps-card">
+            <div class="k">전체 타겟</div>
+            <div class="v">{{ total_targets|intcomma }}</div>
+            <div class="n">CrawlTarget</div>
+        </div>
+        <div class="ps-card">
+            <div class="k">전체 실행</div>
+            <div class="v">{{ total_runs|intcomma }}</div>
+            <div class="n">CrawlRun</div>
+        </div>
+        <div class="ps-card">
+            <div class="k">수집 문서</div>
+            <div class="v">{{ total_docs|intcomma }}</div>
+            <div class="n">RawDocument (S3)</div>
+        </div>
+        <div class="ps-card">
+            <div class="k">플랫폼</div>
+            <div class="v">{{ rows|length }}</div>
+            <div class="n">Source</div>
+        </div>
+    </div>
+
+    <div class="table-wrap" style="overflow-x: auto;">
+        <table class="ps-table">
+            <thead>
+                <tr>
+                    <th>플랫폼</th>
+                    <th>유형</th>
+                    <th class="num">타겟</th>
+                    <th class="num">활성</th>
+                    <th class="num">실행</th>
+                    <th class="num">성공</th>
+                    <th class="num">실패</th>
+                    <th class="num">수집 문서</th>
+                    <th>최근 실행</th>
+                    <th>상태</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td>
+                        <div class="ps-plat">{{ row.label }}</div>
+                        <div class="ps-code">{{ row.code }}</div>
+                    </td>
+                    <td><span class="ps-chip">{{ row.source_type }}</span></td>
+                    <td class="num {% if not row.target_count %}ps-zero{% endif %}">{{ row.target_count|intcomma }}</td>
+                    <td class="num {% if not row.active_target_count %}ps-zero{% endif %}">{{ row.active_target_count|intcomma }}</td>
+                    <td class="num {% if not row.run_count %}ps-zero{% endif %}">{{ row.run_count|intcomma }}</td>
+                    <td class="num {% if row.success_count %}ps-ok{% else %}ps-zero{% endif %}">{{ row.success_count|intcomma }}</td>
+                    <td class="num {% if row.failed_count %}ps-bad{% else %}ps-zero{% endif %}">{{ row.failed_count|intcomma }}</td>
+                    <td class="num {% if not row.doc_count %}ps-zero{% endif %}">{{ row.doc_count|intcomma }}</td>
+                    <td>
+                        {% if row.last_run %}
+                            {{ row.last_run.started_at|date:"Y-m-d H:i" }}
+                            <span class="ps-code">{{ row.last_run.status }}</span>
+                        {% else %}
+                            <span class="ps-zero">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.status == 'ACTIVE' %}
+                            <span class="ps-ok">ACTIVE</span>
+                        {% else %}
+                            <span class="ps-zero">{{ row.status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 60px 0; color: var(--tx2);">
+                        등록된 플랫폼이 없습니다.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</section>
+{% endblock %}

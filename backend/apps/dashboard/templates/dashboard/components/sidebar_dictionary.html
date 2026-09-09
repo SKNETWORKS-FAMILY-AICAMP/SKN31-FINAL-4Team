@@ -1,0 +1,11 @@
+{% with u=request.resolver_match.url_name %}
+<aside class="sub-sidebar">
+    <p>DICTIONARY</p>
+    <a href="{% url 'dashboard:dictionary_terms' %}"      {% if u == 'dictionary_terms' %}class="active"{% endif %}>용어 사전</a>
+    <a href="{% url 'dashboard:dictionary_candidates' %}" {% if u == 'dictionary_candidates' %}class="active"{% endif %}>용어 후보</a>
+    <a href="{% url 'dashboard:brand_sources' %}"         {% if u == 'brand_sources' %}class="active"{% endif %}>브랜드 매핑</a>
+    <a href="{% url 'dashboard:brands' %}"                {% if u == 'brands' %}class="active"{% endif %}>브랜드</a>
+    <a href="{% url 'dashboard:categories' %}"            {% if u == 'categories' %}class="active"{% endif %}>카테고리</a>
+    <a href="{% url 'dashboard:products' %}"              {% if u == 'products' %}class="active"{% endif %}>상품</a>
+</aside>
+{% endwith %}

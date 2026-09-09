@@ -1,0 +1,96 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+
+{% block title %}API 관리 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}{% include "dashboard/components/admin_page_css.html" %}{% endblock %}
+
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_system.html" %}{% endblock %}
+
+{% block content %}
+<div class="adm-page">
+
+<div class="page-header">
+    <div>
+        <p class="page-eyebrow">SYSTEM</p>
+        <h1 class="adm-title">API 관리</h1>
+        <p class="adm-sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="adm-cards">
+    <div class="adm-card">
+        <span>설정된 키</span>
+        <strong {% if summary.configured < summary.total_keys %}class="warn"{% else %}class="ok"{% endif %}>{{ summary.configured }}/{{ summary.total_keys }}</strong>
+        <small>환경 변수</small>
+    </div>
+    <div class="adm-card">
+        <span>연동 플랫폼</span><strong>{{ summary.sources }}</strong><small>Source</small>
+    </div>
+</div>
+
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>CREDENTIALS</p>
+        <h2>환경 변수 설정 상태</h2>
+        <p class="adm-note">값은 앞 일부만 표시합니다. 전체 값은 화면에 노출하지 않습니다.</p>
+    </div>
+
+    <table class="adm-table">
+        <colgroup><col style="width:230px"><col><col style="width:200px"><col style="width:96px"></colgroup>
+        <thead><tr><th>변수</th><th>용도</th><th>값</th><th>상태</th></tr></thead>
+        <tbody>
+            {% for row in env_rows %}
+            <tr>
+                <td class="mono strong">{{ row.key }}</td>
+                <td>{{ row.label }}</td>
+                <td class="mono dim">{{ row.masked|default:"—" }}</td>
+                <td>
+                    {% if row.is_set %}<span class="adm-badge ok">설정됨</span>
+                    {% else %}<span class="adm-badge bad">미설정</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>PLATFORM</p>
+        <h2>플랫폼별 호출 결과</h2>
+    </div>
+
+    <table class="adm-table">
+        <colgroup>
+            <col><col style="width:78px"><col style="width:78px"><col style="width:78px">
+            <col style="width:88px"><col style="width:118px">
+        </colgroup>
+        <thead>
+            <tr><th>플랫폼</th><th class="r">전체</th><th class="r">성공</th><th class="r">실패</th><th class="r">성공률</th><th>최근 실행</th></tr>
+        </thead>
+        <tbody>
+            {% for row in source_rows %}
+            <tr>
+                <td class="strong">{{ row.label }} <span class="dim mono">{{ row.source.code }}</span></td>
+                <td class="r">{{ row.total|intcomma }}</td>
+                <td class="r">{{ row.success|intcomma }}</td>
+                <td class="r">{{ row.failed|intcomma }}</td>
+                <td class="r">
+                    {% if row.success_rate is not None %}
+                        {% if row.success_rate >= 90 %}<span class="adm-badge ok">{{ row.success_rate }}%</span>
+                        {% elif row.success_rate >= 60 %}<span class="adm-badge warn">{{ row.success_rate }}%</span>
+                        {% else %}<span class="adm-badge bad">{{ row.success_rate }}%</span>{% endif %}
+                    {% else %}<span class="dim">-</span>{% endif %}
+                </td>
+                <td class="dim">{% if row.last_run %}{{ row.last_run.started_at|date:"m-d H:i" }}{% else %}-{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="adm-empty">등록된 플랫폼이 없습니다.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</div>
+{% endblock %}

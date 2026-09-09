@@ -1,0 +1,166 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+
+{% block title %}Celery 작업 로그 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}{% include "dashboard/components/admin_page_css.html" %}
+<style>
+.cel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dim-value { color: var(--tx3); }
+.cel-check { color: var(--tx2); }
+.cel-check:hover { color: var(--tx); }
+</style>
+{% endblock %}
+
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_system.html" %}{% endblock %}
+
+{% block content %}
+<div class="adm-page">
+
+<div class="page-header">
+    <div>
+        <p class="page-eyebrow">SYSTEM</p>
+        <h1 class="adm-title">Celery 작업 로그</h1>
+        <p class="adm-sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="adm-cards">
+    <div class="adm-card">
+        <span>워커</span>
+        {% if checked_workers %}
+        <strong {% if workers %}class="ok"{% else %}class="bad"{% endif %}>{{ summary.workers }}</strong>
+        <small>응답한 워커 수</small>
+        {% else %}
+        <strong class="dim-value">—</strong>
+        <small><a href="?workers=1" class="cel-check">동작 확인</a></small>
+        {% endif %}
+    </div>
+    <div class="adm-card">
+        <span>실행 중</span><strong>{{ summary.running|intcomma }}</strong><small>RUNNING 상태</small>
+    </div>
+    <div class="adm-card">
+        <span>멈춘 실행</span>
+        <strong {% if summary.stale %}class="warn"{% endif %}>{{ summary.stale|intcomma }}</strong>
+        <small>1시간 이상 RUNNING</small>
+    </div>
+    <div class="adm-card">
+        <span>태스크 기록</span><strong>{{ summary.queued_tasks|intcomma }}</strong><small>task_id 보유</small>
+    </div>
+</div>
+
+{% if checked_workers and not workers %}
+<div class="adm-alert">
+    <b>응답하는 Celery 워커가 없습니다.</b><br>
+    docker compose에 worker/beat 컨테이너가 없어 비동기 작업과 주기 실행이 동작하지 않습니다.
+    수집은 관리자 화면의 수동 실행이나 management command로만 진행됩니다.
+    {% if celery_error %}<br><span class="mono" style="font-size:11.5px;">{{ celery_error }}</span>{% endif %}
+</div>
+{% endif %}
+
+<div class="adm-panel">
+    <div class="adm-panel-head cel-head">
+        <div><p>BROKER</p><h2>연결 설정</h2></div>
+        {% if checked_workers %}
+        <a href="{% url 'dashboard:system_celery' %}" class="adm-btn ghost sm">다시 확인</a>
+        {% else %}
+        <a href="?workers=1" class="adm-btn ghost sm">워커 동작 확인</a>
+        {% endif %}
+    </div>
+    <div class="adm-kv">
+        <div><span>브로커</span><strong class="mono">{{ broker|default:"—" }}</strong></div>
+        <div><span>결과 백엔드</span><strong class="mono">{{ backend|default:"—" }}</strong></div>
+    </div>
+</div>
+
+{% if workers %}
+<div class="adm-panel">
+    <div class="adm-panel-head"><p>WORKERS</p><h2>워커 상태</h2></div>
+    <table class="adm-table">
+        <colgroup><col><col style="width:110px"><col style="width:110px"><col style="width:120px"></colgroup>
+        <thead><tr><th>워커</th><th class="r">동시 실행</th><th class="r">처리 중</th><th class="r">누적 처리</th></tr></thead>
+        <tbody>
+            {% for worker in workers %}
+            <tr>
+                <td class="mono strong">{{ worker.name }}</td>
+                <td class="r">{{ worker.pool|default:"-" }}</td>
+                <td class="r">{{ worker.active }}</td>
+                <td class="r">{{ worker.total|intcomma }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if beat_schedule %}
+<div class="adm-panel">
+    <div class="adm-panel-head"><p>BEAT</p><h2>주기 작업 정의</h2></div>
+    <table class="adm-table">
+        <colgroup><col style="width:260px"><col><col style="width:110px"></colgroup>
+        <thead><tr><th>이름</th><th>태스크</th><th class="r">주기(초)</th></tr></thead>
+        <tbody>
+            {% for job in beat_schedule %}
+            <tr>
+                <td class="strong">{{ job.name }}</td>
+                <td class="mono">{{ job.task }}</td>
+                <td class="r">{{ job.schedule }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if stale_runs %}
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>STALE</p>
+        <h2>멈춘 채 남아 있는 실행</h2>
+        <p class="adm-note">시작한 지 1시간이 넘도록 RUNNING인 실행입니다. 워커가 죽었거나 프로세스가 중단된 흔적입니다.</p>
+    </div>
+    <table class="adm-table">
+        <colgroup><col style="width:62px"><col style="width:92px"><col><col style="width:140px"></colgroup>
+        <thead><tr><th>RUN</th><th>플랫폼</th><th>대상</th><th>시작 시각</th></tr></thead>
+        <tbody>
+            {% for run in stale_runs %}
+            <tr>
+                <td class="mono">{{ run.id }}</td>
+                <td>{{ run.source.code }}</td>
+                <td class="strong">{% if run.crawl_target %}{{ run.crawl_target.name }}{% else %}{{ run.target|default:"-" }}{% endif %}</td>
+                <td class="dim">{{ run.started_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="adm-panel">
+    <div class="adm-panel-head"><p>RECENT TASKS</p><h2>최근 태스크 실행</h2></div>
+    <table class="adm-table">
+        <colgroup><col style="width:62px"><col style="width:88px"><col><col style="width:92px"><col style="width:120px"></colgroup>
+        <thead><tr><th>RUN</th><th>플랫폼</th><th>Task ID</th><th>상태</th><th>시작 시각</th></tr></thead>
+        <tbody>
+            {% for run in recent_runs %}
+            <tr>
+                <td class="mono">{{ run.id }}</td>
+                <td>{{ run.source.code }}</td>
+                <td class="mono dim">{{ run.celery_task_id }}</td>
+                <td>
+                    {% if run.status == 'SUCCESS' %}<span class="adm-badge ok">성공</span>
+                    {% elif run.status == 'FAILED' %}<span class="adm-badge bad">실패</span>
+                    {% elif run.status == 'RUNNING' %}<span class="adm-badge warn">실행 중</span>
+                    {% else %}<span class="adm-badge off">{{ run.status }}</span>{% endif %}
+                </td>
+                <td class="dim">{{ run.started_at|date:"m-d H:i:s"|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="adm-empty">Celery task ID가 기록된 실행이 없습니다.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</div>
+{% endblock %}

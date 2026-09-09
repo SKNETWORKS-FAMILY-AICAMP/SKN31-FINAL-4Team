@@ -1,0 +1,191 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/analytics.css' %}">
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_normalized.html" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">NORMALIZED</p>
+        <h2 class="page-title">{{ page_title }}</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+{% if mode == 'none' %}
+<div class="nz-blank">
+    <strong>아직 이 플랫폼의 데이터가 없습니다.</strong>
+    <p>{{ blank_reason }}</p>
+</div>
+{% else %}
+
+<div class="nz-cards">
+    {% for card in cards %}
+    <div class="nz-card">
+        <span class="nz-label">{{ card.label }}</span>
+        <strong class="nz-value {{ card.tone }}">{{ card.value|intcomma }}</strong>
+        <span class="nz-caption">{{ card.caption }}</span>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not total_rows %}
+<div class="nz-blank">
+    <strong>이 플랫폼에서 수집된 데이터가 없습니다.</strong>
+    <p>{{ blank_reason }}</p>
+</div>
+{% endif %}
+
+<form method="get" class="nz-filter">
+    {% if mode == 'commerce' %}
+    <select name="mapping">
+        <option value="">전체 매핑 상태</option>
+        {% for value, label in mapping_choices %}
+        <option value="{{ value }}" {% if selected_mapping == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="brand">
+        <option value="">브랜드 연결 전체</option>
+        <option value="1" {% if selected_brand == '1' %}selected{% endif %}>표준 브랜드 연결됨</option>
+        <option value="0" {% if selected_brand == '0' %}selected{% endif %}>브랜드 미연결</option>
+    </select>
+    <input type="text" name="q" value="{{ search_query }}" placeholder="상품명 / 상품 ID / 스타일번호 / 브랜드">
+    {% else %}
+    <select name="content_type">
+        <option value="">전체 유형</option>
+        {% for value in content_types %}
+        <option value="{{ value }}" {% if selected_content_type == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+    </select>
+    <input type="text" name="q" value="{{ search_query }}" placeholder="제목 / 콘텐츠 ID / 채널명">
+    {% endif %}
+    <button type="submit">검색</button>
+    <a href="{{ reset_url }}" class="nz-reset">초기화</a>
+</form>
+
+<p class="nz-count">조회 결과 <b>{{ filtered_count|intcomma }}</b>건</p>
+
+<div class="nz-table-card">
+{% if mode == 'commerce' %}
+<table class="nz-table nz-lg">
+    <colgroup>
+        <col style="width:56px"><col style="width:86px"><col><col style="width:118px"><col style="width:108px">
+        <col style="width:88px"><col style="width:64px"><col style="width:84px"><col style="width:104px">
+    </colgroup>
+    <thead>
+        <tr>
+            <th class="nz-sortable"><a href="?{{ qs_sort }}order={% if selected_order == 'id_asc' %}id_desc{% else %}id_asc{% endif %}">ID{% if selected_order == 'id_asc' %} <span class="nz-arrow">▲</span>{% elif selected_order == 'id_desc' %} <span class="nz-arrow">▼</span>{% endif %}</a></th>
+            <th>이미지</th>
+            <th>상품명</th>
+            <th>브랜드</th>
+            <th>카테고리</th>
+            <th class="ta-r">판매가</th>
+            <th class="ta-r">할인</th>
+            <th>표준 매핑</th>
+            <th>최근 확인</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td class="mono">{{ row.id }}</td>
+            {% include "dashboard/components/thumb_cell.html" with url=row.thumbnail_url w=72 h=92 %}
+            <td>
+                {% if row.product_url %}
+                <a class="nz-name" href="{{ row.product_url }}" target="_blank" rel="noopener" title="{{ row.source_name }}">{{ row.source_name|default:"-" }}</a>
+                {% else %}
+                <strong class="nz-name" title="{{ row.source_name }}">{{ row.source_name|default:"-" }}</strong>
+                {% endif %}
+                <span class="nz-sub2">{{ row.source_product_id }}{% if row.style_no %} · {{ row.style_no }}{% endif %}</span>
+            </td>
+            <td>
+                {% if row.source_brand %}{{ row.source_brand.name|default:"-" }}{% if row.source_brand.brand %}<span class="nz-tick">✓</span>{% endif %}
+                {% else %}<span class="nz-none">-</span>{% endif %}
+            </td>
+            <td>
+                {% if row.source_category %}{{ row.source_category.source_category_name|default:"-" }}
+                {% else %}<span class="nz-none">-</span>{% endif %}
+            </td>
+            <td class="ta-r mono">
+                {% if row.latest_snapshot and row.latest_snapshot.sale_price %}{{ row.latest_snapshot.sale_price|floatformat:0|intcomma }}
+                {% else %}<span class="nz-none">-</span>{% endif %}
+            </td>
+            <td class="ta-r mono">
+                {% if row.latest_snapshot and row.latest_snapshot.discount_rate %}{{ row.latest_snapshot.discount_rate|floatformat:0 }}%
+                {% else %}<span class="nz-none">-</span>{% endif %}
+            </td>
+            <td>
+                {% if row.mapping_status == 'MAPPED' %}<span class="nz-badge ok">연결됨</span>
+                {% elif row.mapping_status == 'REVIEW' %}<span class="nz-badge warn">검토 중</span>
+                {% elif row.mapping_status == 'REJECTED' %}<span class="nz-badge off">제외</span>
+                {% else %}<span class="nz-badge off">미매핑</span>{% endif %}
+            </td>
+            <td class="nz-date">{% if row.last_seen_at %}{{ row.last_seen_at|date:"Y-m-d" }}<span class="nz-time">{{ row.last_seen_at|date:"H:i" }}</span>{% else %}-{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" class="nz-empty">조건에 맞는 상품이 없습니다.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<table class="nz-table nz-lg">
+    <colgroup>
+        <col style="width:56px"><col style="width:150px"><col><col style="width:128px"><col style="width:70px">
+        <col style="width:84px"><col style="width:74px"><col style="width:68px"><col style="width:92px">
+    </colgroup>
+    <thead>
+        <tr>
+            <th class="nz-sortable"><a href="?{{ qs_sort }}order={% if selected_order == 'id_asc' %}id_desc{% else %}id_asc{% endif %}">ID{% if selected_order == 'id_asc' %} <span class="nz-arrow">▲</span>{% elif selected_order == 'id_desc' %} <span class="nz-arrow">▼</span>{% endif %}</a></th>
+            <th>이미지</th>
+            <th>제목</th>
+            <th>채널</th>
+            <th>유형</th>
+            <th class="ta-r nz-sortable"><a href="?{{ qs_sort }}order={% if selected_order == 'views_desc' %}views_asc{% else %}views_desc{% endif %}">조회수{% if selected_order == 'views_asc' %} <span class="nz-arrow">▲</span>{% elif selected_order == 'views_desc' %} <span class="nz-arrow">▼</span>{% endif %}</a></th>
+            <th class="ta-r">좋아요</th>
+            <th class="ta-r">댓글</th>
+            <th>게시일</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td class="mono">{{ row.id }}</td>
+            {% include "dashboard/components/thumb_cell.html" with url=row.thumbnail_url w=136 h=77 %}
+            <td>
+                {% if row.content_url %}
+                <a class="nz-name" href="{{ row.content_url }}" target="_blank" rel="noopener" title="{{ row.title }}">{{ row.title|default:"-" }}</a>
+                {% else %}
+                <strong class="nz-name" title="{{ row.title }}">{{ row.title|default:"-" }}</strong>
+                {% endif %}
+                <span class="nz-sub2">{{ row.external_content_id }}{% if row.duration_seconds %} · {{ row.duration_seconds }}초{% endif %}</span>
+            </td>
+            <td>{% if row.profile %}{{ row.profile.name|default:"-" }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td><span class="nz-plat">{{ row.content_type|default:"-" }}</span></td>
+            <td class="ta-r mono">{% if row.latest_snapshot %}{{ row.latest_snapshot.view_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.latest_snapshot %}{{ row.latest_snapshot.like_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.latest_snapshot %}{{ row.latest_snapshot.comment_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="nz-date">{{ row.published_at|date:"Y-m-d"|default:"-" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" class="nz-empty">조건에 맞는 콘텐츠가 없습니다.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+</div>
+
+{% include "dashboard/components/pagination_qs.html" %}
+
+{% endif %}
+
+{% endblock %}

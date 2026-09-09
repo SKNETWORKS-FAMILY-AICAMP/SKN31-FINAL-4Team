@@ -1,10 +1,62 @@
 {% extends "dashboard/base.html" %}
-
-{% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
+{% load static humanize %}
+{% block title %}카테고리 | FEEDIT Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_dictionary.html" %}{% endblock %}
 
 {% block content %}
-{% include "dashboard/components/page_header.html" %}
-<section class="panel">
-    {% include "dashboard/components/empty_state.html" %}
-</section>
+<div class="page-header">
+    <div>
+        <p class="eyebrow">FEEDIT ADMIN</p>
+        <h2 class="page-title">카테고리</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="nz-cards">
+    <div class="nz-card"><span class="nz-label">전체</span><strong class="nz-value">{{ summary.total|intcomma }}</strong><span class="nz-caption">CATEGORY</span></div>
+    <div class="nz-card"><span class="nz-label">상품 카테고리</span><strong class="nz-value">{{ summary.product|intcomma }}</strong><span class="nz-caption">PRODUCT</span></div>
+    <div class="nz-card"><span class="nz-label">브랜드 카테고리</span><strong class="nz-value">{{ summary.brand|intcomma }}</strong><span class="nz-caption">BRAND</span></div>
+    <div class="nz-card"><span class="nz-label">플랫폼 카테고리</span><strong class="nz-value">{{ summary.category_source|intcomma }}</strong><span class="nz-caption">CATEGORY SOURCE</span></div>
+</div>
+
+<form method="get" class="nz-filter">
+    <select name="category_type">
+        <option value="">전체 유형</option>
+        {% for value, label in type_choices %}<option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="level">
+        <option value="">전체 레벨</option>
+        {% for lv in levels %}<option value="{{ lv }}" {% if selected_level == lv|stringformat:"s" %}selected{% endif %}>레벨 {{ lv }}</option>{% endfor %}
+    </select>
+    <input type="text" name="q" value="{{ search_query }}" placeholder="카테고리명 / 코드 검색">
+    <button type="submit">검색</button>
+    <a href="{% url 'dashboard:categories' %}" class="nz-reset">초기화</a>
+</form>
+
+<p class="nz-count">조회 결과 <b>{{ filtered_count|intcomma }}</b>건</p>
+
+<div class="nz-table-card">
+<table class="nz-table">
+    <colgroup><col style="width:64px"><col style="width:110px"><col style="width:70px"><col><col style="width:170px"><col style="width:160px"><col style="width:74px"></colgroup>
+    <thead><tr><th>ID</th><th>유형</th><th>레벨</th><th>카테고리명</th><th>코드</th><th>상위</th><th>상태</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+        <tr>
+            <td class="mono">{{ row.id }}</td>
+            <td><span class="nz-plat">{{ row.category_type }}</span></td>
+            <td class="mono">{{ row.level }}</td>
+            <td><strong class="nz-name" style="padding-left:{{ row.level|add:"-1" }}0px;">{{ row.name }}</strong></td>
+            <td class="mono nz-ellip">{{ row.code }}</td>
+            <td class="nz-ellip">{% if row.parent %}{{ row.parent.name }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td>{% if row.status == 'ACTIVE' %}<span class="nz-badge ok">활성</span>{% else %}<span class="nz-badge off">{{ row.status }}</span>{% endif %}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="7" class="nz-empty">조건에 맞는 카테고리가 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% include "dashboard/components/pagination_nz.html" %}
 {% endblock %}

@@ -1,0 +1,85 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+
+{% block title %}AWS 관리 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}{% include "dashboard/components/admin_page_css.html" %}{% endblock %}
+
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_system.html" %}{% endblock %}
+
+{% block content %}
+<div class="adm-page">
+
+<div class="page-header">
+    <div>
+        <p class="page-eyebrow">SYSTEM</p>
+        <h1 class="adm-title">AWS 관리</h1>
+        <p class="adm-sub">{{ page_description }}</p>
+    </div>
+</div>
+
+{% if error %}<div class="adm-alert bad">{{ error }}</div>{% endif %}
+
+<div class="adm-panel">
+    <div class="adm-panel-head"><p>CONNECTION</p><h2>접속 설정</h2></div>
+    <div class="adm-kv">
+        <div><span>S3 버킷</span><strong>{{ bucket|default:"—" }}</strong></div>
+        <div><span>리전</span><strong>{{ region|default:"—" }}</strong></div>
+        <div><span>DB 엔진</span><strong>{{ db_info.engine }}</strong></div>
+        <div><span>DB 이름</span><strong>{{ db_info.name }}</strong></div>
+        <div><span>DB 호스트</span><strong class="mono">{{ db_info.host }}</strong></div>
+        <div><span>DB 포트</span><strong>{{ db_info.port }}</strong></div>
+        <div><span>DB 사용자</span><strong class="mono">{{ db_info.user }}</strong></div>
+        <div><span>원본 문서</span><strong>{{ raw_documents|intcomma }}건</strong></div>
+    </div>
+</div>
+
+{% if top_level %}
+<div class="adm-chips">
+    <span class="adm-chip" style="border:0;background:none;padding-left:0;">최상위 경로</span>
+    {% for prefix in top_level %}<span class="adm-chip">{{ prefix }}</span>{% endfor %}
+</div>
+{% endif %}
+
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>S3 STORAGE</p>
+        <h2>경로별 적재 현황</h2>
+        <p class="adm-note">경로당 최대 5,000개까지 집계합니다. 상한에 걸린 경로는 실제 값이 더 큽니다.</p>
+    </div>
+
+    <table class="adm-table">
+        <colgroup><col><col style="width:110px"><col style="width:110px"><col style="width:140px"></colgroup>
+        <thead><tr><th>경로</th><th class="r">객체 수</th><th class="r">용량(MB)</th><th>최근 업로드</th></tr></thead>
+        <tbody>
+            {% for row in prefix_rows %}
+            <tr>
+                <td class="mono strong">{{ row.prefix }}</td>
+                <td class="r">
+                    {{ row.count|intcomma }}{% if row.capped %}<span class="adm-badge warn" style="margin-left:6px;">상한</span>{% endif %}
+                </td>
+                <td class="r">{{ row.size_mb|intcomma }}</td>
+                <td class="dim">{% if row.latest %}{{ row.latest|date:"Y-m-d H:i" }}{% else %}-{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="adm-empty">S3 정보를 가져오지 못했습니다.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if latest_document %}
+<div class="adm-panel">
+    <div class="adm-panel-head"><p>LATEST</p><h2>가장 최근 원본 문서</h2></div>
+    <div class="adm-kv">
+        <div><span>문서 ID</span><strong>{{ latest_document.id }}</strong></div>
+        <div><span>플랫폼</span><strong>{{ latest_document.source.code }}</strong></div>
+        <div><span>유형</span><strong>{{ latest_document.document_type }}</strong></div>
+        <div><span>수집 시각</span><strong>{{ latest_document.collected_at|date:"Y-m-d H:i:s" }}</strong></div>
+    </div>
+    <pre class="adm-code" style="margin-top:14px;">{{ latest_document.s3_key }}</pre>
+</div>
+{% endif %}
+
+</div>
+{% endblock %}

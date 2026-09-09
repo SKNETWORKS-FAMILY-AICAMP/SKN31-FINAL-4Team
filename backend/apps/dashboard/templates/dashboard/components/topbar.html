@@ -1,0 +1,78 @@
+{% load static %}
+{% with url_name=request.resolver_match.url_name %}
+<div class="top">
+  <div class="topIn">
+    <a class="logo" href="{% url 'dashboard:dashboard' %}">
+      <img src="{% static 'dashboard/img/feedit-logo.png' %}" alt="FEEDiT" class="logo-mark" width="24" height="24">
+      <b>FEEDiT</b> <span>ADMIN</span>
+    </a>
+    
+    <div class="tabs">
+      <a href="{% url 'dashboard:platform_status' %}" class="btn {% if url_name in 'platform_status,collection_targets,run_crawl,collection_runs,crawl_rules,robots_check' %}on{% endif %}">수집</a>
+      
+      <a href="{% url 'dashboard:raw_documents' %}" class="btn {% if url_name == 'raw_documents' %}on{% endif %}">원본데이터</a>
+      
+      <a href="{% url 'dashboard:normalized_products' %}" class="btn {% if url_name in 'normalized_products,normalization_failures,normalized_musinsa,normalized_zigzag,normalized_ably,normalized_kream,normalized_musinsa_used,normalized_youtube,normalized_naver' %}on{% endif %}">정규화데이터</a>
+      
+      <a href="{% url 'dashboard:trend_metrics' %}" class="btn {% if url_name in 'trend_metrics,term_metrics,product_metrics,product_snapshot' %}on{% endif %}">데이터분석</a>
+      
+      <a href="{% url 'dashboard:system_status' %}" class="btn {% if url_name in 'system_status,jobs,system_api,system_aws,system_celery' %}on{% endif %}">시스템</a>
+      
+      <a href="{% url 'dashboard:dictionary_terms' %}" class="btn {% if url_name in 'dictionary_terms,dictionary_candidates,dictionary_candidate_detail,brand_sources' %}on{% endif %}">사전</a>
+    </div>
+    
+    <div class="live">
+      SYSTEM LIVE <div class="dot on"></div>
+      {% if request.user.is_authenticated %}
+      <span style="margin-left: 15px; color: var(--tx2); text-transform: none;">{{ request.user.username }} 님</span>
+      <a href="{% url 'dashboard:logout' %}" style="margin-left: 10px; color: var(--tx2); text-decoration: none;">로그아웃</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endwith %}
+
+<style>
+  /* 로고: 마크와 글자의 시각적 중심을 맞춘다.
+     마크는 정사각 이미지라 line-height 영향을 받지 않게 block으로 둔다. */
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: inherit;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .logo-mark {
+    width: 24px;
+    height: 24px;
+    display: block;
+    flex-shrink: 0;
+    object-fit: contain;
+  }
+  .logo b {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1;
+    display: block;
+  }
+  .logo span {
+    font-family: var(--num);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .16em;
+    color: var(--tx3);
+    line-height: 1;
+    display: block;
+    padding-left: 9px;
+    margin-left: 1px;
+    border-left: 1px solid var(--line);
+  }
+  .logo:hover b { opacity: .65; }
+  .tabs { display: flex; gap: 3px; margin-left: 14px; }
+  .tabs .btn { padding: 8px 15px; border-radius: 9px; font-size: 13px; color: var(--tx2); transition: .25s var(--ease); text-decoration: none; border: none; background: transparent; }
+  .tabs .btn:hover { background: rgba(10,10,10,.05); }
+  .tabs .btn.on { background: var(--ink); color: #f1efea; }
+</style>

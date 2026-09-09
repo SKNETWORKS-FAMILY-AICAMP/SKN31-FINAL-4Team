@@ -1,0 +1,666 @@
+/* ============================================================
+   브랜드 소스 관리 (dictionary/brand_sources.html)
+   base.css의 토큰(--card, --line, --tx, --ink ...)을 그대로 사용
+   ============================================================ */
+
+/* ---------- SUMMARY CARDS ---------- */
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+    gap: 16px;
+    margin-bottom: 26px;
+}
+
+.summary-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px 26px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 132px;
+}
+
+.summary-label {
+    font-size: 13px;
+    color: var(--tx2);
+    line-height: 1.3;
+}
+
+.summary-value {
+    font-family: var(--num);
+    font-size: 38px;
+    font-weight: 600;
+    letter-spacing: -.03em;
+    line-height: 1;
+    color: var(--tx);
+    font-variant-numeric: tabular-nums;
+}
+
+.summary-caption {
+    font-size: 11.5px;
+    color: var(--tx3);
+    margin-top: -2px;
+}
+
+/* ---------- FILTER BAR ---------- */
+
+.filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+}
+
+.filter-bar select,
+.filter-bar input[type="text"],
+.filter-bar input[type="search"] {
+    height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    font-family: var(--body);
+    font-size: 13.5px;
+    color: var(--tx);
+    outline: none;
+    transition: border-color .2s var(--ease);
+}
+
+.filter-bar select {
+    min-width: 168px;
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--tx2) 50%),
+        linear-gradient(135deg, var(--tx2) 50%, transparent 50%);
+    background-position:
+        calc(100% - 19px) calc(50% + 1px),
+        calc(100% - 14px) calc(50% + 1px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 38px;
+}
+
+.filter-bar input[type="text"],
+.filter-bar input[type="search"] {
+    flex: 1;
+    min-width: 260px;
+}
+
+.filter-bar input::placeholder {
+    color: var(--tx3);
+}
+
+.filter-bar select:focus,
+.filter-bar input:focus {
+    border-color: var(--tx3);
+}
+
+/* 배경이 투명이라 페이지 바탕과 구분되지 않던 것을
+   다른 페이지의 검색 버튼(.nz-filter button)과 동일하게 맞춤 (2026-09-09) */
+.filter-bar button {
+    height: 44px;
+    padding: 0 22px;
+    border: 1px solid var(--ink);
+    border-radius: 10px;
+    background: var(--ink);
+    color: #f1efea;
+    font-family: var(--body);
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .2s var(--ease);
+}
+
+.filter-bar button:hover {
+    opacity: .88;
+}
+
+/* ---------- TABLE ---------- */
+
+.table-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 6px 10px;
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    padding: 20px 14px 16px;
+    text-align: left;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--tx2);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+}
+
+.data-table td {
+    padding: 16px 14px;
+    font-size: 13.5px;
+    color: var(--tx);
+    vertical-align: middle;
+    border-bottom: 1px solid var(--line2);
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+    background: rgba(10, 10, 10, .018);
+}
+
+.data-table td strong {
+    font-weight: 600;
+}
+
+/* 플랫폼 / ID 열은 옅게 */
+.data-table td:nth-child(1) {
+    font-weight: 600;
+}
+
+.data-table td:nth-child(2) {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--tx2);
+}
+
+.empty-row {
+    text-align: center;
+    padding: 64px 0 !important;
+    color: var(--tx2);
+    font-size: 13.5px;
+}
+
+/* ---------- BADGES ---------- */
+
+.priority-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: var(--ink);
+    color: #f1efea;
+    font-family: var(--num);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    vertical-align: 2px;
+}
+
+.status {
+    display: inline-block;
+    padding: 5px 13px;
+    border-radius: 7px;
+    font-family: var(--num);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    white-space: nowrap;
+}
+
+.status-success {
+    background: rgba(31, 158, 110, .12);
+    color: var(--ok);
+}
+
+.status-warning {
+    background: rgba(201, 138, 27, .13);
+    color: var(--warn);
+}
+
+/* ---------- ACTION ---------- */
+
+.review-btn {
+    padding: 8px 18px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--card);
+    font-family: var(--body);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--tx);
+    cursor: pointer;
+    transition: .2s var(--ease);
+    white-space: nowrap;
+}
+
+.review-btn:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #f1efea;
+}
+
+.done-text {
+    font-size: 12.5px;
+    color: var(--tx3);
+}
+
+/* ---------- MODAL ---------- */
+
+.brand-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(10, 10, 10, .45);
+    backdrop-filter: blur(3px);
+    padding: 40px 20px;
+    overflow-y: auto;
+}
+
+.brand-modal.open {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.brand-modal-panel {
+    position: relative;
+    width: min(720px, 100%);
+    background: var(--card);
+    border-radius: 20px;
+    padding: 38px 40px 40px;
+    box-shadow: 0 30px 70px -30px rgba(10, 10, 10, .45);
+    margin: auto;
+}
+
+.modal-close {
+    position: absolute;
+    top: 24px;
+    right: 26px;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    font-size: 24px;
+    line-height: 1;
+    color: var(--tx2);
+    cursor: pointer;
+    transition: .2s var(--ease);
+}
+
+.modal-close:hover {
+    background: rgba(10, 10, 10, .06);
+    color: var(--tx);
+}
+
+.modal-header {
+    padding-right: 44px;
+    margin-bottom: 28px;
+}
+
+.modal-header > span {
+    display: block;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--tx3);
+    margin-bottom: 6px;
+}
+
+.modal-header h2 {
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -.03em;
+    margin: 0 0 8px;
+    line-height: 1.2;
+}
+
+.modal-header > div {
+    font-size: 12.5px;
+    color: var(--tx2);
+}
+
+.modal-header > div strong {
+    color: var(--tx);
+    font-weight: 600;
+}
+
+/* ---------- MODAL SECTIONS ---------- */
+
+.mapping-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mapping-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    margin: 0;
+}
+
+.mapping-section > p {
+    font-size: 12.5px;
+    color: var(--tx2);
+    line-height: 1.65;
+    margin: 0 0 6px;
+}
+
+.mapping-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mapping-section label {
+    font-size: 12px;
+    color: var(--tx2);
+    margin-top: 6px;
+}
+
+.mapping-section select,
+.mapping-section input[type="text"] {
+    width: 100%;
+    height: 46px;
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    font-family: var(--body);
+    font-size: 13.5px;
+    color: var(--tx);
+    outline: none;
+    transition: border-color .2s var(--ease);
+}
+
+.mapping-section select {
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--tx2) 50%),
+        linear-gradient(135deg, var(--tx2) 50%, transparent 50%);
+    background-position:
+        calc(100% - 19px) calc(50% + 1px),
+        calc(100% - 14px) calc(50% + 1px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 38px;
+}
+
+.mapping-section select:focus,
+.mapping-section input:focus {
+    border-color: var(--tx3);
+}
+
+.secondary-button,
+.primary-button {
+    width: 100%;
+    height: 48px;
+    border-radius: 11px;
+    font-family: var(--body);
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .2s var(--ease);
+    margin-top: 4px;
+}
+
+.secondary-button {
+    border: 1px solid var(--line);
+    background: rgba(10, 10, 10, .035);
+    color: var(--tx);
+}
+
+.secondary-button:hover {
+    background: rgba(10, 10, 10, .07);
+}
+
+.primary-button {
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: #f1efea;
+}
+
+.primary-button:hover {
+    opacity: .88;
+}
+
+/* ---------- DIVIDER ---------- */
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 28px 0;
+    font-family: var(--num);
+    font-size: 11px;
+    letter-spacing: .14em;
+    color: var(--tx3);
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+}
+
+/* ---------- RESPONSIVE ---------- */
+
+@media (max-width: 900px) {
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .summary-value {
+        font-size: 32px;
+    }
+
+    .brand-modal-panel {
+        padding: 30px 22px 32px;
+    }
+
+    .filter-bar input[type="text"],
+    .filter-bar input[type="search"] {
+        min-width: 100%;
+    }
+}
+
+/* ============================================================
+   매핑된 브랜드 관리 (모달 확장)
+   ============================================================ */
+
+/* 표: 매핑된 행의 버튼은 옅게 */
+.review-btn.is-mapped {
+    border-color: var(--line2);
+    color: var(--tx2);
+}
+
+.review-btn.is-mapped:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #f1efea;
+}
+
+/* 헤더 상태 칩 */
+.modal-chip {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-family: var(--num);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    vertical-align: 1px;
+}
+
+.modal-chip.ok {
+    background: rgba(31, 158, 110, .12);
+    color: var(--ok);
+}
+
+.modal-chip.warn {
+    background: rgba(201, 138, 27, .13);
+    color: var(--warn);
+}
+
+/* 현재 매핑 배너 */
+.current-map {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    padding: 18px 20px;
+    margin-bottom: 26px;
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    background: rgba(10, 10, 10, .028);
+}
+
+.current-map[hidden] {
+    display: none;
+}
+
+.current-map-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.current-map-label {
+    font-size: 11.5px;
+    color: var(--tx3);
+}
+
+.current-map-info strong {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+}
+
+.current-map-code {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--tx2);
+}
+
+.current-map-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.current-map-actions form {
+    margin: 0;
+}
+
+.ghost-button {
+    height: 38px;
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--card);
+    font-family: var(--body);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--tx);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: .2s var(--ease);
+}
+
+.ghost-button:hover {
+    background: rgba(10, 10, 10, .06);
+}
+
+.ghost-button.danger {
+    color: var(--bad);
+    border-color: rgba(178, 59, 59, .3);
+}
+
+.ghost-button.danger:hover {
+    background: rgba(178, 59, 59, .09);
+}
+
+/* 신규 등록 섹션 숨김 */
+#create-section[hidden],
+#create-divider[hidden] {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .current-map {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .current-map-actions {
+        justify-content: stretch;
+    }
+
+    .current-map-actions form,
+    .ghost-button {
+        flex: 1;
+        width: 100%;
+    }
+}
+
+
+/* ============================================================
+   FEEDIT 브랜드 검색 (2026-09-09 추가)
+   브랜드가 수천 개라 select 스크롤로는 찾을 수 없어 검색을 붙였다.
+   ============================================================ */
+
+.brand-search {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px;
+    margin-bottom: 8px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    font-family: var(--body);
+    font-size: 13.5px;
+    transition: border-color .2s var(--ease);
+}
+
+.brand-search:focus {
+    outline: none;
+    border-color: var(--tx3);
+}
+
+.brand-search-count {
+    margin: 0 0 8px;
+    font-size: 11.5px;
+    color: var(--tx3);
+    min-height: 15px;
+}
+
+#brand-select {
+    width: 100%;
+    min-height: 340px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    font-family: var(--body);
+    font-size: 13.5px;
+    line-height: 1.6;
+}
+
+#brand-select option {
+    padding: 9px 11px;
+    border-radius: 6px;
+    line-height: 1.5;
+}
+
+#brand-select option:checked {
+    background: var(--ink);
+    color: #f1efea;
+}

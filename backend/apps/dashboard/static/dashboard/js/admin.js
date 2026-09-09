@@ -127,53 +127,48 @@ document.querySelectorAll("[data-target-toggle]").forEach((button) => {
 
 });
 
-<script>
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
 
-        const input = document.getElementById(
-            "brand_code"
-        );
+/* ============================================================
+   브랜드 코드 자동 정규화
+   ------------------------------------------------------------
+   원래 이 파일 끝에 <script> 태그로 감싼 채 들어 있었다.
+   .js 파일 안의 <script> 는 문법 오류라 파일 전체가 파싱되지 않아
+   위쪽 타겟 토글까지 동작하지 않는 상태였다. (2026-09-09 수정)
 
-        if (!input) {
-            return;
-        }
+   대상도 id="brand_code" 로 잡혀 있었으나 실제 입력란 id 는
+   new-brand-code 라서 매칭되지 않았다. name 기준으로 변경했다.
 
-        input.addEventListener(
-            "blur",
-            function () {
+   서버(create_brand_from_source)에서도 같은 정규화를 하므로
+   여기서는 입력 중 확인용이다.
+   ============================================================ */
 
-                let value = (
-                    input.value
-                    || ""
-                ).trim();
+document.addEventListener("DOMContentLoaded", function () {
 
-                if (!value) {
-                    return;
-                }
+    const inputs = document.querySelectorAll('input[name="brand_code"]');
 
-                value = (
-                    value
-                    .toUpperCase()
-                    .replace(/\s+/g, "_")
-                    .replace(/-+/g, "_")
-                );
+    inputs.forEach(function (input) {
 
-                if (
-                    !value.startsWith(
-                        "BRAND_"
-                    )
-                ) {
-                    value = (
-                        "BRAND_"
-                        + value
-                    );
-                }
+        input.addEventListener("blur", function () {
 
-                input.value = value;
+            let value = (input.value || "").trim();
+
+            if (!value) {
+                return;
             }
-        );
-    }
-);
-</script>
+
+            value = value
+                .toUpperCase()
+                .replace(/\s+/g, "_")
+                .replace(/-+/g, "_")
+                .replace(/_{2,}/g, "_");
+
+            if (!value.startsWith("BRAND_")) {
+                value = "BRAND_" + value;
+            }
+
+            input.value = value;
+        });
+
+    });
+
+});

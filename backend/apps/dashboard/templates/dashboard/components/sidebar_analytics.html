@@ -1,0 +1,9 @@
+{% with u=request.resolver_match.url_name %}
+<aside class="sub-sidebar">
+    <p>ANALYTICS</p>
+    <a href="{% url 'dashboard:trend_metrics' %}"    {% if u == 'trend_metrics' %}class="active"{% endif %}>트렌드 지표</a>
+    <a href="{% url 'dashboard:term_metrics' %}"     {% if u == 'term_metrics' %}class="active"{% endif %}>용어별 지표</a>
+    <a href="{% url 'dashboard:product_metrics' %}"  {% if u == 'product_metrics' %}class="active"{% endif %}>상품별 지표</a>
+    <a href="{% url 'dashboard:product_snapshot' %}" {% if u == 'product_snapshot' %}class="active"{% endif %}>상품 스냅샷</a>
+</aside>
+{% endwith %}

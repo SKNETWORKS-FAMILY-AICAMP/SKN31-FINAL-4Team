@@ -1,128 +1,59 @@
 {% load static humanize %}
-
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FEEDIT Admin{% endblock %}</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <title>
-        {% block title %}
-        FEEDIT Admin
-        {% endblock %}
-    </title>
+    <!-- Pretendard: 전체 가변 폰트(약 1MB) 대신 동적 서브셋을 쓴다.
+         화면에 실제로 쓰인 글자 구간만 내려받아 초기 로딩이 크게 줄어든다. -->
+    <link rel="stylesheet" as="style" crossorigin
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 
-    <!-- =====================================================
-         COMMON CSS
-    ====================================================== -->
+    <!-- Space Grotesk: 숫자·라벨용. 필요한 굵기만 요청한다. -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap">
 
-    <link
-        rel="stylesheet"
-        href="{% static 'dashboard/css/base.css' %}"
-    >
+    <link rel="stylesheet" href="{% static 'dashboard/css/base.css' %}">
+    <link rel="icon" href="{% static 'dashboard/img/feedit-logo.png' %}" type="image/png">
+    
+    <style>
+        .layout-wrap { width: min(1400px, 96vw); margin: 0 auto; padding: 26px 26px 70px; display: flex; gap: 40px; }
+        .sub-sidebar { flex: 0 0 180px; }
+        .sub-sidebar p { font-family: var(--num); font-size: 11px; letter-spacing: 0.15em; color: var(--tx3); margin-bottom: 12px; }
+        .sub-sidebar a { display: block; padding: 6px 0; font-size: 13.5px; color: var(--tx2); text-decoration: none; transition: 0.2s; }
+        .sub-sidebar a:hover { color: var(--tx); }
+        .sub-sidebar a.active { color: var(--tx); font-weight: 600; }
+        .main-content { flex: 1; min-width: 0; }
+    </style>
 
-    <link
-        rel="stylesheet"
-        href="{% static 'dashboard/css/components.css' %}"
-    >
-
-    <link
-        rel="stylesheet"
-        href="{% static 'dashboard/css/dashboard.css' %}"
-    >
-
-
-    <!-- =====================================================
-         PAGE CSS
-         각 페이지에서 필요한 CSS만 추가
-    ====================================================== -->
-
-    {% block extra_css %}
-    {% endblock %}
+    {% block extra_css %}{% endblock %}
 </head>
-
-
 <body>
+    {% include "dashboard/components/topbar.html" %}
 
-<div class="admin-layout">
+    <div class="layout-wrap">
+        {% block sub_sidebar %}{% endblock %}
 
-    <!-- =====================================================
-         SIDEBAR
-    ====================================================== -->
-
-    {% include "dashboard/components/sidebar.html" %}
-
-
-    <!-- =====================================================
-         MAIN
-    ====================================================== -->
-
-    <div class="admin-main">
-
-        <!-- HEADER -->
-
-        {% include "dashboard/components/header.html" %}
-
-
-        <!-- CONTENT -->
-
-        <main class="admin-content">
-
-            <!-- Django messages -->
-
+        <main class="main-content">
             {% if messages %}
                 <div class="dashboard-messages">
-
                     {% for message in messages %}
-
-                        <div
-                            class="
-                                dashboard-message
-                                dashboard-message--{{ message.tags|default:'info' }}
-                            "
-                        >
+                        <div class="note {% if message.tags == 'error' %}bad{% elif message.tags == 'success' %}ok{% else %}info{% endif %}">
                             {{ message }}
                         </div>
-
                     {% endfor %}
-
                 </div>
             {% endif %}
 
-
-            <!-- PAGE CONTENT -->
-
-            {% block content %}
-            {% endblock %}
-
+            {% block content %}{% endblock %}
         </main>
-
     </div>
 
-</div>
-
-
-<!-- =====================================================
-     COMMON JS
-====================================================== -->
-
-<script
-    src="{% static 'dashboard/js/admin.js' %}"
-></script>
-
-
-<!-- =====================================================
-     PAGE JS
-====================================================== -->
-
-{% block extra_js %}
-{% endblock %}
-
+    {% block extra_js %}{% endblock %}
 </body>
-
 </html>

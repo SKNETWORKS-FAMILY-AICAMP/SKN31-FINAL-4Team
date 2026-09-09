@@ -1,0 +1,372 @@
+/* ============================================================
+   정규화 데이터 (성공 / 실패)
+   ============================================================ */
+
+.eyebrow {
+    font-size: 11.5px;
+    color: var(--tx3);
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin: 0 0 4px;
+}
+
+.page-title {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -.03em;
+    margin: 0 0 6px;
+}
+
+/* ---------- 요약 카드 ---------- */
+
+.nz-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.nz-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    padding: 20px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nz-label {
+    font-size: 12.5px;
+    color: var(--tx2);
+}
+
+.nz-value {
+    font-family: var(--num);
+    font-size: 31px;
+    font-weight: 600;
+    letter-spacing: -.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.nz-value.ok  { color: var(--ok); }
+.nz-value.bad { color: var(--bad); }
+
+.nz-caption {
+    font-family: var(--num);
+    font-size: 10px;
+    letter-spacing: .1em;
+    color: var(--tx3);
+}
+
+/* ---------- 플랫폼별 칩 ---------- */
+
+.nz-chipbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.nz-chipbar-label {
+    font-size: 11.5px;
+    color: var(--tx3);
+    margin-right: 2px;
+}
+
+.nz-chip {
+    padding: 5px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    font-size: 12px;
+    color: var(--tx2);
+}
+
+.nz-chip b {
+    font-family: var(--num);
+    color: var(--tx);
+    margin-left: 3px;
+}
+
+/* ---------- 실패 사유 ---------- */
+
+.nz-reasons {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    padding: 20px 22px;
+    margin-bottom: 22px;
+}
+
+.nz-reasons-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--tx2);
+    margin: 0 0 12px;
+}
+
+.nz-reason {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 7px 0;
+    border-top: 1px solid var(--line2);
+}
+
+.nz-reason:first-of-type { border-top: none; }
+
+.nz-reason-n {
+    font-family: var(--num);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--bad);
+    min-width: 46px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.nz-reason-t {
+    font-size: 12.5px;
+    color: var(--tx);
+    word-break: break-all;
+}
+
+/* ---------- 필터 ---------- */
+
+.nz-filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.nz-filter select,
+.nz-filter input[type="text"] {
+    height: 42px;
+    padding: 0 15px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    font-family: var(--body);
+    font-size: 13px;
+    color: var(--tx);
+    outline: none;
+}
+
+.nz-filter select {
+    min-width: 156px;
+    appearance: none;
+    padding-right: 36px;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--tx2) 50%),
+        linear-gradient(135deg, var(--tx2) 50%, transparent 50%);
+    background-position: calc(100% - 18px) calc(50% + 1px), calc(100% - 13px) calc(50% + 1px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+}
+
+.nz-filter input[type="text"] {
+    flex: 1;
+    min-width: 240px;
+}
+
+.nz-filter select:focus,
+.nz-filter input:focus { border-color: var(--tx3); }
+
+.nz-filter button {
+    height: 42px;
+    padding: 0 20px;
+    border: 1px solid var(--ink);
+    border-radius: 10px;
+    background: var(--ink);
+    color: #f1efea;
+    font-family: var(--body);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .2s var(--ease);
+}
+
+.nz-filter button:hover { opacity: .88; }
+
+.nz-reset {
+    font-size: 12.5px;
+    color: var(--tx2);
+    text-decoration: none;
+    padding: 0 6px;
+}
+
+.nz-reset:hover { color: var(--tx); text-decoration: underline; }
+
+.nz-count {
+    font-size: 12.5px;
+    color: var(--tx2);
+    margin: 0 0 12px;
+}
+
+.nz-count b {
+    font-family: var(--num);
+    color: var(--tx);
+}
+
+/* ---------- 표 ---------- */
+
+.nz-table-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    padding: 4px 10px;
+    overflow-x: auto;
+}
+
+.nz-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.nz-table th {
+    padding: 17px 12px 13px;
+    text-align: left;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--tx2);
+    letter-spacing: .03em;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+}
+
+.nz-table td {
+    padding: 13px 12px;
+    font-size: 12.5px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--line2);
+}
+
+.nz-table tbody tr:last-child td { border-bottom: none; }
+.nz-table tbody tr:hover { background: rgba(10, 10, 10, .018); }
+
+.nz-table .mono {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--tx2);
+}
+
+.nz-ellip,
+.nz-name,
+.nz-sub2 {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nz-name {
+    font-weight: 600;
+    color: var(--tx);
+}
+
+.nz-sub2 {
+    font-size: 11px;
+    color: var(--tx3);
+    margin-top: 2px;
+}
+
+.nz-date {
+    font-family: var(--num);
+    font-size: 11.5px;
+    color: var(--tx2);
+    white-space: nowrap;
+}
+
+.nz-none { color: var(--tx3); }
+
+.nz-plat {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 5px;
+    background: #f0f0ee;
+    font-size: 11px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+}
+
+.nz-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-family: var(--num);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    white-space: nowrap;
+}
+
+.nz-badge.ok   { background: rgba(31, 158, 110, .12); color: var(--ok); }
+.nz-badge.warn { background: rgba(201, 138, 27, .13); color: var(--warn); }
+.nz-badge.off  { background: rgba(10, 10, 10, .05);  color: var(--tx2); }
+
+.nz-tick {
+    color: var(--ok);
+    font-size: 11px;
+    margin-left: 3px;
+}
+
+.nz-err {
+    display: block;
+    color: var(--bad);
+    line-height: 1.55;
+    word-break: break-word;
+}
+
+.nz-empty {
+    text-align: center;
+    padding: 60px 0 !important;
+    color: var(--tx2);
+}
+
+/* ---------- 페이지네이션 ---------- */
+
+.nz-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 22px;
+    font-size: 12.5px;
+}
+
+.nz-pagination a {
+    color: var(--tx);
+    text-decoration: none;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--card);
+    transition: .2s var(--ease);
+}
+
+.nz-pagination a:hover { background: rgba(10, 10, 10, .05); }
+
+.nz-pagination .off {
+    color: var(--tx3);
+    padding: 8px 14px;
+}
+
+.nz-page {
+    font-family: var(--num);
+    color: var(--tx2);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+    .nz-cards { grid-template-columns: repeat(2, 1fr); }
+    .nz-filter input[type="text"] { min-width: 100%; }
+}

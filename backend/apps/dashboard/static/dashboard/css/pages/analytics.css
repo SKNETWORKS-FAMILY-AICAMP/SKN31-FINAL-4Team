@@ -1,0 +1,265 @@
+/* ============================================================
+   ANALYTICS / PLATFORM 공통 보조 스타일
+   normalization.css 위에 얹어서 사용한다.
+   ============================================================ */
+
+.ta-r { text-align: right; }
+
+/* ---------- 빈 상태 안내 ---------- */
+.nz-blank {
+    border: 1px solid var(--bd, #e5e7eb);
+    border-radius: 10px;
+    background: var(--bg2, #fafafa);
+    padding: 22px 24px;
+    margin-bottom: 20px;
+}
+
+.nz-blank strong {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--tx1, #111827);
+    margin-bottom: 8px;
+}
+
+.nz-blank p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--tx2, #6b7280);
+    margin: 0 0 6px;
+}
+
+.nz-blank p:last-child { margin-bottom: 0; }
+
+.nz-blank code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    background: rgba(0, 0, 0, .05);
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+
+.nz-blank-steps {
+    margin-top: 10px !important;
+    padding-top: 10px;
+    border-top: 1px dashed var(--bd, #e5e7eb);
+    font-size: 12.5px;
+    color: var(--tx2, #6b7280);
+}
+
+/* ---------- 2단 패널 ---------- */
+.an-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.an-panel {
+    border: 1px solid var(--bd, #e5e7eb);
+    border-radius: 10px;
+    background: var(--bg1, #fff);
+    padding: 18px 20px;
+}
+
+.an-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    color: var(--tx1, #111827);
+    margin: 0 0 14px;
+}
+
+.an-section {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--tx1, #111827);
+    margin: 24px 0 10px;
+}
+
+/* ---------- 가로 막대 ---------- */
+.an-bars {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.an-bars li {
+    display: grid;
+    grid-template-columns: 96px 1fr 64px;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+}
+
+.an-bar-name {
+    font-size: 12.5px;
+    color: var(--tx1, #111827);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.an-bar-track {
+    display: block;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, .06);
+    overflow: hidden;
+}
+
+.an-bar-track i {
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+    background: #4f46e5;
+    min-width: 2px;
+}
+
+.an-bar-track i.alt { background: #0ea5e9; }
+
+.an-bar-val {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    text-align: right;
+    color: var(--tx2, #6b7280);
+}
+
+/* ---------- 할인율 강조 ---------- */
+.an-dc {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* ---------- 썸네일 셀 ---------- */
+.nz-thumb {
+    width: 44px;
+    height: 56px;
+    border-radius: 5px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, .05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nz-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.nz-thumb.wide {
+    width: 72px;
+    height: 41px;
+}
+
+.nz-thumb-none {
+    font-size: 10px;
+    color: var(--tx3, #9ca3af);
+    letter-spacing: -.02em;
+}
+
+.nz-table td.thumb-cell { padding-top: 6px; padding-bottom: 6px; }
+
+/* ============================================================
+   확대 표 (nz-lg)
+   한 페이지 12행 기준. 행 높이를 썸네일에 맞춰 키운다.
+   ============================================================ */
+
+.nz-table.nz-lg {
+    font-size: 13px;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.nz-table.nz-lg thead th {
+    font-size: 12px;
+    padding: 10px 8px;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.nz-table.nz-lg tbody td {
+    padding: 9px 8px;
+    vertical-align: middle;
+    line-height: 1.45;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nz-table.nz-lg .nz-name {
+    font-size: 13px;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.nz-table.nz-lg .nz-sub2 {
+    font-size: 11.5px;
+    margin-top: 3px;
+}
+
+.nz-table.nz-lg .nz-plat,
+.nz-table.nz-lg .nz-badge {
+    font-size: 11.5px;
+    padding: 3px 8px;
+}
+
+.nz-table.nz-lg .nz-date { font-size: 12px; }
+
+.nz-table.nz-lg td.mono { font-size: 12.5px; }
+
+/* ---------- 정렬 가능한 헤더 ---------- */
+.nz-sortable a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 4px;
+    padding: 2px 5px;
+    margin: -2px -5px;
+    transition: background .12s ease;
+}
+
+.nz-sortable a:hover { background: rgba(0, 0, 0, .06); }
+
+.nz-arrow {
+    font-size: 9px;
+    color: #4f46e5;
+    line-height: 1;
+}
+
+
+/* ============================================================
+   정렬/폭 보정
+   ============================================================ */
+
+/* .nz-table th 가 text-align:left 를 가지므로 우선순위를 올린다. */
+.nz-table th.ta-r,
+.nz-table thead th.ta-r { text-align: right; }
+
+.nz-table td.ta-r { text-align: right; }
+
+/* 넓은 모니터에서 컬럼이 과하게 벌어지지 않게 최대 폭을 건다. */
+.nz-table-card { max-width: 1280px; }
+
+/* 제목/상품명 줄바꿈 */
+.nz-table.nz-lg .nz-name { word-break: break-word; }
+
+
+/* ---------- 날짜 2줄 표기 ---------- */
+.nz-table.nz-lg .nz-date {
+    white-space: nowrap;
+    line-height: 1.35;
+}
+
+.nz-time {
+    display: block;
+    font-size: 11px;
+    color: var(--tx2, #6b7280);
+}

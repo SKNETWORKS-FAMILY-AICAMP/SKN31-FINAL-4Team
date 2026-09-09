@@ -1,0 +1,10 @@
+{% with u=request.resolver_match.url_name %}
+<aside class="sub-sidebar">
+    <p>SYSTEM</p>
+    <a href="{% url 'dashboard:system_status' %}" {% if u == 'system_status' %}class="active"{% endif %}>시스템 상태</a>
+    <a href="{% url 'dashboard:jobs' %}"          {% if u == 'jobs' %}class="active"{% endif %}>작업 현황</a>
+    <a href="{% url 'dashboard:system_api' %}"    {% if u == 'system_api' %}class="active"{% endif %}>API 관리</a>
+    <a href="{% url 'dashboard:system_aws' %}"    {% if u == 'system_aws' %}class="active"{% endif %}>AWS 관리</a>
+    <a href="{% url 'dashboard:system_celery' %}" {% if u == 'system_celery' %}class="active"{% endif %}>Celery 로그</a>
+</aside>
+{% endwith %}

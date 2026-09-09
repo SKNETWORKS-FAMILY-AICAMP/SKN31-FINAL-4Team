@@ -12,6 +12,8 @@ from .constants import (
     PRODUCT_LINK_SELECTOR,
     ZIGZAG_BASE_URL,
 )
+# 아래 9곳에서 raise 하지만 임포트가 없어 NameError 로 대체되던 것을 수정 (2026-09-09)
+from .exceptions import ZigzagParseError
 
 class ZigzagParser:
     """

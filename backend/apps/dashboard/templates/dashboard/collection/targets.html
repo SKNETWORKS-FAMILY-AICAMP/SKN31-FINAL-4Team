@@ -5,744 +5,339 @@
 Collection Targets | FEEDIT Admin
 {% endblock %}
 
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_collection.html" %}
+{% endblock %}
+
 {% block content %}
-{% include "dashboard/components/page_header.html" %}
 
-<section class="panel">
-    {% include "dashboard/components/empty_state.html" %}
+<div class="page-header" style="margin-bottom: 25px;">
+    <div>
+        <p style="font-size:11.5px; color:var(--tx3); margin-bottom:4px; font-weight:600; text-transform:uppercase;">FEEDIT ADMIN</p>
+        <h2 style="font-size:26px; margin:0 0 6px; font-weight:700; letter-spacing:-0.5px;">Collection Targets</h2>
+        <p class="sub" style="font-size:14px; color:var(--tx2);">크롤러 수집 대상과 실행 설정을 관리합니다.</p>
+    </div>
+</div>
 
-
-<!-- SUMMARY -->
-
-<section class="run-summary-grid">
-
-    <article class="run-summary-card">
-
-        <span>
-            TOTAL TARGETS
-        </span>
-
-        <strong>
-            {{ summary.total|intcomma }}
-        </strong>
-
-        <small>
-            현재 필터 기준
-        </small>
-
-    </article>
-
-
-    <article class="run-summary-card">
-
-        <span>
-            ACTIVE
-        </span>
-
-        <strong>
-            {{ summary.active|intcomma }}
-        </strong>
-
-        <small>
-            수집 활성화
-        </small>
-
-    </article>
-
-
-    <article class="run-summary-card">
-
-        <span>
-            INACTIVE
-        </span>
-
-        <strong>
-            {{ summary.inactive|intcomma }}
-        </strong>
-
-        <small>
-            수집 중지
-        </small>
-
-    </article>
-
-
-    <article class="run-summary-card">
-
-        <span>
-            LIVE MODE
-        </span>
-
-        <strong>
-            {{ summary.live|intcomma }}
-        </strong>
-
-        <small>
-            실시간 수집
-        </small>
-
-    </article>
-
-</section>
-
-
-<!-- FILTER -->
-
-<section class="panel run-filter-panel">
-
-    <form
-        method="get"
-        class="target-filter-form"
-    >
-
-        <div class="filter-field target-search">
-
-            <label>
-                SEARCH
-            </label>
-
-            <input
-                type="text"
-                name="q"
-                value="{{ search_query }}"
-                placeholder="Target name, URL, Source"
-            >
-
+<div class="card" style="margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center;">
+    <div>
+        <div style="font-weight:700; font-size:14px; margin-bottom:4px; color:var(--tx);">플랫폼 현황 (Platform Status)</div>
+        <div style="font-size:13px; color:var(--tx2);">
+            수집 중인 주요 플랫폼: {% for s in sources %}{{ s.name|default:s.code }}{% if not forloop.last %}, {% endif %}{% endfor %}
         </div>
+    </div>
+    <div style="font-size:12px; color:var(--tx3);">
+        활성 플랫폼 {{ sources|length }}개
+    </div>
+</div>
 
+<div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:15px; margin-bottom:30px;">
+    <div class="card" style="padding:20px;">
+        <div style="font-size:12px; color:var(--tx3); margin-bottom:10px;">전체 타겟 (Total Targets)</div>
+        <div style="font-size:28px; font-weight:700; margin-bottom:8px;">{{ summary.total|intcomma }}</div>
+        <div style="font-size:12px; color:var(--tx2);">현재 필터 기준</div>
+    </div>
+    <div class="card" style="padding:20px;">
+        <div style="font-size:12px; color:var(--tx3); margin-bottom:10px;">활성 (Active)</div>
+        <div style="font-size:28px; font-weight:700; margin-bottom:8px;">{{ summary.active|intcomma }}</div>
+        <div style="font-size:12px; color:var(--tx2);">수집 활성화</div>
+    </div>
+    <div class="card" style="padding:20px;">
+        <div style="font-size:12px; color:var(--tx3); margin-bottom:10px;">비활성 (Inactive)</div>
+        <div style="font-size:28px; font-weight:700; margin-bottom:8px;">{{ summary.inactive|intcomma }}</div>
+        <div style="font-size:12px; color:var(--tx2);">수집 중지</div>
+    </div>
+    <div class="card" style="padding:20px;">
+        <div style="font-size:12px; color:var(--tx3); margin-bottom:10px;">실시간 모드 (Live Mode)</div>
+        <div style="font-size:28px; font-weight:700; margin-bottom:8px;">{{ summary.live|intcomma }}</div>
+        <div style="font-size:12px; color:var(--tx2);">실시간 수집</div>
+    </div>
+</div>
 
-        <div class="filter-field">
+<div style="display:flex; gap:10px; margin-bottom: 20px;">
+    <button type="button" class="btn pri" style="border-radius: 6px;" onclick="document.getElementById('create-modal').style.display='flex';">+ URL 등록(Register)</button>
+    <button type="submit" form="delete-form" class="btn danger" style="border-radius: 6px;" onclick="return confirm('선택한 항목들을 정말 삭제하시겠습니까?');">선택 제거(Delete)</button>
+</div>
 
-            <label>
-                SOURCE
-            </label>
-
-            <select name="source">
-
-                <option value="">
-                    All
-                </option>
-
-                {% for source in sources %}
-
-                    <option
-                        value="{{ source.id }}"
-
-                        {% if selected_source == source.id|stringformat:"s" %}
-                            selected
-                        {% endif %}
-                    >
-                        {{ source.code }}
-                    </option>
-
-                {% endfor %}
-
-            </select>
-
+<form method="get" class="card" style="margin-bottom: 30px;">
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+        <div style="flex:1; min-width: 250px;">
+            <label style="display:block; font-size:11px; color:var(--tx2); margin-bottom:5px;">검색(Search)</label>
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Target name, URL" style="width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:var(--card); font-size:12.5px;">
         </div>
-
-
-        <div class="filter-field">
-
-            <label>
-                TARGET TYPE
-            </label>
-
-            <select name="target_type">
-
-                <option value="">
-                    All
-                </option>
-
-                {% for value, label in target_type_choices %}
-
-                    <option
-                        value="{{ value }}"
-
-                        {% if selected_target_type == value %}
-                            selected
-                        {% endif %}
-                    >
-                        {{ label }}
-                    </option>
-
-                {% endfor %}
-
-            </select>
-
-        </div>
-
-
-        <div class="filter-field">
-
-            <label>
-                MODE
-            </label>
-
-            <select name="collection_mode">
-
-                <option value="">
-                    All
-                </option>
-
-                {% for value, label in collection_mode_choices %}
-
-                    <option
-                        value="{{ value }}"
-
-                        {% if selected_collection_mode == value %}
-                            selected
-                        {% endif %}
-                    >
-                        {{ label }}
-                    </option>
-
-                {% endfor %}
-
-            </select>
-
-        </div>
-
-
-        <div class="filter-field">
-
-            <label>
-                STATUS
-            </label>
-
-            <select name="active">
-
-                <option value="">
-                    All
-                </option>
-
-                <option
-                    value="1"
-
-                    {% if selected_active == "1" %}
-                        selected
-                    {% endif %}
-                >
-                    Active
-                </option>
-
-                <option
-                    value="0"
-
-                    {% if selected_active == "0" %}
-                        selected
-                    {% endif %}
-                >
-                    Inactive
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <div class="filter-actions">
-
-            <button
-                type="submit"
-                class="btn btn-dark"
-            >
-                Apply
-            </button>
-
-            <a
-                href="{% url 'dashboard:collection_targets' %}"
-                class="btn btn-outline"
-            >
-                Reset
-            </a>
-
-        </div>
-
-    </form>
-
-</section>
-
-
-<!-- TARGET TABLE -->
-
-<section class="panel">
-
-    <div class="panel-header row-between">
-
         <div>
-
-            <p>
-                CRAWLER CONFIGURATION
-            </p>
-
-            <h2>
-                Crawl Targets
-            </h2>
-
+            <label style="display:block; font-size:11px; color:var(--tx2); margin-bottom:5px;">플랫폼(Source)</label>
+            <select name="source" style="padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:var(--card); font-size:12.5px; min-width:120px;">
+                <option value="">All</option>
+                {% for source in sources %}
+                <option value="{{ source.id }}" {% if selected_source == source.id|stringformat:"s" %}selected{% endif %}>{{ source.name|default:source.code }}</option>
+                {% endfor %}
+            </select>
         </div>
-
-
-        <span class="count-chip">
-
-            {{ page_obj.paginator.count|intcomma }}
-            TARGETS
-
-        </span>
-
-    </div>
-
-
-    <div class="table-wrap">
-
-        <table class="admin-table target-table">
-
-            <thead>
-
-                <tr>
-
-                    <th>ID</th>
-                    <th>SOURCE</th>
-                    <th>TARGET NAME</th>
-                    <th>TYPE</th>
-                    <th>MODE</th>
-                    <th>STATUS</th>
-                    <th>INTERVAL</th>
-                    <th>PRIORITY</th>
-                    <th>LAST CRAWLED</th>
-                    <th>NEXT CRAWL</th>
-                    <th>ACTION</th>
-
-                </tr>
-
-            </thead>
-
-
-            <tbody>
-
-            {% for target in targets %}
-
-                <tr>
-
-                    <td>
-
-                        <strong>
-                            #{{ target.id }}
-                        </strong>
-
-                    </td>
-
-
-                    <td>
-
-                        <div class="source-cell">
-
-                            <strong>
-                                {{ target.source.code }}
-                            </strong>
-
-                            <small>
-                                {{ target.source.name }}
-                            </small>
-
-                        </div>
-
-                    </td>
-
-
-                    <td>
-
-                        <div class="target-cell">
-
-                            <strong>
-
-                                {% if target.name %}
-
-                                    {{ target.name }}
-
-                                {% else %}
-
-                                    Target #{{ target.id }}
-
-                                {% endif %}
-
-                            </strong>
-
-
-                            {% if target.target_url %}
-
-                                <small
-                                    title="{{ target.target_url }}"
-                                >
-
-                                    {{ target.target_url|truncatechars:50 }}
-
-                                </small>
-
-                            {% endif %}
-
-                        </div>
-
-                    </td>
-
-
-                    <td>
-
-                        <span class="type-chip">
-
-                            {{ target.get_target_type_display }}
-
-                        </span>
-
-                    </td>
-
-
-                    <td>
-
-                        <span
-                            class="
-                                target-mode
-                                target-mode--{{ target.collection_mode|lower }}
-                            "
-                        >
-
-                            {{ target.get_collection_mode_display }}
-
-                        </span>
-
-                    </td>
-
-
-                    <td>
-
-                        {% if target.is_active %}
-
-                            <span class="target-status target-status--active">
-
-                                <i></i>
-                                ACTIVE
-
-                            </span>
-
-                        {% else %}
-
-                            <span class="target-status target-status--inactive">
-
-                                <i></i>
-                                INACTIVE
-
-                            </span>
-
-                        {% endif %}
-
-                    </td>
-
-
-                    <td>
-
-                        <strong>
-
-                            {{ target.interval_minutes|intcomma }}
-
-                        </strong>
-
-                        <small class="unit-text">
-
-                            min
-
-                        </small>
-
-                    </td>
-
-
-                    <td>
-
-                        <span class="priority-chip">
-
-                            P{{ target.priority }}
-
-                        </span>
-
-                    </td>
-
-
-                    <td>
-
-                        {% if target.last_crawled_at %}
-
-                            <div class="datetime-cell">
-
-                                <strong>
-
-                                    {{ target.last_crawled_at|date:"m-d H:i" }}
-
-                                </strong>
-
-                                <small>
-
-                                    {{ target.last_crawled_at|date:"Y" }}
-
-                                </small>
-
-                            </div>
-
-                        {% else %}
-
-                            <span class="muted">
-                                Never
-                            </span>
-
-                        {% endif %}
-
-                    </td>
-
-
-                    <td>
-
-                        {% if target.next_crawl_at %}
-
-                            <div class="datetime-cell">
-
-                                <strong>
-
-                                    {{ target.next_crawl_at|date:"m-d H:i" }}
-
-                                </strong>
-
-                                <small>
-
-                                    {{ target.next_crawl_at|date:"Y" }}
-
-                                </small>
-
-                            </div>
-
-                        {% else %}
-
-                            <span class="muted">
-                                -
-                            </span>
-
-                        {% endif %}
-
-                    </td>
-
-
-                    <td>
-
-                        <div class="target-actions">
-
-                            <button
-                                type="button"
-                                class="btn-icon"
-                                title="Run now"
-                            >
-                                ▶
-                            </button>
-
-
-                            <button
-                                type="button"
-                                class="btn-icon"
-                                title="View params"
-                                data-target-toggle="{{ target.id }}"
-                            >
-                                ⋯
-                            </button>
-
-                        </div>
-
-                    </td>
-
-                </tr>
-
-
-                <!-- DETAIL -->
-
-                <tr
-                    class="run-detail-row"
-                    id="target-detail-{{ target.id }}"
-                >
-
-                    <td colspan="11">
-
-                        <div class="run-detail">
-
-                            <div class="run-detail-grid">
-
-                                <div>
-
-                                    <span>
-                                        TARGET ID
-                                    </span>
-
-                                    <strong>
-                                        {{ target.id }}
-                                    </strong>
-
-                                </div>
-
-
-                                <div>
-
-                                    <span>
-                                        SOURCE
-                                    </span>
-
-                                    <strong>
-                                        {{ target.source.code }}
-                                    </strong>
-
-                                </div>
-
-
-                                <div>
-
-                                    <span>
-                                        MODE
-                                    </span>
-
-                                    <strong>
-                                        {{ target.collection_mode }}
-                                    </strong>
-
-                                </div>
-
-
-                                <div>
-
-                                    <span>
-                                        INTERVAL
-                                    </span>
-
-                                    <strong>
-                                        {{ target.interval_minutes }} min
-                                    </strong>
-
-                                </div>
-
-                            </div>
-
-
-                            {% if target.target_url %}
-
-                                <div class="run-detail-block">
-
-                                    <span>
-                                        TARGET URL
-                                    </span>
-
-                                    <p>
-                                        {{ target.target_url }}
-                                    </p>
-
-                                </div>
-
-                            {% endif %}
-
-
-                            <div class="run-detail-block">
-
-                                <span>
-                                    PARAMS
-                                </span>
-
-                                <pre>{{ target.params }}</pre>
-
-                            </div>
-
-
-                            <div class="run-detail-block">
-
-                                <span>
-                                    COLLECTION CONFIG
-                                </span>
-
-                                <p>
-                                    Target type:
-                                    {{ target.target_type }}
-                                    /
-                                    Priority:
-                                    {{ target.priority }}
-                                    /
-                                    Active:
-                                    {{ target.is_active }}
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </td>
-
-                </tr>
-
-
-            {% empty %}
-
-                <tr>
-
-                    <td
-                        colspan="11"
-                        class="empty-table-cell"
-                    >
-
-                        등록된 크롤러 타깃이 없습니다.
-
-                    </td>
-
-                </tr>
-
-            {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-    <!-- PAGINATION -->
-
-    {% if page_obj.paginator.num_pages > 1 %}
-
-        <div class="pagination">
-
-            {% if page_obj.has_previous %}
-
-                <a
-                    href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&source={{ selected_source }}&target_type={{ selected_target_type }}&collection_mode={{ selected_collection_mode }}&active={{ selected_active }}"
-                >
-                    ← Prev
-                </a>
-
-            {% endif %}
-
-
-            <span>
-
-                {{ page_obj.number }}
-
-                /
-
-                {{ page_obj.paginator.num_pages }}
-
-            </span>
-
-
-            {% if page_obj.has_next %}
-
-                <a
-                    href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&source={{ selected_source }}&target_type={{ selected_target_type }}&collection_mode={{ selected_collection_mode }}&active={{ selected_active }}"
-                >
-                    Next →
-                </a>
-
-            {% endif %}
-
+        <div>
+            <label style="display:block; font-size:11px; color:var(--tx2); margin-bottom:5px;">수집 유형(Type)</label>
+            <select name="target_type" style="padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:var(--card); font-size:12.5px; min-width:120px;">
+                <option value="">All</option>
+                {% for value, label in target_type_choices %}
+                <option value="{{ value }}" {% if selected_target_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
         </div>
+        <div>
+            <label style="display:block; font-size:11px; color:var(--tx2); margin-bottom:5px;">수집 모드(Mode)</label>
+            <select name="collection_mode" style="padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:var(--card); font-size:12.5px; min-width:120px;">
+                <option value="">All</option>
+                {% for value, label in collection_mode_choices %}
+                <option value="{{ value }}" {% if selected_collection_mode == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label style="display:block; font-size:11px; color:var(--tx2); margin-bottom:5px;">상태(Status)</label>
+            <select name="active" style="padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:var(--card); font-size:12.5px; min-width:120px;">
+                <option value="">All</option>
+                <option value="1" {% if selected_active == "1" %}selected{% endif %}>Active</option>
+                <option value="0" {% if selected_active == "0" %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div style="align-self: flex-end;">
+            <button type="submit" class="btn pri" style="border-radius: 8px;">검색(Search)</button>
+        </div>
+    </div>
+</form>
 
+<div style="display:flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px;">
+    <div>
+        <p style="font-size:11.5px; color:var(--tx3); margin-bottom:4px; font-weight:600;">크롤러 설정 (CRAWLER CONFIGURATION)</p>
+        <h2 style="font-size:22px; margin:0; font-weight:700; letter-spacing:-0.5px;">수집 타겟 (Crawl Targets)</h2>
+    </div>
+    <div>
+        <span style="font-size:13px; font-weight:600; padding:6px 12px; background:rgba(10,10,10,0.06); color:var(--tx2); border-radius:20px;">{{ summary.total }} Targets</span>
+    </div>
+</div>
+
+<form id="delete-form" method="POST" action="{% url 'dashboard:collection_targets_delete' %}">
+    {% csrf_token %}
+    <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
+    <div class="card" style="padding:0; overflow-x:auto;">
+        <div class="tWrap" style="max-height: none;">
+            <table class="dTable" style="width:100%; min-width:1000px;">
+                <thead>
+                    <tr>
+                        <th style="width: 30px; text-align: center; padding: 12px 8px;"><input type="checkbox" onclick="document.querySelectorAll('input[name=target_ids]').forEach(cb => cb.checked = this.checked);"></th>
+                        <th style="width: 40px; padding: 12px 8px; font-size: 11px;">ID</th>
+                        <th style="width: 80px; padding: 12px 8px; font-size: 11px;">SOURCE</th>
+                        <th style="padding: 12px 8px; font-size: 11px;">TARGET NAME</th>
+                        <th style="width: 80px; padding: 12px 8px; font-size: 11px;">TYPE</th>
+                        <th style="width: 70px; padding: 12px 8px; font-size: 11px;">MODE</th>
+                        <th style="width: 80px; padding: 12px 8px; font-size: 11px;">STATUS</th>
+                        <th style="width: 100px; padding: 12px 8px; font-size: 11px;">INTERVAL</th>
+                        <th style="width: 60px; padding: 12px 8px; font-size: 11px;">PRIORITY</th>
+                        <th style="width: 110px; padding: 12px 8px; font-size: 11px;">LAST CRAWLED</th>
+                        <th style="width: 110px; padding: 12px 8px; font-size: 11px;">NEXT CRAWL</th>
+                        <th style="width: 40px; padding: 12px 8px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for target in targets %}
+                    <tr>
+                        <td style="text-align: center; padding: 14px 8px;"><input type="checkbox" name="target_ids" value="{{ target.id }}"></td>
+                        <td style="font-family: var(--num); font-weight: 600; padding: 14px 8px; font-size: 14.5px;">{{ target.id }}</td>
+                        <td style="font-weight: 700; padding: 14px 8px; font-size: 14.5px;">{{ target.source.name|default:target.source.code }}</td>
+                        <td style="padding: 14px 8px;">
+                            <div style="font-weight: 700; font-size: 14.5px; margin-bottom: 4px;">{{ target.name }}</div>
+                            <div class="dMono" style="max-width: 250px; font-size: 12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                <a href="{{ target.target_url }}" target="_blank" style="color:var(--tx3); text-decoration:none;">{{ target.target_url }}</a>
+                            </div>
+                        </td>
+                        <td style="padding: 14px 8px;"><span class="pill" style="color:var(--tx3); border-color:var(--line); padding:4px 8px; font-size:11px;">{{ target.get_target_type_display }}</span></td>
+                        <td style="font-weight:500; padding: 14px 8px; font-size: 14px;">{{ target.get_collection_mode_display }}</td>
+                        <td style="padding: 14px 8px;">
+                            {% if target.is_active %}
+                            <span class="pill settled" style="border-color: #1f9e6e; color: #1f9e6e; font-weight:500; padding:4px 8px; font-size:11px;">ACTIVE</span>
+                            {% else %}
+                            <span class="pill notready" style="font-weight:500; padding:4px 8px; font-size:11px;">INACTIVE</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 14px 8px;">
+                            <strong class="dNum" style="font-size: 15px;">{{ target.interval_minutes|intcomma }}</strong> <span style="font-size:12px; color:var(--tx2);">min</span>
+                        </td>
+                        <td style="padding: 14px 8px;"><span class="pill dim" style="background:transparent; border-color:var(--line); padding:4px 8px; font-size:11px; color:var(--tx3);">P{{ target.priority }}</span></td>
+                        <td style="padding: 14px 8px;">
+                            {% if target.last_crawled_at %}
+                            <div style="font-weight: 700; font-size: 13px; margin-bottom:2px;">{{ target.last_crawled_at|date:"m-d H:i" }}</div>
+                            <div class="dNum" style="font-size: 11.5px; color:var(--tx3);">{{ target.last_crawled_at|date:"Y" }}</div>
+                            {% else %}
+                            <span style="color:var(--tx3); font-size: 14.5px;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 14px 8px;">
+                            {% if target.next_crawl_at %}
+                            <div style="font-weight: 700; font-size: 13px; margin-bottom:2px;">{{ target.next_crawl_at|date:"m-d H:i" }}</div>
+                            <div class="dNum" style="font-size: 11.5px; color:var(--tx3);">{{ target.next_crawl_at|date:"Y" }}</div>
+                            {% else %}
+                            <span style="color:var(--tx3); font-size: 14.5px;">-</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 14px 8px; text-align:right;">
+                        <button type="button" class="btn" style="width:28px; height:28px; padding:0; border-radius:50%; border:1px solid var(--line); background:var(--card); display:inline-flex; align-items:center; justify-content:center; cursor:pointer;" title="Edit Target" onclick="document.getElementById('update-modal-{{ target.id }}').style.display='flex';">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--tx2); margin-left:2px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        </button>
+                        
+                        <div id="update-modal-{{ target.id }}" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000; text-align:left;">
+                            <div class="card" style="width:400px; padding:25px; background:var(--bg); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1);">
+                                <h3 style="margin-top:0; font-size:18px; margin-bottom:20px;">타겟 정보 상세/수정</h3>
+                                <form method="POST" action="{% url 'dashboard:collection_targets_update' target.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
+                                    
+                                    <div style="margin-bottom:15px;">
+                                        <label style="display:block; font-size:12px; margin-bottom:5px; color:var(--tx2); font-weight:600;">Target Name <span style="color:#d93025;">*</span></label>
+                                        <input type="text" name="name" value="{{ target.name }}" required style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card);">
+                                    </div>
+                                    
+                                    <div style="margin-bottom:15px;">
+                                        <label style="display:block; font-size:12px; margin-bottom:5px; color:var(--tx2); font-weight:600;">Target URL <span style="color:#d93025;">*</span></label>
+                                        <input type="url" name="target_url" value="{{ target.target_url }}" required style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card);">
+                                    </div>
+                                    
+                                    <div style="margin-bottom:15px;">
+                                        <label style="display:block; font-size:12px; margin-bottom:5px; color:var(--tx2); font-weight:600;">Source <span style="color:#d93025;">*</span></label>
+                                        <select name="source" required style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card);">
+                                            {% for source in sources %}
+                                            <option value="{{ source.id }}" {% if source.id == target.source.id %}selected{% endif %}>{{ source.name|default:source.code }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div style="margin-bottom:15px; display:flex; gap:10px;">
+                                        <div style="flex:1;">
+                                            <label style="display:block; font-size:12px; margin-bottom:5px; color:var(--tx2); font-weight:600;">Type</label>
+                                            <select name="target_type" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card);">
+                                                {% for value, label in target_type_choices %}
+                                                <option value="{{ value }}" {% if value == target.target_type %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div style="flex:1;">
+                                            <label style="display:block; font-size:12px; margin-bottom:5px; color:var(--tx2); font-weight:600;">Mode</label>
+                                            <select name="collection_mode" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card);">
+                                                {% for value, label in collection_mode_choices %}
+                                                <option value="{{ value }}" {% if value == target.collection_mode %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="margin-bottom:15px; display:flex; gap:10px;">
+                                        <div style="flex:1;">
+                                            <label style="display:block; font-size:12px; margin-bottom:5px; color:var(--tx2); font-weight:600;">Interval (min)</label>
+                                            <input type="number" name="interval_minutes" value="{{ target.interval_minutes }}" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card);">
+                                        </div>
+                                        <div style="flex:1;">
+                                            <label style="display:block; font-size:12px; margin-bottom:5px; color:var(--tx2); font-weight:600;">Active Status</label>
+                                            <div style="padding:10px 0;">
+                                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                                    <input type="checkbox" name="is_active" {% if target.is_active %}checked{% endif %}>
+                                                    <span style="font-size:14px;">Active</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:25px;">
+                                        <button type="button" class="btn" style="border:1px solid var(--line); border-radius:6px; padding:8px 16px;" onclick="document.getElementById('update-modal-{{ target.id }}').style.display='none';">닫기 / 취소</button>
+                                        <button type="submit" class="btn pri" style="border-radius:6px; padding:8px 16px;">수정 저장</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="12" class="dEmpty" style="padding: 30px; text-align:center;">
+                            검색 조건에 맞는 타겟이 없습니다.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
+
+{% if page_obj.has_other_pages %}
+<div style="display:flex; justify-content:center; gap:8px; margin-top:30px;">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&source={{ selected_source }}&target_type={{ selected_target_type }}&collection_mode={{ selected_collection_mode }}&active={{ selected_active }}" class="btn" style="padding:6px 12px; background:var(--card); border:1px solid var(--line); border-radius:6px; color:var(--tx2); text-decoration:none;">&lt;</a>
     {% endif %}
 
-</section>
+    {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <span class="btn" style="padding:6px 12px; background:var(--tx); border:1px solid var(--tx); border-radius:6px; color:var(--bg); font-weight:700;">{{ num }}</span>
+        {% else %}
+        <a href="?page={{ num }}&q={{ search_query }}&source={{ selected_source }}&target_type={{ selected_target_type }}&collection_mode={{ selected_collection_mode }}&active={{ selected_active }}" class="btn" style="padding:6px 12px; background:var(--card); border:1px solid var(--line); border-radius:6px; color:var(--tx2); text-decoration:none;">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&source={{ selected_source }}&target_type={{ selected_target_type }}&collection_mode={{ selected_collection_mode }}&active={{ selected_active }}" class="btn" style="padding:6px 12px; background:var(--card); border:1px solid var(--line); border-radius:6px; color:var(--tx2); text-decoration:none;">&gt;</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<div id="create-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;">
+    <div class="card" style="width:400px; padding:25px; background:var(--bg); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.1);">
+        <h3 style="margin-top:0; font-size:18px; margin-bottom:20px;">URL 등록</h3>
+        <form method="POST" action="{% url 'dashboard:collection_targets_create' %}">
+            {% csrf_token %}
+            <input type="hidden" name="return_url" value="{{ request.get_full_path }}">
+            
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:12px; margin-bottom:5px; color:var(--tx2); font-weight:600;">Target Name <span style="color:#d93025;">*</span></label>
+                <input type="text" name="name" required style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card);">
+            </div>
+            
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:12px; margin-bottom:5px; color:var(--tx2); font-weight:600;">Target URL <span style="color:#d93025;">*</span></label>
+                <input type="url" name="target_url" required style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card);">
+            </div>
+            
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:12px; margin-bottom:5px; color:var(--tx2); font-weight:600;">Source <span style="color:#d93025;">*</span></label>
+                <select name="source" required style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card);">
+                    {% for source in sources %}
+                    <option value="{{ source.id }}">{{ source.name|default:source.code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div style="margin-bottom:15px; display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label style="display:block; font-size:12px; margin-bottom:5px; color:var(--tx2); font-weight:600;">Type</label>
+                    <select name="target_type" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card);">
+                        {% for value, label in target_type_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label style="display:block; font-size:12px; margin-bottom:5px; color:var(--tx2); font-weight:600;">Mode</label>
+                    <select name="collection_mode" style="width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card);">
+                        {% for value, label in collection_mode_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:25px;">
+                <button type="button" class="btn" style="border:1px solid var(--line); border-radius:6px; padding:8px 16px;" onclick="document.getElementById('create-modal').style.display='none';">취소</button>
+                <button type="submit" class="btn pri" style="border-radius:6px; padding:8px 16px;">등록하기</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 {% endblock %}

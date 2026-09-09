@@ -1,10 +1,156 @@
 {% extends "dashboard/base.html" %}
+{% load humanize %}
 
-{% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
+{% block title %}작업 현황 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}{% include "dashboard/components/admin_page_css.html" %}{% endblock %}
+
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_system.html" %}{% endblock %}
 
 {% block content %}
-{% include "dashboard/components/page_header.html" %}
-<section class="panel">
-    {% include "dashboard/components/empty_state.html" %}
-</section>
+<div class="adm-page">
+
+<div class="page-header">
+    <div>
+        <p class="page-eyebrow">SYSTEM</p>
+        <h1 class="adm-title">작업 현황</h1>
+        <p class="adm-sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="adm-cards">
+    <div class="adm-card">
+        <span>전체 실행</span><strong>{{ summary.total|intcomma }}</strong><small>CrawlRun</small>
+    </div>
+    <div class="adm-card">
+        <span>오늘</span><strong>{{ summary.today|intcomma }}</strong><small>오늘 시작된 실행</small>
+    </div>
+    <div class="adm-card">
+        <span>실행 중</span>
+        <strong {% if summary.running %}class="warn"{% endif %}>{{ summary.running|intcomma }}</strong>
+        <small>RUNNING</small>
+    </div>
+    <div class="adm-card">
+        <span>실패</span>
+        <strong {% if summary.failed %}class="bad"{% endif %}>{{ summary.failed|intcomma }}</strong>
+        <small>FAILED</small>
+    </div>
+    <div class="adm-card">
+        <span>대기 중 대상</span>
+        <strong {% if summary.due %}class="warn"{% endif %}>{{ summary.due|intcomma }}</strong>
+        <small>주기 도래</small>
+    </div>
+</div>
+
+{% if summary.due %}
+<div class="adm-alert">
+    실행 시각이 지난 대상이 <b>{{ summary.due }}건</b> 있습니다.
+    Celery 워커가 없어 자동으로 처리되지 않으므로
+    <a href="{% url 'dashboard:run_crawl' %}">수동 크롤링 실행</a>에서 직접 돌려야 합니다.
+</div>
+{% endif %}
+
+{% if by_status %}
+<div class="adm-chips">
+    <span class="adm-chip" style="border:0;background:none;padding-left:0;">상태별</span>
+    {% for row in by_status %}
+    <span class="adm-chip">{{ row.status }} · {{ row.n|intcomma }}</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="adm-panel">
+    <div class="adm-panel-head"><p>BY PLATFORM</p><h2>플랫폼별 실행</h2></div>
+    <table class="adm-table">
+        <colgroup><col><col style="width:82px"><col style="width:82px"><col style="width:82px"><col style="width:82px"><col style="width:118px"></colgroup>
+        <thead>
+            <tr><th>플랫폼</th><th class="r">전체</th><th class="r">성공</th><th class="r">실패</th><th class="r">실행 중</th><th>최근 실행</th></tr>
+        </thead>
+        <tbody>
+            {% for row in by_source %}
+            <tr>
+                <td class="strong">{{ row.label }} <span class="dim mono">{{ row.code }}</span></td>
+                <td class="r">{{ row.total|intcomma }}</td>
+                <td class="r">{{ row.success|intcomma }}</td>
+                <td class="r">{% if row.failed %}<span style="color:#a33232;font-weight:600;">{{ row.failed|intcomma }}</span>{% else %}0{% endif %}</td>
+                <td class="r">{{ row.running|intcomma }}</td>
+                <td class="dim">{% if row.last %}{{ row.last.started_at|date:"m-d H:i" }}{% else %}-{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="adm-empty">실행 이력이 없습니다.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if running_runs %}
+<div class="adm-panel">
+    <div class="adm-panel-head"><p>IN PROGRESS</p><h2>실행 중인 작업</h2></div>
+    <table class="adm-table">
+        <colgroup><col style="width:58px"><col style="width:88px"><col><col style="width:130px"></colgroup>
+        <thead><tr><th>RUN</th><th>플랫폼</th><th>대상</th><th>시작 시각</th></tr></thead>
+        <tbody>
+            {% for run in running_runs %}
+            <tr>
+                <td class="mono">{{ run.id }}</td>
+                <td>{{ run.source.code }}</td>
+                <td class="strong">{% if run.crawl_target %}{{ run.crawl_target.name }}{% else %}{{ run.target|default:"-" }}{% endif %}</td>
+                <td class="dim">{{ run.started_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>WAITING</p>
+        <h2>실행 대기 중인 대상</h2>
+    </div>
+    <table class="adm-table">
+        <colgroup><col style="width:58px"><col style="width:88px"><col><col style="width:82px"><col style="width:66px"><col style="width:118px"></colgroup>
+        <thead>
+            <tr><th>ID</th><th>플랫폼</th><th>대상</th><th class="r">주기(분)</th><th class="r">우선</th><th>예정 시각</th></tr>
+        </thead>
+        <tbody>
+            {% for target in due_targets %}
+            <tr>
+                <td class="mono">{{ target.id }}</td>
+                <td>{{ target.source.code }}</td>
+                <td class="strong">{{ target.name }}</td>
+                <td class="r">{{ target.interval_minutes|intcomma }}</td>
+                <td class="r">{{ target.priority }}</td>
+                <td class="dim">{% if target.next_crawl_at %}{{ target.next_crawl_at|date:"m-d H:i" }}{% else %}미실행{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="adm-empty">대기 중인 대상이 없습니다.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="adm-panel">
+    <div class="adm-panel-head">
+        <p>FAILURE</p>
+        <h2>실패 사유 상위</h2>
+    </div>
+    <table class="adm-table">
+        <colgroup><col style="width:150px"><col><col style="width:86px"></colgroup>
+        <thead><tr><th>오류 코드</th><th>메시지</th><th class="r">건수</th></tr></thead>
+        <tbody>
+            {% for row in top_reasons %}
+            <tr>
+                <td><span class="adm-badge bad">{{ row.code }}</span></td>
+                <td title="{{ row.message }}">{{ row.message }}</td>
+                <td class="r strong">{{ row.count|intcomma }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="adm-empty">실패한 실행이 없습니다.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</div>
 {% endblock %}

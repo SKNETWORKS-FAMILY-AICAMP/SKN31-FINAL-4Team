@@ -287,7 +287,8 @@ def normalize_pending_musinsa_categories(
 ) -> dict:
 
     raw_documents = (
-        _get_musinsa_raw_documents(
+        # _get_musinsa_raw_documents -> _get_pending_musinsa_raw_documents (2026-09-09)
+        _get_pending_musinsa_raw_documents(
             limit=limit,
             crawl_run_id=crawl_run_id,
         )
@@ -311,12 +312,15 @@ def normalize_pending_musinsa_categories(
         result["raw_documents"] += 1
 
         try:
-            raw_data = _load_raw_json(
-                raw_document,
+            # _load_raw_json -> _load_raw_document_json (2026-09-09)
+            # 키워드 전용 인자라 호출 형태도 함께 수정
+            raw_data = _load_raw_document_json(
+                raw_document=raw_document,
                 s3_client=s3,
             )
 
-            payload = _extract_payload(
+            # _extract_payload -> _extract_parsed_payload (2026-09-09)
+            payload = _extract_parsed_payload(
                 raw_data
             )
 

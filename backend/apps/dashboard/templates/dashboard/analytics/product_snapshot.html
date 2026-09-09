@@ -1,0 +1,132 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}상품 스냅샷 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/analytics.css' %}">
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_analytics.html" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">ANALYTICS</p>
+        <h2 class="page-title">상품 스냅샷</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="nz-cards">
+    <div class="nz-card">
+        <span class="nz-label">상품 스냅샷</span>
+        <strong class="nz-value">{{ summary.snapshot_rows|intcomma }}</strong>
+        <span class="nz-caption">ProductSourceSnapshot</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">리셀 스냅샷</span>
+        <strong class="nz-value">{{ summary.resale_rows|intcomma }}</strong>
+        <span class="nz-caption">ResaleSnapshot</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">콘텐츠 스냅샷</span>
+        <strong class="nz-value">{{ summary.content_rows|intcomma }}</strong>
+        <span class="nz-caption">ContentSnapshot</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">관측일 수</span>
+        <strong class="nz-value">{{ summary.observed_days|intcomma }}</strong>
+        <span class="nz-caption">일자 종류</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">최근 관측</span>
+        <strong class="nz-value">{{ summary.latest_observed|date:"m-d"|default:"-" }}</strong>
+        <span class="nz-caption">observed_at</span>
+    </div>
+</div>
+
+{% if daily_counts %}
+<div class="nz-chipbar">
+    <span class="nz-chipbar-label">일자별 스냅샷</span>
+    {% for row in daily_counts %}
+    <span class="nz-chip">{{ row.day|date:"m-d" }} <b>{{ row.n|intcomma }}</b></span>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if not summary.snapshot_rows %}
+<div class="nz-blank">
+    <strong>아직 적재된 상품 스냅샷이 없습니다.</strong>
+    <p>스냅샷은 같은 상품을 날짜별로 반복 관측해 가격·순위 변화를 남기는 테이블입니다. 수집을 매일 돌려야 시계열이 쌓이며, 지나간 날짜는 나중에 복구할 수 없습니다.</p>
+</div>
+{% endif %}
+
+<form method="get" class="nz-filter">
+    <select name="source">
+        <option value="">전체 플랫폼</option>
+        {% for src in sources %}
+        <option value="{{ src.id }}" {% if selected_source == src.id|stringformat:"s" %}selected{% endif %}>{{ src.label }}</option>
+        {% endfor %}
+    </select>
+    <input type="text" name="q" value="{{ search_query }}" placeholder="상품명 / 상품 ID">
+    <button type="submit">검색</button>
+    <a href="{% url 'dashboard:product_snapshot' %}" class="nz-reset">초기화</a>
+</form>
+
+<p class="nz-count">조회 결과 <b>{{ filtered_count|intcomma }}</b>건</p>
+
+<div class="nz-table-card">
+<table class="nz-table nz-lg">
+    <colgroup>
+        <col style="width:66px"><col style="width:78px"><col style="width:78px"><col><col style="width:114px">
+        <col style="width:92px"><col style="width:74px"><col style="width:70px">
+        <col style="width:82px"><col style="width:70px"><col style="width:96px">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>플랫폼</th>
+            <th>이미지</th>
+            <th>상품명</th>
+            <th>관측일시</th>
+            <th class="ta-r">판매가</th>
+            <th class="ta-r">할인</th>
+            <th class="ta-r">평점</th>
+            <th class="ta-r">리뷰</th>
+            <th class="ta-r">순위</th>
+            <th>재고</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td class="mono">{{ row.id }}</td>
+            <td><span class="nz-plat">{{ row.product_source.source.code }}</span></td>
+            {% include "dashboard/components/thumb_cell.html" with url=row.product_source.thumbnail_url w=64 h=82 %}
+            <td>
+                <strong class="nz-name" title="{{ row.product_source.source_name }}">{{ row.product_source.source_name|default:"-" }}</strong>
+                <span class="nz-sub2">{{ row.product_source.source_product_id }}</span>
+            </td>
+            <td class="nz-date">{{ row.observed_at|date:"Y-m-d" }}<span class="nz-time">{{ row.observed_at|date:"H:i" }}</span></td>
+            <td class="ta-r mono">{% if row.sale_price %}{{ row.sale_price|floatformat:0|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.discount_rate %}<span class="an-dc">{{ row.discount_rate|floatformat:0 }}%</span>{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.rating %}{{ row.rating|floatformat:1 }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.review_count %}{{ row.review_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.rank_position %}{{ row.rank_position }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td>{% if row.stock_status %}<span class="nz-badge off">{{ row.stock_status }}</span>{% else %}<span class="nz-none">-</span>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="11" class="nz-empty">조건에 맞는 스냅샷이 없습니다.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% include "dashboard/components/pagination_qs.html" %}
+
+{% endblock %}

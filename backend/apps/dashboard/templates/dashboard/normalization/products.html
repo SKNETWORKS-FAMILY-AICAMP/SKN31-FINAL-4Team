@@ -1,10 +1,147 @@
 {% extends "dashboard/base.html" %}
+{% load static humanize %}
 
-{% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
+{% block title %}정규화 성공 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/analytics.css' %}">
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_normalized.html" %}
+{% endblock %}
 
 {% block content %}
-{% include "dashboard/components/page_header.html" %}
-<section class="panel">
-    {% include "dashboard/components/empty_state.html" %}
-</section>
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">FEEDIT ADMIN</p>
+        <h2 class="page-title">정규화 성공</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<!-- 요약 -->
+<div class="nz-cards">
+    <div class="nz-card">
+        <span class="nz-label">원본 문서</span>
+        <strong class="nz-value">{{ summary.total|intcomma }}</strong>
+        <span class="nz-caption">RawDocument 전체</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">정규화 성공</span>
+        <strong class="nz-value ok">{{ summary.success|intcomma }}</strong>
+        <span class="nz-caption">SUCCESS</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">정규화 실패</span>
+        <strong class="nz-value bad">{{ summary.failed|intcomma }}</strong>
+        <span class="nz-caption">FAILED</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">대기</span>
+        <strong class="nz-value">{{ summary.pending|intcomma }}</strong>
+        <span class="nz-caption">PENDING</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">플랫폼 상품</span>
+        <strong class="nz-value">{{ summary.product_source|intcomma }}</strong>
+        <span class="nz-caption">ProductSource</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">콘텐츠</span>
+        <strong class="nz-value">{{ summary.content_item|intcomma }}</strong>
+        <span class="nz-caption">ContentItem</span>
+    </div>
+</div>
+
+{% if by_source %}
+<div class="nz-chipbar">
+    <span class="nz-chipbar-label">플랫폼별 상품</span>
+    {% for row in by_source %}
+    <span class="nz-chip">{{ row.source__code }} <b>{{ row.n|intcomma }}</b></span>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- 필터 -->
+<form method="get" class="nz-filter">
+    <select name="source">
+        <option value="">전체 플랫폼</option>
+        {% for src in sources %}
+        <option value="{{ src.id }}" {% if selected_source == src.id|stringformat:"s" %}selected{% endif %}>{{ src.label }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="mapping">
+        <option value="">전체 매핑 상태</option>
+        {% for value, label in mapping_choices %}
+        <option value="{{ value }}" {% if selected_mapping == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+
+    <input type="text" name="q" value="{{ search_query }}" placeholder="상품명 / 상품 ID / 스타일번호 / 브랜드 검색">
+    <button type="submit">검색</button>
+    <a href="{% url 'dashboard:normalized_products' %}" class="nz-reset">초기화</a>
+</form>
+
+<p class="nz-count">조회 결과 <b>{{ filtered_count|intcomma }}</b>건</p>
+
+<!-- 표 -->
+<div class="nz-table-card">
+<table class="nz-table nz-lg">
+    <colgroup>
+        <col style="width:58px"><col style="width:74px"><col style="width:78px"><col><col style="width:110px">
+        <col style="width:100px"><col style="width:82px"><col style="width:104px">
+    </colgroup>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>플랫폼</th>
+            <th>이미지</th>
+            <th>상품명</th>
+            <th>브랜드</th>
+            <th>카테고리</th>
+            <th>표준 매핑</th>
+            <th>최근 확인</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td class="mono">{{ row.id }}</td>
+            <td><span class="nz-plat">{{ row.source.code }}</span></td>
+            {% include "dashboard/components/thumb_cell.html" with url=row.thumbnail_url w=64 h=82 %}
+            <td>
+                <strong class="nz-name" title="{{ row.source_name }}">{{ row.source_name|default:"-" }}</strong>
+                <span class="nz-sub2">{{ row.source_product_id }}{% if row.style_no %} · {{ row.style_no }}{% endif %}</span>
+            </td>
+            <td>
+                {% if row.source_brand %}
+                    {{ row.source_brand.name|default:"-" }}
+                    {% if row.source_brand.brand %}<span class="nz-tick">✓</span>{% endif %}
+                {% else %}<span class="nz-none">-</span>{% endif %}
+            </td>
+            <td>
+                {% if row.source_category %}{{ row.source_category.source_category_name|default:"-" }}
+                {% else %}<span class="nz-none">-</span>{% endif %}
+            </td>
+            <td>
+                {% if row.mapping_status == 'MAPPED' %}<span class="nz-badge ok">연결됨</span>
+                {% elif row.mapping_status == 'REVIEW' %}<span class="nz-badge warn">검토 중</span>
+                {% elif row.mapping_status == 'REJECTED' %}<span class="nz-badge off">제외</span>
+                {% else %}<span class="nz-badge off">미매핑</span>{% endif %}
+            </td>
+            <td class="nz-date">{% if row.last_seen_at %}{{ row.last_seen_at|date:"Y-m-d" }}<span class="nz-time">{{ row.last_seen_at|date:"H:i" }}</span>{% else %}-{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="nz-empty">조건에 맞는 정규화 상품이 없습니다.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% include "dashboard/components/pagination_nz.html" %}
+
 {% endblock %}
