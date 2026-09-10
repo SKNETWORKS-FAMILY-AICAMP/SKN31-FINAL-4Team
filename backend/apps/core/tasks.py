@@ -84,10 +84,17 @@ def run_live_target(
             region_name=settings.AWS_REGION,
         )
 
+        params = dict(target.params or {})
+        if (
+            target.source.code == "musinsa_used"
+            and target.collection_mode == CrawlTarget.CollectionMode.LIVE
+        ):
+            params.setdefault("live", True)
+
         result = pipeline.run_target(
             target_type=target.target_type,
             target_url=target.target_url,
-            params=target.params,
+            params=params,
         )
 
         # ====================================================

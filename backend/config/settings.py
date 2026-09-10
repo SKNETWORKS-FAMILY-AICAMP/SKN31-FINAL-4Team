@@ -138,3 +138,17 @@ AWS_REGION = os.getenv(
 YOUTUBE_API_KEY = os.getenv(
     "YOUTUBE_API_KEY"
 )
+
+# KURE candidates remain review-only unless both values are configured from a
+# calibrated benchmark.  Environment variables keep deployment tuning out of
+# the pipeline code.
+KURE_HIGH_CONFIDENCE_THRESHOLD = (
+    float(os.getenv("KURE_HIGH_CONFIDENCE_THRESHOLD"))
+    if os.getenv("KURE_HIGH_CONFIDENCE_THRESHOLD")
+    else None
+)
+KURE_HIGH_CONFIDENCE_MARGIN_THRESHOLD = (
+    float(os.getenv("KURE_HIGH_CONFIDENCE_MARGIN_THRESHOLD"))
+    if os.getenv("KURE_HIGH_CONFIDENCE_MARGIN_THRESHOLD")
+    else None
+)
