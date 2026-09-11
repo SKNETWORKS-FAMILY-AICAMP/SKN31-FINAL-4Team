@@ -1,7 +1,58 @@
+from __future__ import annotations
+
+import re
+
 from django.db import models
 from django.db.models import Q
 from pgvector.django import VectorField
 
+
+# ============================================================
+# COMMON
+# ============================================================
+
+def normalize_dictionary_text(value: str | None) -> str | None:
+    """
+    FEEDIT Dictionary 공통 문자열 정규화.
+
+    - lowercase
+    - "_" / "-" -> space
+    - 특수문자 제거
+    - 연속 공백 축약
+
+    주의:
+    "와이드핏"과 "와이드 핏"을 강제로 붙이지는 않는다.
+    형태적으로 다른 표현은 TermAlias에서 같은 canonical term으로 묶는다.
+    """
+    if value is None:
+        return None
+
+    text = str(value).lower().strip()
+
+    if not text:
+        return ""
+
+    text = text.replace("_", " ")
+    text = text.replace("-", " ")
+
+    text = re.sub(
+        r"[^\w가-힣\s]",
+        " ",
+        text,
+    )
+
+    text = re.sub(
+        r"\s+",
+        " ",
+        text,
+    )
+
+    return text.strip()
+
+
+# ============================================================
+# DICTIONARY TERM
+# ============================================================
 
 class DictionaryTerm(models.Model):
 
@@ -13,6 +64,7 @@ class DictionaryTerm(models.Model):
         MATERIAL = "MATERIAL", "소재"
         COLOR = "COLOR", "색상"
         TPO = "TPO", "TPO"
+        PERSON = "PERSON", "인물"
 
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", "활성"
@@ -31,12 +83,20 @@ class DictionaryTerm(models.Model):
     term_type = models.CharField(
         max_length=30,
         choices=TermType.choices,
+        db_index=True,
         verbose_name="용어 유형",
     )
 
     canonical_name = models.CharField(
         max_length=255,
         verbose_name="표준 용어명",
+    )
+
+    normalized_name = models.CharField(
+        max_length=255,
+        blank=True,
+        db_index=True,
+        verbose_name="정규화 용어명",
     )
 
     english_name = models.CharField(
@@ -85,6 +145,7 @@ class DictionaryTerm(models.Model):
         blank=True,
         verbose_name="최근 관측일",
     )
+
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
@@ -92,6 +153,7 @@ class DictionaryTerm(models.Model):
         db_index=True,
         verbose_name="상태",
     )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="생성일시",
@@ -104,7 +166,6 @@ class DictionaryTerm(models.Model):
 
     class Meta:
         db_table = '"dictionary"."dictionary_term"'
-
         verbose_name = "표준 용어"
         verbose_name_plural = "표준 용어"
 
@@ -112,11 +173,10 @@ class DictionaryTerm(models.Model):
             models.UniqueConstraint(
                 fields=[
                     "term_type",
-                    "canonical_name",
+                    "normalized_name",
                 ],
                 name="uq_dict_term_name",
             ),
-
             models.CheckConstraint(
                 condition=Q(
                     term_type__in=[
@@ -127,11 +187,11 @@ class DictionaryTerm(models.Model):
                         "MATERIAL",
                         "COLOR",
                         "TPO",
+                        "PERSON",
                     ]
                 ),
                 name="ck_dict_term_type",
             ),
-
             models.CheckConstraint(
                 condition=Q(
                     status__in=[
@@ -144,11 +204,28 @@ class DictionaryTerm(models.Model):
             ),
         ]
 
+        indexes = [
+            models.Index(
+                fields=[
+                    "term_type",
+                    "normalized_name",
+                ],
+                name="idx_dict_term_type_norm",
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        self.normalized_name = normalize_dictionary_text(
+            self.canonical_name
+        )
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return (
             f"[{self.term_type}] "
             f"{self.canonical_name}"
         )
+
 
 class TermAlias(models.Model):
 
@@ -181,6 +258,13 @@ class TermAlias(models.Model):
         verbose_name="별칭",
     )
 
+    normalized_alias = models.CharField(
+        max_length=255,
+        blank=True,
+        db_index=True,
+        verbose_name="정규화 별칭",
+    )
+
     alias_type = models.CharField(
         max_length=30,
         choices=AliasType.choices,
@@ -211,7 +295,6 @@ class TermAlias(models.Model):
                 ),
                 name="uq_term_alias_global",
             ),
-
             models.UniqueConstraint(
                 fields=[
                     "term",
@@ -232,7 +315,12 @@ class TermAlias(models.Model):
                 ],
                 name="idx_term_alias",
             ),
-
+            models.Index(
+                fields=[
+                    "normalized_alias",
+                ],
+                name="idx_term_alias_norm",
+            ),
             models.Index(
                 fields=[
                     "source",
@@ -242,12 +330,23 @@ class TermAlias(models.Model):
             ),
         ]
 
+    def save(self, *args, **kwargs):
+        self.normalized_alias = normalize_dictionary_text(
+            self.alias
+        )
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return (
             f"{self.alias} "
             f"-> {self.term.canonical_name}"
         )
-    
+
+
+# ============================================================
+# CATEGORY
+# ============================================================
+
 class Category(models.Model):
 
     class CategoryType(models.TextChoices):
@@ -306,8 +405,13 @@ class Category(models.Model):
         verbose_name="상태",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
 
     class Meta:
         db_table = '"dictionary"."category"'
@@ -321,41 +425,58 @@ class Category(models.Model):
 
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(
-                    category_type__in=["PRODUCT", "BRAND"]
+                condition=Q(
+                    category_type__in=[
+                        "PRODUCT",
+                        "BRAND",
+                    ]
                 ),
                 name="ck_category_type",
             ),
             models.CheckConstraint(
-                condition=models.Q(level__gte=1),
+                condition=Q(
+                    level__gte=1
+                ),
                 name="ck_category_level",
             ),
             models.CheckConstraint(
                 condition=(
-                    models.Q(sort_order__isnull=True)
-                    | models.Q(sort_order__gte=0)
+                    Q(sort_order__isnull=True)
+                    | Q(sort_order__gte=0)
                 ),
                 name="ck_category_sort",
             ),
             models.CheckConstraint(
-                condition=models.Q(
-                    status__in=["ACTIVE", "INACTIVE"]
+                condition=Q(
+                    status__in=[
+                        "ACTIVE",
+                        "INACTIVE",
+                    ]
                 ),
                 name="ck_category_status",
             ),
             models.CheckConstraint(
                 condition=(
-                    models.Q(parent__isnull=True)
-                    | ~models.Q(parent=models.F("id"))
+                    Q(parent__isnull=True)
+                    | ~Q(parent=models.F("id"))
                 ),
                 name="ck_category_self",
             ),
         ]
 
     def __str__(self):
-        return f"[{self.category_type}] {self.name}"
+        return (
+            f"[{self.category_type}] "
+            f"{self.name}"
+        )
+
+
+# ============================================================
+# TYPE DETAIL TABLES
+# ============================================================
 
 class Style(models.Model):
+
     term = models.OneToOneField(
         DictionaryTerm,
         on_delete=models.CASCADE,
@@ -376,8 +497,13 @@ class Style(models.Model):
         verbose_name="핵심 스타일",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
 
     class Meta:
         db_table = '"dictionary"."style"'
@@ -389,6 +515,7 @@ class Style(models.Model):
 
 
 class Item(models.Model):
+
     term = models.OneToOneField(
         DictionaryTerm,
         on_delete=models.CASCADE,
@@ -403,7 +530,9 @@ class Item(models.Model):
         null=True,
         blank=True,
         related_name="items",
-        limit_choices_to={"category_type": "PRODUCT"},
+        limit_choices_to={
+            "category_type": "PRODUCT"
+        },
         verbose_name="카테고리",
     )
 
@@ -420,8 +549,13 @@ class Item(models.Model):
         verbose_name="메모",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
 
     class Meta:
         db_table = '"dictionary"."item"'
@@ -433,18 +567,35 @@ class Item(models.Model):
 
 
 class Detail(models.Model):
+
+    class AttributeType(models.TextChoices):
+        PATTERN = "PATTERN", "패턴"
+        FIT = "FIT", "핏"
+        SILHOUETTE = "SILHOUETTE", "실루엣"
+        LENGTH = "LENGTH", "기장"
+        SHAPE = "SHAPE", "형태/쉐입"
+        NECKLINE = "NECKLINE", "넥라인/카라"
+        SLEEVE = "SLEEVE", "소매"
+        POCKET = "POCKET", "포켓"
+        CLOSURE = "CLOSURE", "여밈"
+        DECORATION = "DECORATION", "장식"
+        ETC = "ETC", "기타"
+
     term = models.OneToOneField(
         DictionaryTerm,
         on_delete=models.CASCADE,
         primary_key=True,
         related_name="detail",
         verbose_name="용어",
+        limit_choices_to={
+            "term_type": DictionaryTerm.TermType.DETAIL
+        },
     )
 
     attribute_type = models.CharField(
-        max_length=100,
-        null=True,
-        blank=True,
+        max_length=30,
+        choices=AttributeType.choices,
+        default=AttributeType.ETC,
         db_index=True,
         verbose_name="속성 유형",
     )
@@ -462,8 +613,13 @@ class Detail(models.Model):
         verbose_name="메모",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
 
     class Meta:
         db_table = '"dictionary"."detail"'
@@ -473,7 +629,18 @@ class Detail(models.Model):
     def __str__(self):
         return self.term.canonical_name
 
+
 class Material(models.Model):
+
+    class MaterialType(models.TextChoices):
+        FIBER = "FIBER", "섬유/원료"
+        FABRIC = "FABRIC", "원단/조직"
+        LEATHER_FUR = "LEATHER_FUR", "가죽/모피"
+        FILLING = "FILLING", "충전재"
+        FUNCTIONAL = "FUNCTIONAL", "기능성 소재"
+        TREATMENT = "TREATMENT", "가공/처리"
+        ETC = "ETC", "기타"
+
     term = models.OneToOneField(
         DictionaryTerm,
         on_delete=models.CASCADE,
@@ -504,8 +671,13 @@ class Material(models.Model):
         verbose_name="메모",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
 
     class Meta:
         db_table = '"dictionary"."material"'
@@ -517,6 +689,35 @@ class Material(models.Model):
 
 
 class Color(models.Model):
+
+    class ColorFamily(models.TextChoices):
+        BLACK = "BLACK", "블랙"
+        WHITE = "WHITE", "화이트"
+        GRAY = "GRAY", "그레이"
+        BEIGE = "BEIGE", "베이지"
+        BROWN = "BROWN", "브라운"
+        RED = "RED", "레드"
+        ORANGE = "ORANGE", "오렌지"
+        YELLOW = "YELLOW", "옐로우"
+        GREEN = "GREEN", "그린"
+        BLUE = "BLUE", "블루"
+        PURPLE = "PURPLE", "퍼플"
+        PINK = "PINK", "핑크"
+        METALLIC = "METALLIC", "메탈릭"
+        ETC = "ETC", "기타"
+
+    class ColorTone(models.TextChoices):
+        WARM = "WARM", "웜톤"
+        COOL = "COOL", "쿨톤"
+        NEUTRAL = "NEUTRAL", "뉴트럴"
+
+    class ColorMood(models.TextChoices):
+        PASTEL = "PASTEL", "파스텔"
+        VIVID = "VIVID", "비비드"
+        DEEP_DARK = "DEEP_DARK", "딥/다크"
+        MUTED = "MUTED", "뮤트"
+        LIGHT = "LIGHT", "라이트"
+
     term = models.OneToOneField(
         DictionaryTerm,
         on_delete=models.CASCADE,
@@ -526,11 +727,28 @@ class Color(models.Model):
     )
 
     color_family = models.CharField(
-        max_length=50,
+        max_length=30,
+        choices=ColorFamily.choices,
+        default=ColorFamily.ETC,
+        db_index=True,
+        verbose_name="색상 계열",
+    )
+    color_tone = models.CharField(
+        max_length=20,
+        choices=ColorTone.choices,
         null=True,
         blank=True,
         db_index=True,
-        verbose_name="색상 계열",
+        verbose_name="톤",
+    )
+
+    color_mood = models.CharField(
+        max_length=20,
+        choices=ColorMood.choices,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="색감 특성",
     )
 
     base_color = models.ForeignKey(
@@ -547,6 +765,7 @@ class Color(models.Model):
         blank=True,
         verbose_name="설명",
     )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="생성일시",
@@ -567,33 +786,36 @@ class Color(models.Model):
             "term__canonical_name",
         ]
 
-        constraints = [
-            models.CheckConstraint(
-                condition=(
-                    models.Q(base_color__isnull=True)
-                    | ~models.Q(base_color=models.F("term"))
-                ),
-                name="ck_color_self_base",
-            ),
-        ]
-
     def __str__(self):
         return self.term.canonical_name
 
+
 class TPO(models.Model):
 
+    class TPOType(models.TextChoices):
+        OCCASION = "OCCASION", "행사/상황"
+        ACTIVITY = "ACTIVITY", "활동"
+        PLACE = "PLACE", "장소"
+        TIME = "TIME", "시간대"
+        SEASON = "SEASON", "계절/시기"
+        ETC = "ETC", "기타"
+
+
     term = models.OneToOneField(
-        "DictionaryTerm",
+        DictionaryTerm,
         on_delete=models.CASCADE,
         primary_key=True,
         related_name="tpo",
         verbose_name="용어",
+        limit_choices_to={
+            "term_type": DictionaryTerm.TermType.TPO
+        },
     )
 
     tpo_type = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
+        max_length=30,
+        choices=TPOType.choices,
+        default=TPOType.ETC,
         db_index=True,
         verbose_name="TPO 유형",
     )
@@ -627,7 +849,13 @@ class TPO(models.Model):
     def __str__(self):
         return self.term.canonical_name
 
+
+# ============================================================
+# TERM RELATION
+# ============================================================
+
 class TermRelation(models.Model):
+
     source_term = models.ForeignKey(
         DictionaryTerm,
         on_delete=models.CASCADE,
@@ -670,8 +898,13 @@ class TermRelation(models.Model):
         verbose_name="관계 출처",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
 
     class Meta:
         db_table = '"dictionary"."term_relation"'
@@ -680,22 +913,36 @@ class TermRelation(models.Model):
 
         constraints = [
             models.UniqueConstraint(
-                fields=["source_term", "target_term", "relation_type"],
+                fields=[
+                    "source_term",
+                    "target_term",
+                    "relation_type",
+                ],
                 name="uq_term_relation",
             ),
             models.CheckConstraint(
-                condition=~models.Q(source_term=models.F("target_term")),
+                condition=~Q(
+                    source_term=models.F(
+                        "target_term"
+                    )
+                ),
                 name="ck_term_rel_self",
             ),
         ]
 
         indexes = [
             models.Index(
-                fields=["source_term", "relation_type"],
+                fields=[
+                    "source_term",
+                    "relation_type",
+                ],
                 name="idx_term_rel_src",
             ),
             models.Index(
-                fields=["target_term", "relation_type"],
+                fields=[
+                    "target_term",
+                    "relation_type",
+                ],
                 name="idx_term_rel_tgt",
             ),
         ]
@@ -707,11 +954,17 @@ class TermRelation(models.Model):
         )
 
 
+# ============================================================
+# TERM CANDIDATE
+# ============================================================
+
 class TermCandidate(models.Model):
+
     class Status(models.TextChoices):
         PENDING = "PENDING", "검토 대기"
         REVIEWING = "REVIEWING", "검토 중"
         RESOLVED = "RESOLVED", "처리 완료"
+        REJECTED = "REJECTED", "제외"
 
     class Decision(models.TextChoices):
         PENDING = "PENDING", "미판정"
@@ -723,13 +976,14 @@ class TermCandidate(models.Model):
         max_length=255,
         verbose_name="원본 용어",
     )
-    suggested_attribute_type = models.CharField(
-    max_length=50,
-    null=True,
-    blank=True,
-    db_index=True,
-    verbose_name="추천 세부 속성 유형",
+
+    normalized_term = models.CharField(
+        max_length=255,
+        blank=True,
+        db_index=True,
+        verbose_name="정규화 후보 용어",
     )
+
     suggested_type = models.CharField(
         max_length=30,
         choices=DictionaryTerm.TermType.choices,
@@ -738,19 +992,29 @@ class TermCandidate(models.Model):
         db_index=True,
         verbose_name="추천 용어 유형",
     )
+
+    suggested_attribute_type = models.CharField(
+        max_length=30,
+        choices=Detail.AttributeType.choices,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="추천 세부 속성 유형",
+    )
+
     decision_reason = models.TextField(
-    null=True,
-    blank=True,
-    verbose_name="자동 판정 사유",
+        null=True,
+        blank=True,
+        verbose_name="자동 판정 사유",
     )
 
     detected_count = models.BigIntegerField(
-        default=1,
+        default=0,
         verbose_name="총 발견 횟수",
     )
 
     source_count = models.PositiveIntegerField(
-        default=1,
+        default=0,
         verbose_name="발견 출처 수",
     )
 
@@ -761,17 +1025,20 @@ class TermCandidate(models.Model):
         blank=True,
         verbose_name="후보 신뢰도",
     )
+
     embedding = VectorField(
         dimensions=1536,
         null=True,
         blank=True,
         verbose_name="후보 임베딩",
     )
+
     embedding_updated_at = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name="임베딩 갱신일시",
     )
+
     nearest_term = models.ForeignKey(
         DictionaryTerm,
         on_delete=models.SET_NULL,
@@ -780,6 +1047,7 @@ class TermCandidate(models.Model):
         related_name="nearest_candidates",
         verbose_name="가장 유사한 기존 용어",
     )
+
     similarity_score = models.DecimalField(
         max_digits=6,
         decimal_places=5,
@@ -787,6 +1055,7 @@ class TermCandidate(models.Model):
         blank=True,
         verbose_name="기존 용어 유사도",
     )
+
     decision = models.CharField(
         max_length=20,
         choices=Decision.choices,
@@ -794,6 +1063,7 @@ class TermCandidate(models.Model):
         db_index=True,
         verbose_name="판정",
     )
+
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
@@ -837,28 +1107,58 @@ class TermCandidate(models.Model):
 
         indexes = [
             models.Index(
-                fields=["raw_term", "suggested_type"],
+                fields=[
+                    "raw_term",
+                    "suggested_type",
+                ],
                 name="idx_term_cand_raw_type",
             ),
             models.Index(
-                fields=["status", "decision"],
+                fields=[
+                    "normalized_term",
+                    "suggested_type",
+                ],
+                name="idx_term_cand_norm_type",
+            ),
+            models.Index(
+                fields=[
+                    "status",
+                    "decision",
+                ],
                 name="idx_term_cand_decision",
             ),
             models.Index(
-                fields=["suggested_type", "-detected_count",],
+                fields=[
+                    "suggested_type",
+                    "-detected_count",
+                ],
                 name="idx_term_cand_type_count",
             ),
             models.Index(
-                fields=["-last_seen_at",],
+                fields=[
+                    "-last_seen_at",
+                ],
                 name="idx_term_cand_last_seen",
-            ),]
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        self.normalized_term = normalize_dictionary_text(
+            self.raw_term
+        )
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return (
             f"{self.raw_term} "
             f"[{self.get_decision_display()}]"
         )
-    
+
+
+# ============================================================
+# TERM CANDIDATE OBSERVATION
+# ============================================================
+
 class TermCandidateObservation(models.Model):
 
     class SourceType(models.TextChoices):
@@ -930,6 +1230,14 @@ class TermCandidateObservation(models.Model):
         verbose_name="원본 엔터티 ID",
     )
 
+    source_field = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="원본 필드",
+    )
+
     detected_phrase = models.CharField(
         max_length=255,
         verbose_name="발견 표현",
@@ -937,6 +1245,12 @@ class TermCandidateObservation(models.Model):
 
     raw_text = models.TextField(
         verbose_name="원본 문맥",
+    )
+
+    residual_text = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="사전 매칭 제거 후 잔여 문맥",
     )
 
     detected_at = models.DateTimeField(
@@ -965,13 +1279,26 @@ class TermCandidateObservation(models.Model):
                 ],
                 name="idx_term_obs_candidate",
             ),
-
             models.Index(
                 fields=[
                     "source",
                     "source_type",
                 ],
                 name="idx_term_obs_source",
+            ),
+            models.Index(
+                fields=[
+                    "source_type",
+                    "source_field",
+                ],
+                name="idx_term_obs_field",
+            ),
+            models.Index(
+                fields=[
+                    "source_type",
+                    "source_entity_id",
+                ],
+                name="idx_term_obs_entity",
             ),
         ]
 
@@ -981,7 +1308,13 @@ class TermCandidateObservation(models.Model):
             f"/ {self.source_type}"
         )
 
+
+# ============================================================
+# BRAND
+# ============================================================
+
 class Brand(models.Model):
+
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", "활성"
         INACTIVE = "INACTIVE", "비활성"
@@ -990,7 +1323,10 @@ class Brand(models.Model):
         max_length=100,
         unique=True,
         db_index=True,
-        help_text="FEEDIT 표준 브랜드 코드. ex) BRAND_NIKE",
+        help_text=(
+            "FEEDIT 표준 브랜드 코드. "
+            "ex) BRAND_NIKE"
+        ),
     )
 
     name = models.CharField(
@@ -1014,15 +1350,19 @@ class Brand(models.Model):
         null=True,
         help_text="브랜드 대표 이미지 또는 로고",
     )
+
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="brands",
-        limit_choices_to={"category_type": "BRAND"},
+        limit_choices_to={
+            "category_type": "BRAND"
+        },
         help_text="FEEDIT 브랜드 카테고리",
     )
+
     country_code = models.CharField(
         max_length=10,
         blank=True,
@@ -1030,40 +1370,56 @@ class Brand(models.Model):
         db_index=True,
         help_text="KR / US / JP / FR 등",
     )
+
     description = models.TextField(
         blank=True,
         null=True,
         help_text="브랜드 소개 / 컨셉 / 슬로건",
     )
+
     target_gender = models.JSONField(
         blank=True,
         null=True,
-        help_text='ex) ["WOMEN", "MEN", "UNISEX"]',
+        help_text=(
+            'ex) ["WOMEN", "MEN", "UNISEX"]'
+        ),
     )
+
     target_age = models.JSONField(
         blank=True,
         null=True,
-        help_text='ex) ["20", "25", "30"]',
+        help_text=(
+            'ex) ["20", "25", "30"]'
+        ),
     )
+
     styles = models.ManyToManyField(
-        "Style",
+        Style,
         blank=True,
         related_name="brands",
         help_text="FEEDIT 표준 스타일",
     )
+
     website_url = models.URLField(
         max_length=1000,
         blank=True,
         null=True,
     )
+
     is_verified = models.BooleanField(
         default=False,
         db_index=True,
-        help_text="관리자가 표준 브랜드 정보를 검수했는지 여부",
+        help_text=(
+            "관리자가 표준 브랜드 정보를 "
+            "검수했는지 여부"
+        ),
     )
+
     source_count = models.PositiveIntegerField(
         default=0,
-        help_text="현재 연결된 플랫폼 BrandSource 수",
+        help_text=(
+            "현재 연결된 플랫폼 BrandSource 수"
+        ),
     )
 
     status = models.CharField(
@@ -1074,17 +1430,31 @@ class Brand(models.Model):
         verbose_name="상태",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
 
     class Meta:
         db_table = '"dictionary"."brand"'
-        ordering = ["name"]
+        ordering = [
+            "name",
+        ]
 
     def __str__(self):
-        return f"[{self.brand_code}] {self.name}"
+        return (
+            f"[{self.brand_code}] "
+            f"{self.name}"
+        )
 
-    
+
+# ============================================================
+# CATEGORY SOURCE
+# ============================================================
+
 class CategorySource(models.Model):
 
     category = models.ForeignKey(
@@ -1162,7 +1532,11 @@ class CategorySource(models.Model):
                 condition=(
                     Q(last_seen_at__isnull=True)
                     | Q(first_seen_at__isnull=True)
-                    | Q(last_seen_at__gte=models.F("first_seen_at"))
+                    | Q(
+                        last_seen_at__gte=models.F(
+                            "first_seen_at"
+                        )
+                    )
                 ),
                 name="ck_category_source_seen",
             ),
@@ -1184,7 +1558,9 @@ class CategorySource(models.Model):
                 name="idx_cat_source_name",
             ),
             models.Index(
-                fields=["category"],
+                fields=[
+                    "category",
+                ],
                 name="idx_cat_source_category",
             ),
         ]
@@ -1202,7 +1578,11 @@ class CategorySource(models.Model):
             f"-> {target}"
         )
 
-    
+
+# ============================================================
+# BRAND SOURCE
+# ============================================================
+
 class BrandSource(models.Model):
 
     class MappingStatus(models.TextChoices):
@@ -1224,10 +1604,10 @@ class BrandSource(models.Model):
         null=True,
         blank=True,
         related_name="brand_sources",
-    )       
+    )
 
     source = models.ForeignKey(
-        "Source",
+        "core.Source",
         on_delete=models.CASCADE,
         related_name="brand_sources",
     )
@@ -1250,6 +1630,7 @@ class BrandSource(models.Model):
         blank=True,
         null=True,
     )
+
     image_url = models.URLField(
         max_length=1000,
         blank=True,
@@ -1263,11 +1644,13 @@ class BrandSource(models.Model):
         null=True,
         db_index=True,
     )
+
     description = models.TextField(
         blank=True,
         null=True,
         help_text="플랫폼에서 제공한 브랜드 소개/문구",
     )
+
     target_gender = models.JSONField(
         blank=True,
         null=True,
@@ -1277,8 +1660,9 @@ class BrandSource(models.Model):
         blank=True,
         null=True,
     )
+
     styles = models.ManyToManyField(
-        "Style",
+        Style,
         blank=True,
         related_name="brand_sources",
     )
@@ -1288,12 +1672,14 @@ class BrandSource(models.Model):
         blank=True,
         null=True,
     )
+
     source_profile_url = models.URLField(
         max_length=1000,
         blank=True,
         null=True,
         help_text="플랫폼 브랜드/스토어 페이지",
     )
+
     attributes = models.JSONField(
         blank=True,
         null=True,
@@ -1320,10 +1706,6 @@ class BrandSource(models.Model):
         blank=True,
         null=True,
     )
-
-    # ========================================================
-    # OBSERVATION
-    # ========================================================
 
     detected_count = models.PositiveIntegerField(
         default=0,
@@ -1365,4 +1747,95 @@ class BrandSource(models.Model):
         return (
             f"[{self.source.code}] "
             f"{self.name}"
+        )
+
+# ============================================================
+# PERSON
+# ============================================================
+class Person(models.Model):
+
+    class PersonType(models.TextChoices):
+        CELEBRITY = "CELEBRITY", "연예인"
+        INFLUENCER = "INFLUENCER", "인플루언서"
+        CREATOR = "CREATOR", "크리에이터"
+        OTHER = "OTHER", "기타"
+
+    class Gender(models.TextChoices):
+        M = "M", "남성"
+        W = "W", "여성"
+        MIXED = "MIXED", "혼성"
+        UNKNOWN = "UNKNOWN", "미상"
+
+    # DictionaryTerm.id를 Person의 PK로 그대로 사용
+    term = models.OneToOneField(
+        DictionaryTerm,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="person",
+        verbose_name="인물 용어",
+        limit_choices_to={
+            "term_type": DictionaryTerm.TermType.PERSON,
+        },
+    )
+
+    person_type = models.CharField(
+        max_length=30,
+        choices=PersonType.choices,
+        default=PersonType.OTHER,
+        db_index=True,
+        verbose_name="인물 유형",
+    )
+
+    gender = models.CharField(
+        max_length=20,
+        choices=Gender.choices,
+        default=Gender.UNKNOWN,
+        db_index=True,
+        verbose_name="성별",
+    )
+
+    image_url = models.URLField(
+        max_length=1000,
+        null=True,
+        blank=True,
+        verbose_name="대표 이미지",
+        help_text="FEEDIT에서 사용하는 인물 대표 이미지",
+    )
+
+    note = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="메모",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="생성일시",
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="수정일시",
+    )
+
+    class Meta:
+        db_table = '"dictionary"."person"'
+        verbose_name = "인물"
+        verbose_name_plural = "인물"
+
+        indexes = [
+            models.Index(
+                fields=["person_type"],
+                name="idx_person_type",
+            ),
+            models.Index(
+                fields=["gender"],
+                name="idx_person_gender",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"[{self.get_person_type_display()}] "
+            f"{self.term.canonical_name}"
         )

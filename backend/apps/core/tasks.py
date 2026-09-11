@@ -9,7 +9,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from apps.core.models import CrawlTarget
+from apps.core.models import CrawlTarget, RawDocument
 from apps.core.services import (
     create_crawl_run,
     create_raw_document,
@@ -125,23 +125,62 @@ def run_live_target(
             ),
         )
 
+        # create_raw_document()의 반환형에 의존하지 않고
+        # 방금 저장한 S3 key로 정확한 RawDocument를 다시 잡는다.
+        raw_document = (
+            RawDocument.objects
+            .select_related(
+                "source",
+                "crawl_run",
+            )
+            .get(
+                s3_bucket=result["s3"]["bucket"],
+                s3_key=result["s3"]["key"],
+            )
+        )
+
         # ====================================================
         # 3. SOURCE-SPECIFIC POST PROCESS
         #
-        # 현재:
+        # ZIGZAG RANKING
+        #   -> Source Ingestion
+        #   -> BrandSource / CategorySource / ProductSource
+        #
         # YOUTUBE CREATOR
         #   -> ContentProfile upsert
-        #
-        # 이후:
-        # VIDEO / PRODUCT / STORE 등 확장 가능
+        #   -> ContentItem(video) upsert
         # ====================================================
 
+        source_code = target.source.code.upper()
+        entity_type = result["entity_type"].upper()
+
+        source_ingestion_result = None
         profile_id = None
         video_result = None
 
+        # ----------------------------------------------------
+        # ZIGZAG RANKING -> Source Ingestion
+        # ----------------------------------------------------
         if (
-            target.source.code.upper() == "YOUTUBE"
-            and result["entity_type"] == "CREATOR"
+            source_code == "ZIGZAG"
+            and entity_type == "RANKING"
+        ):
+            from apps.core.services.source_ingestion import (
+                ingest_zigzag_raw_document,
+            )
+
+            source_ingestion_result = (
+                ingest_zigzag_raw_document(
+                    raw_document_id=raw_document.id
+                )
+            )
+
+        # ----------------------------------------------------
+        # YOUTUBE CREATOR -> Profile + Videos
+        # ----------------------------------------------------
+        if (
+            source_code == "YOUTUBE"
+            and entity_type == "CREATOR"
         ):
             platform_data = (
                 result.get("platform_data")
@@ -234,6 +273,7 @@ def run_live_target(
             "target_type": target.target_type,
             "source": target.source.code,
             "crawl_run_id": crawl_run.id,
+            "raw_document_id": raw_document.id,
             "entity_type": result[
                 "entity_type"
             ],
@@ -260,6 +300,7 @@ def run_live_target(
                 "failure_count",
                 0,
             ),
+            "source_ingestion": source_ingestion_result,
             "content_profile_id": profile_id,
             "content_item_count": (
                 video_result["success_count"]
@@ -277,6 +318,13 @@ def run_live_target(
         # ====================================================
         # RUN FAILED
         # ====================================================
+
+        logger.exception(
+            "CrawlTarget failed. "
+            "target_id=%s source=%s",
+            target.id,
+            target.source.code,
+        )
 
         mark_crawl_run_failed(
             crawl_run,

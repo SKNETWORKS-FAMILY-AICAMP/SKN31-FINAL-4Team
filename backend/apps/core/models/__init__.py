@@ -21,6 +21,7 @@ from .dictionary import (
     BrandSource,
     CategorySource,
     TermCandidateObservation,
+    Person
 )
 
 from .commerce import *

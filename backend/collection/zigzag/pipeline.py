@@ -6,6 +6,7 @@ from urllib.parse import parse_qs, urlparse
 from collection.common.pipeline import BasePlatformPipeline
 
 from .collector import ZigzagCollector
+from .store_enricher import ZigzagStoreEnricher
 
 
 class ZigzagPipeline(BasePlatformPipeline):
@@ -307,8 +308,27 @@ class ZigzagPipeline(BasePlatformPipeline):
         )
 
         products: list[dict] = []
+        errors: list[dict] = []
+
+        enrich_store = self._to_bool(
+            params.get("enrich_store", True)
+        )
+
+        enrichment_stats = {
+            "enabled": enrich_store,
+            "unique_store_count": 0,
+            "cache_hit_count": 0,
+            "db_hit_count": 0,
+            "fetched_count": 0,
+            "failure_count": 0,
+        }
 
         with ZigzagCollector() as collector:
+            enricher = (
+                ZigzagStoreEnricher(collector=collector)
+                if enrich_store
+                else None
+            )
 
             for (
                 _raw_body,
@@ -319,32 +339,39 @@ class ZigzagPipeline(BasePlatformPipeline):
                 sort=sort,
                 max_pages=max_pages,
             ):
-
                 for item in parsed_items:
-
-                    # 현재 category 목록 순서를
-                    # 해당 관측의 rank로 사용.
                     item = dict(item)
+                    item["rank"] = len(products) + 1
 
-                    item["rank"] = (
-                        len(products) + 1
-                    )
+                    if enricher is not None:
+                        item = enricher.enrich(item)
+                        store = item.get("store") or {}
+                        enrichment_error = store.get("enrichment_error")
+                        if enrichment_error:
+                            errors.append({
+                                "rank": item.get("rank"),
+                                "source_product_id": item.get("source_product_id"),
+                                "store_id": item.get("store_id"),
+                                "stage": "STORE_ENRICHMENT",
+                                **enrichment_error,
+                            })
 
-                    products.append(
-                        item
-                    )
-
-                    if (
-                        len(products)
-                        >= limit
-                    ):
+                    products.append(item)
+                    if len(products) >= limit:
                         break
 
-                if (
-                    len(products)
-                    >= limit
-                ):
+                if len(products) >= limit:
                     break
+
+            if enricher is not None:
+                enrichment_stats = {
+                    "enabled": True,
+                    "unique_store_count": enricher.unique_store_count,
+                    "cache_hit_count": enricher.cache_hit_count,
+                    "db_hit_count": enricher.db_hit_count,
+                    "fetched_count": enricher.fetched_count,
+                    "failure_count": enricher.failure_count,
+                }
 
         collected_at = datetime.now(
             timezone.utc
@@ -369,7 +396,9 @@ class ZigzagPipeline(BasePlatformPipeline):
 
             "products": products,
 
-            "errors": [],
+            "store_enrichment": enrichment_stats,
+
+            "errors": errors,
         }
 
         return {

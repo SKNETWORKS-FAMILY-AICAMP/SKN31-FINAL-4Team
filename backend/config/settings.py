@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.humanize",
     "apps.dashboard.apps.AdminDashboardConfig",
     "apps.api.apps.ApiConfig",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [

@@ -19,6 +19,8 @@ from apps.core.models import (
 from django.contrib import admin
 
 from apps.core.models import Category
+from apps.core.models import CrawlTarget
+from apps.core.tasks import run_live_target
 
 
 # ============================================================

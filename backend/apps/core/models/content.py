@@ -8,6 +8,15 @@ class ContentProfile(models.Model):
         MIXED = "MIXED", "혼성"
         UNKNOWN = "UNKNOWN", "미상"
 
+    person = models.ForeignKey(
+        "core.Person",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="content_profiles",
+        verbose_name="FEEDIT 인물",
+    )
+
     source = models.ForeignKey(
         "core.Source",
         on_delete=models.PROTECT,
@@ -134,6 +143,12 @@ class ContentProfile(models.Model):
         ]
 
     def __str__(self):
+        if self.person_id:
+            return (
+                f"{self.person.term.canonical_name}"
+                f" / {self.source.code}"
+            )
+
         return self.name
 
 
