@@ -2,6 +2,7 @@ from importlib import import_module
 
 
 PIPELINE_REGISTRY = {
+    "ABLY": "collection.ably.pipeline.AblyPipeline",
     "KREAM": "collection.kream.pipeline.KreamPipeline",
     "MUSINSA": "collection.musinsa.pipeline.MusinsaPipeline",
     "MUSINSA_USED": "collection.musinsa_used.pipeline.MusinsaUsedPipeline",
