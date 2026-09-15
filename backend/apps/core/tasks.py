@@ -176,6 +176,30 @@ def run_live_target(
             )
 
         # ----------------------------------------------------
+        # ABLY / MUSINSA_USED -> Source Ingestion
+        # ----------------------------------------------------
+        if source_code == "ABLY" and entity_type == "RANKING":
+            from apps.core.services.source_ingestion import (
+                ingest_ably_raw_document,
+            )
+
+            source_ingestion_result = ingest_ably_raw_document(
+                raw_document_id=raw_document.id,
+            )
+
+        if (
+            source_code == "MUSINSA_USED"
+            and entity_type in {"RANKING", "PRODUCT"}
+        ):
+            from apps.core.services.source_ingestion import (
+                ingest_musinsa_used_raw_document,
+            )
+
+            source_ingestion_result = ingest_musinsa_used_raw_document(
+                raw_document_id=raw_document.id,
+            )
+
+        # ----------------------------------------------------
         # YOUTUBE CREATOR -> Profile + Videos
         # ----------------------------------------------------
         if (

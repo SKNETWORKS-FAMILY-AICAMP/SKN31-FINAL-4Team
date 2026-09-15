@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock, get_ident
@@ -11,9 +12,13 @@ from .constants import (
     PRODUCT_BASE_URL,
     RANKING_API_URL,
     USED_RELATED_GOODS_API_URL,
+    USED_PRICE_ANCHOR_API_URL,
     USED_SALE_INFORMATION_API_URL,
 )
 from .parser import MusinsaUsedParser
+
+
+logger = logging.getLogger(__name__)
 
 
 class MusinsaUsedCollector:
@@ -104,6 +109,7 @@ class MusinsaUsedCollector:
         goods_no: str | int,
         sale_information_path: str | Path | None = None,
         related_goods_path: str | Path | None = None,
+        price_anchor_path: str | Path | None = None,
         ranking_context: dict | None = None,
         source_url: str | None = None,
     ) -> dict:
@@ -115,11 +121,15 @@ class MusinsaUsedCollector:
         related_goods = (
             self.client.read_json(related_goods_path) if related_goods_path else None
         )
+        price_anchor = (
+            self.client.read_json(price_anchor_path) if price_anchor_path else None
+        )
         return MusinsaUsedParser.parse_product_record_from_html(
             self.client.read_html(html_path),
             goods_no=goods_no,
             sale_information=sale_information,
             related_goods=related_goods,
+            price_anchor=price_anchor,
             ranking_context=ranking_context,
             meta={
                 "request_url": source_url or PRODUCT_BASE_URL.format(goods_no=goods_no),
@@ -140,6 +150,7 @@ class MusinsaUsedCollector:
         enrichment_urls = {
             "sale_information": USED_SALE_INFORMATION_API_URL.format(goods_no=goods_no),
             "related_goods": USED_RELATED_GOODS_API_URL.format(goods_no=goods_no),
+            "price_anchor": USED_PRICE_ANCHOR_API_URL.format(goods_no=goods_no),
         }
         enrichments: dict[str, dict | None] = {}
         enrichment_errors: list[dict] = []
@@ -156,8 +167,33 @@ class MusinsaUsedCollector:
                     }
                 )
 
+        related_parsed = MusinsaUsedParser.parse_related_goods(
+            enrichments.get("related_goods")
+        )
+        logger.debug(
+            "[ENRICH][MUSINSA_USED][RELATED_GOODS] goods_no=%s "
+            "original_goods_present=%s related_count=%s",
+            goods_no,
+            related_parsed.get("original_goods") is not None,
+            len(related_parsed.get("used_products") or []),
+        )
+        price_anchor_type = MusinsaUsedParser.parse_price_anchor(
+            enrichments.get("price_anchor")
+        )
+        price_anchor_failed = any(
+            error.get("enrichment") == "price_anchor" for error in enrichment_errors
+        )
+        logger.debug(
+            "[ENRICH][MUSINSA_USED][PRICE_ANCHOR] goods_no=%s status=%s "
+            "price_anchor_type=%s product_collection_continues=true",
+            goods_no,
+            "FAILED" if price_anchor_failed else "SUCCESS",
+            price_anchor_type,
+        )
+
         sale_information = enrichments.get("sale_information")
         related_goods = enrichments.get("related_goods")
+        price_anchor = enrichments.get("price_anchor")
         # Options describe all available sizes, not this USED listing's size.
         # They are deliberately excluded from the default live request path.
         options = {}
@@ -167,6 +203,7 @@ class MusinsaUsedCollector:
             goods_no=goods_no,
             sale_information=sale_information,
             related_goods=related_goods,
+            price_anchor=price_anchor,
             options=options,
             ranking_context=ranking_context,
             meta={

@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
 from collection.common.pipeline import BasePlatformPipeline
+from collection.common.normalization import compact_preview, log_preview, log_run_summary
 
 from .collector import MusinsaUsedCollector
 from .constants import (
@@ -13,6 +14,7 @@ from .constants import (
     PRODUCT_BASE_URL,
 )
 from .pacing import TargetCooldownCoordinator
+from .normalization import normalize_musinsa_used_preview
 
 
 MUSINSA_USED_TARGET_COORDINATOR = TargetCooldownCoordinator(
@@ -165,6 +167,7 @@ class MusinsaUsedPipeline(BasePlatformPipeline):
             product_paths = params.get("product_html_paths") or {}
             sale_paths = params.get("sale_information_paths") or {}
             related_paths = params.get("related_goods_paths") or {}
+            price_anchor_paths = params.get("price_anchor_paths") or {}
 
             def collect_product(ranking_item: dict) -> dict:
                 goods_key = str(ranking_item["goods_no"])
@@ -181,6 +184,7 @@ class MusinsaUsedPipeline(BasePlatformPipeline):
                     goods_no=goods_key,
                     sale_information_path=sale_paths.get(goods_key),
                     related_goods_path=related_paths.get(goods_key),
+                    price_anchor_path=price_anchor_paths.get(goods_key),
                     ranking_context=ranking_item,
                     source_url=ranking_item.get("product_url"),
                 )
@@ -196,6 +200,15 @@ class MusinsaUsedPipeline(BasePlatformPipeline):
             )
             request_metrics = collector.aggregate_request_metrics()
 
+        previews = [
+            normalize_musinsa_used_preview(product, observed_at=collected_at)
+            for product in payload["products"]
+        ]
+        for preview in previews:
+            log_preview(preview)
+        normalization_summary = compact_preview(previews, source=self.SOURCE)
+        log_run_summary(normalization_summary)
+
         return {
             "entity_type": "RANKING",
             "source_entity_id": self._build_ranking_id(ranking_scope),
@@ -207,7 +220,10 @@ class MusinsaUsedPipeline(BasePlatformPipeline):
             "discovered_count": payload["ranking"]["discovered_count"],
             "success_count": payload["ranking"]["success_count"],
             "failure_count": payload["ranking"]["failure_count"],
-            "platform_data": {"request_metrics": request_metrics},
+            "platform_data": {
+                "request_metrics": request_metrics,
+                "normalization_preview": normalization_summary,
+            },
         }
 
     def _collect_product(self, *, target_url: str | None, params: dict) -> dict:
@@ -228,6 +244,7 @@ class MusinsaUsedPipeline(BasePlatformPipeline):
                     goods_no=goods_no,
                     sale_information_path=params.get("sale_information_path"),
                     related_goods_path=params.get("related_goods_path"),
+                    price_anchor_path=params.get("price_anchor_path"),
                     source_url=target_url,
                 )
             else:
@@ -236,8 +253,13 @@ class MusinsaUsedPipeline(BasePlatformPipeline):
                 )
             request_metrics = collector.aggregate_request_metrics()
 
-        product = record["product"]
         collected_at = datetime.now(timezone.utc).isoformat()
+        preview = normalize_musinsa_used_preview(record, observed_at=collected_at)
+        log_preview(preview)
+        normalization_summary = compact_preview([preview], source=self.SOURCE)
+        log_run_summary(normalization_summary)
+
+        product = record["product"]
         return {
             "entity_type": "PRODUCT",
             "source_entity_id": str(product["goods_no"]),
@@ -249,7 +271,10 @@ class MusinsaUsedPipeline(BasePlatformPipeline):
             "discovered_count": 1,
             "success_count": 1,
             "failure_count": 0,
-            "platform_data": {"request_metrics": request_metrics},
+            "platform_data": {
+                "request_metrics": request_metrics,
+                "normalization_preview": normalization_summary,
+            },
         }
 
     @staticmethod

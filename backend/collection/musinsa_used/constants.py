@@ -10,6 +10,9 @@ USED_SALE_INFORMATION_API_URL = (
 USED_RELATED_GOODS_API_URL = (
     "https://goods-detail.musinsa.com/api2/used/goods/{goods_no}/related-goods"
 )
+USED_PRICE_ANCHOR_API_URL = (
+    "https://goods-detail.musinsa.com/api2/used/goods/{goods_no}/price-anchor"
+)
 # Adaptive retry defaults for live MUSINSA USED transport.  Normal 2xx
 # responses incur no delay; these values apply only after retryable failures.
 MUSINSA_USED_MAX_RETRIES = 3

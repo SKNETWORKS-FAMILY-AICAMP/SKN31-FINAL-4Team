@@ -436,6 +436,7 @@ class MusinsaUsedParser:
         *,
         sale_information: dict | None = None,
         related_goods: dict | None = None,
+        price_anchor: dict | None = None,
         options: dict | None = None,
         reviews: dict | None = None,
         ranking_context: dict | None = None,
@@ -487,6 +488,11 @@ class MusinsaUsedParser:
         if isinstance(meta, dict):
             record_meta.update(meta)
 
+        used_price_history = cls.parse_used_price_history(sale_information)
+        dedicated_price_anchor = cls.parse_price_anchor(price_anchor)
+        if dedicated_price_anchor is not None:
+            used_price_history["price_anchor_type"] = dedicated_price_anchor
+
         return {
             "brand": {
                 "brand_code": cls._clean_text(
@@ -536,6 +542,7 @@ class MusinsaUsedParser:
                 "like_count": cls._to_int(detail.get("likeCount")),
                 "brand_like_count": cls._to_int(detail.get("brandLikeCount")),
                 "view_count": cls._to_int(detail.get("goodsPageViewCount")),
+                "age_view_total": cls._to_int(detail.get("ageViewTotal")),
                 "page_view_total": cls._to_int(detail.get("pageViewTotal")),
                 "purchase_total": cls._to_int(detail.get("purchaseTotal")),
                 "availability": cls._clean_text(detail.get("availability")),
@@ -547,7 +554,8 @@ class MusinsaUsedParser:
                     detail.get("isSoldOut") if "isSoldOut" in detail else detail.get("isOutOfStock")
                 ),
             },
-            "used_price_history": cls.parse_used_price_history(sale_information),
+            "used_price_history": used_price_history,
+            "related_goods": cls.parse_related_goods(related_goods),
             "options": options if isinstance(options, dict) else source_options,
             "reviews": reviews if isinstance(reviews, dict) else {"summary": {}, "items": []},
             "ranking_context": ranking_context,
@@ -562,6 +570,7 @@ class MusinsaUsedParser:
         goods_no: str | int | None = None,
         sale_information: dict | None = None,
         related_goods: dict | None = None,
+        price_anchor: dict | None = None,
         options: dict | None = None,
         reviews: dict | None = None,
         ranking_context: dict | None = None,
@@ -577,6 +586,7 @@ class MusinsaUsedParser:
             raw,
             sale_information=sale_information,
             related_goods=related_goods,
+            price_anchor=price_anchor,
             options=options,
             reviews=reviews,
             ranking_context=ranking_context,
@@ -620,6 +630,104 @@ class MusinsaUsedParser:
         if not isinstance(original, dict) or original.get("goodsNo") is None:
             return None
         return str(original["goodsNo"])
+
+    @classmethod
+    def parse_price_anchor(cls, body: dict | None) -> str | None:
+        if not isinstance(body, dict):
+            return None
+        raw_data = body.get("data")
+        if isinstance(raw_data, str):
+            return cls._clean_text(raw_data)
+        data = raw_data if isinstance(raw_data, dict) else body
+        candidates = [
+            data,
+            data.get("usedProductPriceInfo") if isinstance(data, dict) else None,
+            data.get("priceAnchor") if isinstance(data, dict) else None,
+        ]
+        for candidate in candidates:
+            if not isinstance(candidate, dict):
+                continue
+            value = candidate.get("priceAnchorType") or candidate.get("type")
+            if value is not None:
+                return cls._clean_text(value)
+        return None
+
+    @classmethod
+    def parse_related_goods(cls, body: dict | None) -> dict:
+        data = body.get("data") if isinstance(body, dict) else {}
+        data = data if isinstance(data, dict) else {}
+        original = data.get("originalGoods")
+        original = cls._snake_case_value(original) if isinstance(original, dict) else None
+        if isinstance(original, dict) and original.get("goods_no") is not None:
+            original["goods_no"] = str(original["goods_no"])
+        raw_products = data.get("usedProductsList") or []
+        products = [
+            cls._parse_related_used_product(item)
+            for item in raw_products
+            if isinstance(item, dict)
+        ]
+        return {"original_goods": original, "used_products": products}
+
+    @classmethod
+    def _parse_related_used_product(cls, raw: dict) -> dict:
+        brand = raw.get("brand") if isinstance(raw.get("brand"), dict) else {}
+        review = raw.get("review") if isinstance(raw.get("review"), dict) else {}
+        options = raw.get("options")
+        grade_raw = cls._clean_text(
+            raw.get("conditionGrade") or raw.get("usedConditionGrade")
+        )
+        grade_map = {
+            "S+등급": "S+", "S등급": "S", "A+등급": "A+",
+            "A등급": "A", "B등급": "B",
+        }
+        return {
+            "goods_no": str(raw["goodsNo"]) if raw.get("goodsNo") is not None else None,
+            "name": cls._clean_text(raw.get("goodsName") or raw.get("name")),
+            "product_url": cls._clean_text(raw.get("linkUrl") or raw.get("goodsUrl")),
+            "thumbnail_url": cls._image_url(raw.get("imageUrl") or raw.get("thumbnailUrl")),
+            "gender_text": cls._clean_text(raw.get("genderText")),
+            "regular_price": cls._to_int(raw.get("regularPrice") or raw.get("normalPrice")),
+            "sale_price": cls._to_int(raw.get("salePrice") or raw.get("price")),
+            "discount_rate": cls._to_float(raw.get("discountRate")),
+            "brand_code": cls._clean_text(raw.get("brandCode") or brand.get("brandCode")),
+            "brand_name": cls._clean_text(raw.get("brandName") or brand.get("brandName") or brand.get("name")),
+            "brand_url": cls._clean_text(raw.get("brandUrl") or brand.get("linkUrl")),
+            "review_count": cls._to_int(raw.get("reviewCount") or review.get("count")),
+            "review_score": cls._to_float(raw.get("reviewScore") or review.get("score")),
+            "is_option_visible": cls._to_bool(raw.get("isOptionVisible")),
+            "sold_out": cls._to_bool(raw.get("isSoldOut")),
+            "on_sale": cls._to_bool(raw.get("isOnSale") if "isOnSale" in raw else raw.get("onSale")),
+            "condition_grade_raw": grade_raw,
+            "condition_grade": grade_map.get(grade_raw),
+            "coupon_price": cls._to_int(raw.get("couponPrice")),
+            "coupon_discount_rate": cls._to_float(raw.get("couponDiscountRate")),
+            "has_option_price": cls._to_bool(raw.get("hasOptionPrice")),
+            "size": cls._related_size(options),
+        }
+
+    @classmethod
+    def _related_size(cls, options) -> str | None:
+        values = options if isinstance(options, list) else [options]
+        for value in values:
+            if not isinstance(value, dict):
+                continue
+            size = value.get("optionItemValueName")
+            if size is None and isinstance(value.get("optionItems"), list):
+                return cls._related_size(value["optionItems"])
+            if size is not None:
+                return cls._clean_text(size)
+        return None
+
+    @classmethod
+    def _snake_case_value(cls, value):
+        if isinstance(value, dict):
+            return {
+                re.sub(r"(?<!^)(?=[A-Z])", "_", str(key)).lower(): cls._snake_case_value(item)
+                for key, item in value.items()
+            }
+        if isinstance(value, list):
+            return [cls._snake_case_value(item) for item in value]
+        return value
 
     # ============================================================
     # JSON SCRIPT
