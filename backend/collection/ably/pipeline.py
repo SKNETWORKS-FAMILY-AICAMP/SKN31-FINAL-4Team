@@ -3,8 +3,10 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from collection.common.pipeline import BasePlatformPipeline
+from collection.common.normalization import compact_preview, log_preview, log_run_summary
 
 from .collector import AblyCollector
+from .normalization import normalize_ably_preview
 
 
 class AblyPipeline(BasePlatformPipeline):
@@ -41,6 +43,14 @@ class AblyPipeline(BasePlatformPipeline):
             "products": collected.get("products") or [],
             "errors": collected.get("errors") or [],
         }
+        previews = [
+            normalize_ably_preview(product, {**ranking, "collected_at": collected_at})
+            for product in payload["products"]
+        ]
+        for preview in previews:
+            log_preview(preview)
+        normalization_summary = compact_preview(previews, source=self.SOURCE)
+        log_run_summary(normalization_summary)
 
         return {
             "entity_type": "RANKING",
@@ -53,8 +63,9 @@ class AblyPipeline(BasePlatformPipeline):
             "discovered_count": ranking["discovered_count"],
             "success_count": ranking["success_count"],
             "failure_count": ranking["failure_count"],
-            # 최신 요청에 따라 normalize/DB post-process는 연결하지 않는다.
-            "platform_data": None,
+            "platform_data": {
+                "normalization_preview": normalization_summary,
+            },
         }
 
     @staticmethod
