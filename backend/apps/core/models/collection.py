@@ -1,5 +1,9 @@
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.db import models
 
 def default_crawl_target_params():
     return {
@@ -557,3 +561,219 @@ class RawDocument(models.Model):
 
     def __str__(self):
         return self.s3_uri
+
+
+class Task(models.Model):
+    """
+    FEEDIT 범용 후처리 Task.
+
+    - CrawlRun 성공 이후 생성
+    - RawDocument / ProductSource / ContentItem / TermCandidate 등
+      어떤 객체든 GenericForeignKey로 target 지정 가능
+    - 정규화 / OCR / Vision / Embedding / Content Analysis / Metric 계산 등에 재사용
+    """
+
+    class Pipeline(models.TextChoices):
+        NORMALIZATION = "NORMALIZATION", "상품 정규화"
+        CONTENT = "CONTENT", "콘텐츠 분석"
+        VISION = "VISION", "비전 분석"
+        TERM_DISCOVERY = "TERM_DISCOVERY", "용어 발굴"
+        METRIC = "METRIC", "지표 계산"
+
+    class TaskType(models.TextChoices):
+        # --------------------------------------------------
+        # NORMALIZATION
+        # --------------------------------------------------
+        PREPROCESS = "PREPROCESS", "기본 정규화"
+        ENTITY_NORMALIZE = "ENTITY_NORMALIZE", "엔터티 정규화"
+        ATTRIBUTE_EXTRACT = "ATTRIBUTE_EXTRACT", "속성 추출"
+        DICTIONARY_MATCH = "DICTIONARY_MATCH", "사전 매칭"
+        TERM_CANDIDATE = "TERM_CANDIDATE", "신규 용어 후보"
+        PRODUCT_PROMOTE = "PRODUCT_PROMOTE", "Product 승격"
+
+        # --------------------------------------------------
+        # GENERIC / ANALYSIS
+        # --------------------------------------------------
+        OCR = "OCR", "OCR"
+        VISION = "VISION", "Vision 분석"
+        EMBEDDING = "EMBEDDING", "Embedding 생성"
+        CONTENT_ANALYSIS = "CONTENT_ANALYSIS", "콘텐츠 분석"
+        TREND_METRIC = "TREND_METRIC", "트렌드 지표 계산"
+
+    class Status(models.TextChoices):
+        BLOCKED = "BLOCKED", "이전 단계 대기"
+        READY = "READY", "실행 가능"
+        RUNNING = "RUNNING", "실행 중"
+        REVIEW = "REVIEW", "검토 필요"
+        COMPLETED = "COMPLETED", "완료"
+        FAILED = "FAILED", "실패"
+        SKIPPED = "SKIPPED", "건너뜀"
+
+    # ------------------------------------------------------
+    # ORIGIN
+    # ------------------------------------------------------
+    crawl_run = models.ForeignKey(
+        "core.CrawlRun",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="tasks",
+        verbose_name="수집 실행",
+    )
+
+    # ------------------------------------------------------
+    # GENERIC TARGET
+    # ------------------------------------------------------
+    target_content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        related_name="+",
+        verbose_name="대상 타입",
+    )
+    target_object_id = models.PositiveBigIntegerField(
+        db_index=True,
+        verbose_name="대상 ID",
+    )
+    target = GenericForeignKey(
+        "target_content_type",
+        "target_object_id",
+    )
+
+    # ------------------------------------------------------
+    # TASK META
+    # ------------------------------------------------------
+    pipeline = models.CharField(
+        max_length=40,
+        choices=Pipeline.choices,
+        default=Pipeline.NORMALIZATION,
+        db_index=True,
+    )
+    task_type = models.CharField(
+        max_length=50,
+        choices=TaskType.choices,
+        db_index=True,
+    )
+    stage = models.PositiveSmallIntegerField(
+        default=1,
+        db_index=True,
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.BLOCKED,
+        db_index=True,
+    )
+
+    # ------------------------------------------------------
+    # DEPENDENCY
+    # ------------------------------------------------------
+    previous_task = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="next_tasks",
+        verbose_name="이전 Task",
+    )
+
+    # ------------------------------------------------------
+    # HITL
+    # ------------------------------------------------------
+    requires_review = models.BooleanField(
+        default=False,
+        help_text="이 Task 유형이 REVIEW 상태를 가질 수 있는지 여부",
+    )
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="reviewed_processing_tasks",
+    )
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    # ------------------------------------------------------
+    # EXECUTION
+    # ------------------------------------------------------
+    attempt_count = models.PositiveIntegerField(
+        default=0,
+    )
+    started_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    finished_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    # ------------------------------------------------------
+    # INPUT / OUTPUT / TRACE
+    # ------------------------------------------------------
+    input_data = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+    result = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+    reason = models.TextField(
+        blank=True,
+        default="",
+    )
+    error_message = models.TextField(
+        blank=True,
+        default="",
+    )
+    input_s3_uri = models.TextField(
+        blank=True,
+        default="",
+    )
+    output_s3_uri = models.TextField(
+        blank=True,
+        default="",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        db_table = '"collection"."task"'
+        ordering = ["stage", "id"]
+        indexes = [
+            models.Index(
+                fields=["pipeline", "task_type", "status"],
+                name="idx_task_pipe_type_status",
+            ),
+            models.Index(
+                fields=["crawl_run", "stage"],
+                name="idx_task_crawl_stage",
+            ),
+            models.Index(
+                fields=["target_content_type", "target_object_id"],
+                name="idx_task_target",
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "crawl_run",
+                    "target_content_type",
+                    "target_object_id",
+                    "pipeline",
+                    "task_type",
+                ],
+                name="uq_task_run_target_pipe_type",
+            ),
+        ]
+
+    def __str__(self):
+        return f"[{self.pipeline}] {self.task_type} #{self.pk} ({self.status})"

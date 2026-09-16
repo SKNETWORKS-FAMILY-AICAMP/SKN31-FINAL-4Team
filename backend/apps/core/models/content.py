@@ -152,6 +152,7 @@ class ContentProfile(models.Model):
         return self.name
 
 
+
 class ContentItem(models.Model):
     class ContentType(models.TextChoices):
         VIDEO = "VIDEO", "영상"
@@ -159,13 +160,27 @@ class ContentItem(models.Model):
         POST = "POST", "게시글"
         ARTICLE = "ARTICLE", "기사"
 
+    class ContentFormat(models.TextChoices):
+        HAUL = "HAUL", "하울"                # 본인이 산 것을 공개
+        REVIEW = "REVIEW", "리뷰"            # 직접 써 보고 평가·비교
+        RECOMMEND = "RECOMMEND", "추천"      # 살 아이템·브랜드를 제시
+        VERDICT = "VERDICT", "살까말까"       # 살지 말지 판정
+        STYLING = "STYLING", "코디"          # 입는 방법·착장 조합
+        VLOG = "VLOG", "브이로그"             # 일상·매장 탐방
+        ETC = "ETC", "기타"
+
+    class AdDisclosure(models.TextChoices):
+        DISCLOSED = "DISCLOSED", "광고 표기"     # 협찬·유료광고 표기 있음
+        AFFILIATE = "AFFILIATE", "제휴 수수료"    # 수수료·리워드 링크 표기
+        NONE = "NONE", "표기 없음"               # 둘 다 없음
+
+
     source = models.ForeignKey(
         "core.Source",
         on_delete=models.PROTECT,
         related_name="content_items",
         verbose_name="플랫폼",
     )
-
     profile = models.ForeignKey(
         "core.ContentProfile",
         on_delete=models.SET_NULL,
@@ -175,17 +190,28 @@ class ContentItem(models.Model):
         verbose_name="프로필",
     )
 
-    external_content_id = models.CharField(
-        max_length=255,
-        verbose_name="플랫폼 콘텐츠 ID",
-    )
-
     content_type = models.CharField(
         max_length=30,
         choices=ContentType.choices,
         verbose_name="콘텐츠 유형",
     )
+    content_format = models.CharField(
+        max_length=20,
+        choices=ContentFormat.choices,
+        blank=True,
+        default="",
+        db_index=True,          # "하울 영상 댓글만" 같은 조회를 자주 한다
+        verbose_name="영상 형식",
+    )
 
+    ad_disclosure = models.CharField(
+        max_length=20,
+        choices=AdDisclosure.choices,
+        blank=True,
+        default="",
+        db_index=True,
+        verbose_name="광고 표기",
+    ) 
     title = models.CharField(
         max_length=500,
         null=True,
@@ -198,6 +224,11 @@ class ContentItem(models.Model):
         blank=True,
         verbose_name="설명",
     )
+    external_content_id = models.CharField(
+        max_length=255,
+        verbose_name="플랫폼 콘텐츠 ID",
+    )
+
 
     content_url = models.TextField(
         verbose_name="콘텐츠 URL",

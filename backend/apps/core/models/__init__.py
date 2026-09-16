@@ -21,7 +21,8 @@ from .dictionary import (
     BrandSource,
     CategorySource,
     TermCandidateObservation,
-    Person
+    Person,
+    DiscoveryExclusion,
 )
 
 from .commerce import *

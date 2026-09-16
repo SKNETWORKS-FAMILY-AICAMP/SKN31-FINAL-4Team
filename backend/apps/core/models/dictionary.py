@@ -227,6 +227,188 @@ class DictionaryTerm(models.Model):
         )
 
 
+class DiscoveryExclusion(models.Model):
+
+    class Reason(models.TextChoices):
+        GENERIC = (
+            "GENERIC",
+            "일반 문맥어",
+        )
+        GENDER = (
+            "GENDER",
+            "성별 메타",
+        )
+        CATEGORY = (
+            "CATEGORY",
+            "카테고리 표현",
+        )
+        PRODUCT_META = (
+            "PRODUCT_META",
+            "상품 메타",
+        )
+        MARKETING = (
+            "MARKETING",
+            "마케팅 표현",
+        )
+        SEASON = (
+            "SEASON",
+            "시즌 표현",
+        )
+        OTHER = (
+            "OTHER",
+            "기타",
+        )
+
+    term = models.CharField(
+        max_length=255,
+        verbose_name="제외 용어",
+    )
+
+    normalized_term = models.CharField(
+        max_length=255,
+        db_index=True,
+        verbose_name="정규화 제외 용어",
+    )
+
+    reason = models.CharField(
+        max_length=30,
+        choices=Reason.choices,
+        db_index=True,
+        verbose_name="제외 사유",
+    )
+
+    source = models.ForeignKey(
+        "core.Source",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="discovery_exclusions",
+        verbose_name="출처",
+        help_text=(
+            "비어 있으면 모든 출처에 적용"
+        ),
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+        db_index=True,
+        verbose_name="활성 여부",
+    )
+
+    note = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="메모",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        db_table = (
+            '"dictionary"."discovery_exclusion"'
+        )
+
+        verbose_name = (
+            "제외 사전"
+        )
+
+        verbose_name_plural = (
+            "제외 사전"
+        )
+
+        constraints = [
+            # 전역 exclusion
+            models.UniqueConstraint(
+                fields=[
+                    "normalized_term",
+                ],
+                condition=Q(
+                    source__isnull=True,
+                ),
+                name=(
+                    "uq_discovery_exclusion_global"
+                ),
+            ),
+
+            # source별 exclusion
+            models.UniqueConstraint(
+                fields=[
+                    "normalized_term",
+                    "source",
+                ],
+                condition=Q(
+                    source__isnull=False,
+                ),
+                name=(
+                    "uq_discovery_exclusion_source"
+                ),
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "normalized_term",
+                    "is_active",
+                ],
+                name=(
+                    "idx_disc_excl_norm_active"
+                ),
+            ),
+            models.Index(
+                fields=[
+                    "source",
+                    "normalized_term",
+                ],
+                name=(
+                    "idx_disc_excl_source_norm"
+                ),
+            ),
+            models.Index(
+                fields=[
+                    "reason",
+                    "is_active",
+                ],
+                name=(
+                    "idx_disc_excl_reason"
+                ),
+            ),
+        ]
+
+    def save(
+        self,
+        *args,
+        **kwargs,
+    ):
+        self.normalized_term = (
+            normalize_dictionary_text(
+                self.term
+            )
+        )
+
+        super().save(
+            *args,
+            **kwargs,
+        )
+
+    def __str__(self):
+        scope = (
+            self.source.code
+            if self.source_id
+            else "GLOBAL"
+        )
+
+        return (
+            f"{self.term} "
+            f"[{self.reason} / {scope}]"
+        )
+    
 class TermAlias(models.Model):
 
     class AliasType(models.TextChoices):
@@ -1002,12 +1184,6 @@ class TermCandidate(models.Model):
         verbose_name="추천 세부 속성 유형",
     )
 
-    decision_reason = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name="자동 판정 사유",
-    )
-
     detected_count = models.BigIntegerField(
         default=0,
         verbose_name="총 발견 횟수",
@@ -1018,6 +1194,41 @@ class TermCandidate(models.Model):
         verbose_name="발견 출처 수",
     )
 
+    document_count = models.BigIntegerField(
+        default=0,
+        verbose_name="발견 문서 수",
+    )
+    source_breakdown = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="출처별 발견 통계",
+    )
+    field_breakdown = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="필드별 발견 통계",
+    )
+    sample_contexts = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="대표 관측 문맥",
+    )
+    evidence_s3_uri = models.CharField(
+        max_length=1024,
+        null=True,
+        blank=True,
+        verbose_name="후보 관측 근거 S3 경로",
+    )
+
+    evidence_updated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="후보 근거 갱신일시",
+    )
+    # ========================================================
+    # REFINER
+    # ========================================================
+
     confidence = models.DecimalField(
         max_digits=6,
         decimal_places=5,
@@ -1025,6 +1236,16 @@ class TermCandidate(models.Model):
         blank=True,
         verbose_name="후보 신뢰도",
     )
+
+    decision_reason = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="자동 판정 사유",
+    )
+
+    # ========================================================
+    # VECTOR MATCHING
+    # ========================================================
 
     embedding = VectorField(
         dimensions=1536,
@@ -1055,6 +1276,10 @@ class TermCandidate(models.Model):
         blank=True,
         verbose_name="기존 용어 유사도",
     )
+
+    # ========================================================
+    # HUMAN REVIEW
+    # ========================================================
 
     decision = models.CharField(
         max_length=20,
@@ -1102,23 +1327,25 @@ class TermCandidate(models.Model):
 
     class Meta:
         db_table = '"dictionary"."term_candidate"'
+
         verbose_name = "신규 용어 후보"
         verbose_name_plural = "신규 용어 후보"
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "normalized_term",
+                ],
+                name="uq_term_candidate_norm",
+            ),
+        ]
 
         indexes = [
             models.Index(
                 fields=[
-                    "raw_term",
-                    "suggested_type",
-                ],
-                name="idx_term_cand_raw_type",
-            ),
-            models.Index(
-                fields=[
                     "normalized_term",
-                    "suggested_type",
                 ],
-                name="idx_term_cand_norm_type",
+                name="idx_term_cand_norm",
             ),
             models.Index(
                 fields=[
@@ -1141,18 +1368,6 @@ class TermCandidate(models.Model):
                 name="idx_term_cand_last_seen",
             ),
         ]
-
-    def save(self, *args, **kwargs):
-        self.normalized_term = normalize_dictionary_text(
-            self.raw_term
-        )
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return (
-            f"{self.raw_term} "
-            f"[{self.get_decision_display()}]"
-        )
 
 
 # ============================================================
@@ -1839,3 +2054,6 @@ class Person(models.Model):
             f"[{self.get_person_type_display()}] "
             f"{self.term.canonical_name}"
         )
+
+
+
