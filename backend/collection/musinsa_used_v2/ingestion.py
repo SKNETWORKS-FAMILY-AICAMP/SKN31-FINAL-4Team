@@ -1356,6 +1356,8 @@ def ingest_musinsa_used_v2_raw_document(
             raw_document.id,
         "products":
             0,
+        "product_source_ids":
+            [],
 
         "brand_created":
             0,
@@ -1454,6 +1456,12 @@ def ingest_musinsa_used_v2_raw_document(
                 else "product_updated"
             ] += 1
 
+            result[
+                "product_source_ids"
+            ].append(
+                product_source.id
+            )
+
             (
                 _snapshot,
                 snapshot_created,
@@ -1511,6 +1519,10 @@ def ingest_musinsa_used_v2_raw_document(
             raw_document,
             success=True,
         )
+
+    result["product_source_ids"] = sorted(
+        set(result["product_source_ids"])
+    )
 
     return result
 

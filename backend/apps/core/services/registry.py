@@ -5,7 +5,10 @@ PIPELINE_REGISTRY = {
     "ABLY": "collection.ably.pipeline.AblyPipeline",
     "KREAM": "collection.kream.pipeline.KreamPipeline",
     "MUSINSA": "collection.musinsa.pipeline.MusinsaPipeline",
-    "MUSINSA_USED": "collection.musinsa_used.pipeline.MusinsaUsedPipeline",
+    "MUSINSA_USED": (
+        "collection.musinsa_used_v2.filter_pipeline."
+        "MusinsaUsedFilterPipeline"
+    ),
     "YOUTUBE": "collection.youtube.pipeline.""YoutubePipeline",
     "ZIGZAG": "collection.zigzag.pipeline.ZigzagPipeline",
 }

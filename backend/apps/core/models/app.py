@@ -280,6 +280,19 @@ class UserSavedItem(models.Model):
         verbose_name = "저장 항목"
         verbose_name_plural = "저장 항목"
 
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "product"],
+                condition=models.Q(product__isnull=False),
+                name="uq_saved_user_product",
+            ),
+            models.UniqueConstraint(
+                fields=["user", "content_item"],
+                condition=models.Q(content_item__isnull=False),
+                name="uq_saved_user_content",
+            ),
+        ]
+
         indexes = [
             models.Index(
                 fields=["user", "-created_at"],
@@ -316,6 +329,30 @@ class VoteCard(models.Model):
         verbose_name="상품",
     )
 
+    product_source = models.ForeignKey(
+        "core.ProductSource",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="vote_cards",
+        verbose_name="상품 출처",
+    )
+
+    seed_key = models.CharField(
+        max_length=160,
+        null=True,
+        blank=True,
+        unique=True,
+        verbose_name="시드 식별자",
+    )
+
+    gender_target = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        verbose_name="성별 타깃",
+    )
+
     title = models.CharField(
         max_length=300,
         verbose_name="제목",
@@ -346,6 +383,18 @@ class VoteCard(models.Model):
         verbose_name="상태",
     )
 
+    closes_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="마감일시",
+    )
+
+    source_metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="출처 메타데이터",
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="생성일시",
@@ -365,6 +414,10 @@ class VoteCard(models.Model):
             models.Index(
                 fields=["status", "-created_at"],
                 name="idx_vote_card_status",
+            ),
+            models.Index(
+                fields=["gender_target", "status"],
+                name="idx_vote_gender_status",
             ),
         ]
 
@@ -420,6 +473,121 @@ class VoteBallot(models.Model):
 
     def __str__(self):
         return f"{self.card} / {self.get_choice_display()}"
+
+
+class VoteComment(models.Model):
+    """살말 카드에 사용자가 남긴 댓글."""
+
+    card = models.ForeignKey(
+        VoteCard,
+        on_delete=models.CASCADE,
+        related_name="comments",
+        verbose_name="살말 카드",
+    )
+    user = models.ForeignKey(
+        AppUser,
+        on_delete=models.CASCADE,
+        related_name="vote_comments",
+        verbose_name="작성자",
+    )
+    seed_key = models.CharField(
+        max_length=190,
+        null=True,
+        blank=True,
+        unique=True,
+        verbose_name="시드 식별자",
+    )
+    choice = models.CharField(
+        max_length=10,
+        choices=[("BUY", "살"), ("PASS", "말"), ("NEUTRAL", "중립")],
+        null=True,
+        blank=True,
+        verbose_name="댓글 의견",
+    )
+    content = models.TextField(verbose_name="댓글 내용")
+    source_metadata = models.JSONField(default=dict, blank=True, verbose_name="출처 메타데이터")
+    is_deleted = models.BooleanField(default=False, db_index=True, verbose_name="삭제 여부")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="작성일시")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="수정일시")
+
+    class Meta:
+        db_table = '"app"."vote_comment"'
+        verbose_name = "살말 댓글"
+        verbose_name_plural = "살말 댓글"
+        indexes = [
+            models.Index(fields=["card", "-created_at"], name="idx_vote_comment_card"),
+            models.Index(fields=["user", "-created_at"], name="idx_vote_comment_user"),
+        ]
+
+    def __str__(self):
+        return f"{self.card} / {self.user}"
+
+
+class VoteReport(models.Model):
+    """살말 카드 또는 댓글에 접수된 사용자 신고 기록."""
+
+    class TargetType(models.TextChoices):
+        CARD = "CARD", "카드"
+        COMMENT = "COMMENT", "댓글"
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "검토 대기"
+        REVIEWED = "REVIEWED", "검토 완료"
+        DISMISSED = "DISMISSED", "기각"
+
+    reporter = models.ForeignKey(
+        AppUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="vote_reports",
+        verbose_name="신고자",
+    )
+    target_type = models.CharField(max_length=10, choices=TargetType.choices, verbose_name="신고 대상")
+    target_id = models.PositiveBigIntegerField(verbose_name="신고 대상 ID")
+    card = models.ForeignKey(
+        VoteCard,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reports",
+        verbose_name="대상 카드",
+    )
+    comment = models.ForeignKey(
+        VoteComment,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reports",
+        verbose_name="대상 댓글",
+    )
+    reason = models.CharField(max_length=500, blank=True, default="", verbose_name="신고 사유")
+    target_snapshot = models.JSONField(default=dict, blank=True, verbose_name="대상 스냅샷")
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+        verbose_name="처리 상태",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="신고일시")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="수정일시")
+
+    class Meta:
+        db_table = '"app"."vote_report"'
+        verbose_name = "살말 신고"
+        verbose_name_plural = "살말 신고"
+        indexes = [
+            models.Index(fields=["target_type", "target_id"], name="idx_vote_report_target"),
+            models.Index(fields=["status", "-created_at"], name="idx_vote_report_status"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["reporter", "target_type", "target_id"],
+                name="uq_vote_report_target",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.get_target_type_display()} #{self.target_id} / {self.get_status_display()}"
 
 
 class ChatSession(models.Model):

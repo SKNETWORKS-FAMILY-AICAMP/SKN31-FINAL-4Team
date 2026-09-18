@@ -9,7 +9,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from apps.core.models import CrawlTarget, RawDocument
+from apps.core.models import CrawlTarget, RawDocument, Source
 from apps.core.services import (
     create_crawl_run,
     create_raw_document,
@@ -26,6 +26,112 @@ logger = logging.getLogger(__name__)
 # 한 번의 dispatcher 실행에서 너무 많은 타깃을
 # 동시에 queue에 넣지 않도록 제한.
 DISPATCH_BATCH_SIZE = 100
+
+
+@shared_task(
+    name="core.analyze_product_sources",
+)
+def analyze_product_sources(
+    *,
+    product_source_ids: list[int],
+    force: bool = False,
+):
+    """Run the current enrichment pipeline for explicitly selected products."""
+    from analysis.product_enrichment import ProductEnrichmentPipeline
+    from apps.core.models import ProductSource
+
+    ids = sorted({int(value) for value in product_source_ids})
+    queryset = (
+        ProductSource.objects
+        .filter(id__in=ids)
+        .select_related(
+            "source",
+            "source_brand__brand",
+            "source_category__category",
+        )
+        .order_by("id")
+    )
+    pipelines: dict[str, ProductEnrichmentPipeline] = {}
+    results: list[dict] = []
+
+    for product_source in queryset:
+        source_code = str(product_source.source.code or "").upper()
+        attributes = (
+            product_source.attributes
+            if isinstance(product_source.attributes, dict)
+            else {}
+        )
+        existing = attributes.get("feedit_analysis")
+        if (
+            not force
+            and isinstance(existing, dict)
+            and (existing.get("version") or 0) >= 3
+        ):
+            results.append({
+                "product_source_id": product_source.id,
+                "source": source_code,
+                "status": "SKIPPED_ALREADY_ANALYZED",
+            })
+            continue
+
+        try:
+            pipeline = pipelines.get(source_code)
+            if pipeline is None:
+                pipeline = ProductEnrichmentPipeline(source_code=source_code)
+                pipelines[source_code] = pipeline
+            output = pipeline.run_one(
+                product_source,
+                save_json=True,
+                persist_known=True,
+                persist_unknown=True,
+                cnv_candidates_only=True,
+            )
+            results.append({
+                "product_source_id": product_source.id,
+                "source": source_code,
+                "status": "DONE",
+                "output": output,
+            })
+        except Exception as exc:
+            logger.exception(
+                "Product enrichment failed. product_source_id=%s",
+                product_source.id,
+            )
+            results.append({
+                "product_source_id": product_source.id,
+                "source": source_code,
+                "status": "FAILED",
+                "error_type": exc.__class__.__name__,
+                "error": str(exc),
+            })
+
+    return {
+        "summary": {
+            "requested": len(ids),
+            "selected": len(results),
+            "processed": sum(row["status"] == "DONE" for row in results),
+            "skipped": sum(
+                row["status"] == "SKIPPED_ALREADY_ANALYZED"
+                for row in results
+            ),
+            "failed": sum(row["status"] == "FAILED" for row in results),
+        },
+        "results": results,
+    }
+
+
+def _enqueue_product_analysis(product_source_ids) -> str | None:
+    ids = sorted({int(value) for value in product_source_ids or []})
+    if not ids:
+        return None
+    try:
+        return analyze_product_sources.delay(product_source_ids=ids).id
+    except Exception:
+        logger.exception(
+            "Failed to enqueue ProductSource analysis. product_source_ids=%s",
+            ids,
+        )
+        return None
 
 
 # ============================================================
@@ -149,6 +255,7 @@ def run_live_target(
         entity_type = result["entity_type"].upper()
 
         source_ingestion_result = None
+        product_analysis_task_id = None
         profile_id = None
         video_result = None
 
@@ -260,6 +367,11 @@ def run_live_target(
                 target.id,
                 raw_document.id,
                 source_ingestion_result,
+            )
+
+        if source_code in {"ABLY", "MUSINSA_USED"} and source_ingestion_result:
+            product_analysis_task_id = _enqueue_product_analysis(
+                source_ingestion_result.get("product_source_ids") or []
             )
         # ----------------------------------------------------
         # KREAM PRODUCT -> Source Ingestion
@@ -447,6 +559,7 @@ def run_live_target(
                 0,
             ),
             "source_ingestion": source_ingestion_result,
+            "product_analysis_task_id": product_analysis_task_id,
             "content_profile_id": profile_id,
             "content_item_count": (
                 video_result["success_count"]
@@ -567,6 +680,7 @@ def dispatch_due_targets():
             )
             .select_related("source")
             .filter(
+                source__status=Source.Status.ACTIVE,
                 is_active=True,
                 collection_mode=(
                     CrawlTarget.CollectionMode.LIVE

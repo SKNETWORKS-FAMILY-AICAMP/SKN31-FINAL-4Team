@@ -376,6 +376,11 @@ def ingest_preview_raw_document(
     summary = {
         "raw_document_id": raw_document.id,
         "products": len(rows),
+        "product_source_ids": sorted({
+            row["product_source_id"]
+            for row in rows
+            if row.get("product_source_id") is not None
+        }),
         "product_created": sum(int(row["product_created"]) for row in rows),
         "product_mapped": sum(row["mapping_status"] == ProductSource.MappingStatus.MAPPED for row in rows),
         "product_review": sum(row["mapping_status"] == ProductSource.MappingStatus.REVIEW for row in rows),
