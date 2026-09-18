@@ -1,0 +1,1165 @@
+{% extends "dashboard/base.html" %}
+
+{% load static humanize %}
+
+{% block title %}상품 스냅샷 상세 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/analytics.css' %}">
+
+<style>
+
+/* =========================================
+   SNAPSHOT DETAIL TEMP FIX
+========================================= */
+
+.psd-page {
+    width: 100%;
+    max-width: 1280px;
+}
+
+.psd-hero {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr) auto;
+    gap: 20px;
+    align-items: center;
+
+    padding: 20px;
+    margin-bottom: 14px;
+
+    background: #fff;
+    border: 1px solid rgba(10,10,10,.11);
+    border-radius: 14px;
+}
+
+.psd-thumb {
+    width: 104px;
+    height: 132px;
+
+    overflow: hidden;
+    border-radius: 10px;
+
+    background: #f1efea;
+}
+
+.psd-thumb img {
+    width: 100%;
+    height: 100%;
+    display: block;
+
+    object-fit: cover;
+}
+
+.psd-platform {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 8px;
+}
+
+.psd-platform-badge {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 5px 9px;
+
+    border-radius: 999px;
+
+    background: #1c1a17;
+    color: #fff;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.psd-platform-id {
+    color: rgba(10,10,10,.45);
+    font-size: 11px;
+}
+
+.psd-product-name {
+    margin: 0;
+
+    font-size: 23px;
+    line-height: 1.35;
+    font-weight: 700;
+
+    letter-spacing: -.04em;
+}
+
+.psd-meta {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 8px 16px;
+
+    margin-top: 10px;
+
+    color: rgba(10,10,10,.58);
+    font-size: 12px;
+}
+
+.psd-nav {
+    display: flex;
+    gap: 6px;
+
+    align-self: start;
+}
+
+.psd-nav a {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #fff;
+    border: 1px solid rgba(10,10,10,.11);
+    border-radius: 8px;
+
+    color: #111;
+    text-decoration: none;
+}
+
+
+/* META */
+
+.psd-info {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+
+    margin-bottom: 14px;
+
+    background: #fff;
+    border: 1px solid rgba(10,10,10,.11);
+    border-radius: 12px;
+
+    overflow: hidden;
+}
+
+.psd-info > div {
+    padding: 14px 16px;
+
+    border-right: 1px solid rgba(10,10,10,.055);
+}
+
+.psd-info > div:last-child {
+    border-right: 0;
+}
+
+.psd-label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: rgba(10,10,10,.4);
+
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .12em;
+
+    text-transform: uppercase;
+}
+
+.psd-value {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+
+/* KPI */
+
+.psd-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 10px;
+
+    margin-bottom: 14px;
+}
+
+.psd-kpi {
+    padding: 18px;
+
+    background: #fff;
+
+    border: 1px solid rgba(10,10,10,.11);
+    border-radius: 12px;
+}
+
+.psd-kpi-value {
+    font-size: 27px;
+    font-weight: 700;
+
+    line-height: 1;
+
+    letter-spacing: -.04em;
+}
+
+.psd-delta {
+    margin-top: 9px;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.psd-delta.up,
+.psd-up {
+    color: #1f9e6e;
+}
+
+.psd-delta.down,
+.psd-down {
+    color: #b23b3b;
+}
+
+.psd-delta.flat,
+.psd-muted {
+    color: rgba(10,10,10,.4);
+}
+
+
+/* SECTION */
+
+.psd-section {
+    margin-bottom: 14px;
+
+    overflow: hidden;
+
+    background: #fff;
+
+    border: 1px solid rgba(10,10,10,.11);
+    border-radius: 14px;
+}
+
+.psd-section-head {
+    padding: 16px 18px 13px;
+
+    border-bottom: 1px solid rgba(10,10,10,.055);
+}
+
+.psd-section-kicker {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: rgba(10,10,10,.38);
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: .14em;
+}
+
+.psd-section-title {
+    margin: 0;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.psd-section-desc {
+    margin: 5px 0 0;
+
+    color: rgba(10,10,10,.55);
+    font-size: 11px;
+}
+
+
+/* CHARTS */
+
+.psd-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 10px;
+
+    padding: 14px;
+}
+
+.psd-chart-card {
+    min-width: 0;
+
+    padding: 15px;
+
+    border: 1px solid rgba(10,10,10,.07);
+    border-radius: 11px;
+}
+
+.psd-chart-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 12px;
+}
+
+.psd-chart-title {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.psd-chart-current {
+    color: rgba(10,10,10,.4);
+
+    font-size: 10px;
+}
+
+.psd-chart-wrap {
+    position: relative;
+
+    width: 100%;
+    height: 220px;
+}
+
+
+/* TABLE */
+
+.psd-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.psd-table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+.psd-table th,
+.psd-table td {
+    padding: 11px 16px;
+
+    border-bottom: 1px solid rgba(10,10,10,.055);
+
+    font-size: 12px;
+}
+
+.psd-table th {
+    background: rgba(10,10,10,.018);
+
+    color: rgba(10,10,10,.42);
+
+    font-size: 10px;
+    font-weight: 700;
+
+    text-align: right;
+}
+
+.psd-table th:first-child,
+.psd-table td:first-child {
+    text-align: left;
+}
+
+.psd-table td:not(:first-child) {
+    text-align: right;
+}
+
+.psd-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.psd-table tbody tr.is-current {
+    background: rgba(233,240,86,.18);
+}
+
+.psd-metric {
+    font-weight: 700;
+}
+
+.psd-table a {
+    color: inherit;
+    text-decoration: none;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 1050px) {
+
+    .psd-chart-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 800px) {
+
+    .psd-kpis,
+    .psd-info {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+</style>
+
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_analytics.html" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="psd-page">
+
+    <div class="page-header">
+        <div>
+            <p class="eyebrow">ANALYTICS / SNAPSHOT DETAIL</p>
+            <h2 class="page-title">상품 스냅샷 상세</h2>
+            <p class="sub">{{ page_description }}</p>
+        </div>
+
+        <a href="{% url 'dashboard:product_snapshot' %}" class="psd-back">
+            ← 스냅샷 목록
+        </a>
+    </div>
+
+
+    <!-- 상품 헤더 -->
+    <section class="psd-hero">
+
+        <div class="psd-thumb">
+            {% if product_source.thumbnail_url %}
+                <img
+                    src="{{ product_source.thumbnail_url }}"
+                    alt="{{ product_source.source_name }}"
+                >
+            {% else %}
+                <div class="psd-thumb-empty">NO IMAGE</div>
+            {% endif %}
+        </div>
+
+        <div>
+            <div class="psd-platform">
+                <span class="psd-platform-badge">
+                    {{ product_source.source.code }}
+                </span>
+
+                <span class="psd-platform-id">
+                    {{ product_source.source_product_id }}
+                </span>
+            </div>
+
+            <h1 class="psd-product-name">
+                {{ product_source.source_name|default:"-" }}
+            </h1>
+
+            <div class="psd-meta">
+                <span>
+                    관측 {{ snapshot.observed_at|date:"Y-m-d H:i:s" }}
+                </span>
+
+                <span>
+                    품번 {{ product_source.style_no|default:"-" }}
+                </span>
+
+                {% if snapshot.ranking_scope %}
+                    <code>{{ snapshot.ranking_scope }}</code>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="psd-nav">
+            {% if previous_snapshot %}
+                <a
+                    href="{% url 'dashboard:product_snapshot_detail' previous_snapshot.id %}"
+                    title="직전 스냅샷"
+                >
+                    ←
+                </a>
+            {% endif %}
+
+            {% if next_snapshot %}
+                <a
+                    href="{% url 'dashboard:product_snapshot_detail' next_snapshot.id %}"
+                    title="다음 스냅샷"
+                >
+                    →
+                </a>
+            {% endif %}
+        </div>
+
+    </section>
+
+
+    <!-- 상품 메타 -->
+    <section class="psd-info">
+
+        <div>
+            <span class="psd-label">Brand</span>
+            <strong class="psd-value">
+                {% if product_source.source_brand %}
+                    {{ product_source.source_brand.name|default:"-" }}
+                {% else %}
+                    -
+                {% endif %}
+            </strong>
+        </div>
+
+        <div>
+            <span class="psd-label">FEEDIT Product</span>
+            <strong class="psd-value">
+                {% if product_source.product %}
+                    {{ product_source.product.product_code }}
+                {% else %}
+                    미매핑
+                {% endif %}
+            </strong>
+        </div>
+
+        <div>
+            <span class="psd-label">Ranking scope</span>
+            <strong class="psd-value">
+                {{ snapshot.ranking_scope|default:"-" }}
+            </strong>
+        </div>
+
+        <div>
+            <span class="psd-label">Stock</span>
+            <strong class="psd-value">
+                {{ snapshot.stock_status|default:"-" }}
+            </strong>
+        </div>
+
+    </section>
+
+
+    <!-- KPI -->
+    <section class="psd-kpis">
+
+        <article class="psd-kpi">
+            <span class="psd-label">Sale price</span>
+
+            <div class="psd-kpi-value">
+                {% if snapshot.sale_price != None %}
+                    {{ snapshot.sale_price|floatformat:0|intcomma }}
+                {% else %}
+                    -
+                {% endif %}
+            </div>
+
+            {% if changes.sale_price.delta == None %}
+                <div class="psd-delta flat">이전 데이터 없음</div>
+            {% elif changes.sale_price.delta < 0 %}
+                <div class="psd-delta up">
+                    ▼ {{ changes.sale_price.delta|floatformat:0|intcomma }}
+                </div>
+            {% elif changes.sale_price.delta > 0 %}
+                <div class="psd-delta down">
+                    ▲ +{{ changes.sale_price.delta|floatformat:0|intcomma }}
+                </div>
+            {% else %}
+                <div class="psd-delta flat">변동 없음</div>
+            {% endif %}
+        </article>
+
+
+        <article class="psd-kpi">
+            <span class="psd-label">Rank</span>
+
+            <div class="psd-kpi-value">
+                {% if snapshot.rank_position != None %}
+                    {{ snapshot.rank_position }}위
+                {% else %}
+                    -
+                {% endif %}
+            </div>
+
+            {% if changes.rank_position.delta == None %}
+                <div class="psd-delta flat">이전 데이터 없음</div>
+            {% elif changes.rank_position.delta > 0 %}
+                <div class="psd-delta up">
+                    ▲ {{ changes.rank_position.delta }}위
+                </div>
+            {% elif changes.rank_position.delta < 0 %}
+                <div class="psd-delta down">
+                    ▼ {{ changes.rank_position.delta|cut:"-" }}위
+                </div>
+            {% else %}
+                <div class="psd-delta flat">변동 없음</div>
+            {% endif %}
+        </article>
+
+
+        <article class="psd-kpi">
+            <span class="psd-label">Review</span>
+
+            <div class="psd-kpi-value">
+                {{ snapshot.review_count|default_if_none:"-"|intcomma }}
+            </div>
+
+            {% if changes.review_count.delta == None %}
+                <div class="psd-delta flat">이전 데이터 없음</div>
+            {% elif changes.review_count.delta > 0 %}
+                <div class="psd-delta up">
+                    +{{ changes.review_count.delta|intcomma }}
+                </div>
+            {% elif changes.review_count.delta < 0 %}
+                <div class="psd-delta down">
+                    {{ changes.review_count.delta|intcomma }}
+                </div>
+            {% else %}
+                <div class="psd-delta flat">변동 없음</div>
+            {% endif %}
+        </article>
+
+
+        <article class="psd-kpi">
+            <span class="psd-label">Sales</span>
+
+            <div class="psd-kpi-value">
+                {{ snapshot.sales_count|default_if_none:"-"|intcomma }}
+            </div>
+
+            {% if changes.sales_count.delta == None %}
+                <div class="psd-delta flat">이전 데이터 없음</div>
+            {% elif changes.sales_count.delta > 0 %}
+                <div class="psd-delta up">
+                    +{{ changes.sales_count.delta|intcomma }}
+                </div>
+            {% elif changes.sales_count.delta < 0 %}
+                <div class="psd-delta down">
+                    {{ changes.sales_count.delta|intcomma }}
+                </div>
+            {% else %}
+                <div class="psd-delta flat">변동 없음</div>
+            {% endif %}
+        </article>
+
+    </section>
+
+
+    <!-- 시계열 차트 -->
+    <section class="psd-section">
+
+        <div class="psd-section-head">
+            <div>
+                <span class="psd-section-kicker">TIME SERIES</span>
+                <h3 class="psd-section-title">핵심 지표 흐름</h3>
+                <p class="psd-section-desc">
+                    동일 ranking_scope 기준 최근 최대 90개 관측.
+                </p>
+            </div>
+        </div>
+
+        {% if chart_rows %}
+
+            <div class="psd-chart-grid">
+
+                <article class="psd-chart-card">
+                    <div class="psd-chart-head">
+                        <span class="psd-chart-title">순위</span>
+                        <span class="psd-chart-current">
+                            {% if snapshot.rank_position != None %}
+                                현재 {{ snapshot.rank_position }}위
+                            {% else %}
+                                현재 -
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="psd-chart-wrap">
+                        <canvas id="rankChart"></canvas>
+                    </div>
+                </article>
+
+
+                <article class="psd-chart-card">
+                    <div class="psd-chart-head">
+                        <span class="psd-chart-title">판매가</span>
+                        <span class="psd-chart-current">
+                            {% if snapshot.sale_price != None %}
+                                {{ snapshot.sale_price|floatformat:0|intcomma }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="psd-chart-wrap">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </article>
+
+
+                <article class="psd-chart-card">
+                    <div class="psd-chart-head">
+                        <span class="psd-chart-title">판매 수</span>
+                        <span class="psd-chart-current">
+                            {{ snapshot.sales_count|default_if_none:"-"|intcomma }}
+                        </span>
+                    </div>
+
+                    <div class="psd-chart-wrap">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </article>
+
+            </div>
+
+        {% else %}
+
+            <div class="psd-empty">
+                차트로 표시할 스냅샷이 없습니다.
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- 직전 대비 -->
+    <section class="psd-section">
+
+        <div class="psd-section-head">
+            <div>
+                <span class="psd-section-kicker">CHANGE</span>
+                <h3 class="psd-section-title">직전 스냅샷 대비</h3>
+
+                <p class="psd-section-desc">
+                    {% if previous_snapshot %}
+                        {{ previous_snapshot.observed_at|date:"Y-m-d H:i:s" }}
+                        →
+                        {{ snapshot.observed_at|date:"Y-m-d H:i:s" }}
+                    {% else %}
+                        비교 가능한 이전 관측이 없습니다.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+
+        {% if previous_snapshot %}
+
+            <div class="psd-table-wrap">
+                <table class="psd-table">
+
+                    <thead>
+                        <tr>
+                            <th>지표</th>
+                            <th>이전</th>
+                            <th>현재</th>
+                            <th>변동</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+                            <td class="psd-metric">판매가</td>
+                            <td>{{ changes.sale_price.previous|floatformat:0|intcomma }}</td>
+                            <td>{{ changes.sale_price.current|floatformat:0|intcomma }}</td>
+                            <td>
+                                {% if changes.sale_price.delta < 0 %}
+                                    <span class="psd-up">
+                                        {{ changes.sale_price.delta|floatformat:0|intcomma }}
+                                    </span>
+                                {% elif changes.sale_price.delta > 0 %}
+                                    <span class="psd-down">
+                                        +{{ changes.sale_price.delta|floatformat:0|intcomma }}
+                                    </span>
+                                {% else %}
+                                    <span class="psd-muted">0</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="psd-metric">할인율</td>
+                            <td>{{ changes.discount_rate.previous|floatformat:1 }}%</td>
+                            <td>{{ changes.discount_rate.current|floatformat:1 }}%</td>
+                            <td>{{ changes.discount_rate.delta|floatformat:1 }}%p</td>
+                        </tr>
+
+                        <tr>
+                            <td class="psd-metric">순위</td>
+                            <td>{{ changes.rank_position.previous|default_if_none:"-" }}위</td>
+                            <td>{{ changes.rank_position.current|default_if_none:"-" }}위</td>
+                            <td>
+                                {% if changes.rank_position.delta > 0 %}
+                                    <span class="psd-up">
+                                        ▲ {{ changes.rank_position.delta }}위
+                                    </span>
+                                {% elif changes.rank_position.delta < 0 %}
+                                    <span class="psd-down">
+                                        ▼ {{ changes.rank_position.delta|cut:"-" }}위
+                                    </span>
+                                {% else %}
+                                    <span class="psd-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="psd-metric">평점</td>
+                            <td>{{ changes.rating.previous|default_if_none:"-" }}</td>
+                            <td>{{ changes.rating.current|default_if_none:"-" }}</td>
+                            <td>{{ changes.rating.delta|default_if_none:"-" }}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="psd-metric">리뷰</td>
+                            <td>{{ changes.review_count.previous|default_if_none:"-"|intcomma }}</td>
+                            <td>{{ changes.review_count.current|default_if_none:"-"|intcomma }}</td>
+                            <td>
+                                {% if changes.review_count.delta > 0 %}
+                                    <span class="psd-up">+{{ changes.review_count.delta|intcomma }}</span>
+                                {% elif changes.review_count.delta < 0 %}
+                                    <span class="psd-down">{{ changes.review_count.delta|intcomma }}</span>
+                                {% else %}
+                                    <span class="psd-muted">0</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="psd-metric">좋아요</td>
+                            <td>{{ changes.like_count.previous|default_if_none:"-"|intcomma }}</td>
+                            <td>{{ changes.like_count.current|default_if_none:"-"|intcomma }}</td>
+                            <td>
+                                {% if changes.like_count.delta > 0 %}
+                                    <span class="psd-up">+{{ changes.like_count.delta|intcomma }}</span>
+                                {% elif changes.like_count.delta < 0 %}
+                                    <span class="psd-down">{{ changes.like_count.delta|intcomma }}</span>
+                                {% else %}
+                                    <span class="psd-muted">0</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="psd-metric">조회</td>
+                            <td>{{ changes.view_count.previous|default_if_none:"-"|intcomma }}</td>
+                            <td>{{ changes.view_count.current|default_if_none:"-"|intcomma }}</td>
+                            <td>
+                                {% if changes.view_count.delta > 0 %}
+                                    <span class="psd-up">+{{ changes.view_count.delta|intcomma }}</span>
+                                {% elif changes.view_count.delta < 0 %}
+                                    <span class="psd-down">{{ changes.view_count.delta|intcomma }}</span>
+                                {% else %}
+                                    <span class="psd-muted">0</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="psd-metric">판매</td>
+                            <td>{{ changes.sales_count.previous|default_if_none:"-"|intcomma }}</td>
+                            <td>{{ changes.sales_count.current|default_if_none:"-"|intcomma }}</td>
+                            <td>
+                                {% if changes.sales_count.delta > 0 %}
+                                    <span class="psd-up">+{{ changes.sales_count.delta|intcomma }}</span>
+                                {% elif changes.sales_count.delta < 0 %}
+                                    <span class="psd-down">{{ changes.sales_count.delta|intcomma }}</span>
+                                {% else %}
+                                    <span class="psd-muted">0</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+
+            <div class="psd-empty">
+                동일 랭킹 조건의 이전 스냅샷이 없습니다.
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- 이력 -->
+    <section class="psd-section">
+
+        <div class="psd-section-head">
+            <div>
+                <span class="psd-section-kicker">HISTORY</span>
+                <h3 class="psd-section-title">동일 랭킹 조건 관측 이력</h3>
+                <p class="psd-section-desc">
+                    최근 {{ history|length }}건
+                </p>
+            </div>
+        </div>
+
+        <div class="psd-table-wrap">
+
+            <table class="psd-table">
+
+                <thead>
+                    <tr>
+                        <th>관측일시</th>
+                        <th>순위</th>
+                        <th>판매가</th>
+                        <th>할인</th>
+                        <th>평점</th>
+                        <th>리뷰</th>
+                        <th>좋아요</th>
+                        <th>조회</th>
+                        <th>판매</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for row in history %}
+
+                        <tr {% if row.id == snapshot.id %}class="is-current"{% endif %}>
+
+                            <td>
+                                <a href="{% url 'dashboard:product_snapshot_detail' row.id %}">
+                                    {{ row.observed_at|date:"Y-m-d H:i" }}
+                                </a>
+                            </td>
+
+                            <td>{{ row.rank_position|default_if_none:"-" }}</td>
+
+                            <td>
+                                {% if row.sale_price != None %}
+                                    {{ row.sale_price|floatformat:0|intcomma }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if row.discount_rate != None %}
+                                    {{ row.discount_rate|floatformat:1 }}%
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>{{ row.rating|default_if_none:"-" }}</td>
+                            <td>{{ row.review_count|default_if_none:"-"|intcomma }}</td>
+                            <td>{{ row.like_count|default_if_none:"-"|intcomma }}</td>
+                            <td>{{ row.view_count|default_if_none:"-"|intcomma }}</td>
+                            <td>{{ row.sales_count|default_if_none:"-"|intcomma }}</td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="9" class="psd-empty">
+                                관측 이력이 없습니다.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+{{ chart_rows|json_script:"product-snapshot-chart-data" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<script>
+(() => {
+    const node = document.getElementById("product-snapshot-chart-data");
+
+    if (!node || typeof Chart === "undefined") {
+        return;
+    }
+
+    const rows = JSON.parse(node.textContent || "[]");
+
+    if (!rows.length) {
+        return;
+    }
+
+    const root = getComputedStyle(document.documentElement);
+
+    const tx = root.getPropertyValue("--tx").trim() || "#111";
+    const tx3 = root.getPropertyValue("--tx3").trim() || "rgba(10,10,10,.36)";
+    const line2 = root.getPropertyValue("--line2").trim() || "rgba(10,10,10,.055)";
+    const coral = root.getPropertyValue("--coral").trim() || "#ff6b4a";
+    const ok = root.getPropertyValue("--ok").trim() || "#1f9e6e";
+    const info = root.getPropertyValue("--info").trim() || "#3d7fd6";
+
+    const labels = rows.map(row => row.label);
+
+    Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+    Chart.defaults.color = tx3;
+
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: {
+            mode: "index",
+            intersect: false,
+        },
+        plugins: {
+            legend: {
+                display: false,
+            },
+            tooltip: {
+                displayColors: false,
+                padding: 10,
+                callbacks: {},
+            },
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false,
+                },
+                border: {
+                    display: false,
+                },
+                ticks: {
+                    maxTicksLimit: 6,
+                    maxRotation: 0,
+                    autoSkip: true,
+                    font: {
+                        size: 10,
+                    },
+                },
+            },
+            y: {
+                grid: {
+                    color: line2,
+                },
+                border: {
+                    display: false,
+                },
+                ticks: {
+                    font: {
+                        size: 10,
+                    },
+                },
+            },
+        },
+        elements: {
+            line: {
+                borderWidth: 2,
+                tension: .3,
+            },
+            point: {
+                hoverRadius: 5,
+            },
+        },
+    };
+
+    const pointRadius = rows.map(row => row.is_current ? 5 : 2);
+
+    function makeChart(id, values, color, options = {}) {
+        const canvas = document.getElementById(id);
+
+        if (!canvas) {
+            return;
+        }
+
+        const merged = structuredClone(commonOptions);
+
+        if (options.reverse) {
+            merged.scales.y.reverse = true;
+        }
+
+        if (options.beginAtZero) {
+            merged.scales.y.beginAtZero = true;
+        }
+
+        if (options.tickCallback) {
+            merged.scales.y.ticks.callback = options.tickCallback;
+        }
+
+        if (options.tooltipCallback) {
+            merged.plugins.tooltip.callbacks.label = options.tooltipCallback;
+        }
+
+        new Chart(canvas, {
+            type: "line",
+            data: {
+                labels,
+                datasets: [{
+                    data: values,
+                    borderColor: color,
+                    backgroundColor: color,
+                    pointBackgroundColor: rows.map(
+                        row => row.is_current ? coral : color
+                    ),
+                    pointBorderColor: "#fff",
+                    pointBorderWidth: rows.map(
+                        row => row.is_current ? 2 : 0
+                    ),
+                    pointRadius,
+                    spanGaps: true,
+                    fill: false,
+                }],
+            },
+            options: merged,
+        });
+    }
+
+
+    makeChart(
+        "rankChart",
+        rows.map(row => row.rank),
+        coral,
+        {
+            reverse: true,
+            tickCallback: value => `${value}위`,
+            tooltipCallback: ctx => (
+                ctx.raw == null ? "-" : `${ctx.raw}위`
+            ),
+        }
+    );
+
+
+    makeChart(
+        "priceChart",
+        rows.map(row => row.sale_price),
+        info,
+        {
+            tickCallback: value => (
+                Number(value).toLocaleString("ko-KR")
+            ),
+            tooltipCallback: ctx => (
+                ctx.raw == null
+                    ? "-"
+                    : `${Number(ctx.raw).toLocaleString("ko-KR")}원`
+            ),
+        }
+    );
+
+
+    makeChart(
+        "salesChart",
+        rows.map(row => row.sales_count),
+        ok,
+        {
+            beginAtZero: false,
+            tickCallback: value => (
+                Number(value).toLocaleString("ko-KR")
+            ),
+            tooltipCallback: ctx => (
+                ctx.raw == null
+                    ? "-"
+                    : `${Number(ctx.raw).toLocaleString("ko-KR")}건`
+            ),
+        }
+    );
+})();
+</script>
+
+{% endblock %}

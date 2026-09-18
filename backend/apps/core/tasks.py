@@ -71,38 +71,47 @@ def run_live_target(
     )
 
     try:
-        # ====================================================
-        # 1. PLATFORM PIPELINE
-        # ====================================================
+        params = dict(target.params or {})
 
-        pipeline_class = get_pipeline_class(
+        source_code_for_pipeline = (
             target.source.code
-        )
+            or ""
+        ).strip().lower()
+
+        if source_code_for_pipeline == "musinsa_used":
+            from collection.musinsa_used_v2.filter_pipeline import (
+                MusinsaUsedFilterPipeline,
+            )
+
+            pipeline_class = (
+                MusinsaUsedFilterPipeline
+            )
+
+        else:
+            pipeline_class = get_pipeline_class(
+                target.source.code
+            )
 
         pipeline = pipeline_class(
             bucket=settings.AWS_STORAGE_BUCKET_NAME,
             region_name=settings.AWS_REGION,
         )
 
-        params = dict(target.params or {})
         if (
-            target.source.code == "musinsa_used"
-            and target.collection_mode == CrawlTarget.CollectionMode.LIVE
+            source_code_for_pipeline == "musinsa_used"
+            and target.collection_mode
+            == CrawlTarget.CollectionMode.LIVE
         ):
-            params.setdefault("live", True)
+            params.setdefault(
+                "live",
+                True,
+            )
 
         result = pipeline.run_target(
             target_type=target.target_type,
             target_url=target.target_url,
             params=params,
         )
-
-        # ====================================================
-        # 2. RAW DOCUMENT
-        #
-        # 실제 RAW 데이터는 S3에 저장한다.
-        # RDS에는 S3 위치와 메타데이터만 기록한다.
-        # ====================================================
 
         create_raw_document(
             crawl_run=crawl_run,
@@ -124,9 +133,6 @@ def run_live_target(
                 "collected_at"
             ),
         )
-
-        # create_raw_document()의 반환형에 의존하지 않고
-        # 방금 저장한 S3 key로 정확한 RawDocument를 다시 잡는다.
         raw_document = (
             RawDocument.objects
             .select_related(
@@ -139,18 +145,6 @@ def run_live_target(
             )
         )
 
-        # ====================================================
-        # 3. SOURCE-SPECIFIC POST PROCESS
-        #
-        # ZIGZAG RANKING
-        #   -> Source Ingestion
-        #   -> BrandSource / CategorySource / ProductSource
-        #
-        # YOUTUBE CREATOR
-        #   -> ContentProfile upsert
-        #   -> ContentItem(video) upsert
-        # ====================================================
-
         source_code = target.source.code.upper()
         entity_type = result["entity_type"].upper()
 
@@ -158,12 +152,41 @@ def run_live_target(
         profile_id = None
         video_result = None
 
+
+        if (
+            source_code == "MUSINSA"
+            and entity_type == "RANKING"
+        ):
+            from apps.core.services.source_ingestion import (
+                ingest_musinsa_raw_document,
+            )
+
+            source_ingestion_result = (
+                ingest_musinsa_raw_document(
+                    raw_document_id=raw_document.id,
+                )
+            )
+
+            logger.info(
+                "MUSINSA source ingestion completed. "
+                "target_id=%s raw_document_id=%s result=%s",
+                target.id,
+                raw_document.id,
+                source_ingestion_result,
+            )
+
         # ----------------------------------------------------
-        # ZIGZAG RANKING -> Source Ingestion
+        # ZIGZAG CNV_CATEGORY -> Source Ingestion
+        #
+        # RawDocument
+        # -> BrandSource
+        # -> CategorySource
+        # -> ProductSource
+        # -> ProductSourceSnapshot
         # ----------------------------------------------------
         if (
             source_code == "ZIGZAG"
-            and entity_type == "RANKING"
+            and entity_type == "CNV_CATEGORY"
         ):
             from apps.core.services.source_ingestion import (
                 ingest_zigzag_raw_document,
@@ -171,8 +194,16 @@ def run_live_target(
 
             source_ingestion_result = (
                 ingest_zigzag_raw_document(
-                    raw_document_id=raw_document.id
+                    raw_document_id=raw_document.id,
                 )
+            )
+
+            logger.info(
+                "ZIGZAG source ingestion completed. "
+                "target_id=%s raw_document_id=%s result=%s",
+                target.id,
+                raw_document.id,
+                source_ingestion_result,
             )
 
         # ----------------------------------------------------
@@ -186,19 +217,110 @@ def run_live_target(
             source_ingestion_result = ingest_ably_raw_document(
                 raw_document_id=raw_document.id,
             )
-
+        # ----------------------------------------------------
+        # MUSINSA_USED V2
+        # RawDocument -> BrandSource -> CategorySource
+        # -> ProductSource(RESALE) -> ResaleSnapshot
+        # ----------------------------------------------------
         if (
             source_code == "MUSINSA_USED"
-            and entity_type in {"RANKING", "PRODUCT"}
+            and entity_type == "RANKING"
         ):
-            from apps.core.services.source_ingestion import (
-                ingest_musinsa_used_raw_document,
+            from collection.musinsa_used_v2.ingestion import (
+                ingest_musinsa_used_v2_raw_document,
             )
 
-            source_ingestion_result = ingest_musinsa_used_raw_document(
-                raw_document_id=raw_document.id,
+            source_ingestion_result = (
+                ingest_musinsa_used_v2_raw_document(
+                    raw_document_id=raw_document.id,
+                )
             )
 
+            failed = int(
+                source_ingestion_result.get("failed")
+                or 0
+            )
+
+            if failed:
+                errors = (
+                    source_ingestion_result.get("errors")
+                    or []
+                )
+
+                raise RuntimeError(
+                    "MUSINSA_USED V2 ingestion failed: "
+                    f"failed={failed}, "
+                    f"first_error="
+                    f"{errors[0] if errors else None}"
+                )
+
+            logger.info(
+                "MUSINSA_USED V2 ingestion completed. "
+                "target_id=%s raw_document_id=%s result=%s",
+                target.id,
+                raw_document.id,
+                source_ingestion_result,
+            )
+        # ----------------------------------------------------
+        # KREAM PRODUCT -> Source Ingestion
+        #
+        # RawDocument
+        # -> BrandSource
+        # -> CategorySource
+        # -> ProductSource(RESALE)
+        # -> ProductSourceSnapshot
+        # -> ResaleSnapshot
+        # ----------------------------------------------------
+        if (
+            source_code == "KREAM"
+            and entity_type in {
+                "PRODUCT",
+                "DISCOVERY",
+            }
+        ):
+            from apps.core.services.kream_normalization import (
+                normalize_kream_raw_document,
+            )
+
+            source_ingestion_result = (
+                normalize_kream_raw_document(
+                    raw_document_id=raw_document.id,
+                )
+            )
+
+            failed = int(
+                source_ingestion_result.get(
+                    "failed"
+                )
+                or 0
+            )
+
+            if failed:
+                errors = (
+                    source_ingestion_result.get(
+                        "errors"
+                    )
+                    or []
+                )
+
+                raise RuntimeError(
+                    "KREAM ingestion failed: "
+                    f"failed={failed}, "
+                    f"first_error="
+                    f"{errors[0] if errors else None}"
+                )
+
+            logger.info(
+                "KREAM source ingestion completed. "
+                "target_id=%s "
+                "raw_document_id=%s "
+                "entity_type=%s "
+                "result=%s",
+                target.id,
+                raw_document.id,
+                entity_type,
+                source_ingestion_result,
+            )
         # ----------------------------------------------------
         # YOUTUBE CREATOR -> Profile + Videos
         # ----------------------------------------------------

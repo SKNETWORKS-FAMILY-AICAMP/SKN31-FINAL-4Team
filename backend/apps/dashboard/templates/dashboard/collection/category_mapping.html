@@ -1,0 +1,1171 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+
+{% block sub_sidebar %}
+<aside class="sub-sidebar">
+    <p>RAW DATA</p>
+
+    <a href="{% url 'dashboard:raw_documents' %}">
+        원본 데이터 목록
+    </a>
+
+    <a href="{% url 'dashboard:brand_sources' %}">
+        브랜드 매핑
+    </a>
+
+    <a href="{% url 'dashboard:category_mapping' %}" class="active">
+        카테고리 매핑
+    </a>
+</aside>
+{% endblock %}
+
+{% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
+
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h2 style="margin: 0; letter-spacing: -1px; font-size: 24px;">
+            카테고리 매핑
+        </h2>
+
+        <p class="sub"
+           style="margin-top: 8px; font-size: 13px; color: var(--tx2);">
+            플랫폼 카테고리를 FEEDIT 표준 PRODUCT 카테고리에 연결합니다.
+        </p>
+    </div>
+</div>
+
+
+<section class="panel" style="padding: 30px;">
+
+<style>
+    /* =========================================================
+       FILTER
+    ========================================================= */
+
+    .mapping-filter {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+    .mapping-filter input,
+    .mapping-filter select {
+        height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: white;
+        padding: 0 12px;
+        font-size: 12px;
+        box-sizing: border-box;
+    }
+
+    .mapping-filter input:focus,
+    .mapping-filter select:focus {
+        outline: none;
+        border-color: #111;
+    }
+
+    .mapping-search {
+        width: 280px;
+    }
+
+    .mapping-filter .btn {
+        height: 36px;
+        padding: 0 16px;
+        border-radius: 7px;
+        font-size: 12px;
+    }
+
+
+    /* =========================================================
+       TABLE
+    ========================================================= */
+
+    .mapping-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .mapping-table th,
+    .mapping-table td {
+        vertical-align: middle;
+        padding: 11px 10px;
+        font-size: 12px;
+        line-height: 1.4;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .mapping-table th {
+        font-size: 11px;
+        letter-spacing: .04em;
+        color: var(--tx2);
+        font-weight: 600;
+        text-align: left;
+        padding-bottom: 10px;
+    }
+
+    .mapping-table tbody tr:hover {
+        background: #fafafa;
+    }
+
+
+    /* =========================================================
+       PLATFORM
+    ========================================================= */
+
+    .source-chip {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        background: #f0f0ee;
+        color: #333;
+        white-space: nowrap;
+    }
+
+
+    /* =========================================================
+       PATH
+    ========================================================= */
+
+    .path-text {
+        display: block;
+        color: var(--tx2);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+
+    /* =========================================================
+       STATUS
+    ========================================================= */
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 9px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+        border: 1px solid var(--line);
+        white-space: nowrap;
+    }
+
+    .status-chip.mapped {
+        background: #eef7f0;
+        color: #26643a;
+        border-color: #d7eadc;
+    }
+
+    .status-chip.unmapped {
+        background: #fafafa;
+        color: var(--tx2);
+    }
+
+
+    /* =========================================================
+       CATEGORY SEARCH
+    ========================================================= */
+
+    .mapping-box {
+        position: relative;
+        width: 100%;
+    }
+
+    .mapping-input {
+        width: 100%;
+        height: 36px;
+        box-sizing: border-box;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 0 11px;
+        background: white;
+        font-size: 12px;
+    }
+
+    .mapping-input:focus {
+        outline: none;
+        border-color: #111;
+    }
+
+    .mapping-input.is-saving {
+        opacity: .6;
+        pointer-events: none;
+    }
+
+
+    /* =========================================================
+       AUTOCOMPLETE RESULTS
+    ========================================================= */
+
+    .mapping-results {
+        position: absolute;
+        top: 40px;
+        left: 0;
+        right: 0;
+
+        display: none;
+
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+
+        max-height: 280px;
+        overflow-y: auto;
+
+        z-index: 999;
+
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .12);
+    }
+
+    .mapping-result {
+        display: block;
+        width: 100%;
+        padding: 10px 12px;
+
+        border: none;
+        border-bottom: 1px solid #eee;
+
+        background: white;
+        color: #111;
+
+        text-align: left;
+        font-size: 11px;
+        line-height: 1.4;
+
+        cursor: pointer;
+    }
+
+    .mapping-result:last-child {
+        border-bottom: none;
+    }
+
+    .mapping-result:hover {
+        background: #f5f5f2;
+    }
+
+    .mapping-result-name {
+        font-weight: 600;
+        color: #111;
+    }
+
+    .mapping-result-code {
+        margin-top: 2px;
+        color: var(--tx2);
+        font-size: 10px;
+    }
+
+
+    /* =========================================================
+       CURRENT MAPPING
+    ========================================================= */
+
+    .current-mapping {
+        margin-top: 6px;
+        font-size: 10px;
+        color: var(--tx2);
+        line-height: 1.4;
+    }
+
+    .current-mapping strong {
+        color: #111;
+        font-weight: 600;
+    }
+
+
+    /* =========================================================
+       CLEAR BUTTON
+    ========================================================= */
+
+    .mapping-input-row {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .mapping-input-row .mapping-input {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .clear-mapping-btn {
+        flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
+
+        border: 1px solid var(--line);
+        border-radius: 7px;
+
+        background: white;
+        color: var(--tx2);
+
+        font-size: 15px;
+        line-height: 1;
+
+        cursor: pointer;
+    }
+
+    .clear-mapping-btn:hover {
+        background: #f5f5f2;
+        color: #111;
+    }
+
+
+    /* =========================================================
+       EMPTY
+    ========================================================= */
+
+    .empty-result {
+        padding: 14px 12px;
+        font-size: 11px;
+        color: var(--tx2);
+    }
+
+
+    /* =========================================================
+       PAGINATION
+    ========================================================= */
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 14px;
+        margin-top: 24px;
+        font-size: 12px;
+    }
+
+    .pagination a {
+        text-decoration: none;
+        color: #111;
+    }
+
+    .pagination a:hover {
+        text-decoration: underline;
+    }
+
+</style>
+
+
+<!-- =========================================================
+     FILTER
+========================================================= -->
+
+<form method="get" class="mapping-filter">
+
+    <input
+        class="mapping-search"
+        type="text"
+        name="q"
+        value="{{ search_query }}"
+        placeholder="원본 카테고리명 / 경로 검색"
+    >
+
+    <select name="source">
+        <option value="">전체 플랫폼</option>
+
+        {% for src in sources %}
+        <option
+            value="{{ src.id }}"
+            {% if selected_source|stringformat:"s" == src.id|stringformat:"s" %}
+                selected
+            {% endif %}
+        >
+            {{ src.label }}
+        </option>
+        {% endfor %}
+    </select>
+
+
+    <select name="status">
+        <option value="">전체 상태</option>
+
+        <option
+            value="unmapped"
+            {% if selected_status == "unmapped" %}
+                selected
+            {% endif %}
+        >
+            미매핑
+        </option>
+
+        <option
+            value="mapped"
+            {% if selected_status == "mapped" %}
+                selected
+            {% endif %}
+        >
+            매핑 완료
+        </option>
+    </select>
+
+
+    <button
+        type="submit"
+        class="btn"
+        style="background: #222; color: white;"
+    >
+        검색
+    </button>
+
+</form>
+
+
+
+<!-- =========================================================
+     TABLE
+========================================================= -->
+
+<div class="table-wrap" style="overflow-x: auto;">
+
+<table class="mapping-table">
+
+    <colgroup>
+        <col style="width: 60px;">
+        <col style="width: 105px;">
+        <col style="width: 150px;">
+        <col>
+        <col style="width: 380px;">
+        <col style="width: 100px;">
+    </colgroup>
+
+
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>플랫폼</th>
+            <th>원본 카테고리명</th>
+            <th>원본 카테고리 경로</th>
+            <th>FEEDIT PRODUCT CATEGORY</th>
+            <th>상태</th>
+        </tr>
+    </thead>
+
+
+    <tbody>
+
+    {% for item in category_sources %}
+
+        <tr>
+
+            <!-- ID -->
+            <td style="font-weight: 700;">
+                {{ item.id }}
+            </td>
+
+
+            <!-- SOURCE -->
+            <td>
+                <span class="source-chip">
+                    {{ item.source.label }}
+                </span>
+            </td>
+
+
+            <!-- SOURCE CATEGORY NAME -->
+            <td style="font-weight: 600;">
+                {{ item.source_category_name|default:"-" }}
+            </td>
+
+
+            <!-- SOURCE CATEGORY PATH -->
+            <td>
+                <span
+                    class="path-text"
+                    title="{{ item.source_category_path }}"
+                >
+                    {{ item.source_category_path|default:"-" }}
+                </span>
+            </td>
+
+
+            <!-- FEEDIT CATEGORY -->
+            <td>
+
+                <div
+                    class="mapping-box"
+                    data-source-id="{{ item.id }}"
+                >
+
+                    <div class="mapping-input-row">
+
+                        <input
+                            type="text"
+                            class="mapping-input"
+                            placeholder="PRODUCT 카테고리 검색..."
+                            autocomplete="off"
+                            value="{% if item.category_id %}{{ item.category }}{% endif %}"
+                        >
+
+                        <button
+                            type="button"
+                            class="clear-mapping-btn"
+                            title="매핑 해제"
+                        >
+                            ×
+                        </button>
+
+                    </div>
+
+
+                    <input
+                        type="hidden"
+                        class="mapping-category-id"
+                        value="{% if item.category_id %}{{ item.category_id }}{% endif %}"
+                    >
+
+
+                    <div class="mapping-results"></div>
+
+
+                    <div class="current-mapping">
+                        {% if item.category_id %}
+                            현재:
+                            <strong>
+                                {{ item.category }}
+                            </strong>
+                        {% else %}
+                            현재 매핑 없음
+                        {% endif %}
+                    </div>
+
+                </div>
+
+            </td>
+
+
+            <!-- STATUS -->
+            <td class="status-cell">
+
+                {% if item.category_id %}
+
+                    <span class="status-chip mapped">
+                        MAPPED
+                    </span>
+
+                {% else %}
+
+                    <span class="status-chip unmapped">
+                        UNMAPPED
+                    </span>
+
+                {% endif %}
+
+            </td>
+
+        </tr>
+
+    {% empty %}
+
+        <tr>
+            <td
+                colspan="6"
+                style="
+                    text-align: center;
+                    padding: 60px 0;
+                    color: var(--tx2);
+                "
+            >
+                조건에 맞는 카테고리가 없습니다.
+            </td>
+        </tr>
+
+    {% endfor %}
+
+    </tbody>
+
+</table>
+
+</div>
+
+
+
+<!-- =========================================================
+     PAGINATION
+========================================================= -->
+
+<div class="pagination">
+
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&source={{ selected_source }}&status={{ selected_status }}&q={{ search_query|urlencode }}">
+            ← Prev
+        </a>
+    {% endif %}
+
+
+    <span>
+        {{ page_obj.number }}
+        /
+        {{ page_obj.paginator.num_pages }}
+    </span>
+
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&source={{ selected_source }}&status={{ selected_status }}&q={{ search_query|urlencode }}">
+            Next →
+        </a>
+    {% endif %}
+
+</div>
+
+</section>
+
+
+
+<script>
+
+const CATEGORY_SEARCH_URL =
+    "{% url 'dashboard:category_mapping_search' %}";
+
+
+function getCsrfToken() {
+
+    const cookies = document.cookie.split(";");
+
+    for (const cookieRaw of cookies) {
+
+        const cookie = cookieRaw.trim();
+
+        if (cookie.startsWith("csrftoken=")) {
+            return decodeURIComponent(
+                cookie.substring("csrftoken=".length)
+            );
+        }
+    }
+
+    return "";
+}
+
+
+function hideAllResults(except = null) {
+
+    document
+        .querySelectorAll(".mapping-results")
+        .forEach(results => {
+
+            if (results !== except) {
+                results.style.display = "none";
+            }
+
+        });
+}
+
+
+document.querySelectorAll(".mapping-box").forEach(box => {
+
+    const sourceId =
+        box.dataset.sourceId;
+
+    const input =
+        box.querySelector(".mapping-input");
+
+    const hidden =
+        box.querySelector(".mapping-category-id");
+
+    const results =
+        box.querySelector(".mapping-results");
+
+    const currentMapping =
+        box.querySelector(".current-mapping");
+
+    const clearButton =
+        box.querySelector(".clear-mapping-btn");
+
+    let timer = null;
+
+
+    /* =====================================================
+       SEARCH
+    ===================================================== */
+
+    input.addEventListener("input", () => {
+
+        clearTimeout(timer);
+
+        const query = input.value.trim();
+
+        /*
+         사용자가 직접 입력을 수정한 순간
+         기존 hidden id는 무효화.
+        */
+        hidden.value = "";
+
+
+        if (!query) {
+            results.innerHTML = "";
+            results.style.display = "none";
+            return;
+        }
+
+
+        timer = setTimeout(async () => {
+
+            try {
+
+                hideAllResults(results);
+
+                const response = await fetch(
+                    CATEGORY_SEARCH_URL
+                    + "?q="
+                    + encodeURIComponent(query)
+                );
+
+
+                if (!response.ok) {
+                    throw new Error(
+                        `HTTP ${response.status}`
+                    );
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                results.innerHTML = "";
+
+
+                if (!data.results || !data.results.length) {
+
+                    results.innerHTML = `
+                        <div class="empty-result">
+                            검색 결과가 없습니다.
+                        </div>
+                    `;
+
+                    results.style.display = "block";
+
+                    return;
+                }
+
+
+                data.results.forEach(category => {
+
+                    const button =
+                        document.createElement("button");
+
+
+                    button.type = "button";
+
+                    button.className =
+                        "mapping-result";
+
+
+                    const name =
+                        document.createElement("div");
+
+                    name.className =
+                        "mapping-result-name";
+
+                    name.textContent =
+                        category.label;
+
+
+                    button.appendChild(name);
+
+
+                    if (category.code) {
+
+                        const code =
+                            document.createElement("div");
+
+                        code.className =
+                            "mapping-result-code";
+
+                        code.textContent =
+                            category.code;
+
+                        button.appendChild(code);
+
+                    }
+
+
+                    button.addEventListener(
+                        "click",
+                        async () => {
+
+                            input.value =
+                                category.label;
+
+                            hidden.value =
+                                category.id;
+
+                            results.style.display =
+                                "none";
+
+
+                            await saveMapping(
+                                sourceId,
+                                category.id,
+                                box
+                            );
+
+                        }
+                    );
+
+
+                    results.appendChild(button);
+
+                });
+
+
+                results.style.display =
+                    "block";
+
+
+            } catch (error) {
+
+                console.error(
+                    "Category search failed:",
+                    error
+                );
+
+
+                results.innerHTML = `
+                    <div class="empty-result">
+                        카테고리를 불러오지 못했습니다.
+                    </div>
+                `;
+
+                results.style.display =
+                    "block";
+
+            }
+
+        }, 250);
+
+    });
+
+
+    /* =====================================================
+       CLEAR
+    ===================================================== */
+
+    clearButton.addEventListener(
+        "click",
+        async () => {
+
+            await clearMapping(
+                sourceId,
+                box
+            );
+
+        }
+    );
+
+});
+
+
+
+/* =========================================================
+   SAVE
+========================================================= */
+
+async function saveMapping(
+    sourceId,
+    categoryId,
+    box
+) {
+
+    const input =
+        box.querySelector(".mapping-input");
+
+    const hidden =
+        box.querySelector(".mapping-category-id");
+
+    const currentMapping =
+        box.querySelector(".current-mapping");
+
+    const row =
+        box.closest("tr");
+
+    const statusCell =
+        row.querySelector(".status-cell");
+
+
+    input.classList.add(
+        "is-saving"
+    );
+
+
+    try {
+
+        const formData =
+            new FormData();
+
+
+        formData.append(
+            "category_id",
+            categoryId
+        );
+
+
+        const response = await fetch(
+            `/admin-dashboard/collection/category-mapping/${sourceId}/save/`,
+            {
+                method: "POST",
+
+                headers: {
+                    "X-CSRFToken":
+                        getCsrfToken()
+                },
+
+                body: formData,
+            }
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.ok) {
+
+            throw new Error(
+                data.error
+                || "매핑 저장 실패"
+            );
+
+        }
+
+
+        hidden.value =
+            data.mapped_id || "";
+
+
+        if (data.mapped_label) {
+
+            input.value =
+                data.mapped_label;
+
+
+            currentMapping.innerHTML =
+                "현재: <strong>"
+                + escapeHtml(data.mapped_label)
+                + "</strong>";
+
+        }
+
+
+        statusCell.innerHTML = `
+            <span class="status-chip mapped">
+                MAPPED
+            </span>
+        `;
+
+
+    } catch (error) {
+
+        console.error(
+            "Mapping save failed:",
+            error
+        );
+
+
+        alert(
+            "카테고리 매핑 저장에 실패했습니다."
+        );
+
+    } finally {
+
+        input.classList.remove(
+            "is-saving"
+        );
+
+    }
+
+}
+
+
+
+/* =========================================================
+   CLEAR MAPPING
+========================================================= */
+
+async function clearMapping(
+    sourceId,
+    box
+) {
+
+    const input =
+        box.querySelector(".mapping-input");
+
+    const hidden =
+        box.querySelector(".mapping-category-id");
+
+    const currentMapping =
+        box.querySelector(".current-mapping");
+
+    const row =
+        box.closest("tr");
+
+    const statusCell =
+        row.querySelector(".status-cell");
+
+
+    input.classList.add(
+        "is-saving"
+    );
+
+
+    try {
+
+        const formData =
+            new FormData();
+
+
+        /*
+         빈 category_id 전송
+         → backend에서 category = None 처리
+        */
+        formData.append(
+            "category_id",
+            ""
+        );
+
+
+        const response = await fetch(
+            `/admin-dashboard/collection/category-mapping/${sourceId}/save/`,
+            {
+                method: "POST",
+
+                headers: {
+                    "X-CSRFToken":
+                        getCsrfToken()
+                },
+
+                body: formData,
+            }
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.ok) {
+
+            throw new Error(
+                data.error
+                || "매핑 해제 실패"
+            );
+
+        }
+
+
+        input.value = "";
+        hidden.value = "";
+
+
+        currentMapping.textContent =
+            "현재 매핑 없음";
+
+
+        statusCell.innerHTML = `
+            <span class="status-chip unmapped">
+                UNMAPPED
+            </span>
+        `;
+
+
+    } catch (error) {
+
+        console.error(
+            "Mapping clear failed:",
+            error
+        );
+
+
+        alert(
+            "카테고리 매핑 해제에 실패했습니다."
+        );
+
+    } finally {
+
+        input.classList.remove(
+            "is-saving"
+        );
+
+    }
+
+}
+
+
+
+/* =========================================================
+   CLOSE AUTOCOMPLETE
+========================================================= */
+
+document.addEventListener(
+    "click",
+    event => {
+
+        document
+            .querySelectorAll(".mapping-box")
+            .forEach(box => {
+
+                if (!box.contains(event.target)) {
+
+                    const results =
+                        box.querySelector(
+                            ".mapping-results"
+                        );
+
+                    results.style.display =
+                        "none";
+
+                }
+
+            });
+
+    }
+);
+
+
+
+/* =========================================================
+   SAFE HTML
+========================================================= */
+
+function escapeHtml(value) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        value ?? "";
+
+    return div.innerHTML;
+
+}
+
+</script>
+
+{% endblock %}

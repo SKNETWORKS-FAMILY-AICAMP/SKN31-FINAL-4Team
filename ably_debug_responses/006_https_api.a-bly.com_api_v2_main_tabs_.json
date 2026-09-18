@@ -1,0 +1,92 @@
+{
+  "selected_id": "home",
+  "item_list": [
+    {
+      "id": "home",
+      "name": "홈",
+      "screen_name": "HOME",
+      "render": {
+        "selected_icon": "https://img.a-bly.com/tab/v3/icon_home_active.png",
+        "unselected_icon": "https://img.a-bly.com/tab/v3/icon_home.png",
+        "selected_color": "#1F1F1F",
+        "unselected_color": "#777777"
+      },
+      "type": "CUSTOM",
+      "default_query": null
+    },
+    {
+      "id": "overview",
+      "name": "카테고리",
+      "screen_name": "OVERVIEW",
+      "render": {
+        "selected_icon": "https://img.a-bly.com/tab/v3/icon_category_active.png",
+        "unselected_icon": "https://img.a-bly.com/tab/v3/icon_category.png",
+        "selected_color": "#1F1F1F",
+        "unselected_color": "#777777"
+      },
+      "type": "CUSTOM",
+      "default_query": null
+    },
+    {
+      "id": "todayDelivery",
+      "name": "도착보장",
+      "screen_name": "TODAY_DELIVERY",
+      "render": {
+        "selected_icon": "https://img.a-bly.com/tab/v3/icon_todaydelivery_active2.png",
+        "unselected_icon": "https://img.a-bly.com/tab/v3/icon_todaydelivery2.png",
+        "selected_color": "#1F1F1F",
+        "unselected_color": "#777777"
+      },
+      "type": "WEBVIEW",
+      "default_query": {
+        "url": "https://m.a-bly.com/today-delivery/?bottom-tab=true&tab=third_pl",
+        "title_bar": false
+      }
+    },
+    {
+      "id": "place",
+      "name": "오늘뭐하지",
+      "screen_name": "PLACE_HOME",
+      "render": {
+        "selected_icon": "https://img.a-bly.com/events/editor_images/event_editor_1782256279619527.png",
+        "unselected_icon": "https://img.a-bly.com/events/editor_images/event_editor_1782893737449681.png",
+        "selected_color": "#1F1F1F",
+        "unselected_color": "#777777"
+      },
+      "type": "WEBVIEW",
+      "default_query": {
+        "url": "https://m.a-bly.com/place/home",
+        "title_bar": false
+      }
+    },
+    {
+      "id": "like",
+      "name": "찜",
+      "screen_name": "LIKED_GOODS",
+      "render": {
+        "selected_icon": "https://img.a-bly.com/tab/v3/icon_heart_active.png",
+        "unselected_icon": "https://img.a-bly.com/tab/v3/icon_heart_new.png",
+        "selected_color": "#1F1F1F",
+        "unselected_color": "#777777"
+      },
+      "type": "CUSTOM",
+      "default_query": null
+    },
+    {
+      "id": "mypage",
+      "name": "마이페이지",
+      "screen_name": "MY_PAGE",
+      "render": {
+        "selected_icon": "https://img.a-bly.com/tab/v3/icon_mypage_active.png",
+        "unselected_icon": "https://img.a-bly.com/tab/v3/icon_mypage.png",
+        "selected_color": "#1F1F1F",
+        "unselected_color": "#777777"
+      },
+      "type": "WEBVIEW",
+      "default_query": {
+        "url": "https://m.a-bly.com/mypage",
+        "title_bar": true
+      }
+    }
+  ]
+}

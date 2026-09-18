@@ -1,0 +1,1015 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}댓글 데이터 분석 | FEEDIT Admin{% endblock %}
+
+{% block content %}
+<div class="comment-analytics-page">
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">DATA ANALYSIS</p>
+      <h1>댓글 데이터 분석</h1>
+      <p class="page-desc">
+        COMMENT 문서의 intent, mention, polarity, 복합 태그와 term co-occurrence를 확인합니다.
+      </p>
+    </div>
+    <div class="head-meta">
+      <span class="status-dot"></span>
+      <span>analysis.text_document / COMMENT</span>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <section class="kpi-grid">
+    <article class="kpi-card">
+      <span class="kpi-label">전체 댓글</span>
+      <strong class="kpi-value">{{ summary.total_comments|default:0 }}</strong>
+      <span class="kpi-sub">수집된 COMMENT 문서</span>
+    </article>
+
+    <article class="kpi-card">
+      <span class="kpi-label">분석 완료</span>
+      <strong class="kpi-value">{{ summary.analyzed_comments|default:0 }}</strong>
+      <span class="kpi-sub">analysis_metadata 존재</span>
+    </article>
+
+    <article class="kpi-card">
+      <span class="kpi-label">전체 Mention</span>
+      <strong class="kpi-value">{{ summary.total_mentions|default:0 }}</strong>
+      <span class="kpi-sub">추출된 패션 태그 수</span>
+    </article>
+
+    <article class="kpi-card">
+      <span class="kpi-label">평균 태그 / 댓글</span>
+      <strong class="kpi-value">{{ summary.avg_mentions_per_comment|default:0 }}</strong>
+      <span class="kpi-sub">댓글당 mention 평균</span>
+    </article>
+
+    <article class="kpi-card accent">
+      <span class="kpi-label">복합 태그 댓글</span>
+      <strong class="kpi-value">{{ summary.multi_tag_rate|default:0 }}%</strong>
+      <span class="kpi-sub">mention 2개 이상 · {{ summary.multi_tag_comments|default:0 }}건</span>
+    </article>
+  </section>
+
+  <!-- DISTRIBUTIONS -->
+  <section class="grid-3">
+    <article class="panel">
+      <div class="panel-head">
+        <div>
+          <span class="panel-kicker">INTENT</span>
+          <h2>댓글 의도 분포</h2>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="intentChart"></canvas></div>
+      <div class="metric-list">
+        {% for row in intent_stats %}
+        <div class="metric-row">
+          <span>{{ row.intent|default:"UNKNOWN" }}</span>
+          <div>
+            <strong>{{ row.count }}</strong>
+            <small>{{ row.percentage }}%</small>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty">데이터 없음</div>
+        {% endfor %}
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <div>
+          <span class="panel-kicker">MENTION SLOT</span>
+          <h2>패션 속성 분포</h2>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="slotChart"></canvas></div>
+      <div class="metric-list">
+        {% for row in slot_stats %}
+        <div class="metric-row">
+          <span>{{ row.slot|default:"UNKNOWN" }}</span>
+          <div>
+            <strong>{{ row.count }}</strong>
+            <small>{{ row.percentage }}%</small>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty">데이터 없음</div>
+        {% endfor %}
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <div>
+          <span class="panel-kicker">POLARITY</span>
+          <h2>반응 극성 분포</h2>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="polarityChart"></canvas></div>
+      <div class="metric-list">
+        {% for row in polarity_stats %}
+        <div class="metric-row">
+          <span>{{ row.polarity|default:"UNKNOWN" }}</span>
+          <div>
+            <strong>{{ row.count }}</strong>
+            <small>{{ row.percentage }}%</small>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty">데이터 없음</div>
+        {% endfor %}
+      </div>
+    </article>
+  </section>
+
+  <!-- ACTUAL REACTIONS -->
+  <section class="reaction-grid">
+    <article class="panel">
+      <div class="panel-head">
+        <div>
+          <span class="panel-kicker">TERM REACTIONS</span>
+          <h2>실제 반응 TERM TOP 30</h2>
+          <p class="panel-desc">점수화 없이 실제 댓글 건수 기준으로 구매·질문·경험·긍부정 반응을 집계합니다.</p>
+        </div>
+        <span class="panel-note">KEEP = TRUE</span>
+      </div>
+
+      <div class="table-wrap reaction-table">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>TERM</th>
+              <th>SLOT</th>
+              <th class="num">댓글</th>
+              <th class="num">POS</th>
+              <th class="num">NEG</th>
+              <th class="num">PURCHASE</th>
+              <th class="num">QUESTION</th>
+              <th class="num">EXPERIENCE</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in term_reactions %}
+            <tr>
+              <td class="muted">{{ forloop.counter|stringformat:"02d" }}</td>
+              <td><strong>{{ row.term }}</strong></td>
+              <td><span class="slot-badge">{{ row.slot|default:"-" }}</span></td>
+              <td class="num"><strong>{{ row.comment_count }}</strong></td>
+              <td class="num reaction-pos">{{ row.pos_count }}</td>
+              <td class="num reaction-neg">{{ row.neg_count }}</td>
+              <td class="num reaction-purchase">{{ row.purchase_count }}</td>
+              <td class="num">{{ row.question_count }}</td>
+              <td class="num">{{ row.experience_count }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9" class="empty">TERM 반응 데이터가 없습니다.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <div>
+          <span class="panel-kicker">REAL COMMENTS</span>
+          <h2>실제 반응 댓글</h2>
+          <p class="panel-desc">좋아요가 높은 실제 댓글 원문과 함께 추출된 패션 태그를 확인합니다.</p>
+        </div>
+        <span class="panel-note">TOP 20</span>
+      </div>
+
+      <div class="comment-feed">
+        {% for row in reaction_comments %}
+        <article class="comment-item">
+          <div class="comment-meta">
+            <span class="intent-badge intent-{{ row.intent|lower }}">
+              {{ row.intent|default:"UNKNOWN" }}
+            </span>
+
+            <span class="comment-likes">
+              ♥ {{ row.likes|default:0 }}
+            </span>
+
+            {% if row.published_at %}
+            <span class="comment-date">
+              {{ row.published_at|slice:":10" }}
+            </span>
+            {% endif %}
+          </div>
+
+          <p class="comment-body">
+            {{ row.body }}
+          </p>
+
+          <div class="comment-tags">
+            {% for mention in row.mentions %}
+            <span class="reaction-tag polarity-{{ mention.polarity|lower }}">
+              <small>{{ mention.slot }}</small>
+              {{ mention.term }}
+              <em>{{ mention.polarity }}</em>
+            </span>
+            {% endfor %}
+          </div>
+        </article>
+        {% empty %}
+        <div class="empty">실제 댓글 데이터가 없습니다.</div>
+        {% endfor %}
+      </div>
+    </article>
+  </section>
+
+  <!-- TERM PAIR -->
+  <section class="panel term-panel">
+    <div class="panel-head">
+      <div>
+        <span class="panel-kicker">TERM CO-OCCURRENCE</span>
+        <h2>동시 등장 Term Pair TOP 50</h2>
+        <p class="panel-desc">같은 댓글 안에서 함께 등장한 패션 용어 조합입니다. 추후 Lift / PMI 지표와 연결할 수 있습니다.</p>
+      </div>
+      <div class="mini-kpis">
+        <span>MIN CO-COUNT <strong>5</strong></span>
+        <span>TOP <strong>50</strong></span>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>TERM 1</th>
+            <th>SLOT</th>
+            <th></th>
+            <th>TERM 2</th>
+            <th>SLOT</th>
+            <th class="num">CO-COUNT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in term_pairs %}
+          <tr>
+            <td class="muted">{{ forloop.counter|stringformat:"02d" }}</td>
+            <td><strong>{{ row.term_1 }}</strong></td>
+            <td><span class="slot-badge">{{ row.slot_1 }}</span></td>
+            <td class="pair-arrow">×</td>
+            <td><strong>{{ row.term_2 }}</strong></td>
+            <td><span class="slot-badge">{{ row.slot_2 }}</span></td>
+            <td class="num"><strong>{{ row.co_count }}</strong></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="empty">동시 등장 term 데이터가 없습니다.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+{{ intent_stats|json_script:"intent-stats-data" }}
+{{ slot_stats|json_script:"slot-stats-data" }}
+{{ polarity_stats|json_script:"polarity-stats-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  const parse = (id) => {
+    const el = document.getElementById(id);
+    return el ? JSON.parse(el.textContent) : [];
+  };
+
+  const intent = parse('intent-stats-data');
+  const slots = parse('slot-stats-data');
+  const polarity = parse('polarity-stats-data');
+
+  const textColor = '#7d7a74';
+  const gridColor = 'rgba(28, 27, 24, .08)';
+  const accent = '#2FA875';
+
+  Chart.defaults.color = textColor;
+  Chart.defaults.font.family = 'Inter, Pretendard, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+  function doughnut(id, labels, values) {
+    const el = document.getElementById(id);
+    if (!el || !values.length) return;
+
+    new Chart(el, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: [
+            accent,
+            '#D9D5CD',
+            '#BEB8AE',
+            '#9E978D',
+            '#7D766D',
+            '#5E5851',
+            '#2D2A27'
+          ],
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '72%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `${ctx.label}: ${Number(ctx.raw).toLocaleString()}`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  doughnut(
+    'intentChart',
+    intent.map(x => x.intent || 'UNKNOWN'),
+    intent.map(x => Number(x.count || 0))
+  );
+
+  doughnut(
+    'slotChart',
+    slots.map(x => x.slot || 'UNKNOWN'),
+    slots.map(x => Number(x.count || 0))
+  );
+
+  doughnut(
+    'polarityChart',
+    polarity.map(x => x.polarity || 'UNKNOWN'),
+    polarity.map(x => Number(x.count || 0))
+  );
+
+  const tagEl = document.getElementById('tagCountChart');
+  if (tagEl && tagCounts.length) {
+    new Chart(tagEl, {
+      type: 'bar',
+      data: {
+        labels: tagCounts.map(x => `${x.tag_count}개`),
+        datasets: [{
+          label: '댓글 수',
+          data: tagCounts.map(x => Number(x.comment_count || 0)),
+          backgroundColor: accent,
+          borderRadius: 6,
+          maxBarThickness: 42
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: {
+            beginAtZero: true,
+            grid: { color: gridColor },
+            ticks: { precision: 0 }
+          }
+        }
+      }
+    });
+  }
+
+  const bars = [...document.querySelectorAll('.combo-bar')];
+  const max = Math.max(...bars.map(el => Number(el.dataset.value || 0)), 1);
+  bars.forEach(el => {
+    el.style.width = `${Math.max(4, Number(el.dataset.value || 0) / max * 100)}%`;
+  });
+})();
+</script>
+
+<style>
+.comment-analytics-page {
+  --page-bg: #f5f3ee;
+  --card: #ffffff;
+  --card-soft: #faf9f6;
+  --line: #dedbd4;
+  --line-soft: #ebe8e1;
+  --text: #171714;
+  --muted: #7f7a72;
+  --muted-2: #aaa49b;
+  --green: #2fa875;
+  --green-soft: #edf8f3;
+  --lime: #e9f056;
+
+  color: var(--text);
+  padding: 0 0 56px;
+}
+
+/* ============================================================
+   PAGE HEAD
+============================================================ */
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 28px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.eyebrow,
+.panel-kicker {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--green);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: .14em;
+}
+
+.page-head h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: 31px;
+  line-height: 1.18;
+  font-weight: 800;
+  letter-spacing: -.045em;
+}
+
+.page-desc,
+.panel-desc {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.head-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgba(47, 168, 117, .10);
+}
+
+/* ============================================================
+   KPI
+============================================================ */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.kpi-card {
+  min-height: 142px;
+  padding: 20px 21px 18px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 1px 0 rgba(0,0,0,.02);
+}
+
+.kpi-card.accent {
+  border-color: rgba(47, 168, 117, .35);
+  background:
+    linear-gradient(180deg, rgba(47,168,117,.035), rgba(47,168,117,0)),
+    var(--card);
+}
+
+.kpi-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.kpi-value {
+  margin-top: 15px;
+  color: var(--text);
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -.055em;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-card.accent .kpi-value {
+  color: var(--green);
+}
+
+.kpi-sub {
+  margin-top: auto;
+  padding-top: 15px;
+  color: var(--muted-2);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .03em;
+}
+
+/* ============================================================
+   LAYOUT
+============================================================ */
+
+.grid-3,
+.grid-2 {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.panel {
+  padding: 21px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+}
+
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.panel-head h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -.025em;
+}
+
+.panel-note {
+  color: var(--muted-2);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   CHARTS
+============================================================ */
+
+.chart-box {
+  height: 185px;
+  margin-bottom: 12px;
+  padding: 4px 0;
+}
+
+.chart-box.wide {
+  height: 215px;
+}
+
+/* ============================================================
+   DISTRIBUTION LIST
+============================================================ */
+
+.metric-list {
+  display: grid;
+  margin-top: 4px;
+}
+
+.metric-row {
+  min-height: 39px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 12px;
+}
+
+.metric-row > span {
+  color: #57534d;
+  font-weight: 650;
+}
+
+.metric-row > div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.metric-row strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-row small {
+  min-width: 46px;
+  text-align: right;
+  color: var(--muted-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   TABLES
+============================================================ */
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--card);
+}
+
+.table-wrap table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
+.compact-table table {
+  min-width: 0;
+}
+
+th,
+td {
+  padding: 12px 13px;
+  border-bottom: 1px solid var(--line-soft);
+  color: #4d4943;
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  background: var(--card-soft);
+  color: #918b82;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .07em;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody tr:hover {
+  background: #fbfaf7;
+}
+
+td strong {
+  color: var(--text);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--muted-2);
+}
+
+.pair-arrow {
+  text-align: center;
+  color: var(--green);
+  font-weight: 900;
+}
+
+/* ============================================================
+   BADGES
+============================================================ */
+
+.tag-pill,
+.slot-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 8px;
+  border: 1px solid #dedbd4;
+  border-radius: 999px;
+  background: #f7f5f0;
+  color: #676159;
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.slot-badge {
+  border-color: #d7ebe1;
+  background: var(--green-soft);
+  color: #277e5b;
+}
+
+/* ============================================================
+   RANK LIST
+============================================================ */
+
+.rank-list {
+  display: grid;
+}
+
+.rank-row {
+  min-height: 47px;
+  display: grid;
+  grid-template-columns: 31px minmax(0, 1fr) 66px;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.rank-row:first-child {
+  border-top: 0;
+}
+
+.rank {
+  color: #b2aca3;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-main strong {
+  display: block;
+  overflow: hidden;
+  color: #4d4943;
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  height: 4px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #efede7;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--green);
+}
+
+.rank-count {
+  text-align: right;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   TERM PANEL
+============================================================ */
+
+.term-panel {
+  margin-bottom: 0;
+}
+
+.mini-kpis {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.mini-kpis span {
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card-soft);
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.mini-kpis strong {
+  color: var(--green);
+}
+
+.empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--muted-2);
+  font-size: 12px;
+}
+
+
+/* ============================================================
+   ACTUAL REACTIONS
+============================================================ */
+
+.reaction-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, .85fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.reaction-table table {
+  min-width: 860px;
+}
+
+.reaction-pos {
+  color: #25865f;
+  font-weight: 700;
+}
+
+.reaction-neg {
+  color: #b6554d;
+  font-weight: 700;
+}
+
+.reaction-purchase {
+  color: #171714;
+  font-weight: 800;
+  background: #f7f8e8;
+}
+
+.comment-feed {
+  display: grid;
+  max-height: 650px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.comment-item {
+  padding: 16px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.comment-item:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 9px;
+}
+
+.intent-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f1efe9;
+  color: #615c55;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.intent-purchase {
+  background: #eef8f3;
+  color: #237b58;
+}
+
+.intent-question {
+  background: #f1f4f8;
+  color: #53677c;
+}
+
+.intent-experience {
+  background: #f6f2e8;
+  color: #7d6742;
+}
+
+.intent-praise {
+  background: #f4f7df;
+  color: #6c762d;
+}
+
+.intent-critique {
+  background: #fbefed;
+  color: #a34e46;
+}
+
+.comment-likes,
+.comment-date {
+  color: var(--muted-2);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.comment-body {
+  margin: 0 0 11px;
+  color: #3f3b36;
+  font-size: 12px;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+.comment-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.reaction-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card-soft);
+  color: #4f4a44;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.reaction-tag small {
+  color: var(--muted-2);
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.reaction-tag em {
+  color: var(--muted-2);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.reaction-tag.polarity-pos {
+  border-color: #d7ebe1;
+  background: #f3faf7;
+}
+
+.reaction-tag.polarity-neg {
+  border-color: #edd7d4;
+  background: #fdf6f5;
+}
+
+@media (max-width: 1180px) {
+  .reaction-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .comment-feed {
+    max-height: none;
+  }
+}
+
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
+@media (max-width: 1280px) {
+  .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .page-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .kpi-grid,
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .head-meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+</style>
+{% endblock %}

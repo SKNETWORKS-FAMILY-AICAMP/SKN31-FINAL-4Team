@@ -28,181 +28,92 @@ from analysis.source_ingestion.product_name_preprocessor import (
 )
 
 
+CATEGORY_NAME_MAP = {
+    "474": "상의",
+    "547": "팬츠",
+    "436": "아우터",
+    "560": "스커트",
+    "2757": "니트/카디건",
+    "833": "트레이닝",
+    "507": "원피스",
+    "538": "투피스/세트",
+}
+
+
 class ZigzagNormalizer:
     """
-    Zigzag schema 3.x ranking/store payload -> FEEDIT DB.
+    Zigzag CNV payload -> FEEDIT source layer.
 
-    기준
-    ------------------------------------------------------------
-    BrandSource.source_brand_id = Zigzag shop_id
-    BrandSource.attributes["main_domain"] = Zigzag main_domain
-    BrandSource.source_profile_url = https://zigzag.kr/{main_domain}
+    흐름:
+        CNV Raw
+        -> group/tag flatten
+        -> product_id별 observation 병합
+        -> BrandSource
+        -> CategorySource
+        -> ProductSource
+        -> ProductSourceSnapshot
 
-    Ranking item 예:
-    {
-        "rank": 1,
-        "source_product_id": "...",
-        "product_name": "...",
-        "store": {
-            "source_brand_id": "88",
-            "name": "케이클럽",
-            "main_domain": "kclub",
-            "source_profile_url": "https://zigzag.kr/kclub"
-        },
-        "category_id": "435",
-        "category_name": "롱원피스",
-        "category_path": [...],
-        "regular_price": 27400,
-        "sale_price": 24110,
-        "discount_rate": 58.0,
-        "review_score": 4.9,
-        "review_count": 208,
-        ...
-    }
-
-    중요:
-    - canonical Brand / Product를 억지로 생성하지 않는다.
-    - source 레이어는 UNMAPPED여도 반드시 보존한다.
-    - 이미 수동 매핑된 BrandSource / ProductSource 연결은 보존한다.
+    원칙:
+        - canonical Brand/Product를 억지로 만들지 않는다.
+        - source layer는 UNMAPPED이어도 보존한다.
+        - 기존 수동 매핑은 덮어쓰지 않는다.
+        - 동일 상품의 trend/style/tpo 노출은 ProductSource 1개로 합친다.
+        - tag/rank는 observed_tags로 모두 보존한다.
     """
 
     def __init__(self, *, source):
         self.source = source
-
-    # ============================================================
-    # PUBLIC
-    # ============================================================
+        self._brand_lookup = None
+        self._category_lookup = None
 
     @transaction.atomic
-    def normalize_ranking_payload(
+    def normalize_cnv_payload(
         self,
         raw: dict[str, Any],
         *,
         create_snapshot: bool = True,
     ) -> dict[str, Any]:
-        """
-        S3 raw JSON 또는 pipeline payload 모두 허용.
-
-        create_snapshot=False이면
-        BrandSource / CategorySource / ProductSource까지만 저장하고
-        ProductSourceSnapshot은 생성하지 않는다.
-
-        지원:
-        1)
-        {
-            "payload": {
-                "ranking": {
-                    "items": [...]
-                }
-            }
-        }
-
-        2)
-        {
-            "ranking": {
-                "items": [...]
-            }
-        }
-
-        3)
-        {
-            "products": [...]
-        }
-        """
-
         if not isinstance(raw, dict):
-            raise ValueError(
-                "ZIGZAG raw payload는 dict여야 합니다."
-            )
+            raise ValueError("ZIGZAG raw payload는 dict여야 합니다.")
 
-        payload = raw.get("payload")
-        if isinstance(payload, dict):
-            data = payload
-        else:
-            data = raw
+        data = self._unwrap_payload(raw)
+        cnv = data.get("cnv") if isinstance(data.get("cnv"), dict) else {}
+        groups = data.get("groups") if isinstance(data.get("groups"), dict) else {}
 
-        ranking = (
-            data.get("ranking")
-            if isinstance(
-                data.get("ranking"),
-                dict,
-            )
-            else {}
-        )
-
-        items = (
-            ranking.get("items")
-            if isinstance(
-                ranking.get("items"),
-                list,
-            )
-            else data.get("products")
-        )
-
-        if not isinstance(items, list):
-            items = []
+        if not groups:
+            raise ValueError("ZIGZAG CNV payload에 groups가 없습니다.")
 
         observed_at = self._parse_datetime(
-            raw.get("collected_at")
-            or data.get("collected_at")
+            raw.get("collected_at") or data.get("collected_at")
         )
 
-        ranking_context = {
-            "category_id": (
-                ranking.get("category_id")
-                or (
-                    data.get("target") or {}
-                ).get("category_id")
-            ),
-            "sort": (
-                ranking.get("sort")
-                or (
-                    data.get("target") or {}
-                ).get("sort")
-            ),
-            "page_id": (
-                ranking.get("page_id")
-                or (
-                    data.get("target") or {}
-                ).get("page_id")
-            ),
-            "source_url": (
-                ranking.get("source_url")
-                or (
-                    data.get("target") or {}
-                ).get("target_url")
-                or raw.get("source_url")
-            ),
-        }
+        category_id = clean_text(cnv.get("category_id"))
+        if category_id is None:
+            category_id = self._infer_category_id(groups)
 
-        brand_created = 0
-        brand_updated = 0
-        product_created = 0
-        product_updated = 0
-        snapshot_created = 0
-        snapshot_updated = 0
-        category_created = 0
-        category_updated = 0
-        errors = []
+        order = clean_text(cnv.get("order")) or "SCORE_DESC"
 
-        results = []
+        observations = self.flatten_cnv_groups(
+            groups=groups,
+            category_id=category_id,
+            order=order,
+        )
+        aggregated_products = self.aggregate_product_observations(observations)
 
-        for index, item in enumerate(
-            items,
-            start=1,
-        ):
-            if not isinstance(item, dict):
-                continue
+        brand_created = brand_updated = 0
+        category_created = category_updated = 0
+        product_created = product_updated = 0
+        snapshot_created = snapshot_updated = 0
+        errors: list[dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
 
+        for index, item in enumerate(aggregated_products, start=1):
             try:
-                result = self.normalize_ranking_item(
+                result = self.normalize_cnv_item(
                     item,
                     observed_at=observed_at,
-                    ranking_context=ranking_context,
-                    fallback_rank=index,
                     create_snapshot=create_snapshot,
                 )
-
                 results.append(result)
 
                 if result["brand_source_created"]:
@@ -230,12 +141,7 @@ class ZigzagNormalizer:
                 errors.append(
                     {
                         "index": index,
-                        "source_product_id": (
-                            item.get("source_product_id")
-                            or item.get(
-                                "catalog_product_id"
-                            )
-                        ),
+                        "source_product_id": item.get("source_product_id"),
                         "error_type": type(exc).__name__,
                         "error": str(exc),
                     }
@@ -243,155 +149,178 @@ class ZigzagNormalizer:
 
         return {
             "source": self.source.code,
+            "schema": "ZIGZAG_CNV",
             "observed_at": observed_at,
-            "count": len(results),
-            "brand_sources": {
-                "created": brand_created,
-                "updated": brand_updated,
-            },
-            "category_sources": {
-                "created": category_created,
-                "updated": category_updated,
-            },
-            "product_sources": {
-                "created": product_created,
-                "updated": product_updated,
-            },
-            "snapshots": {
-                "created": snapshot_created,
-                "updated": snapshot_updated,
-            },
+            "category_id": category_id,
+            "category_name": CATEGORY_NAME_MAP.get(str(category_id)) if category_id else None,
+            "order": order,
+            "observation_count": len(observations),
+            "unique_product_count": len(aggregated_products),
+            "processed_count": len(results),
+            "brand_sources": {"created": brand_created, "updated": brand_updated},
+            "category_sources": {"created": category_created, "updated": category_updated},
+            "product_sources": {"created": product_created, "updated": product_updated},
+            "snapshots": {"created": snapshot_created, "updated": snapshot_updated},
+            "error_count": len(errors),
             "errors": errors,
             "items": results,
         }
 
-    @transaction.atomic
-    def normalize_ranking_item(
+    def normalize_ranking_payload(
+        self,
+        raw: dict[str, Any],
+        *,
+        create_snapshot: bool = True,
+    ) -> dict[str, Any]:
+        # 기존 source_ingestion service 호환 alias
+        return self.normalize_cnv_payload(raw, create_snapshot=create_snapshot)
+
+    def normalize_payload(
+        self,
+        raw: dict[str, Any],
+        *,
+        create_snapshot: bool = True,
+    ) -> dict[str, Any]:
+        return self.normalize_cnv_payload(raw, create_snapshot=create_snapshot)
+
+    def flatten_cnv_groups(
+        self,
+        *,
+        groups: dict[str, Any],
+        category_id: str | None,
+        order: str,
+    ) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+
+        for group_key, snapshots in groups.items():
+            group_key = str(group_key).lower().strip()
+            if not isinstance(snapshots, list):
+                continue
+
+            for snapshot in snapshots:
+                if not isinstance(snapshot, dict):
+                    continue
+
+                tag_name = clean_text(snapshot.get("tag_name"))
+                tag_group = clean_text(snapshot.get("tag_group"))
+                tag_attribute = clean_text(snapshot.get("tag_attribute"))
+                result_count = self._to_int(snapshot.get("result_count"))
+                products = snapshot.get("products") if isinstance(snapshot.get("products"), list) else []
+
+                for fallback_rank, product in enumerate(products, start=1):
+                    if not isinstance(product, dict):
+                        continue
+
+                    source_product_id = clean_text(product.get("product_id"))
+                    if source_product_id is None:
+                        continue
+
+                    rank = self._to_int(product.get("rank")) or fallback_rank
+                    resolved_category_id = clean_text(category_id or snapshot.get("category_id"))
+
+                    row = dict(product)
+                    row.update(
+                        {
+                            "source_product_id": source_product_id,
+                            "category_id": resolved_category_id,
+                            "category_name": CATEGORY_NAME_MAP.get(str(resolved_category_id or "")),
+                            "order": clean_text(snapshot.get("order")) or order,
+                            "tag_group_key": group_key,
+                            "tag_group": tag_group,
+                            "tag_attribute": tag_attribute,
+                            "tag_name": tag_name,
+                            "tag_result_count": result_count,
+                            "rank": rank,
+                        }
+                    )
+                    rows.append(row)
+
+        return rows
+
+    def aggregate_product_observations(
+        self,
+        rows: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        by_product: dict[str, dict[str, Any]] = {}
+
+        for row in rows:
+            source_product_id = clean_text(row.get("source_product_id"))
+            if source_product_id is None:
+                continue
+
+            current = by_product.get(source_product_id)
+            if current is None:
+                current = dict(row)
+                current["observed_tags"] = []
+                by_product[source_product_id] = current
+            else:
+                self._merge_non_null_fields(current, row)
+
+            observation = {
+                "group": clean_text(row.get("tag_group_key")),
+                "group_label": clean_text(row.get("tag_group")),
+                "attribute": clean_text(row.get("tag_attribute")),
+                "tag": clean_text(row.get("tag_name")),
+                "rank": self._to_int(row.get("rank")),
+                "result_count": self._to_int(row.get("tag_result_count")),
+                "order": clean_text(row.get("order")),
+            }
+
+            if observation not in current["observed_tags"]:
+                current["observed_tags"].append(observation)
+
+        for item in by_product.values():
+            ranks = [
+                obs.get("rank")
+                for obs in item["observed_tags"]
+                if obs.get("rank") is not None
+            ]
+            item["best_rank"] = min(ranks) if ranks else None
+
+        return list(by_product.values())
+
+    def normalize_cnv_item(
         self,
         item: dict[str, Any],
         *,
-        observed_at: datetime | None = None,
-        ranking_context: dict[str, Any] | None = None,
-        fallback_rank: int | None = None,
+        observed_at: datetime,
         create_snapshot: bool = True,
     ) -> dict[str, Any]:
-
-        observed_at = (
-            observed_at
-            or timezone.now()
+        brand_result = self.normalize_brand_source(self._extract_store(item))
+        category_result = self.normalize_category_source(item)
+        product_result = self.normalize_product_source(
+            item,
+            brand_source=brand_result["brand_source"],
+            category_source=category_result["category_source"],
+            observed_at=observed_at,
         )
 
-        ranking_context = (
-            dict(ranking_context)
-            if isinstance(
-                ranking_context,
-                dict,
-            )
-            else {}
-        )
-
-        brand_result = (
-            self.normalize_brand_source(
-                self._extract_store(item)
-            )
-        )
-
-        category_result = (
-            self.normalize_category_source(
-                item
-            )
-        )
-
-        product_result = (
-            self.normalize_product_source(
-                item,
-                brand_source=(
-                    brand_result[
-                        "brand_source"
-                    ]
-                ),
-                category_source=(
-                    category_result[
-                        "category_source"
-                    ]
-                ),
-                observed_at=observed_at,
-            )
-        )
-
-        snapshot_result = {
-            "created": False,
-            "snapshot": None,
-        }
-
+        snapshot_result = {"created": False, "snapshot": None}
         if create_snapshot:
-            snapshot_result = (
-                self.normalize_snapshot(
-                    item,
-                    product_source=(
-                        product_result[
-                            "product_source"
-                        ]
-                    ),
-                    observed_at=observed_at,
-                    ranking_context=ranking_context,
-                    fallback_rank=fallback_rank,
-                )
+            snapshot_result = self.normalize_snapshot(
+                item,
+                product_source=product_result["product_source"],
+                observed_at=observed_at,
             )
 
         return {
-            "source_product_id": (
-                product_result[
-                    "product_source"
-                ].source_product_id
-            ),
-            "brand_source": (
-                brand_result[
-                    "brand_source"
-                ]
-            ),
-            "brand_source_created": (
-                brand_result["created"]
-            ),
-            "category_source": (
-                category_result[
-                    "category_source"
-                ]
-            ),
-            "category_source_created": (
-                category_result["created"]
-            ),
-            "product_source": (
-                product_result[
-                    "product_source"
-                ]
-            ),
-            "product_source_created": (
-                product_result["created"]
-            ),
-            "snapshot": (
-                snapshot_result["snapshot"]
-            ),
-            "snapshot_created": (
-                snapshot_result["created"]
-            ),
+            "source_product_id": product_result["product_source"].source_product_id,
+            "brand_source": brand_result["brand_source"],
+            "brand_source_created": brand_result["created"],
+            "category_source": category_result["category_source"],
+            "category_source_created": category_result["created"],
+            "product_source": product_result["product_source"],
+            "product_source_created": product_result["created"],
+            "snapshot": snapshot_result["snapshot"],
+            "snapshot_created": snapshot_result["created"],
+            "observed_tag_count": len(item.get("observed_tags") or []),
         }
 
-    # ============================================================
-    # BRAND SOURCE
-    # ============================================================
-
-    @transaction.atomic
     def normalize_brand_source(
         self,
         store: dict[str, Any] | None,
     ) -> dict[str, Any]:
-
-        store = (
-            store
-            if isinstance(store, dict)
-            else {}
-        )
+        store = store if isinstance(store, dict) else {}
 
         source_brand_id = clean_text(
             store.get("source_brand_id")
@@ -399,17 +328,13 @@ class ZigzagNormalizer:
             or store.get("store_id")
             or store.get("id")
         )
-
         name = clean_text(
             store.get("name")
             or store.get("shop_name")
             or store.get("store_name")
         )
 
-        if (
-            source_brand_id is None
-            and name is None
-        ):
+        if source_brand_id is None and name is None:
             return {
                 "created": False,
                 "brand_source": None,
@@ -417,259 +342,76 @@ class ZigzagNormalizer:
                 "matched_by": "NO_STORE",
             }
 
-        # shop_id가 없는 예외 케이스만 이름 fallback
         if source_brand_id is None:
-            source_brand_id = (
-                "name:"
-                + normalize_brand_name(
-                    name
-                )
-            )
-
-        main_domain = clean_text(
-            store.get("main_domain")
-            or store.get("shop_domain")
-            or store.get("domain")
-        )
-
-        source_profile_url = clean_text(
-            store.get("source_profile_url")
-            or store.get("profile_url")
-        )
-
-        if (
-            not source_profile_url
-            and main_domain
-        ):
-            source_profile_url = (
-                f"https://zigzag.kr/"
-                f"{main_domain}"
-            )
-
-        english_name = clean_text(
-            store.get("english_name")
-        )
-
-        image_url = clean_text(
-            store.get("image_url")
-        )
-
-        description = clean_text(
-            store.get("description")
-        )
+            source_brand_id = "name:" + normalize_brand_name(name)
 
         now = timezone.now()
 
         brand_source = (
-            BrandSource.objects
-            .select_related("brand")
-            .filter(
-                source=self.source,
-                source_brand_id=(
-                    str(source_brand_id)
-                ),
-            )
+            BrandSource.objects.select_related("brand")
+            .filter(source=self.source, source_brand_id=str(source_brand_id))
             .first()
         )
-
-        created = (
-            brand_source is None
-        )
+        created = brand_source is None
 
         if created:
-            canonical_brand = (
-                self._find_brand(
-                    name
-                )
-            )
-
+            canonical_brand = self._find_brand(name)
             defaults = {
                 "brand": canonical_brand,
                 "source": self.source,
-                "source_brand_id": (
-                    str(source_brand_id)
-                ),
+                "source_brand_id": str(source_brand_id),
                 "name": name,
-                "english_name": english_name,
-                "image_url": image_url,
-                "description": description,
-                "source_profile_url": (
-                    source_profile_url
-                ),
-                "attributes": (
-                    self._build_store_attributes(
-                        store,
-                        current=None,
-                        main_domain=main_domain,
-                    )
-                ),
                 "first_seen_at": now,
                 "last_seen_at": now,
                 "detected_count": 1,
+                "attributes": {"zigzag_shop_id": str(source_brand_id)},
             }
 
             if canonical_brand is not None:
-                defaults[
-                    "mapping_status"
-                ] = (
-                    BrandSource
-                    .MappingStatus
-                    .AUTO_MAPPED
-                )
-                defaults[
-                    "mapping_method"
-                ] = (
-                    BrandSource
-                    .MappingMethod
-                    .EXACT_NAME
-                )
-                defaults[
-                    "mapping_confidence"
-                ] = Decimal("1.0000")
+                defaults["mapping_status"] = BrandSource.MappingStatus.AUTO_MAPPED
+                defaults["mapping_method"] = BrandSource.MappingMethod.EXACT_NAME
+                defaults["mapping_confidence"] = Decimal("1.0000")
             else:
-                defaults[
-                    "mapping_status"
-                ] = (
-                    BrandSource
-                    .MappingStatus
-                    .UNMAPPED
-                )
+                defaults["mapping_status"] = BrandSource.MappingStatus.UNMAPPED
 
-            brand_source = (
-                BrandSource.objects.create(
-                    **defaults
-                )
-            )
-
+            brand_source = BrandSource.objects.create(**defaults)
         else:
-            # 기존 canonical 매핑은 절대 덮어쓰지 않는다.
             if name:
                 brand_source.name = name
 
-            if english_name:
-                brand_source.english_name = (
-                    english_name
-                )
-
-            if image_url:
-                brand_source.image_url = (
-                    image_url
-                )
-
-            if description:
-                brand_source.description = (
-                    description
-                )
-
-            if source_profile_url:
-                brand_source.source_profile_url = (
-                    source_profile_url
-                )
-
-            brand_source.attributes = (
-                self._build_store_attributes(
-                    store,
-                    current=(
-                        brand_source.attributes
-                    ),
-                    main_domain=main_domain,
-                )
+            current_attributes = (
+                dict(brand_source.attributes)
+                if isinstance(brand_source.attributes, dict)
+                else {}
             )
+            current_attributes["zigzag_shop_id"] = str(source_brand_id)
+            brand_source.attributes = current_attributes
 
-            if (
-                brand_source.first_seen_at
-                is None
-            ):
-                brand_source.first_seen_at = (
-                    now
-                )
+            if brand_source.first_seen_at is None:
+                brand_source.first_seen_at = now
 
             brand_source.last_seen_at = now
-
-            brand_source.detected_count = (
-                (
-                    brand_source.detected_count
-                    or 0
-                )
-                + 1
-            )
-
+            brand_source.detected_count = (brand_source.detected_count or 0) + 1
             brand_source.save()
 
         return {
             "created": created,
             "brand_source": brand_source,
-            "matched": (
-                brand_source.brand_id
-                is not None
-            ),
-            "matched_by": (
-                brand_source.mapping_method
-                if brand_source.brand_id
-                else "UNMAPPED"
-            ),
+            "matched": brand_source.brand_id is not None,
+            "matched_by": brand_source.mapping_method if brand_source.brand_id else "UNMAPPED",
         }
 
-    # ============================================================
-    # CATEGORY SOURCE
-    # ============================================================
-
-    @transaction.atomic
     def normalize_category_source(
         self,
         item: dict[str, Any],
     ) -> dict[str, Any]:
+        category_id = clean_text(item.get("category_id"))
+        category_name = clean_text(item.get("category_name"))
 
-        category_path = (
-            item.get("category_path")
-            if isinstance(
-                item.get("category_path"),
-                list,
-            )
-            else []
-        )
+        if category_name is None and category_id is not None:
+            category_name = CATEGORY_NAME_MAP.get(str(category_id))
 
-        category_id = clean_text(
-            item.get("category_id")
-        )
-
-        category_name = clean_text(
-            item.get("category_name")
-        )
-
-        if (
-            category_path
-            and (
-                category_id is None
-                or category_name is None
-            )
-        ):
-            leaf = self._deepest_category(
-                category_path
-            )
-
-            category_id = (
-                category_id
-                or clean_text(
-                    leaf.get("id")
-                    or leaf.get(
-                        "category_id"
-                    )
-                )
-            )
-
-            category_name = (
-                category_name
-                or clean_text(
-                    leaf.get("name")
-                    or leaf.get("value")
-                )
-            )
-
-        if (
-            category_id is None
-            and category_name is None
-        ):
+        if category_id is None and category_name is None:
             return {
                 "created": False,
                 "category_source": None,
@@ -678,123 +420,47 @@ class ZigzagNormalizer:
             }
 
         if category_id is None:
-            category_id = (
-                "name:"
-                + normalize_category_name(
-                    category_name
-                )
-            )
+            category_id = "name:" + normalize_category_name(category_name)
 
-        path_names = []
-
-        for node in category_path:
-            if not isinstance(
-                node,
-                dict,
-            ):
-                continue
-
-            value = clean_text(
-                node.get("name")
-                or node.get("value")
-            )
-
-            if value:
-                path_names.append(value)
-
-        source_category_path = (
-            " > ".join(path_names)
-            if path_names
-            else category_name
-        )
-
-        normalized_name = (
-            normalize_category_name(
-                category_name
-            )
-        )
-
+        normalized_name = normalize_category_name(category_name) if category_name else None
         now = timezone.now()
 
         category_source = (
-            CategorySource.objects
-            .select_related("category")
-            .filter(
-                source=self.source,
-                source_category_id=(
-                    str(category_id)
-                ),
-            )
+            CategorySource.objects.select_related("category")
+            .filter(source=self.source, source_category_id=str(category_id))
             .first()
         )
-
-        created = (
-            category_source is None
-        )
+        created = category_source is None
 
         if created:
-            category = (
-                self._find_category(
-                    normalized_name
-                )
+            category = self._find_category(normalized_name)
+            category_source = CategorySource.objects.create(
+                category=category,
+                source=self.source,
+                source_category_id=str(category_id),
+                source_category_name=category_name,
+                source_category_path=category_name,
+                first_seen_at=now,
+                last_seen_at=now,
             )
-
-            category_source = (
-                CategorySource.objects.create(
-                    category=category,
-                    source=self.source,
-                    source_category_id=(
-                        str(category_id)
-                    ),
-                    source_category_name=(
-                        category_name
-                    ),
-                    source_category_path=(
-                        source_category_path
-                    ),
-                    first_seen_at=now,
-                    last_seen_at=now,
-                )
-            )
-
         else:
-            category_source.source_category_name = (
-                category_name
-            )
-            category_source.source_category_path = (
-                source_category_path
-            )
+            if category_name:
+                category_source.source_category_name = category_name
+                category_source.source_category_path = category_name
 
-            if (
-                category_source.first_seen_at
-                is None
-            ):
-                category_source.first_seen_at = (
-                    now
-                )
+            if category_source.first_seen_at is None:
+                category_source.first_seen_at = now
 
             category_source.last_seen_at = now
             category_source.save()
 
         return {
             "created": created,
-            "category_source": (
-                category_source
-            ),
-            "category": (
-                category_source.category
-            ),
-            "matched": (
-                category_source.category_id
-                is not None
-            ),
+            "category_source": category_source,
+            "category": category_source.category,
+            "matched": category_source.category_id is not None,
         }
 
-    # ============================================================
-    # PRODUCT SOURCE
-    # ============================================================
-
-    @transaction.atomic
     def normalize_product_source(
         self,
         item: dict[str, Any],
@@ -803,583 +469,346 @@ class ZigzagNormalizer:
         category_source: CategorySource | None,
         observed_at: datetime,
     ) -> dict[str, Any]:
-
         source_product_id = clean_text(
-            item.get("source_product_id")
-            or item.get(
-                "catalog_product_id"
-            )
-            or item.get("goods_id")
+            item.get("source_product_id") or item.get("product_id")
         )
-
         if source_product_id is None:
-            raise ValueError(
-                "ZIGZAG source_product_id가 없습니다."
-            )
+            raise ValueError("ZIGZAG source_product_id가 없습니다.")
 
         raw_source_name = clean_text(
-            item.get("product_name")
-            or item.get("title")
-            or item.get("name")
+            item.get("product_name") or item.get("title") or item.get("name")
         )
 
-        source_tags = item.get("tags") or []
-
-        if not isinstance(
-            source_tags,
-            (list, tuple),
-        ):
-            source_tags = []
-
-        name_result = (
-            ProductNamePreprocessor.parse(
-                raw_source_name,
-                existing_tags=source_tags,
-                source_code="ZIGZAG",
-            )
+        name_result = ProductNamePreprocessor.parse(
+            raw_source_name,
+            existing_tags=[],
+            source_code="ZIGZAG",
         )
+        source_name = name_result["source_name"]
 
-        source_name = name_result[
-            "source_name"
-        ]
+        thumbnail_url = clean_text(item.get("image_url") or item.get("thumbnail_url"))
+        product_url = clean_text(item.get("product_url"))
+        if product_url is None:
+            product_url = f"https://zigzag.kr/catalog/products/{source_product_id}"
 
-        product_url = clean_text(
-            item.get("product_url")
-        )
-
-        thumbnail_url = clean_text(
-            item.get("thumbnail_url")
-            or item.get("image_url")
+        observed_tags = (
+            item.get("observed_tags")
+            if isinstance(item.get("observed_tags"), list)
+            else []
         )
 
         source_attributes = {
-            "is_brand": item.get(
-                "is_brand"
-            ),
-            "catalog_product_id": (
-                clean_text(
-                    item.get(
-                        "catalog_product_id"
-                    )
-                )
-            ),
-            "category_path": (
-                item.get(
-                    "category_path"
-                )
-                or []
-            ),
-            "sellable_status": (
-                clean_text(
-                    item.get(
-                        "sellable_status"
-                    )
-                )
-            ),
+            "zigzag": {
+                "shop_id": clean_text(item.get("shop_id")),
+                "shop_name": clean_text(item.get("shop_name")),
+                "sales_status": clean_text(item.get("sales_status")),
+                "shipping_type": clean_text(item.get("shipping_type")),
+                "arrival_text": clean_text(item.get("arrival_text")),
+                "fomo_text": clean_text(item.get("fomo_text")),
+                "social_proof_value": self._to_int(item.get("social_proof_value")),
+                "is_new": self._to_bool(item.get("is_new")),
+                "is_ad": self._to_bool(item.get("is_ad")),
+                "badge_list": item.get("badge_list") or [],
+                "server_log": (
+                    item.get("server_log")
+                    if isinstance(item.get("server_log"), dict)
+                    else {}
+                ),
+                "category_id": clean_text(item.get("category_id")),
+                "order": clean_text(item.get("order")),
+            },
+            "observed_tags": observed_tags,
             "tags": name_result["tags"],
-            "source_name_meta": (
-                name_result[
-                    "source_name_meta"
-                ]
-            ),
+            "source_name_meta": name_result["source_name_meta"],
         }
 
         product_source = (
             ProductSource.objects
-            .filter(
-                source=self.source,
-                source_product_id=(
-                    str(source_product_id)
-                ),
-            )
+            .filter(source=self.source, source_product_id=str(source_product_id))
             .first()
         )
-
-        created = (
-            product_source is None
-        )
+        created = product_source is None
 
         if created:
-            product_source = (
-                ProductSource.objects.create(
-                    product=None,
-                    source=self.source,
-                    source_product_id=(
-                        str(source_product_id)
-                    ),
-                    source_brand=brand_source,
-                    source_category=(
-                        category_source
-                    ),
-                    source_name=source_name,
-                    source_name_en=None,
-                    normalized_name=None,
-                    style_no=None,
-                    thumbnail_url=(
-                        thumbnail_url
-                    ),
-                    product_url=product_url,
-                    gender_scope=None,
-                    attributes=source_attributes,
-                    market_type=(
-                        ProductSource
-                        .MarketType
-                        .RETAIL
-                    ),
-                    mapping_status=(
-                        ProductSource
-                        .MappingStatus
-                        .UNMAPPED
-                    ),
-                    first_seen_at=(
-                        observed_at
-                    ),
-                    last_seen_at=(
-                        observed_at
-                    ),
-                    detected_count=1,
-                    status=(
-                        ProductSource
-                        .Status
-                        .ACTIVE
-                    ),
-                )
+            product_source = ProductSource.objects.create(
+                product=None,
+                source=self.source,
+                source_product_id=str(source_product_id),
+                source_brand=brand_source,
+                source_category=category_source,
+                source_name=source_name,
+                source_name_en=None,
+                normalized_name=None,
+                style_no=None,
+                thumbnail_url=thumbnail_url,
+                product_url=product_url,
+                gender_scope=None,
+                attributes=source_attributes,
+                market_type=ProductSource.MarketType.RETAIL,
+                mapping_status=ProductSource.MappingStatus.UNMAPPED,
+                first_seen_at=observed_at,
+                last_seen_at=observed_at,
+                detected_count=1,
+                status=ProductSource.Status.ACTIVE,
             )
-
         else:
-            # canonical product 매핑은 유지하고
-            # source 정보만 갱신
-            product_source.source_brand = (
-                brand_source
-            )
+            # canonical product 연결은 유지
+            product_source.source_brand = brand_source
+            product_source.source_category = category_source
+            product_source.source_name = source_name
 
-            product_source.source_category = (
-                category_source
-            )
-
-            product_source.source_name = (
-                source_name
-            )
-
-            # 기존 normalized_name이 옛날 STEP 1 잔재라면 제거.
-            # 실제 Product Enrichment 결과(feedit_analysis)가 있을 때만 보존.
             existing_attributes = (
                 product_source.attributes
-                if isinstance(
-                    product_source.attributes,
-                    dict,
-                )
+                if isinstance(product_source.attributes, dict)
                 else {}
             )
 
-            if not existing_attributes.get(
-                "feedit_analysis"
-            ):
+            if not existing_attributes.get("feedit_analysis"):
                 product_source.normalized_name = None
 
-            product_source.thumbnail_url = (
-                thumbnail_url
-            )
+            product_source.thumbnail_url = thumbnail_url
+            product_source.product_url = product_url
 
-            product_source.product_url = (
-                product_url
-            )
+            current_attributes = dict(existing_attributes)
+            current_attributes.update(source_attributes)
+            product_source.attributes = current_attributes
 
-            current_attributes = (
-                dict(product_source.attributes)
-                if isinstance(
-                    product_source.attributes,
-                    dict,
-                )
-                else {}
-            )
+            if product_source.first_seen_at is None:
+                product_source.first_seen_at = observed_at
 
-            current_attributes.update(
-                source_attributes
-            )
-
-            product_source.attributes = (
-                current_attributes
-            )
-
-            if (
-                product_source.first_seen_at
-                is None
-            ):
-                product_source.first_seen_at = (
-                    observed_at
-                )
-
-            product_source.last_seen_at = (
-                observed_at
-            )
-
-            product_source.detected_count = (
-                (
-                    product_source.detected_count
-                    or 0
-                )
-                + 1
-            )
-
-            product_source.status = (
-                ProductSource.Status.ACTIVE
-            )
-
+            product_source.last_seen_at = observed_at
+            product_source.detected_count = (product_source.detected_count or 0) + 1
+            product_source.status = ProductSource.Status.ACTIVE
             product_source.save()
 
-        return {
-            "created": created,
-            "product_source": (
-                product_source
-            ),
-        }
+        return {"created": created, "product_source": product_source}
 
-    # ============================================================
-    # SNAPSHOT
-    # ============================================================
 
-    @transaction.atomic
     def normalize_snapshot(
         self,
         item: dict[str, Any],
         *,
         product_source: ProductSource,
         observed_at: datetime,
-        ranking_context: dict[str, Any],
-        fallback_rank: int | None = None,
     ) -> dict[str, Any]:
-
-        rank = self._to_int(
-            item.get("rank")
+        observed_tags = (
+            item.get("observed_tags")
+            if isinstance(item.get("observed_tags"), list)
+            else []
         )
+        best_rank = self._to_int(item.get("best_rank"))
 
-        if rank is None:
-            rank = fallback_rank
+        best_observations = [
+            obs
+            for obs in observed_tags
+            if self._to_int(obs.get("rank")) == best_rank
+        ]
+
+        ranking_context = {
+            "source": "ZIGZAG_CNV",
+            "category_id": clean_text(item.get("category_id")),
+            "category_name": clean_text(item.get("category_name")),
+            "order": clean_text(item.get("order")),
+            "observations": observed_tags,
+            "best_observations": best_observations,
+        }
 
         platform_metrics = {
-            # JSONField에는 Decimal을 직접 넣지 않는다.
-            # DB DecimalField인 rating에는 Decimal을 사용하고,
-            # platform_metrics(JSON)에는 float로 저장한다.
-            "review_score": (
-                self._to_float(
-                    item.get(
-                        "review_score"
-                    )
-                )
-            ),
-            "interest_count": (
-                self._to_int(
-                    item.get(
-                        "interest_count"
-                    )
-                )
-            ),
-            "fomo_text": clean_text(
-                item.get("fomo_text")
-            ),
-            "is_ad": item.get("is_ad"),
-            "is_brand": item.get(
-                "is_brand"
-            ),
-            "sellable_status": (
-                clean_text(
-                    item.get(
-                        "sellable_status"
-                    )
-                )
-            ),
+            "review_score": self._to_float(item.get("review_score")),
+            "review_count": self._to_int(item.get("review_count")),
+            "fomo_text": clean_text(item.get("fomo_text")),
+            "social_proof_value": self._to_int(item.get("social_proof_value")),
+            "sales_status": clean_text(item.get("sales_status")),
+            "shipping_type": clean_text(item.get("shipping_type")),
+            "arrival_text": clean_text(item.get("arrival_text")),
+            "is_new": self._to_bool(item.get("is_new")),
+            "is_ad": self._to_bool(item.get("is_ad")),
+            "badge_list": item.get("badge_list") or [],
+            "tag_observations": observed_tags,
+            "tag_count": len(observed_tags),
         }
 
         defaults = {
-            "list_price": (
-                self._to_decimal(
-                    item.get(
-                        "regular_price"
-                    )
-                    or item.get(
-                        "list_price"
-                    )
-                )
-            ),
-            "sale_price": (
-                self._to_decimal(
-                    item.get(
-                        "sale_price"
-                    )
-                )
-            ),
-            "discount_rate": (
-                self._to_decimal(
-                    item.get(
-                        "discount_rate"
-                    )
-                )
-            ),
-            "rank_position": rank,
-            "ranking_scope": "CATEGORY",
-            "ranking_context": (
-                ranking_context
-            ),
-            "rating": (
-                self._to_decimal(
-                    item.get(
-                        "review_score"
-                    )
-                )
-            ),
-            "review_count": (
-                self._to_int(
-                    item.get(
-                        "review_count"
-                    )
-                )
-            ),
-            "like_count": (
-                self._to_int(
-                    item.get(
-                        "interest_count"
-                    )
-                )
-            ),
-            "stock_status": (
-                clean_text(
-                    item.get(
-                        "sellable_status"
-                    )
-                )
-            ),
-            "platform_metrics": (
-                platform_metrics
-            ),
+            "list_price": self._to_decimal(item.get("max_price")),
+            "sale_price": self._to_decimal(item.get("final_price")),
+            "discount_rate": self._to_decimal(item.get("discount_rate")),
+            "rank_position": best_rank,
+            "ranking_scope": "CNV_TAG",
+            "ranking_context": ranking_context,
+            "rating": self._to_decimal(item.get("review_score")),
+            "review_count": self._to_int(item.get("review_count")),
+            # social_proof_value를 like로 단정하지 않는다.
+            "like_count": None,
+            "stock_status": clean_text(item.get("sales_status")),
+            "platform_metrics": platform_metrics,
         }
 
-        snapshot, created = (
-            ProductSourceSnapshot
-            .objects
-            .update_or_create(
-                product_source=(
-                    product_source
-                ),
-                observed_at=observed_at,
-                defaults=defaults,
-            )
+        snapshot, created = ProductSourceSnapshot.objects.update_or_create(
+            product_source=product_source,
+            observed_at=observed_at,
+            defaults=defaults,
         )
+        return {"created": created, "snapshot": snapshot}
 
+    @staticmethod
+    def _unwrap_payload(raw: dict[str, Any]) -> dict[str, Any]:
+        payload = raw.get("payload")
+        return payload if isinstance(payload, dict) else raw
+
+    @staticmethod
+    def _extract_store(item: dict[str, Any]) -> dict[str, Any]:
         return {
-            "created": created,
-            "snapshot": snapshot,
+            "source_brand_id": item.get("shop_id"),
+            "shop_id": item.get("shop_id"),
+            "name": item.get("shop_name"),
+            "shop_name": item.get("shop_name"),
         }
 
-    # ============================================================
-    # HELPERS
-    # ============================================================
+    @staticmethod
+    def _infer_category_id(groups: dict[str, Any]) -> str | None:
+        for snapshots in groups.values():
+            if not isinstance(snapshots, list):
+                continue
+            for snapshot in snapshots:
+                if not isinstance(snapshot, dict):
+                    continue
+                category_id = clean_text(snapshot.get("category_id"))
+                if category_id:
+                    return category_id
+        return None
 
     @staticmethod
-    def _extract_store(
-        item: dict[str, Any],
-    ) -> dict[str, Any]:
+    def _merge_non_null_fields(
+        current: dict[str, Any],
+        incoming: dict[str, Any],
+    ) -> None:
+        for key, value in incoming.items():
+            if key == "observed_tags":
+                continue
+            if value in (None, "", [], {}):
+                continue
+            if current.get(key) in (None, "", [], {}):
+                current[key] = value
 
-        store = (
-            item.get("store")
-            if isinstance(
-                item.get("store"),
-                dict,
-            )
-            else {}
-        )
-
-        # schema 2.x / 과거 raw 호환
-        if not store:
-            store = {
-                "source_brand_id": (
-                    item.get("store_id")
-                    or item.get("shop_id")
-                ),
-                "name": (
-                    item.get("store_name")
-                    or item.get("shop_name")
-                ),
-                "main_domain": (
-                    item.get("main_domain")
-                    or item.get("shop_domain")
-                ),
-                "source_profile_url": (
-                    item.get(
-                        "source_profile_url"
-                    )
-                ),
-            }
-
-        return store
-
-    @staticmethod
-    def _build_store_attributes(
-        store: dict[str, Any],
-        *,
-        current: dict | None,
-        main_domain: str | None,
-    ) -> dict[str, Any]:
-
-        result = (
-            dict(current)
-            if isinstance(
-                current,
-                dict,
-            )
-            else {}
-        )
-
-        if main_domain:
-            result["main_domain"] = (
-                main_domain
-            )
-
-        for key in (
-            "bookmark_count",
-            "seller_badges",
-            "total_product_count",
-            "is_brand",
-        ):
-            value = store.get(key)
-
-            if value not in (
-                None,
-                "",
-                [],
-                {},
-            ):
-                result[key] = value
-
-        return result
-
-    @staticmethod
-    def _deepest_category(
-        path: list[dict[str, Any]],
-    ) -> dict[str, Any]:
-
-        candidates = [
-            item
-            for item in path
-            if isinstance(item, dict)
-        ]
-
-        if not candidates:
-            return {}
-
-        return max(
-            candidates,
-            key=lambda item: (
-                ZigzagNormalizer._to_int(
-                    item.get("depth")
-                )
-                or 0
-            ),
-        )
-
-    @staticmethod
     def _find_brand(
+        self,
         name: str | None,
     ) -> Brand | None:
 
         if not name:
             return None
 
-        normalized = (
-            normalize_brand_name(name)
+        normalized = normalize_brand_name(
+            name
         )
 
         if not normalized:
             return None
 
-        matches = []
+        # 최초 1회만 Brand 전체 조회
+        if self._brand_lookup is None:
 
-        for brand in (
-            Brand.objects
-            .filter(
-                status=Brand.Status.ACTIVE
+            lookup = {}
+
+            brands = (
+                Brand.objects
+                .filter(
+                    status=Brand.Status.ACTIVE
+                )
+                .only(
+                    "id",
+                    "name",
+                    "english_name",
+                )
             )
-            .only(
-                "id",
-                "name",
-                "english_name",
-            )
-        ):
-            for candidate in (
-                brand.name,
-                brand.english_name,
-            ):
-                if (
-                    candidate
-                    and normalize_brand_name(
+
+            for brand in brands:
+
+                for candidate in (
+                    brand.name,
+                    brand.english_name,
+                ):
+
+                    if not candidate:
+                        continue
+
+                    key = normalize_brand_name(
                         candidate
                     )
-                    == normalized
-                ):
-                    matches.append(brand)
-                    break
 
-        if len(matches) != 1:
-            return None
+                    if not key:
+                        continue
 
-        return matches[0]
+                    # 같은 이름이 여러 canonical brand에
+                    # 존재하면 자동매핑하지 않도록 None 처리
+                    if key in lookup:
+                        lookup[key] = None
+                    else:
+                        lookup[key] = brand
 
-    @staticmethod
+            self._brand_lookup = lookup
+
+        return self._brand_lookup.get(
+            normalized
+        )
+    
     def _find_category(
+        self,
         normalized_name: str | None,
     ) -> Category | None:
 
         if not normalized_name:
             return None
 
-        matches = []
+        if self._category_lookup is None:
 
-        for category in (
-            Category.objects
-            .filter(
-                category_type=(
-                    Category
-                    .CategoryType
-                    .PRODUCT
-                ),
-                status=(
-                    Category.Status.ACTIVE
-                ),
+            lookup = {}
+
+            categories = (
+                Category.objects
+                .filter(
+                    category_type=(
+                        Category
+                        .CategoryType
+                        .PRODUCT
+                    ),
+                    status=(
+                        Category
+                        .Status
+                        .ACTIVE
+                    ),
+                )
+                .only(
+                    "id",
+                    "name",
+                )
             )
-            .only(
-                "id",
-                "name",
-            )
-        ):
-            if (
-                normalize_category_name(
+
+            for category in categories:
+
+                key = normalize_category_name(
                     category.name
                 )
-                == normalized_name
-            ):
-                matches.append(
-                    category
-                )
 
-        if len(matches) != 1:
-            return None
+                if not key:
+                    continue
 
-        return matches[0]
+                if key in lookup:
+                    lookup[key] = None
+                else:
+                    lookup[key] = category
 
+            self._category_lookup = lookup
+
+        return self._category_lookup.get(
+            normalized_name
+        )
     @staticmethod
-    def _parse_datetime(
-        value: Any,
-    ) -> datetime:
-
-        if isinstance(
-            value,
-            datetime,
-        ):
+    def _parse_datetime(value: Any) -> datetime:
+        if isinstance(value, datetime):
             dt = value
         elif value:
-            dt = parse_datetime(
-                str(value)
-            )
+            dt = parse_datetime(str(value))
         else:
             dt = None
 
@@ -1387,83 +816,49 @@ class ZigzagNormalizer:
             return timezone.now()
 
         if timezone.is_naive(dt):
-            dt = timezone.make_aware(
-                dt,
-                timezone.get_current_timezone(),
-            )
+            dt = timezone.make_aware(dt, timezone.get_current_timezone())
 
         return dt
 
     @staticmethod
-    def _to_int(
-        value: Any,
-    ) -> int | None:
-
-        if value in (
-            None,
-            "",
-        ):
+    def _to_int(value: Any) -> int | None:
+        if value in (None, ""):
             return None
-
+        if isinstance(value, bool):
+            return int(value)
         try:
-            return int(
-                float(
-                    str(value)
-                    .replace(",", "")
-                    .strip()
-                )
-            )
-        except (
-            TypeError,
-            ValueError,
-        ):
+            return int(float(str(value).replace(",", "").strip()))
+        except (TypeError, ValueError):
             return None
 
     @staticmethod
-    def _to_float(
-        value: Any,
-    ) -> float | None:
-
-        if value in (
-            None,
-            "",
-        ):
+    def _to_float(value: Any) -> float | None:
+        if value in (None, ""):
             return None
-
         try:
-            return float(
-                str(value)
-                .replace(",", "")
-                .replace("%", "")
-                .strip()
-            )
-        except (
-            TypeError,
-            ValueError,
-        ):
+            return float(str(value).replace(",", "").replace("%", "").strip())
+        except (TypeError, ValueError):
             return None
 
     @staticmethod
-    def _to_decimal(
-        value: Any,
-    ) -> Decimal | None:
-
-        if value in (
-            None,
-            "",
-        ):
+    def _to_decimal(value: Any) -> Decimal | None:
+        if value in (None, ""):
             return None
-
         try:
-            return Decimal(
-                str(value)
-                .replace(",", "")
-                .replace("%", "")
-                .strip()
-            )
-        except (
-            InvalidOperation,
-            TypeError,
-            ValueError,
-        ):
+            return Decimal(str(value).replace(",", "").replace("%", "").strip())
+        except (InvalidOperation, TypeError, ValueError):
             return None
+
+    @staticmethod
+    def _to_bool(value: Any) -> bool | None:
+        if isinstance(value, bool):
+            return value
+        if value is None:
+            return None
+
+        text = str(value).strip().lower()
+        if text in {"true", "1", "yes", "y"}:
+            return True
+        if text in {"false", "0", "no", "n"}:
+            return False
+        return None

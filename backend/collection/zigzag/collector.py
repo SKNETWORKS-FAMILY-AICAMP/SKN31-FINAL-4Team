@@ -1,51 +1,52 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
-from datetime import datetime, timezone
-from urllib.parse import urlparse
+import random
+import time
+from typing import Any
 
 import requests
 
-from collection.common.http import DEFAULT_HEADERS
-
-from .constants import (
-    DEFAULT_PAGE_ID,
-    GOODS_CARD_TYPE,
-    PRODUCT_BASE_URL,
-    REQUEST_TIMEOUT,
-    SEARCH_RESULT_API_URL,
-    SEARCH_RESULT_QUERY,
-    SHOP_COMPONENT_API_URL,
-    SHOP_COMPONENT_QUERY,
-    ZIGZAG_BASE_URL,
+from .config import (
+    CNV_ENDPOINT,
+    DEFAULT_MAX_DELAY,
+    DEFAULT_MIN_DELAY,
 )
-from .parser import ZigzagParser
+from .query import GET_CNV_PAGE_ACTION_QUERY
 
 
-class ZigzagCollectError(Exception):
+class ZigzagCnvError(RuntimeError):
     pass
 
 
-class ZigzagCollector:
-    """
-    FINAL
-    - ranking/category GraphQL
-    - ranking item detail enrichment(main_domain)
-    - store profile + store products
-    - ORM/S3/Celery 책임 없음
-    """
-
-    def __init__(self, *, timeout=None, session=None):
-        self.timeout = timeout or REQUEST_TIMEOUT
+class ZigzagCnvCollector:
+    def __init__(
+        self,
+        *,
+        min_delay: float = DEFAULT_MIN_DELAY,
+        max_delay: float = DEFAULT_MAX_DELAY,
+        timeout: int = 20,
+        session: requests.Session | None = None,
+    ):
+        self.min_delay = float(min_delay)
+        self.max_delay = float(max_delay)
+        self.timeout = int(timeout)
         self.session = session or requests.Session()
-        self.session.headers.update(DEFAULT_HEADERS)
-        self.session.headers.update({
-            "Accept": "application/json, text/plain, */*",
-            "Origin": ZIGZAG_BASE_URL,
-            "Referer": f"{ZIGZAG_BASE_URL}/",
-        })
 
-    def close(self):
+        self.session.headers.update(
+            {
+                "Accept": "application/json, text/plain, */*",
+                "Content-Type": "application/json",
+                "Origin": "https://zigzag.kr",
+                "Referer": "https://zigzag.kr/",
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/152.0.0.0 Safari/537.36"
+                ),
+            }
+        )
+
+    def close(self) -> None:
         self.session.close()
 
     def __enter__(self):
@@ -54,249 +55,796 @@ class ZigzagCollector:
     def __exit__(self, exc_type, exc, tb):
         self.close()
 
-    def _post_graphql(self, url: str, query: str, variables: dict) -> dict:
+    # ============================================================
+    # HTTP
+    # ============================================================
+
+    def _post(
+        self,
+        payload: list[dict[str, Any]],
+        *,
+        max_retries: int = 4,
+    ) -> Any:
+        last_error: Exception | None = None
+
+        for attempt in range(max_retries + 1):
+            try:
+                response = self.session.post(
+                    CNV_ENDPOINT,
+                    json=payload,
+                    timeout=self.timeout,
+                )
+
+                if response.status_code == 429:
+                    retry_after = response.headers.get("Retry-After")
+
+                    if retry_after:
+                        try:
+                            wait_seconds = float(retry_after)
+                        except ValueError:
+                            wait_seconds = 0.0
+                    else:
+                        wait_seconds = 0.0
+
+                    if wait_seconds <= 0:
+                        wait_seconds = (
+                            min(60.0, 2 ** attempt)
+                            + random.uniform(0.5, 1.5)
+                        )
+
+                    if attempt >= max_retries:
+                        raise ZigzagCnvError(
+                            f"Zigzag HTTP 429 after retries: {response.text[:500]}"
+                        )
+
+                    time.sleep(wait_seconds)
+                    continue
+
+                response.raise_for_status()
+
+                data = response.json()
+
+                if isinstance(data, list):
+                    for item in data:
+                        if isinstance(item, dict) and item.get("errors"):
+                            raise ZigzagCnvError(
+                                f"GraphQL errors: {item['errors']}"
+                            )
+
+                return data
+
+            except (requests.RequestException, ValueError, ZigzagCnvError) as exc:
+                last_error = exc
+
+                if attempt >= max_retries:
+                    break
+
+                time.sleep(
+                    min(30.0, 2 ** attempt)
+                    + random.uniform(0.3, 1.0)
+                )
+
+        raise ZigzagCnvError(
+            f"Zigzag CNV request failed: {last_error}"
+        ) from last_error
+
+    # ============================================================
+    # FILTER
+    # ============================================================
+    @staticmethod
+    def _to_int(value):
+        if value is None or isinstance(value, bool):
+            return None
+
         try:
-            res = self.session.post(
-                url,
-                json={"query": query, "variables": variables},
-                timeout=self.timeout,
+            return int(
+                float(
+                    str(value)
+                    .replace(",", "")
+                    .strip()
+                )
             )
-            res.raise_for_status()
-            body = res.json()
-        except Exception as exc:
-            raise ZigzagCollectError(f"GraphQL 요청 실패: {url} / {exc}") from exc
-        if not isinstance(body, dict):
-            raise ZigzagCollectError("GraphQL 응답이 object가 아닙니다.")
-        if body.get("errors"):
-            raise ZigzagCollectError(f"GraphQL 응답 에러: {body['errors']}")
-        return body
+        except (TypeError, ValueError):
+            return None
 
-    def _get_html(self, url: str):
-        try:
-            res = self.session.get(url, timeout=self.timeout)
-            res.raise_for_status()
-            return res.text, res
-        except Exception as exc:
-            raise ZigzagCollectError(f"GET 실패: {url} / {exc}") from exc
 
-    # ==========================================================
-    # RANKING / CATEGORY
-    # ==========================================================
-    def iter_category_pages(
+    @staticmethod
+    def _to_bool(value):
+        if isinstance(value, bool):
+            return value
+
+        if value is None:
+            return None
+
+        text = str(value).strip().lower()
+
+        if text in {"true", "1", "yes", "y"}:
+            return True
+
+        if text in {"false", "0", "no", "n"}:
+            return False
+
+        return None
+        
+    @staticmethod
+    def make_combined_tag(
+        value: str,
+        *,
+        attribute: str,
+        name: str,
+    ) -> dict[str, Any]:
+        return {
+            "filter_type": "COMBINED_TAG",
+            "value_list": [
+                {
+                    "label": value,
+                    "value": value,
+                    "attribute": attribute,
+                    "name": name,
+                    "rangeGte": None,
+                    "rangeLte": None,
+                    "campaignId": None,
+                    "campaignTagType": None,
+                }
+            ],
+        }
+
+    @staticmethod
+    def build_search_state(
+        *,
+        category_id: str,
+        order: str,
+        filters: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        filter_list: list[dict[str, Any]] = [
+            {
+                "filter_type": "CATEGORY",
+                "value_list": [
+                    {
+                        "label": None,
+                        "value": str(category_id),
+                        "attribute": None,
+                        "name": None,
+                        "rangeGte": None,
+                        "rangeLte": None,
+                        "campaignId": None,
+                        "campaignTagType": None,
+                    }
+                ],
+            }
+        ]
+
+        if filters:
+            filter_list.extend(filters)
+
+        return {
+            "filter_list": filter_list,
+            "order": order,
+        }
+
+    # ============================================================
+    # REQUEST
+    # ============================================================
+
+    def fetch_initial(
         self,
         *,
         category_id: str,
-        sort: str = "200",
-        page_id: str = DEFAULT_PAGE_ID,
-        max_pages: int | None = None,
-    ) -> Iterator[tuple[dict, list[dict], bool]]:
-        after = None
-        page = 0
-        while True:
-            input_data = {
-                "display_category_id_list": [str(category_id)],
-                "page_id": page_id,
-                "filter_id_list": [str(sort)],
-            }
-            if after:
-                input_data["after"] = after
-            body = self._post_graphql(
-                SEARCH_RESULT_API_URL,
-                SEARCH_RESULT_QUERY,
-                {"input": input_data},
-            )
-            result = (body.get("data") or {}).get("search_result") or {}
-            parsed_items = []
-            for item in result.get("ui_item_list") or []:
-                if not isinstance(item, dict) or item.get("type") != GOODS_CARD_TYPE:
-                    continue
-                parsed = self._parse_goods_card(item)
-                if parsed:
-                    parsed_items.append(parsed)
-            has_next = bool(result.get("has_next"))
-            end_cursor = result.get("end_cursor")
-            yield body, parsed_items, has_next
-            page += 1
-            if not has_next or not end_cursor:
-                break
-            if max_pages is not None and page >= max_pages:
-                break
-            after = end_cursor
-
-    @classmethod
-    def _parse_goods_card(cls, item: dict) -> dict | None:
-        goods_id = ZigzagParser.to_int(item.get("goods_id"))
-        if goods_id is None:
-            return None
-        categories = item.get("managed_category_list") or []
-        candidates = [x for x in categories if isinstance(x, dict)]
-        leaf = max(candidates, key=lambda x: ZigzagParser.to_int(x.get("depth")) or 0) if candidates else {}
-        shop_id = ZigzagParser.clean_text(item.get("shop_id"))
-        shop_name = ZigzagParser.clean_text(item.get("shop_name"))
-        product_url = item.get("product_url") or PRODUCT_BASE_URL.format(goods_id=goods_id)
-        return {
-            "source_product_id": str(goods_id),
-            "catalog_product_id": ZigzagParser.clean_text(item.get("catalog_product_id")) or str(goods_id),
-            "product_name": ZigzagParser.clean_text(item.get("title")),
-            "store": {
-                "source_brand_id": shop_id,
-                "name": shop_name,
-                "main_domain": None,
-                "source_profile_url": None,
-            },
-            # 구버전 코드 호환용 flat fields
-            "store_id": shop_id,
-            "store_name": shop_name,
-            "is_brand": bool(item.get("is_brand")),
-            "category_id": leaf.get("category_id") or leaf.get("id"),
-            "category_name": leaf.get("value") or leaf.get("name"),
-            "category_path": categories,
-            "product_url": product_url,
-            "thumbnail_url": item.get("image_url"),
-            "regular_price": ZigzagParser.to_int(item.get("price")),
-            "sale_price": ZigzagParser.to_int(item.get("final_price")),
-            "discount_rate": ZigzagParser.to_float(item.get("discount_rate")),
-            "review_score": ZigzagParser.to_float(item.get("review_score")),
-            "review_count": ZigzagParser.to_int(str(item.get("display_review_count") or "").replace(",", "")),
-            "sellable_status": item.get("sellable_status"),
-            "is_ad": bool(item.get("is_ad")),
-        }
-
-    def collect_product_detail(self, ranking_item: dict) -> dict:
-        url = ranking_item.get("product_url")
-        if not url:
-            raise ZigzagCollectError("product_url이 없습니다.")
-        html, response = self._get_html(url)
-        parsed = ZigzagParser.parse_product_detail_html(
-            html,
-            source_url=getattr(response, "url", url),
-            fallback_shop_id=(ranking_item.get("store") or {}).get("source_brand_id") or ranking_item.get("store_id"),
-            fallback_shop_name=(ranking_item.get("store") or {}).get("name") or ranking_item.get("store_name"),
+        layout_id: str,
+        action_id: str,
+        module_slot_id: str,
+        order: str,
+        filters: list[dict[str, Any]] | None = None,
+    ) -> Any:
+        search_state = self.build_search_state(
+            category_id=category_id,
+            order=order,
+            filters=filters,
         )
-        parsed["http_status"] = getattr(response, "status_code", None)
-        return parsed
+
+        payload = [
+            {
+                "operationName": "GetCnvPageAction",
+                "variables": {
+                    "layout_id": str(layout_id),
+                    "input_list": [
+                        {
+                            "action_id": action_id,
+                            "type": "MODULE_REFETCH",
+                            "target": {
+                                "module_slot_id": module_slot_id,
+                            },
+                            "option": {
+                                "__typename": "CnvModuleRefetchActionOption",
+                                "type": "MODULE_REFETCH",
+                                "server_option": {
+                                    "delay": 0,
+                                    "tryCount": 1,
+                                    "initial": True,
+                                    "renderParams": [
+                                        {
+                                            "changedFilterType": None,
+                                            "filterDetailUiHints": {
+                                                "keywordsByFilterType": {},
+                                                "rangeBoundsByType": {},
+                                            },
+                                            "search_query_state": search_state,
+                                            "base_search_query_state": None,
+                                            "type": "SEARCH_FILTER_CHANGE",
+                                        }
+                                    ],
+                                    "includeSelfOnUnwrap": True,
+                                    "type": "MODULE_REFETCH",
+                                },
+                                "delay": 0,
+                            },
+                        }
+                    ],
+                },
+                "query": GET_CNV_PAGE_ACTION_QUERY,
+            }
+        ]
+
+        return self._post(payload)
+
+    def fetch_next(
+        self,
+        *,
+        layout_id: str,
+        action_id: str,
+        module_slot_id: str,
+        server_option: dict[str, Any],
+    ) -> Any:
+        payload = [
+            {
+                "operationName": "GetCnvPageAction",
+                "variables": {
+                    "layout_id": str(layout_id),
+                    "input_list": [
+                        {
+                            "action_id": action_id,
+                            "type": "PAGINATION",
+                            "target": {
+                                "module_slot_id": module_slot_id,
+                            },
+                            "option": {
+                                "__typename": "CnvBaseActionOption",
+                                "type": "PAGINATION",
+                                "server_option": server_option,
+                            },
+                        }
+                    ],
+                },
+                "query": GET_CNV_PAGE_ACTION_QUERY,
+            }
+        ]
+
+        time.sleep(
+            random.uniform(
+                self.min_delay,
+                self.max_delay,
+            )
+        )
+
+        return self._post(payload)
+
+    # ============================================================
+    # RESPONSE WALKERS
+    # ============================================================
 
     @staticmethod
-    def enrich_ranking_item(ranking_item: dict, detail: dict | None) -> dict:
-        result = dict(ranking_item)
-        store = dict(result.get("store") or {})
-        detail_store = (detail or {}).get("store") or {}
-        for key in ("source_brand_id", "name", "main_domain", "source_profile_url", "image_url", "description", "target_age", "style_list", "bookmark_count"):
-            value = detail_store.get(key)
-            if value not in (None, "", []):
-                store[key] = value
-        result["store"] = store
-        result["store_id"] = store.get("source_brand_id")
-        result["store_name"] = store.get("name")
-        return result
+    def _walk(value: Any):
+        yield value
 
-    # ==========================================================
-    # STORE
-    # ==========================================================
-    def collect_shop(self, shop_url: str, *, product_limit=100, max_pages=None, collect_products=True) -> dict:
-        source_url = self._normalize_shop_url(shop_url)
-        html, response = self._get_html(source_url)
-        shop = ZigzagParser.parse_store_html(html, source_url=source_url)
-        shop_id = shop.get("source_brand_id")
-        if not shop_id:
-            raise ZigzagCollectError(f"shop_id를 찾지 못했습니다: {source_url}")
-        products, categories = [], []
-        if collect_products:
-            products, categories = self.collect_shop_products(
-                shop_id=str(shop_id), limit=product_limit, max_pages=max_pages
-            )
-        return {
-            "source_url": source_url,
-            "collected_at": datetime.now(timezone.utc).isoformat(),
-            "http_status": getattr(response, "status_code", None),
-            "content_type": getattr(response, "headers", {}).get("Content-Type"),
-            "shop": shop,
-            "categories": [x for x in categories if str(x.get("id")) != "0" and x.get("name") != "전체"],
-            "products": products,
-        }
-
-    def collect_shop_products(self, *, shop_id: str, limit=100, max_pages=None):
-        products, seen = [], set()
-        categories_by_id = {}
-        for body in self.iter_shop_component_pages(shop_id=shop_id, max_pages=max_pages):
-            root = (body.get("data") or {}).get("shop_ux_component_list") or {}
-            for c in root.get("category_list") or []:
-                if isinstance(c, dict) and c.get("id"):
-                    categories_by_id[str(c["id"])] = {"id": str(c["id"]), "name": c.get("name")}
-            for card in self._walk_product_cards(root.get("item_list") or []):
-                parsed = self._parse_shop_product_item(card, fallback_shop_id=shop_id)
-                if not parsed:
-                    continue
-                pid = parsed["source_product_id"]
-                if pid in seen:
-                    continue
-                seen.add(pid); products.append(parsed)
-                if limit is not None and len(products) >= int(limit):
-                    return products, list(categories_by_id.values())
-        return products, list(categories_by_id.values())
-
-    def iter_shop_component_pages(self, *, shop_id: str, max_pages=None):
-        after_id = None; page = 0
-        while True:
-            variables = {
-                "shop_id": str(shop_id),
-                "check_button_item_ids": [],
-                "sub_filter_id_list": [],
-                "sorting_item_id": None,
-            }
-            if after_id:
-                variables["after_id"] = after_id
-            body = self._post_graphql(SHOP_COMPONENT_API_URL, SHOP_COMPONENT_QUERY, variables)
-            yield body
-            page += 1
-            root = (body.get("data") or {}).get("shop_ux_component_list") or {}
-            if not root.get("has_next_page"):
-                break
-            after_id = root.get("after_id")
-            if not after_id:
-                break
-            if max_pages is not None and page >= max_pages:
-                break
-
-    def _walk_product_cards(self, value):
         if isinstance(value, dict):
-            if isinstance(value.get("product"), dict):
-                yield value
             for child in value.values():
-                yield from self._walk_product_cards(child)
+                yield from ZigzagCnvCollector._walk(child)
+
         elif isinstance(value, list):
             for child in value:
-                yield from self._walk_product_cards(child)
-
-    def _parse_shop_product_item(self, item: dict, *, fallback_shop_id=None):
-        product = item.get("product") or {}
-        if not isinstance(product, dict):
-            return None
-        pid = ZigzagParser.clean_text(product.get("catalog_product_id") or product.get("shop_product_no"))
-        if not pid:
-            return None
-        return {
-            "source_product_id": pid,
-            "shop_product_no": ZigzagParser.clean_text(product.get("shop_product_no")),
-            "store_id": ZigzagParser.clean_text(product.get("shop_id")) or fallback_shop_id,
-            "store_name": ZigzagParser.clean_text(item.get("shop_name")),
-            "product_name": ZigzagParser.clean_text(product.get("name")),
-            "product_url": ZigzagParser.clean_text(product.get("url")),
-            "thumbnail_url": ZigzagParser.clean_text(product.get("image_url")),
-            "regular_price": ZigzagParser.to_int(product.get("price")),
-            "sale_price": ZigzagParser.to_int(item.get("final_price")),
-            "discount_rate": ZigzagParser.to_float(product.get("discount_rate")),
-            "ranking": ZigzagParser.to_int(item.get("ranking")),
-            "review_count": ZigzagParser.to_int(item.get("review_count")),
-            "review_score": ZigzagParser.to_float(item.get("review_score")),
-        }
+                yield from ZigzagCnvCollector._walk(child)
 
     @staticmethod
-    def _normalize_shop_url(url: str) -> str:
-        if not url:
-            raise ZigzagCollectError("shop_url이 비었습니다.")
-        if url.startswith("/"):
-            url = f"https://zigzag.kr{url}"
-        if not urlparse(url).scheme:
-            url = f"https://zigzag.kr/{url.lstrip('/')}"
-        return url.split("?")[0].rstrip("/")
+    def _get_result(data: Any) -> dict[str, Any]:
+        if not isinstance(data, list) or not data:
+            raise ZigzagCnvError(
+                "CNV response top-level is not a non-empty list."
+            )
+
+        first = data[0]
+
+        if not isinstance(first, dict):
+            raise ZigzagCnvError(
+                "CNV response first item is not an object."
+            )
+
+        result = (
+            (first.get("data") or {}).get("result")
+        )
+
+        if not isinstance(result, dict):
+            raise ZigzagCnvError(
+                "CNV response data.result was not found."
+            )
+
+        return result
+
+    def parse_products(
+        self,
+        data: Any,
+    ) -> list[dict[str, Any]]:
+
+        products: list[dict[str, Any]] = []
+
+        for node in self._walk(data):
+
+            if not isinstance(node, dict):
+                continue
+
+            # ========================================================
+            # 실제 구조
+            #
+            # wrapper
+            # {
+            #     "product_card": {
+            #         "product_id": ...,
+            #         "product": {...},
+            #         "price": {...},
+            #         ...
+            #     },
+            #     "ubl": {
+            #         "server_log": {...}
+            #     }
+            # }
+            # ========================================================
+
+            card = node.get("product_card")
+
+            if not isinstance(card, dict):
+                continue
+
+            product_id = card.get("product_id")
+
+            product = card.get("product")
+
+            if (
+                not product_id
+                or not isinstance(product, dict)
+            ):
+                continue
+
+            # --------------------------------------------------------
+            # PRODUCT
+            # --------------------------------------------------------
+
+            image = (
+                product.get("image")
+                if isinstance(
+                    product.get("image"),
+                    dict,
+                )
+                else {}
+            )
+
+            # --------------------------------------------------------
+            # PRICE
+            # card.price 임
+            # --------------------------------------------------------
+
+            price = (
+                card.get("price")
+                if isinstance(
+                    card.get("price"),
+                    dict,
+                )
+                else {}
+            )
+
+            # --------------------------------------------------------
+            # REVIEW
+            # --------------------------------------------------------
+
+            review = (
+                card.get("review")
+                if isinstance(
+                    card.get("review"),
+                    dict,
+                )
+                else {}
+            )
+
+            # --------------------------------------------------------
+            # SHOP
+            # --------------------------------------------------------
+
+            shop = (
+                card.get("shop")
+                if isinstance(
+                    card.get("shop"),
+                    dict,
+                )
+                else {}
+            )
+
+            # --------------------------------------------------------
+            # SHIPPING
+            # --------------------------------------------------------
+
+            shipping = (
+                card.get("shipping")
+                if isinstance(
+                    card.get("shipping"),
+                    dict,
+                )
+                else {}
+            )
+
+            # --------------------------------------------------------
+            # ENGAGEMENT
+            # --------------------------------------------------------
+
+            engagement = (
+                card.get("engagement")
+                if isinstance(
+                    card.get("engagement"),
+                    dict,
+                )
+                else {}
+            )
+
+            fomo = (
+                engagement.get("fomo")
+                if isinstance(
+                    engagement.get("fomo"),
+                    dict,
+                )
+                else {}
+            )
+
+            # --------------------------------------------------------
+            # META
+            # --------------------------------------------------------
+
+            meta = (
+                card.get("meta")
+                if isinstance(
+                    card.get("meta"),
+                    dict,
+                )
+                else {}
+            )
+
+            shop_meta = (
+                meta.get("shop")
+                if isinstance(
+                    meta.get("shop"),
+                    dict,
+                )
+                else {}
+            )
+
+            state = (
+                meta.get("state")
+                if isinstance(
+                    meta.get("state"),
+                    dict,
+                )
+                else {}
+            )
+
+            # --------------------------------------------------------
+            # UBL
+            #
+            # 중요:
+            # ubl은 card 안이 아니라
+            # card를 감싸고 있는 wrapper(node)에 있음
+            # --------------------------------------------------------
+
+            ubl = (
+                node.get("ubl")
+                if isinstance(
+                    node.get("ubl"),
+                    dict,
+                )
+                else {}
+            )
+
+            server_log = (
+                ubl.get("server_log")
+                if isinstance(
+                    ubl.get("server_log"),
+                    dict,
+                )
+                else {}
+            )
+
+            # --------------------------------------------------------
+            # OUTPUT
+            # --------------------------------------------------------
+
+            products.append(
+                {
+                    "product_id":
+                        str(product_id),
+
+                    "product_name":
+                        product.get("title"),
+
+                    "image_url":
+                        image.get("normal"),
+
+                    "shop_id":
+                        shop_meta.get("shop_id"),
+
+                    "shop_name":
+                        shop.get("name"),
+
+                    "final_price":
+                        price.get("final_price"),
+
+                    "max_price":
+                        price.get("max_price"),
+
+                    "discount_rate":
+                        price.get(
+                            "final_price_discount_rate"
+                        ),
+
+                    "review_count": self._to_int(
+                        review.get("count")
+                    ),
+
+                    "review_score":
+                        review.get("score"),
+
+                    "sales_status":
+                        state.get("sales_status"),
+
+                    "shipping_type":
+                        state.get("shipping_type"),
+
+                    "arrival_text":
+                        shipping.get(
+                            "arrival_text"
+                        ),
+
+                    "is_saved_product":
+                        engagement.get(
+                            "is_saved_product"
+                        ),
+
+                    "fomo_text":
+                        fomo.get("fomo_text"),
+
+                    # --------------------------------------------
+                    # server log
+                    # --------------------------------------------
+
+                    "social_proof_value":
+                        server_log.get(
+                            "social_proof_value"
+                        ),
+
+                    "organic_position":
+                        server_log.get(
+                            "organic_position"
+                        ),
+
+                    "display_category_id":
+                        server_log.get(
+                            "display_category_id"
+                        ),
+
+                    "is_new": self._to_bool(
+                        server_log.get("is_new")
+                    ),
+
+                    "is_ad":
+                        bool(
+                            server_log.get("ad_key")
+                        ),
+
+                    "recommend_score":
+                        server_log.get(
+                            "recommend_score"
+                        ),
+
+                    "badge_list":
+                        server_log.get(
+                            "badge_list"
+                        ),
+
+                    "server_log":
+                        server_log,
+                }
+            )
+
+        return products
+
+    def extract_result_count(
+        self,
+        data: Any,
+    ) -> int | None:
+        for node in self._walk(data):
+            if not isinstance(node, dict):
+                continue
+
+            value = node.get("result_count")
+
+            if isinstance(value, bool):
+                continue
+
+            if isinstance(value, (int, float)):
+                return int(value)
+
+            if isinstance(value, str):
+                try:
+                    return int(
+                        value.replace(",", "").strip()
+                    )
+                except ValueError:
+                    pass
+
+        return None
+
+    def extract_pagination(
+        self,
+        data: Any,
+    ) -> dict[str, Any] | None:
+        for node in self._walk(data):
+            if not isinstance(node, dict):
+                continue
+
+            if str(node.get("type") or "").upper() != "PAGINATION":
+                continue
+
+            option = node.get("option")
+
+            if not isinstance(option, dict):
+                continue
+
+            server_option = option.get("server_option")
+
+            if not isinstance(server_option, dict):
+                continue
+            return {
+                "action": node,
+                "server_option": server_option,
+            }
+
+        return None
+
+    def get_next_request_info(
+        self,
+        data: Any,
+    ) -> dict[str, Any] | None:
+        pagination = self.extract_pagination(data)
+
+        if not pagination:
+            return None
+
+        action = pagination["action"]
+        server_option = pagination["server_option"]
+
+        target = (
+            action.get("target")
+            if isinstance(action.get("target"), dict)
+            else {}
+        )
+
+        module_slot_id = (
+            target.get("module_slot_id")
+            or server_option.get("moduleSlotId")
+        )
+
+        if not module_slot_id:
+            return None
+
+        return {
+            "module_slot_id": module_slot_id,
+            "server_option": server_option,
+        }
+
+    # ============================================================
+    # SNAPSHOT
+    # ============================================================
+
+    def collect_snapshot(
+        self,
+        *,
+        category_id: str,
+        layout_id: str,
+        action_id: str,
+        module_slot_id: str,
+        order: str = "SCORE_DESC",
+        filters: list[dict[str, Any]] | None = None,
+        limit: int = 100,
+    ) -> dict[str, Any]:
+        if limit <= 0:
+            raise ValueError("limit은 1 이상이어야 합니다.")
+
+        first_response = self.fetch_initial(
+            category_id=category_id,
+            layout_id=layout_id,
+            action_id=action_id,
+            module_slot_id=module_slot_id,
+            order=order,
+            filters=filters,
+        )
+
+        result_count = self.extract_result_count(
+            first_response
+        )
+
+        all_products: list[dict[str, Any]] = []
+        seen_ids: set[str] = set()
+
+        response = first_response
+        page_no = 1
+
+        while True:
+            products = self.parse_products(response)
+            new_count = 0
+
+            for product in products:
+                product_id = product.get("product_id")
+
+                if not product_id:
+                    continue
+
+                if product_id in seen_ids:
+                    continue
+
+                seen_ids.add(product_id)
+
+                product["rank"] = len(all_products) + 1
+
+                all_products.append(product)
+                new_count += 1
+
+                if len(all_products) >= limit:
+                    break
+
+            print(
+                f"[ZIGZAG] page={page_no} "
+                f"received={len(products)} "
+                f"new={new_count} "
+                f"total={len(all_products)}"
+            )
+
+            if len(all_products) >= limit:
+                break
+
+            next_info = self.get_next_request_info(
+                response
+            )
+
+            if not next_info:
+                break
+
+            page_no += 1
+
+            response = self.fetch_next(
+                layout_id=layout_id,
+                action_id=action_id,
+                module_slot_id=(
+                    next_info.get("module_slot_id")
+                    or module_slot_id
+                ),
+                server_option=next_info[
+                    "server_option"
+                ],
+            )
+
+        return {
+            "category_id": str(category_id),
+            "order": order,
+            "filters": filters or [],
+            "result_count": result_count,
+            "is_count_capped": (
+                result_count is not None
+                and result_count >= 10000
+            ),
+            "collected_count": len(all_products),
+            "products": all_products[:limit],
+        }

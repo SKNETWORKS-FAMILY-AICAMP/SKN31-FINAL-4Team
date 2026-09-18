@@ -1,0 +1,153 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/brand_connections.css' %}">
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_dictionary.html" %}
+{% endblock %}
+
+{% block content %}
+
+<section class="page-section">
+    <div class="page-header">
+        <div>
+            <h1>FEEDIT 브랜드 연결 현황</h1>
+            <p>FEEDIT 정규 브랜드와 플랫폼별 브랜드 소스 연결 상태를 확인합니다.</p>
+        </div>
+    </div>
+
+    <!-- summary -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <span class="summary-label">전체 FEEDIT 브랜드</span>
+            <strong class="summary-value">{{ summary.total|intcomma }}</strong>
+        </div>
+
+        <div class="summary-card">
+            <span class="summary-label">소스 연결 브랜드</span>
+            <strong class="summary-value">{{ summary.connected|intcomma }}</strong>
+        </div>
+
+        <div class="summary-card accent">
+            <span class="summary-label">멀티 플랫폼 연결</span>
+            <strong class="summary-value">{{ summary.multi|intcomma }}</strong>
+            <span class="summary-caption">2개 이상 플랫폼</span>
+        </div>
+
+        <div class="summary-card">
+            <span class="summary-label">단일 플랫폼 연결</span>
+            <strong class="summary-value">{{ summary.single|intcomma }}</strong>
+            <span class="summary-caption">소스 1개</span>
+        </div>
+    </div>
+
+    <!-- filter -->
+    <form method="get" class="filter-bar">
+        <select name="connection">
+            <option value="all" {% if selected_connection == "all" %}selected{% endif %}>전체 브랜드</option>
+            <option value="connected" {% if selected_connection == "connected" %}selected{% endif %}>연결 브랜드</option>
+            <option value="multi" {% if selected_connection == "multi" %}selected{% endif %}>멀티 플랫폼</option>
+            <option value="single" {% if selected_connection == "single" %}selected{% endif %}>단일 플랫폼</option>
+            <option value="none" {% if selected_connection == "none" %}selected{% endif %}>연결 없음</option>
+        </select>
+
+        <select name="source">
+            <option value="">전체 플랫폼</option>
+            {% for source in sources %}
+                <option value="{{ source.code }}" {% if selected_source == source.code %}selected{% endif %}>
+                    {{ source.name|default:source.code }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <input
+            type="text"
+            name="q"
+            value="{{ search_query }}"
+            placeholder="브랜드명 / 영문명 / 코드 / 소스 브랜드 검색"
+        >
+
+        <button type="submit">검색</button>
+    </form>
+
+    <!-- list -->
+    <div class="brand-card-list">
+        {% for brand in brands %}
+            <article class="brand-card">
+                <!-- left -->
+                <div class="brand-card-main">
+                    {% if brand.image_url %}
+                        <img src="{{ brand.image_url }}" alt="" class="brand-logo">
+                    {% else %}
+                        <div class="brand-logo brand-logo-empty">F</div>
+                    {% endif %}
+
+                    <div class="brand-meta">
+                        <h3 class="brand-name">{{ brand.name }}</h3>
+
+                        {% if brand.english_name %}
+                            <div class="brand-en">{{ brand.english_name }}</div>
+                        {% endif %}
+
+                        <div class="brand-code">{{ brand.brand_code|default:"-" }}</div>
+                    </div>
+                </div>
+
+                <!-- middle -->
+                <div class="brand-card-status">
+                    {% if brand.linked_source_count > 0 %}
+                        <div class="status-top">
+                            <strong class="status-count">{{ brand.linked_source_count }}</strong>
+                            <span class="status-text">개 소스 연결</span>
+                        </div>
+
+                        <div class="chip-row">
+                            {% for item in brand.linked_sources %}
+                                <span class="chip">{{ item.source.code }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <span class="empty-badge">미연결</span>
+                    {% endif %}
+                </div>
+
+                <!-- right -->
+                <div class="brand-card-sources">
+                    {% for item in brand.linked_sources %}
+                        <div class="source-box">
+                            <div class="source-box-top">
+                                <span class="source-platform">{{ item.source.code }}</span>
+                                <strong class="source-brand-name">{{ item.name|default:"-" }}</strong>
+                            </div>
+
+                            <div class="source-box-meta">
+                                <span>ID {{ item.source_brand_id }}</span>
+
+                                {% if item.english_name %}
+                                    <span>{{ item.english_name }}</span>
+                                {% endif %}
+
+                                {% if item.detected_count %}
+                                    <span>발견 {{ item.detected_count|intcomma }}회</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="source-box empty">
+                            연결된 BrandSource가 없습니다.
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
+        {% empty %}
+            <div class="empty-state">
+                조건에 해당하는 브랜드가 없습니다.
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

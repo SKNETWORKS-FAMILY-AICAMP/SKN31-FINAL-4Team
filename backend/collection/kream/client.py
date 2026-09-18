@@ -220,3 +220,69 @@ class KreamClient:
             )
 
         return body
+
+
+    def get(
+        self,
+        url: str,
+        *,
+        params: dict | None = None,
+        referer: str | None = None,
+    ) -> dict:
+        headers = dict(DEFAULT_HEADERS)
+
+        headers.update(
+            {
+                "x-kream-api-version": (
+                    KREAM_API_VERSION
+                ),
+                "x-kream-client-datetime": (
+                    self.build_client_datetime()
+                ),
+                "x-kream-device-id": (
+                    self.device_id
+                ),
+                "x-kream-web-build-version": (
+                    KREAM_WEB_BUILD_VERSION
+                ),
+                "x-kream-web-request-secret": (
+                    KREAM_WEB_REQUEST_SECRET
+                ),
+            }
+        )
+
+        if referer:
+            headers["Referer"] = referer
+
+        try:
+            response = self.session.get(
+                url,
+                params=params,
+                headers=headers,
+                timeout=self.timeout,
+            )
+
+            response.raise_for_status()
+
+        except Exception as exc:
+            raise KreamCollectError(
+                f"KREAM GET 실패: "
+                f"{url} / {exc}"
+            ) from exc
+
+        try:
+            body = response.json()
+
+        except Exception as exc:
+            raise KreamCollectError(
+                f"KREAM JSON 파싱 실패: "
+                f"{response.url}"
+            ) from exc
+
+        if not isinstance(body, dict):
+            raise KreamCollectError(
+                "KREAM JSON object 응답이 아닙니다: "
+                f"{response.url}"
+            )
+
+        return body

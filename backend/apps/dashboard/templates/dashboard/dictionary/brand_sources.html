@@ -14,7 +14,9 @@
 <div class="page-header">
     <div>
         <h2>브랜드 소스 관리</h2>
-        <p class="sub">수집 플랫폼에서 수집한 브랜드를 검수하고 FEEDIT 정규 브랜드로 매핑합니다.</p>
+        <p class="sub">
+            수집 플랫폼에서 수집한 브랜드를 검수하고 FEEDIT 정규 브랜드로 매핑합니다.
+        </p>
     </div>
 </div>
 
@@ -326,27 +328,54 @@
         </div>
 
 
-        <!-- 현재 매핑 상태 (매핑된 경우만) -->
-        <div id="modal-current" class="current-map" hidden>
+        <!-- 현재 매핑 상태 -->
+        <div
+            id="modal-current"
+            class="current-map"
+            hidden
+        >
 
             <div class="current-map-info">
-                <span class="current-map-label">현재 연결된 FEEDIT 브랜드</span>
+                <span class="current-map-label">
+                    현재 연결된 FEEDIT 브랜드
+                </span>
+
                 <strong id="current-brand-name"></strong>
-                <span id="current-brand-code" class="current-map-code"></span>
+
+                <span
+                    id="current-brand-code"
+                    class="current-map-code"
+                ></span>
             </div>
+
 
             <div class="current-map-actions">
 
-                <form id="unmap-form" method="post">
+                <form
+                    id="unmap-form"
+                    method="post"
+                >
                     {% csrf_token %}
-                    <button type="submit" class="ghost-button">
+
+                    <button
+                        type="submit"
+                        class="ghost-button"
+                    >
                         매핑 해제
                     </button>
                 </form>
 
-                <form id="exclude-form" method="post">
+
+                <form
+                    id="exclude-form"
+                    method="post"
+                >
                     {% csrf_token %}
-                    <button type="submit" class="ghost-button danger">
+
+                    <button
+                        type="submit"
+                        class="ghost-button danger"
+                    >
                         제외 처리
                     </button>
                 </form>
@@ -356,7 +385,9 @@
         </div>
 
 
-        <!-- EXISTING -->
+        <!-- ======================================================
+             EXISTING BRAND MAPPING
+        ====================================================== -->
 
         <section class="mapping-section">
 
@@ -377,7 +408,6 @@
 
                 {% csrf_token %}
 
-                <!-- 브랜드가 수천 개라 스크롤로 찾기 어려워 검색을 붙였다. (2026-09-09) -->
                 <input
                     type="text"
                     id="brand-search"
@@ -386,7 +416,11 @@
                     autocomplete="off"
                 >
 
-                <p class="brand-search-count" id="brand-search-count"></p>
+                <p
+                    class="brand-search-count"
+                    id="brand-search-count"
+                ></p>
+
 
                 <select
                     name="brand_id"
@@ -402,7 +436,10 @@
                     {% for brand in brands %}
 
                         <option value="{{ brand.id }}">
-                            {{ brand.name }}{% if brand.english_name %} / {{ brand.english_name }}{% endif %}
+                            {{ brand.name }}
+                            {% if brand.english_name %}
+                                / {{ brand.english_name }}
+                            {% endif %}
                         </option>
 
                     {% endfor %}
@@ -423,18 +460,27 @@
         </section>
 
 
-        <div class="divider" id="create-divider">
+        <div
+            class="divider"
+            id="create-divider"
+        >
             OR
         </div>
 
 
-        <!-- CREATE -->
+        <!-- ======================================================
+             CREATE BRAND
+        ====================================================== -->
 
-        <section class="mapping-section" id="create-section">
+        <section
+            class="mapping-section"
+            id="create-section"
+        >
 
             <h3>
                 신규 FEEDIT 브랜드 등록
             </h3>
+
 
             <form
                 id="create-form"
@@ -452,7 +498,8 @@
                     id="new-brand-code"
                     type="text"
                     name="brand_code"
-                    required
+                    readonly
+                    placeholder="영문 브랜드명 입력 시 자동 생성"
                 >
 
 
@@ -476,6 +523,7 @@
                     id="new-brand-en"
                     type="text"
                     name="english_name"
+                    required
                 >
 
 
@@ -497,109 +545,416 @@
 
 <script>
 
+/* ============================================================
+   FEEDIT BRAND CODE
+============================================================ */
+
+function generateBrandCode(englishName) {
+
+    if (!englishName) {
+        return "";
+    }
+
+    let value = englishName
+        .trim()
+        .toUpperCase()
+        .replace(/[\s\-\/&]+/g, "_")
+        .replace(/[^A-Z0-9_]/g, "")
+        .replace(/_+/g, "_")
+        .replace(/^_+|_+$/g, "");
+
+    if (!value) {
+        return "";
+    }
+
+    return "BRAND_" + value;
+}
+
+
+function syncBrandCode() {
+
+    const englishInput =
+        document.getElementById(
+            "new-brand-en"
+        );
+
+    const codeInput =
+        document.getElementById(
+            "new-brand-code"
+        );
+
+    if (
+        !englishInput ||
+        !codeInput
+    ) {
+        return;
+    }
+
+    codeInput.value =
+        generateBrandCode(
+            englishInput.value
+        );
+}
+
+
+/* ============================================================
+   MODAL OPEN
+============================================================ */
+
 function openBrandModal(button) {
 
     const data = button.dataset;
-    const id = data.id;
-    const isMapped = data.mapped === "1";
-    const base = "/admin-dashboard/dictionary/brands/" + id + "/";
 
-    // ---------- 헤더 ----------
-    document.getElementById("modal-source").textContent = data.source;
-    document.getElementById("modal-name").textContent = data.name || data.code;
-    document.getElementById("modal-count").textContent = data.count;
+    const id =
+        data.id;
 
-    const chip = document.getElementById("modal-status-chip");
-    chip.textContent = data.status || "";
-    chip.className = "modal-chip " + (isMapped ? "ok" : "warn");
+    const isMapped =
+        data.mapped === "1";
 
-    // ---------- 현재 매핑 배너 ----------
-    const current = document.getElementById("modal-current");
+    const base =
+        "/admin-dashboard/dictionary/brands/" +
+        id +
+        "/";
+
+
+    // --------------------------------------------------------
+    // HEADER
+    // --------------------------------------------------------
+
+    document
+        .getElementById(
+            "modal-source"
+        )
+        .textContent =
+        data.source;
+
+
+    document
+        .getElementById(
+            "modal-name"
+        )
+        .textContent =
+        data.name ||
+        data.code;
+
+
+    document
+        .getElementById(
+            "modal-count"
+        )
+        .textContent =
+        data.count;
+
+
+    const chip =
+        document.getElementById(
+            "modal-status-chip"
+        );
+
+    chip.textContent =
+        data.status || "";
+
+    chip.className =
+        "modal-chip " +
+        (
+            isMapped
+                ? "ok"
+                : "warn"
+        );
+
+
+    // --------------------------------------------------------
+    // CURRENT MAPPING
+    // --------------------------------------------------------
+
+    const current =
+        document.getElementById(
+            "modal-current"
+        );
+
 
     if (isMapped) {
-        document.getElementById("current-brand-name").textContent =
+
+        document
+            .getElementById(
+                "current-brand-name"
+            )
+            .textContent =
             data.brandName || "-";
-        document.getElementById("current-brand-code").textContent =
-            [data.brandCode, data.method].filter(Boolean).join(" · ");
 
-        document.getElementById("unmap-form").action = base + "unmap/";
-        document.getElementById("exclude-form").action = base + "exclude/";
 
-        current.hidden = false;
+        document
+            .getElementById(
+                "current-brand-code"
+            )
+            .textContent =
+            [
+                data.brandCode,
+                data.method
+            ]
+            .filter(Boolean)
+            .join(" · ");
+
+
+        document
+            .getElementById(
+                "unmap-form"
+            )
+            .action =
+            base + "unmap/";
+
+
+        document
+            .getElementById(
+                "exclude-form"
+            )
+            .action =
+            base + "exclude/";
+
+
+        current.hidden =
+            false;
+
     } else {
-        current.hidden = true;
+
+        current.hidden =
+            true;
     }
 
-    // ---------- 매핑 섹션 문구 ----------
-    document.getElementById("map-section-title").textContent =
-        isMapped ? "다른 FEEDIT 브랜드로 변경" : "기존 FEEDIT 브랜드에 연결";
 
-    document.getElementById("map-section-desc").textContent =
+    // --------------------------------------------------------
+    // MAPPING SECTION
+    // --------------------------------------------------------
+
+    document
+        .getElementById(
+            "map-section-title"
+        )
+        .textContent =
+        isMapped
+            ? "다른 FEEDIT 브랜드로 변경"
+            : "기존 FEEDIT 브랜드에 연결";
+
+
+    document
+        .getElementById(
+            "map-section-desc"
+        )
+        .textContent =
         isMapped
             ? "연결된 브랜드를 다른 브랜드로 바꿉니다."
             : "이미 존재하는 브랜드라면 중복 생성하지 않고 기존 브랜드에 연결합니다.";
 
-    document.getElementById("map-submit-btn").textContent =
-        isMapped ? "매핑 변경" : "기존 브랜드에 매핑";
 
-    // 현재 연결된 브랜드를 select에 미리 선택
-    const select = document.querySelector("#map-form select[name='brand_id']");
+    document
+        .getElementById(
+            "map-submit-btn"
+        )
+        .textContent =
+        isMapped
+            ? "매핑 변경"
+            : "기존 브랜드에 매핑";
+
+
+    // --------------------------------------------------------
+    // CURRENT BRAND SELECT
+    // --------------------------------------------------------
+
+    const select =
+        document.querySelector(
+            "#map-form select[name='brand_id']"
+        );
+
     if (select) {
-        select.value = isMapped ? (data.brandId || "") : "";
+
+        select.value =
+            isMapped
+                ? (
+                    data.brandId ||
+                    ""
+                )
+                : "";
     }
 
-    // ---------- 신규 등록 섹션 ----------
-    // 이미 매핑된 브랜드는 신규 생성이 필요 없으므로 감춘다.
-    const createSection = document.getElementById("create-section");
-    const createDivider = document.getElementById("create-divider");
 
-    if (createSection) createSection.hidden = isMapped;
-    if (createDivider) createDivider.hidden = isMapped;
+    // --------------------------------------------------------
+    // CREATE SECTION
+    // --------------------------------------------------------
 
-    document.getElementById("new-brand-code").value = data.code || "";
-    document.getElementById("new-brand-name").value = data.name || "";
-    document.getElementById("new-brand-en").value = data.en || "";
+    const createSection =
+        document.getElementById(
+            "create-section"
+        );
 
-    // ---------- 폼 action ----------
-    document.getElementById("map-form").action = base + "map/";
-    document.getElementById("create-form").action = base + "create/";
+    const createDivider =
+        document.getElementById(
+            "create-divider"
+        );
 
-    document.getElementById("brand-modal").classList.add("open");
+
+    if (createSection) {
+        createSection.hidden =
+            isMapped;
+    }
+
+
+    if (createDivider) {
+        createDivider.hidden =
+            isMapped;
+    }
+
+
+    // --------------------------------------------------------
+    // SOURCE VALUES
+    // --------------------------------------------------------
+
+    document
+        .getElementById(
+            "new-brand-name"
+        )
+        .value =
+        data.name || "";
+
+
+    document
+        .getElementById(
+            "new-brand-en"
+        )
+        .value =
+        data.en || "";
+
+
+    // source_brand_id를 코드로 사용하지 않는다.
+    // 영문 브랜드명을 기준으로 FEEDIT 코드를 만든다.
+    syncBrandCode();
+
+
+    // --------------------------------------------------------
+    // FORM ACTION
+    // --------------------------------------------------------
+
+    document
+        .getElementById(
+            "map-form"
+        )
+        .action =
+        base + "map/";
+
+
+    document
+        .getElementById(
+            "create-form"
+        )
+        .action =
+        base + "create/";
+
+
+    // --------------------------------------------------------
+    // OPEN
+    // --------------------------------------------------------
+
+    document
+        .getElementById(
+            "brand-modal"
+        )
+        .classList
+        .add("open");
 }
 
 
-document.addEventListener("submit", function (event) {
-    const form = event.target;
+/* ============================================================
+   BRAND CODE LIVE UPDATE
+============================================================ */
 
-    if (form.id === "unmap-form") {
-        if (!confirm("이 브랜드의 매핑을 해제하시겠습니까?")) {
-            event.preventDefault();
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const englishInput =
+            document.getElementById(
+                "new-brand-en"
+            );
+
+        if (!englishInput) {
+            return;
         }
-    }
 
-    if (form.id === "exclude-form") {
-        if (!confirm("이 브랜드를 분석 대상에서 제외하시겠습니까?")) {
-            event.preventDefault();
+        englishInput.addEventListener(
+            "input",
+            syncBrandCode
+        );
+    }
+);
+
+
+/* ============================================================
+   FORM CONFIRM
+============================================================ */
+
+document.addEventListener(
+    "submit",
+    function (event) {
+
+        const form =
+            event.target;
+
+
+        if (
+            form.id ===
+            "unmap-form"
+        ) {
+
+            if (
+                !confirm(
+                    "이 브랜드의 매핑을 해제하시겠습니까?"
+                )
+            ) {
+                event.preventDefault();
+            }
         }
-    }
-});
 
+
+        if (
+            form.id ===
+            "exclude-form"
+        ) {
+
+            if (
+                !confirm(
+                    "이 브랜드를 분석 대상에서 제외하시겠습니까?"
+                )
+            ) {
+                event.preventDefault();
+            }
+        }
+
+    }
+);
+
+
+/* ============================================================
+   MODAL CLOSE
+============================================================ */
 
 function closeBrandModal() {
 
-    document.getElementById(
-        "brand-modal"
-    ).classList.remove(
-        "open"
-    );
+    document
+        .getElementById(
+            "brand-modal"
+        )
+        .classList
+        .remove("open");
 }
 
 
 document.addEventListener(
     "keydown",
-    function(event) {
+    function (event) {
 
-        if (event.key === "Escape") {
+        if (
+            event.key ===
+            "Escape"
+        ) {
             closeBrandModal();
         }
 
@@ -609,95 +964,253 @@ document.addEventListener(
 </script>
 
 
-
 <script>
+
 /* ============================================================
    FEEDIT 브랜드 검색
-   ------------------------------------------------------------
-   브랜드가 수천 개라 <select> 스크롤로는 찾을 수 없다.
-   option 을 display:none 으로 숨기는 방식은 브라우저마다
-   동작이 달라서, 전체 목록을 배열로 들고 있다가 다시 그린다.
-   ============================================================ */
+============================================================ */
+
 (function () {
 
-    var select = document.getElementById("brand-select");
-    var search = document.getElementById("brand-search");
-    var counter = document.getElementById("brand-search-count");
+    var select =
+        document.getElementById(
+            "brand-select"
+        );
 
-    if (!select || !search) {
+    var search =
+        document.getElementById(
+            "brand-search"
+        );
+
+    var counter =
+        document.getElementById(
+            "brand-search-count"
+        );
+
+
+    if (
+        !select ||
+        !search
+    ) {
         return;
     }
 
-    var MAX_SHOWN = 300;
 
-    // 전체 목록을 한 번만 저장해 둔다.
-    var all = Array.prototype.slice
-        .call(select.options)
-        .filter(function (o) { return o.value; })
-        .map(function (o) {
-            return {
-                value: o.value,
-                label: o.textContent.trim()
-            };
-        });
+    var MAX_SHOWN =
+        300;
+
+
+    // --------------------------------------------------------
+    // 전체 브랜드 목록 저장
+    // --------------------------------------------------------
+
+    var all =
+        Array.prototype
+            .slice
+            .call(
+                select.options
+            )
+            .filter(
+                function (option) {
+                    return option.value;
+                }
+            )
+            .map(
+                function (option) {
+
+                    return {
+                        value:
+                            option.value,
+
+                        label:
+                            option
+                                .textContent
+                                .trim()
+                    };
+                }
+            );
+
+
+    // --------------------------------------------------------
+    // 검색 결과 렌더링
+    // --------------------------------------------------------
 
     function render(keyword) {
 
-        var want = (keyword || "").trim().toLowerCase();
+        var want =
+            (
+                keyword ||
+                ""
+            )
+            .trim()
+            .toLowerCase();
 
-        var hits = want
-            ? all.filter(function (item) {
-                  return item.label.toLowerCase().indexOf(want) !== -1;
-              })
-            : all;
 
-        var shown = hits.slice(0, MAX_SHOWN);
+        var hits =
+            want
+                ? all.filter(
+                    function (item) {
 
-        var html = '<option value="">FEEDIT 브랜드 선택</option>';
+                        return item
+                            .label
+                            .toLowerCase()
+                            .indexOf(
+                                want
+                            ) !== -1;
+                    }
+                )
+                : all;
 
-        shown.forEach(function (item) {
-            var safe = item.label
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;");
-            html += '<option value="' + item.value + '">' + safe + "</option>";
-        });
 
-        select.innerHTML = html;
+        var shown =
+            hits.slice(
+                0,
+                MAX_SHOWN
+            );
+
+
+        var html =
+            '<option value="">' +
+            'FEEDIT 브랜드 선택' +
+            '</option>';
+
+
+        shown.forEach(
+            function (item) {
+
+                var safe =
+                    item.label
+                        .replace(
+                            /&/g,
+                            "&amp;"
+                        )
+                        .replace(
+                            /</g,
+                            "&lt;"
+                        )
+                        .replace(
+                            />/g,
+                            "&gt;"
+                        );
+
+
+                html +=
+                    '<option value="' +
+                    item.value +
+                    '">' +
+                    safe +
+                    "</option>";
+            }
+        );
+
+
+        select.innerHTML =
+            html;
+
+
+        // ----------------------------------------------------
+        // COUNT
+        // ----------------------------------------------------
 
         if (counter) {
+
             if (!want) {
+
                 counter.textContent =
-                    "전체 " + all.length.toLocaleString() + "개";
-            } else if (hits.length === 0) {
-                counter.textContent = "검색 결과 없음";
-            } else if (hits.length > MAX_SHOWN) {
+                    "전체 " +
+                    all.length.toLocaleString() +
+                    "개";
+
+
+            } else if (
+                hits.length === 0
+            ) {
+
                 counter.textContent =
-                    hits.length.toLocaleString() + "개 중 " +
-                    MAX_SHOWN + "개 표시 — 검색어를 더 입력하세요";
+                    "검색 결과 없음";
+
+
+            } else if (
+                hits.length >
+                MAX_SHOWN
+            ) {
+
+                counter.textContent =
+                    hits.length.toLocaleString() +
+                    "개 중 " +
+                    MAX_SHOWN +
+                    "개 표시 — 검색어를 더 입력하세요";
+
+
             } else {
-                counter.textContent = hits.length.toLocaleString() + "개";
+
+                counter.textContent =
+                    hits.length.toLocaleString() +
+                    "개";
             }
         }
     }
 
-    var timer = null;
 
-    search.addEventListener("input", function () {
-        clearTimeout(timer);
-        var value = this.value;
-        timer = setTimeout(function () { render(value); }, 120);
-    });
+    // --------------------------------------------------------
+    // SEARCH INPUT
+    // --------------------------------------------------------
 
-    // 엔터로 폼이 제출되지 않게 막는다.
-    search.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-            e.preventDefault();
+    var timer =
+        null;
+
+
+    search.addEventListener(
+        "input",
+        function () {
+
+            clearTimeout(
+                timer
+            );
+
+            var value =
+                this.value;
+
+
+            timer =
+                setTimeout(
+                    function () {
+
+                        render(
+                            value
+                        );
+
+                    },
+                    120
+                );
         }
-    });
+    );
 
+
+    // --------------------------------------------------------
+    // ENTER 제출 방지
+    // --------------------------------------------------------
+
+    search.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key ===
+                "Enter"
+            ) {
+
+                event.preventDefault();
+            }
+        }
+    );
+
+
+    // 최초 렌더링
     render("");
+
 })();
+
 </script>
 
 {% endblock %}

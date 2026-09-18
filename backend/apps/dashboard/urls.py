@@ -28,38 +28,23 @@ urlpatterns = [
 
     path("normalization/products/", views.normalized_products, name="normalized_products"),
     path("normalization/failures/", views.normalization_failures, name="normalization_failures"),
-
+    # ---------- 수집 ----------
     path("dictionary/terms/", views.dictionary_terms, name="dictionary_terms"),
     path("dictionary/candidates/", views.dictionary_candidates, name="dictionary_candidates"),
     path("dictionary/candidates/<int:pk>/", views.dictionary_candidate_detail, name="dictionary_candidate_detail"),
-        path(
-        "dictionary/brands/",
-        views.brand_sources,
-        name="brand_sources",
-    ),
 
-    path(
-        "dictionary/brands/<int:source_id>/map/",
-        views.map_brand_source,
-        name="map_brand_source",
-    ),
+    # 기존 BrandSource -> FEEDIT Brand 매핑
+    path("dictionary/brands/", views.brand_sources, name="brand_sources"),
+    path("dictionary/brands/<int:source_id>/map/", views.map_brand_source, name="map_brand_source"),
+    path("dictionary/brands/<int:source_id>/create/", views.create_brand_from_source, name="create_brand_from_source"),
+    path("dictionary/brands/<int:source_id>/unmap/", views.unmap_brand_source, name="unmap_brand_source"),
+    path("dictionary/brands/<int:source_id>/exclude/", views.exclude_brand_source, name="exclude_brand_source"),
 
+    # NEW: FEEDIT Brand -> 연결된 BrandSource 조회
     path(
-        "dictionary/brands/<int:source_id>/create/",
-        views.create_brand_from_source,
-        name="create_brand_from_source",
-    ),
-
-    path(
-        "dictionary/brands/<int:source_id>/unmap/",
-        views.unmap_brand_source,
-        name="unmap_brand_source",
-    ),
-
-    path(
-        "dictionary/brands/<int:source_id>/exclude/",
-        views.exclude_brand_source,
-        name="exclude_brand_source",
+        "dictionary/brands/overview/",
+        views.brand_connections,
+        name="brand_connections",
     ),
     path("trend/metrics/", views.trend_metrics, name="trend_metrics"),
 
@@ -75,7 +60,23 @@ urlpatterns = [
     path("collection/run/", views.run_crawl, name="run_crawl"),
     path("collection/rules/", views.crawl_rules, name="crawl_rules"),
     path("collection/robots/", views.robots_check, name="robots_check"),
+    path(
+    "collection/category-mapping/",
+    views.category_mapping,
+    name="category_mapping",
+    ),
 
+    path(
+        "collection/category-mapping/search/",
+        views.category_mapping_search,
+        name="category_mapping_search",
+    ),
+
+    path(
+        "collection/category-mapping/<int:source_id>/save/",
+        views.category_mapping_save,
+        name="category_mapping_save",
+    ),
     # ---------- 정규화 데이터 ----------
     path("normalized/musinsa/", views.normalized_musinsa, name="normalized_musinsa"),
     path("normalized/zigzag/", views.normalized_zigzag, name="normalized_zigzag"),
@@ -89,7 +90,8 @@ urlpatterns = [
     path("analytics/term-metrics/", views.term_metrics, name="term_metrics"),
     path("analytics/product-metrics/", views.product_metrics, name="product_metrics"),
     path("analytics/product-snapshot/", views.product_snapshot, name="product_snapshot"),
-
+    path("analytics/product-snapshots/<int:snapshot_id>/", views.product_snapshot_detail, name="product_snapshot_detail"),
+    path("analytics/text-comments/", views.analytics.text_comment_metrics,name="text_comment_metrics"),
     # ---------- 시스템 ----------
     path("system/api/", views.system_api, name="system_api"),
     path("system/aws/", views.system_aws, name="system_aws"),

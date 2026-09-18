@@ -1,0 +1,24 @@
+{
+  "androidMarket": "https://play.google.com/store/apps/details?id=com.banhala.android",
+  "appIconImageUrl": "https://play-lh.googleusercontent.com/QtgW1o5zt3Z3gQedik_iYGcgz4pQhe41cZ2Lisp9PT7zV46AfQmXeS1ljbY9Ss2CnzY",
+  "appId": 32576,
+  "appName": "에이블리 - 전 상품 무료배송",
+  "appSubdomain": "ably",
+  "appTitle": "에이블리 - 4천만의 AI 쇼핑메이트",
+  "iosMarket": "https://apps.apple.com/kr/app/%EC%97%90%EC%9D%B4%EB%B8%94%EB%A6%AC-3%EC%B2%9C%EB%A7%8C%EC%9D%98-ai-%EC%87%BC%ED%95%91%EB%A9%94%EC%9D%B4%ED%8A%B8/id1084960428",
+  "ownerUserId": 15651,
+  "sdkFlag": 0,
+  "webLanding": "",
+  "isHTTPDeeplinkEnabled": {
+    "ios": true,
+    "android": true
+  },
+  "protectedAttributionWindowEnabled": true,
+  "blockOverwriteUserInLegacyNativeInterface": false,
+  "deeplinkInTablet": {
+    "ios": false,
+    "android": false
+  },
+  "optimizeTouchpointOriginURLEnabled": false,
+  "template": {}
+}

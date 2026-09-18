@@ -1,0 +1,171 @@
+{
+  "selected_id": "today",
+  "item_list": [
+    {
+      "id": "home_tab_127",
+      "name": "25%쿠폰",
+      "type": "WEBVIEW",
+      "default_query": {
+        "title_bar": false,
+        "url": "https://m.a-bly.com/events/71af415c"
+      },
+      "screen_name": "EVENT",
+      "render": {
+        "text_color": "#ff9100",
+        "selected_text_color": "#ff9100",
+        "overlay_image": null,
+        "overlay_text": null
+      },
+      "enable_content_horizontal_scroll": true
+    },
+    {
+      "id": "today",
+      "name": "추천",
+      "type": "CUSTOM",
+      "default_query": null,
+      "screen_name": "TODAY",
+      "render": {
+        "text_color": "#777777",
+        "selected_text_color": "#1F1F1F",
+        "overlay_image": null,
+        "overlay_text": null
+      },
+      "enable_content_horizontal_scroll": true
+    },
+    {
+      "id": "shoppingmall",
+      "name": "쇼핑몰",
+      "type": "ATOMIC",
+      "default_query": null,
+      "screen_name": "SHOPPINGMALL_DEPARTMENT",
+      "render": {
+        "text_color": "#777777",
+        "selected_text_color": "#1F1F1F",
+        "overlay_image": null,
+        "overlay_text": null
+      },
+      "enable_content_horizontal_scroll": true
+    },
+    {
+      "id": "brand",
+      "name": "브랜드",
+      "type": "ATOMIC",
+      "default_query": null,
+      "screen_name": "BRAND_DEPARTMENT",
+      "render": {
+        "text_color": "#777777",
+        "selected_text_color": "#1F1F1F",
+        "overlay_image": null,
+        "overlay_text": null
+      },
+      "enable_content_horizontal_scroll": true
+    },
+    {
+      "id": "beauty",
+      "name": "뷰티",
+      "type": "ATOMIC",
+      "default_query": null,
+      "screen_name": "BEAUTY_DEPARTMENT",
+      "render": {
+        "text_color": "#777777",
+        "selected_text_color": "#1F1F1F",
+        "overlay_image": null,
+        "overlay_text": null
+      },
+      "enable_content_horizontal_scroll": true
+    },
+    {
+      "id": "life",
+      "name": "라이프",
+      "type": "ATOMIC",
+      "default_query": null,
+      "screen_name": "LIFE_PARENT_CATEGORY_DEPARTMENT",
+      "render": {
+        "text_color": "#777777",
+        "selected_text_color": "#1F1F1F",
+        "overlay_image": null,
+        "overlay_text": null
+      },
+      "enable_content_horizontal_scroll": true
+    },
+    {
+      "id": "food",
+      "name": "푸드",
+      "type": "ATOMIC",
+      "default_query": {
+        "next_token": "eyJsaSI6IDAsICJjYXRlZ29yeV9zbm8iOiA2NTl9",
+        "screen_name": "CATEGORY_DEPARTMENT"
+      },
+      "screen_name": "CATEGORY_DEPARTMENT",
+      "render": {
+        "text_color": "#777777",
+        "selected_text_color": "#1F1F1F",
+        "overlay_image": null,
+        "overlay_text": null
+      },
+      "enable_content_horizontal_scroll": true
+    },
+    {
+      "id": "digital",
+      "name": "디지털",
+      "type": "ATOMIC",
+      "default_query": {
+        "next_token": "eyJsaSI6IDAsICJjYXRlZ29yeV9zbm8iOiA1MjJ9",
+        "screen_name": "CATEGORY_DEPARTMENT"
+      },
+      "screen_name": "CATEGORY_DEPARTMENT",
+      "render": {
+        "text_color": "#777777",
+        "selected_text_color": "#1F1F1F",
+        "overlay_image": null,
+        "overlay_text": null
+      },
+      "enable_content_horizontal_scroll": true
+    },
+    {
+      "id": "shoplive_calendar",
+      "name": "라이브",
+      "type": "WEBVIEW",
+      "default_query": {
+        "title_bar": false,
+        "url": "https://m.a-bly.com/shoplive/calendar?title_bar=false"
+      },
+      "screen_name": "SHOPLIVE_CALENDAR",
+      "render": {
+        "text_color": "#777777",
+        "selected_text_color": "#1F1F1F",
+        "overlay_image": null,
+        "overlay_text": null
+      },
+      "enable_content_horizontal_scroll": true
+    },
+    {
+      "id": "ranking",
+      "name": "랭킹",
+      "type": "CUSTOM",
+      "default_query": null,
+      "screen_name": "GOODS_RANKING",
+      "render": {
+        "text_color": "#777777",
+        "selected_text_color": "#1F1F1F",
+        "overlay_image": null,
+        "overlay_text": null
+      },
+      "enable_content_horizontal_scroll": true
+    },
+    {
+      "id": "market_ranking",
+      "name": "마켓",
+      "type": "CUSTOM",
+      "default_query": null,
+      "screen_name": "MARKET_RANKING",
+      "render": {
+        "text_color": "#777777",
+        "selected_text_color": "#1F1F1F",
+        "overlay_image": null,
+        "overlay_text": null
+      },
+      "enable_content_horizontal_scroll": true
+    }
+  ]
+}

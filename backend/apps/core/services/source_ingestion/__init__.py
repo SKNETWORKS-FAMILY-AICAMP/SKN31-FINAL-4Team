@@ -3,8 +3,9 @@ from .musinsa import (
     ingest_musinsa_raw_document,
 )
 from .zigzag import (
-    ingest_all_zigzag_rankings,
+    ingest_latest_zigzag_raw_document,
     ingest_zigzag_raw_document,
+    ingest_zigzag_crawl_run,
 )
 from .ably import ingest_ably_raw_document, ingest_pending_ably_raw_documents
 from .musinsa_used import (

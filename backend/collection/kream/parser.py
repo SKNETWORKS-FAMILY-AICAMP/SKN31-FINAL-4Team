@@ -137,6 +137,95 @@ class KreamParser:
                 else analytics.get("has_immediate_delivery_item")
             ),
         }
+    
+    @classmethod
+    def _extract_wish_count(
+        cls,
+        screen: dict,
+        *,
+        product_id: int,
+    ) -> int | None:
+
+        target_id = f"product_wish_count/{product_id}"
+
+        def extract_count(obj):
+            if not isinstance(obj, dict):
+                return None
+
+            for key in (
+                "count",
+                "wish_count",
+                "total_count",
+                "interest_count",
+            ):
+                value = cls._parse_compact_count(
+                    obj.get(key)
+                )
+
+                if value is not None:
+                    return value
+
+            text_element = obj.get(
+                "text_element"
+            )
+
+            if isinstance(
+                text_element,
+                dict,
+            ):
+                default_variation = (
+                    text_element.get(
+                        "default_variation"
+                    )
+                )
+
+                if isinstance(
+                    default_variation,
+                    dict,
+                ):
+                    text = (
+                        default_variation.get(
+                            "text"
+                        )
+                    )
+
+                    value = (
+                        cls._parse_compact_count(
+                            text
+                        )
+                    )
+
+                    if value is not None:
+                        return value
+
+            return None
+
+        def walk(obj):
+            if isinstance(obj, dict):
+
+                if obj.get("id") == target_id:
+                    value = extract_count(obj)
+
+                    if value is not None:
+                        return value
+
+                for child in obj.values():
+                    value = walk(child)
+
+                    if value is not None:
+                        return value
+
+            elif isinstance(obj, list):
+
+                for child in obj:
+                    value = walk(child)
+
+                    if value is not None:
+                        return value
+
+            return None
+
+        return walk(screen)
 
     @classmethod
     def _extract_best_product_analytics(cls, roots: list, *, target_product_id: int) -> dict:
@@ -207,35 +296,42 @@ class KreamParser:
                 return item
 
         return None
-
+    
     @classmethod
     def _extract_current_product_viewer_count(
-        cls, header: dict, *, product_id: int
+        cls,
+        header: dict,
+        *,
+        product_id: int,
     ) -> int | None:
-        current_item = cls._find_current_product_series_item(
-            header, product_id=product_id
-        )
-        if not current_item:
-            return None
+        """
+        상품 header 전체에서
+        '230명이 보고 있어요'
+        형태를 찾아 viewer_count 추출.
+        """
 
         values = []
 
         def walk(obj):
             if isinstance(obj, dict):
-                for key, child in obj.items():
-                    if key == "text" and isinstance(child, str):
-                        match = cls.VIEWER_PATTERN.search(child)
+                for value in obj.values():
+                    if isinstance(value, str):
+                        match = cls.VIEWER_PATTERN.search(value)
                         if match:
-                            try:
-                                values.append(int(match.group(1).replace(",", "")))
-                            except ValueError:
-                                pass
-                    walk(child)
-            elif isinstance(obj, list):
-                for child in obj:
-                    walk(child)
+                            number = cls._to_int(
+                                match.group(1).replace(",", "")
+                            )
+                            if number is not None:
+                                values.append(number)
+                    else:
+                        walk(value)
 
-        walk(current_item)
+            elif isinstance(obj, list):
+                for value in obj:
+                    walk(value)
+
+        walk(header)
+
         return values[0] if values else None
 
     @classmethod
@@ -288,42 +384,7 @@ class KreamParser:
         walk(review_tab)
         return counts[0] if counts else None
 
-    @classmethod
-    def _extract_wish_count(
-        cls, screen: dict, *, product_id: int
-    ) -> int | None:
-        target_id = f"product_wish/{product_id}"
 
-        def walk(obj):
-            if isinstance(obj, dict):
-                if obj.get("id") == target_id:
-                    for key in ("count", "wish_count", "total_count", "interest_count"):
-                        value = cls._to_int(obj.get(key))
-                        if value is not None:
-                            return value
-
-                    meta = obj.get("meta")
-                    if isinstance(meta, dict):
-                        for key in ("count", "wish_count", "total_count", "interest_count"):
-                            value = cls._to_int(meta.get(key))
-                            if value is not None:
-                                return value
-                    return None
-
-                for child in obj.values():
-                    found = walk(child)
-                    if found is not None:
-                        return found
-
-            elif isinstance(obj, list):
-                for child in obj:
-                    found = walk(child)
-                    if found is not None:
-                        return found
-
-            return None
-
-        return walk(screen)
 
     @classmethod
     def _extract_ranking_signals(
@@ -393,42 +454,59 @@ class KreamParser:
 
         walk(current_item)
         return results
-
+    
     @classmethod
     def _extract_options(cls, value) -> list[dict]:
-        options = {}
+        options: dict[str, dict] = {}
 
         def add_option(option):
             if not isinstance(option, dict):
                 return
 
             option_id = cls._to_int(option.get("id"))
+
             display = (
                 cls._clean_text(option.get("name_display"))
                 or cls._clean_text(option.get("name"))
                 or cls._clean_text(option.get("key"))
             )
+
             if not display:
                 return
 
-            options[(option_id, display)] = {
-                "option_id": option_id,
-                "value": display,
-            }
+            existing = options.get(display)
+
+            if existing is None:
+                options[display] = {
+                    "option_id": option_id,
+                    "value": display,
+                }
+                return
+
+            # 기존 값에는 ID가 없는데 새 값에는 ID가 있으면 교체
+            if existing["option_id"] is None and option_id is not None:
+                options[display] = {
+                    "option_id": option_id,
+                    "value": display,
+                }
 
         def walk(obj):
             if isinstance(obj, dict):
                 product_option = obj.get("product_option")
+
                 if isinstance(product_option, dict):
                     add_option(product_option)
 
                 raw_options = obj.get("product_options")
+
                 if isinstance(raw_options, list):
                     for option in raw_options:
                         if isinstance(option, dict):
                             add_option(option)
+
                         elif isinstance(option, str):
                             decoded = cls._decode_json_property(option)
+
                             if isinstance(decoded, dict):
                                 add_option(decoded)
 
@@ -440,6 +518,7 @@ class KreamParser:
                     walk(child)
 
         walk(value)
+
         return list(options.values())
 
     @classmethod
@@ -586,6 +665,51 @@ class KreamParser:
                     return found
 
         return None
+
+    @classmethod
+    def _parse_compact_count(
+        cls,
+        value,
+    ) -> int | None:
+        """
+        KREAM 표시 숫자 변환.
+
+        예:
+            "7,491" -> 7491
+            "4.1만" -> 41000
+            "1.2천" -> 1200
+            "2.3억" -> 230000000
+        """
+
+        text = cls._clean_text(value)
+
+        if not text:
+            return None
+
+        text = text.replace(",", "").strip()
+
+        multipliers = {
+            "천": 1_000,
+            "만": 10_000,
+            "억": 100_000_000,
+        }
+
+        unit = text[-1:]
+
+        if unit in multipliers:
+            try:
+                number = float(text[:-1])
+            except ValueError:
+                return None
+
+            return int(
+                number * multipliers[unit]
+            )
+
+        try:
+            return int(float(text))
+        except ValueError:
+            return None
 
     @staticmethod
     def _decode_json_property(raw):

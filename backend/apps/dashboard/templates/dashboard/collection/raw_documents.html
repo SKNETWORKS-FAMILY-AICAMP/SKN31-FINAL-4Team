@@ -1,9 +1,21 @@
-{% extends "dashboard/base.html" %}
-
 {% block sub_sidebar %}
 <aside class="sub-sidebar">
     <p>RAW DATA</p>
-    <a href="{% url 'dashboard:raw_documents' %}" class="active">원본 데이터 목록</a>
+
+    <a href="{% url 'dashboard:raw_documents' %}"
+       class="{% if request.resolver_match.url_name == 'raw_documents' %}active{% endif %}">
+        원본 데이터 목록
+    </a>
+
+    <a href="{% url 'dashboard:brand_sources' %}"
+       class="{% if request.resolver_match.url_name == 'brand_sources' %}active{% endif %}">
+        브랜드 매핑
+    </a>
+
+    <a href="{% url 'dashboard:category_mapping' %}"
+       class="{% if request.resolver_match.url_name == 'category_mapping' %}active{% endif %}">
+        카테고리 매핑
+    </a>
 </aside>
 {% endblock %}
 

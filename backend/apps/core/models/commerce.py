@@ -721,3 +721,83 @@ class ProductTerm(models.Model):
             f"{self.product_source_id} / "
             f"{self.term.term_code}"
         )
+
+
+class ProductReview(models.Model):
+
+    product_source = models.ForeignKey(
+        "core.ProductSource",
+        on_delete=models.CASCADE,
+        related_name="reviews",
+    )
+
+    source_review_id = models.CharField(
+        max_length=100,
+    )
+
+    review_type = models.CharField(
+        max_length=30,
+        blank=True,
+        default="",
+    )
+
+    content = models.TextField()
+
+    grade = models.IntegerField(
+        null=True,
+        blank=True,
+    )
+
+    goods_option = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+    )
+
+    like_count = models.IntegerField(
+        default=0,
+    )
+
+    reviewer_sex = models.CharField(
+        max_length=20,
+        blank=True,
+        default="",
+    )
+
+    reviewer_height = models.IntegerField(
+        null=True,
+        blank=True,
+    )
+
+    reviewer_weight = models.IntegerField(
+        null=True,
+        blank=True,
+    )
+
+    survey = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    source_created_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+        db_table = '"commerce"."product_review"'
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "product_source",
+                    "source_review_id",
+                ],
+                name="uq_product_review_source_review",
+            ),
+        ]
+

@@ -1,0 +1,36 @@
+{
+  "sno": 1351893779,
+  "carts_count": 0,
+  "likes_count": 0,
+  "favorites_count": 0,
+  "is_anonymous": true,
+  "experiment_groups": [
+    "EXP1408:B",
+    "EXP1520:B",
+    "EXP1615:A",
+    "EXP1703:B",
+    "EXP1719:B",
+    "EXP1770:A",
+    "EXP1806:B",
+    "EXP1821:B",
+    "EXP1841:B",
+    "EXP1845:A",
+    "EXP1858:B",
+    "EXP1867:B",
+    "EXP1877:C",
+    "EXP1878:B",
+    "EXP1882:B",
+    "EXP1890:A",
+    "EXP1905:A",
+    "EXP1906:B",
+    "EXP1916:A",
+    "EXP1921:B",
+    "EXP1923:B",
+    "EXP1939:A",
+    "EXP1959:B"
+  ],
+  "affiliate_information": {
+    "is_link_campaign_affiliator": false,
+    "link_campaign_onboarding_deeplink": "ably://webview?url=https%3A%2F%2Fm.a-bly.com%2Faffiliate%2Fevents%2F3a3c7d4a%3Fsnack_bar%3D%EC%B0%B8%EC%97%AC+%ED%9B%84+%EC%83%81%ED%92%88+%EB%A7%81%ED%81%AC%EB%A5%BC+%EA%B3%B5%EC%9C%A0%ED%95%B4%EC%A3%BC%EC%84%B8%EC%9A%94&title_bar=false"
+  }
+}

@@ -1,0 +1,20 @@
+TermMetricDaily의 SENTIMENT / REACTION / INTENT 영역에 아래 필드가 있어야 합니다.
+
+neutral_count = models.BigIntegerField(default=0, verbose_name="중립 반응 수")
+
+question_count = models.BigIntegerField(default=0, verbose_name="질문 반응 수")
+purchase_count = models.BigIntegerField(default=0, verbose_name="구매 반응 수")
+experience_count = models.BigIntegerField(default=0, verbose_name="경험 반응 수")
+praise_count = models.BigIntegerField(default=0, verbose_name="호평 반응 수")
+critique_count = models.BigIntegerField(default=0, verbose_name="비판 반응 수")
+chitchat_count = models.Bi22qgIntegerField(default=0, verbose_name="잡담 반응 수")
+
+positive_rate = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True, verbose_name="긍정 반응 비율")
+neutral_rate = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True, verbose_name="중립 반응 비율")
+negative_rate = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True, verbose_name="부정 반응 비율")
+
+question_rate = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True, verbose_name="질문 반응 비율")
+purchase_rate = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True, verbose_name="구매 반응 비율")
+experience_rate = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True, verbose_name="경험 반응 비율")
+praise_rate = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True, verbose_name="호평 반응 비율")
+critique_rate = models.DecimalField(max_digits=7, decimal_places=4, null=True, blank=True, verbose_name="비판 반응 비율")

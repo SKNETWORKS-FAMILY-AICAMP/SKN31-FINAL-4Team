@@ -1,0 +1,1143 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/analytics.css' %}">
+
+<style>
+.ts-page {
+    width: 100%;
+    min-width: 0;
+    padding-bottom: 40px;
+}
+
+.ts-head {
+    margin-bottom: 18px;
+}
+
+.ts-eyebrow {
+    margin: 0 0 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .14em;
+    color: #9b978f;
+}
+
+.ts-title {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -.04em;
+}
+
+.ts-description {
+    margin: 7px 0 0;
+    font-size: 12px;
+    color: #77736c;
+}
+
+
+/* SUMMARY */
+
+.ts-summary {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.ts-card {
+    min-width: 0;
+    height: 118px;
+    padding: 17px 18px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    background: #fff;
+    border: 1px solid #dedad2;
+    border-radius: 14px;
+}
+
+.ts-card-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #817d75;
+}
+
+.ts-card-value {
+    margin: auto 0 5px;
+
+    font-size: 25px;
+    line-height: 1;
+    font-weight: 800;
+
+    color: #161616;
+}
+
+.ts-card-caption {
+    font-size: 10px;
+    color: #aaa69e;
+}
+
+
+/* FILTER */
+
+.ts-filter {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    padding: 12px;
+    margin-bottom: 14px;
+
+    background: #fff;
+    border: 1px solid #dedad2;
+    border-radius: 12px;
+}
+
+.ts-filter input,
+.ts-filter select {
+    height: 36px;
+    padding: 0 11px;
+
+    min-width: 120px;
+
+    background: #fff;
+    border: 1px solid #dedad2;
+    border-radius: 8px;
+
+    font-size: 11px;
+}
+
+.ts-filter input[type="text"] {
+    min-width: 210px;
+}
+
+.ts-filter button {
+    height: 36px;
+    padding: 0 16px;
+
+    border: 0;
+    border-radius: 8px;
+
+    background: #171614;
+    color: #fff;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.ts-reset {
+    height: 36px;
+    padding: 0 12px;
+
+    display: inline-flex;
+    align-items: center;
+
+    font-size: 11px;
+    color: #77736c;
+    text-decoration: none;
+}
+
+
+/* PANELS */
+
+.ts-panels {
+    display: grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.ts-panel {
+    min-width: 0;
+
+    padding: 18px 20px;
+
+    background: #fff;
+    border: 1px solid #dedad2;
+    border-radius: 14px;
+}
+
+.ts-panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+
+    padding-bottom: 13px;
+    margin-bottom: 14px;
+
+    border-bottom: 1px solid #efede8;
+}
+
+.ts-panel-kicker {
+    margin: 0 0 3px;
+
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .12em;
+
+    color: #99958d;
+}
+
+.ts-panel-title {
+    margin: 0;
+
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.ts-panel-meta {
+    font-size: 10px;
+    color: #aaa69e;
+}
+
+.ts-signal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.ts-signal-row {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr) 54px;
+    align-items: center;
+    gap: 12px;
+}
+
+.ts-signal-name {
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.ts-bar {
+    width: 100%;
+    height: 8px;
+
+    overflow: hidden;
+
+    background: #efede8;
+    border-radius: 999px;
+}
+
+.ts-bar span {
+    display: block;
+    height: 100%;
+
+    max-width: 100%;
+
+    background: #2fa875;
+    border-radius: inherit;
+}
+
+.ts-signal-value {
+    text-align: right;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* TABLE */
+
+.ts-result {
+    margin: 0 2px 9px;
+
+    font-size: 11px;
+    color: #77736c;
+}
+
+.ts-table-shell {
+    width: 100%;
+    min-width: 0;
+
+    overflow: hidden;
+
+    background: #fff;
+    border: 1px solid #dedad2;
+    border-radius: 14px;
+}
+
+.ts-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.ts-table {
+    width: 100%;
+    min-width: 1450px;
+
+    border-collapse: collapse;
+}
+
+.ts-table th {
+    padding: 11px 12px;
+
+    background: #faf9f6;
+    border-bottom: 1px solid #e8e5df;
+
+    font-size: 9px;
+    font-weight: 800;
+    color: #77736c;
+
+    text-align: left;
+    white-space: nowrap;
+}
+
+.ts-table td {
+    padding: 11px 12px;
+
+    border-bottom: 1px solid #f0eee9;
+
+    font-size: 10px;
+
+    white-space: nowrap;
+}
+
+.ts-table th.num,
+.ts-table td.num {
+    text-align: right;
+}
+
+.ts-table tbody tr:hover {
+    background: #fbfaf7;
+}
+
+.ts-term {
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+/* TYPE BADGES */
+
+.ts-type-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 60px;
+    padding: 5px 9px;
+
+    border-radius: 999px;
+
+    font-size: 9px;
+    font-weight: 800;
+}
+
+
+/* ITEM */
+.ts-type-badge.type-item {
+    background: #e8f1ff;
+    color: #3269a8;
+}
+
+/* STYLE */
+.ts-type-badge.type-style {
+    background: #eee8ff;
+    color: #6747a8;
+}
+
+/* DETAIL */
+.ts-type-badge.type-detail {
+    background: #fff0dc;
+    color: #a56520;
+}
+
+/* MATERIAL */
+.ts-type-badge.type-material {
+    background: #e8f3e7;
+    color: #487746;
+}
+
+/* COLOR */
+.ts-type-badge.type-color {
+    background: #ffe9ee;
+    color: #a94c61;
+}
+
+/* TPO */
+.ts-type-badge.type-tpo {
+    background: #e8f4f4;
+    color: #3d7777;
+}
+
+
+/* DETAIL TYPE */
+
+.ts-detail-badge {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 4px 8px;
+
+    border-radius: 6px;
+
+    background: #f3f1ed;
+    color: #69655e;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* METRICS */
+
+.ts-up {
+    color: #24946a;
+    font-weight: 800;
+}
+
+.ts-down {
+    color: #cf5b55;
+    font-weight: 800;
+}
+
+.ts-temp {
+    display: inline-flex;
+    min-width: 46px;
+
+    justify-content: center;
+
+    padding: 5px 7px;
+
+    border-radius: 7px;
+
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.ts-temp.hot {
+    background: #ffe7df;
+    color: #a84a31;
+}
+
+.ts-temp.warm {
+    background: #fff2c9;
+    color: #806300;
+}
+
+.ts-temp.cool {
+    background: #e8f6ef;
+    color: #207353;
+}
+
+
+@media (max-width: 1350px) {
+
+    .ts-summary {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 1050px) {
+
+    .ts-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ts-panels {
+        grid-template-columns: 1fr;
+    }
+
+}
+</style>
+{% endblock %}
+
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_analytics.html" %}
+{% endblock %}
+
+
+{% block content %}
+
+<div class="ts-page">
+
+    <!-- HEADER -->
+    <div class="ts-head">
+
+        <p class="ts-eyebrow">
+            ANALYTICS
+        </p>
+
+        <h1 class="ts-title">
+            트렌드 시그널
+        </h1>
+
+        <p class="ts-description">
+            Commerce · Content · Reaction · Search 기반 용어별 트렌드 강도와 성장 흐름
+        </p>
+
+    </div>
+
+
+    <!-- SUMMARY -->
+    <div class="ts-summary">
+
+        <div class="ts-card">
+
+            <span class="ts-card-label">
+                분석 용어
+            </span>
+
+            <strong class="ts-card-value">
+                {{ summary.total_terms|default:0|intcomma }}
+            </strong>
+
+            <span class="ts-card-caption">
+                집계된 DictionaryTerm
+            </span>
+
+        </div>
+
+
+        <div class="ts-card">
+
+            <span class="ts-card-label">
+                평균 LEVEL
+            </span>
+
+            <strong class="ts-card-value">
+
+                {% if summary.avg_level is not None %}
+
+                    {{ summary.avg_level|floatformat:1 }}
+
+                {% else %}
+
+                    -
+
+                {% endif %}
+
+            </strong>
+
+            <span class="ts-card-caption">
+                통합 트렌드 강도
+            </span>
+
+        </div>
+
+
+        <div class="ts-card">
+
+            <span class="ts-card-label">
+                평균 온도
+            </span>
+
+            <strong class="ts-card-value">
+
+                {% if summary.avg_temperature is not None %}
+
+                    {{ summary.avg_temperature|floatformat:1 }}
+
+                {% else %}
+
+                    -
+
+                {% endif %}
+
+            </strong>
+
+            <span class="ts-card-caption">
+                Trend Temperature
+            </span>
+
+        </div>
+
+
+        <div class="ts-card">
+
+            <span class="ts-card-label">
+                상승 용어
+            </span>
+
+            <strong class="ts-card-value">
+                {{ summary.rising_terms|default:0|intcomma }}
+            </strong>
+
+            <span class="ts-card-caption">
+                Momentum ≥ 60
+            </span>
+
+        </div>
+
+
+        <div class="ts-card">
+
+            <span class="ts-card-label">
+                검색량 연결률
+            </span>
+
+            <strong class="ts-card-value">
+                {{ summary.search_coverage|default:"0%" }}
+            </strong>
+
+            <span class="ts-card-caption">
+                Google / Naver
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- FILTER -->
+    <form
+        method="get"
+        class="ts-filter"
+    >
+
+        <input
+            type="date"
+            name="date"
+            value="{{ selected_date }}"
+        >
+
+
+        <select name="term_type">
+
+            <option value="">
+                전체 유형
+            </option>
+
+            {% for value, label in term_types %}
+
+                <option
+                    value="{{ value }}"
+                    {% if selected_term_type == value %}selected{% endif %}
+                >
+                    {{ label }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <select name="source">
+
+            <option value="">
+                전체 소스
+            </option>
+
+            <option
+                value="ALL"
+                {% if selected_source == "ALL" %}selected{% endif %}
+            >
+                ALL
+            </option>
+
+            {% for source in sources %}
+
+                <option
+                    value="{{ source.code }}"
+                    {% if selected_source == source.code %}selected{% endif %}
+                >
+                    {{ source.code }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <input
+            type="text"
+            name="q"
+            value="{{ q }}"
+            placeholder="용어 검색"
+        >
+
+
+        <button type="submit">
+            조회
+        </button>
+
+
+        <a
+            href="{% url 'dashboard:trend_metrics' %}"
+            class="ts-reset"
+        >
+            초기화
+        </a>
+
+    </form>
+
+
+    <!-- SIGNAL / LIFECYCLE -->
+    <div class="ts-panels">
+
+        <section class="ts-panel">
+
+            <div class="ts-panel-head">
+
+                <div>
+
+                    <p class="ts-panel-kicker">
+                        SIGNAL MIX
+                    </p>
+
+                    <h3 class="ts-panel-title">
+                        도메인 시그널
+                    </h3>
+
+                </div>
+
+                <span class="ts-panel-meta">
+                    ALL 기준 평균
+                </span>
+
+            </div>
+
+
+            <div class="ts-signal-list">
+
+                <div class="ts-signal-row">
+
+                    <span class="ts-signal-name">
+                        COMMERCE
+                    </span>
+
+                    <div class="ts-bar">
+                        <span style="width:{{ signal_summary.commerce|default:0 }}%;"></span>
+                    </div>
+
+                    <strong class="ts-signal-value">
+                        {{ signal_summary.commerce|default:"-" }}
+                    </strong>
+
+                </div>
+
+
+                <div class="ts-signal-row">
+
+                    <span class="ts-signal-name">
+                        CONTENT
+                    </span>
+
+                    <div class="ts-bar">
+                        <span style="width:{{ signal_summary.content|default:0 }}%;"></span>
+                    </div>
+
+                    <strong class="ts-signal-value">
+                        {{ signal_summary.content|default:"-" }}
+                    </strong>
+
+                </div>
+
+
+                <div class="ts-signal-row">
+
+                    <span class="ts-signal-name">
+                        REACTION
+                    </span>
+
+                    <div class="ts-bar">
+                        <span style="width:{{ signal_summary.reaction|default:0 }}%;"></span>
+                    </div>
+
+                    <strong class="ts-signal-value">
+                        {{ signal_summary.reaction|default:"-" }}
+                    </strong>
+
+                </div>
+
+
+                <div class="ts-signal-row">
+
+                    <span class="ts-signal-name">
+                        SEARCH
+                    </span>
+
+                    <div class="ts-bar">
+                        <span style="width:{{ signal_summary.search|default:0 }}%;"></span>
+                    </div>
+
+                    <strong class="ts-signal-value">
+                        {{ signal_summary.search|default:"-" }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="ts-panel">
+
+            <div class="ts-panel-head">
+
+                <div>
+
+                    <p class="ts-panel-kicker">
+                        LIFECYCLE
+                    </p>
+
+                    <h3 class="ts-panel-title">
+                        트렌드 단계
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="ts-signal-list">
+
+                {% for item in lifecycle_summary %}
+
+                    <div class="ts-signal-row">
+
+                        <span class="ts-signal-name">
+                            {{ item.stage }}
+                        </span>
+
+                        <div class="ts-bar">
+                            <span style="width:{{ item.percent|default:0 }}%;"></span>
+                        </div>
+
+                        <strong class="ts-signal-value">
+                            {{ item.count|intcomma }}
+                        </strong>
+
+                    </div>
+
+                {% empty %}
+
+                    <span class="ts-panel-meta">
+                        데이터 없음
+                    </span>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+    </div>
+
+
+    <!-- COUNT -->
+    <p class="ts-result">
+
+        조회 결과
+
+        <strong>
+            {{ filtered_count|default:rows|length|intcomma }}
+        </strong>
+
+        건
+
+    </p>
+
+
+    <!-- TABLE -->
+    <div class="ts-table-shell">
+
+        <div class="ts-table-scroll">
+
+            <table class="ts-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>용어</th>
+
+                        <th>유형</th>
+
+                        <th>상세 유형</th>
+
+                        <th class="num">LEVEL</th>
+
+                        <th class="num">MA7</th>
+
+                        <th class="num">MA28</th>
+
+                        <th class="num">Momentum</th>
+
+                        <th class="num">온도</th>
+
+                        <th class="num">Commerce</th>
+
+                        <th class="num">Content</th>
+
+                        <th class="num">Reaction</th>
+
+                        <th class="num">Search</th>
+
+                        <th class="num">언급</th>
+
+                        <th class="num">구매</th>
+
+                        <th class="num">질문</th>
+
+                        <th class="num">긍정</th>
+
+                        <th class="num">Google</th>
+
+                        <th class="num">Naver</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for row in rows %}
+
+                        <tr>
+
+                            <td>
+
+                                <span class="ts-term">
+
+                                    {{ row.term_name }}
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <span
+                                    class="
+                                        ts-type-badge
+                                        type-{{ row.term_type|lower }}
+                                    "
+                                >
+
+                                    {{ row.term_type }}
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="ts-detail-badge">
+
+                                    {{ row.term_detail|default:"-" }}
+
+                                </span>
+
+                            </td>
+
+
+                            <td class="num">
+                                {{ row.level|default:"-" }}
+                            </td>
+
+
+                            <td class="num">
+                                {{ row.ma7|default:"-" }}
+                            </td>
+
+
+                            <td class="num">
+                                {{ row.ma28|default:"-" }}
+                            </td>
+
+
+                            <td class="num">
+
+                                {% if row.momentum is not None %}
+
+                                    <span
+                                        class="
+                                            {% if row.momentum >= 60 %}
+                                                ts-up
+                                            {% elif row.momentum < 40 %}
+                                                ts-down
+                                            {% endif %}
+                                        "
+                                    >
+
+                                        {{ row.momentum|floatformat:1 }}
+
+                                    </span>
+
+                                {% else %}
+
+                                    -
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td class="num">
+
+                                {% if row.trend_temperature is not None %}
+
+                                    <span
+                                        class="
+                                            ts-temp
+                                            {% if row.trend_temperature >= 75 %}
+                                                hot
+                                            {% elif row.trend_temperature >= 50 %}
+                                                warm
+                                            {% else %}
+                                                cool
+                                            {% endif %}
+                                        "
+                                    >
+
+                                        {{ row.trend_temperature|floatformat:1 }}
+
+                                    </span>
+
+                                {% else %}
+
+                                    -
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td class="num">
+                                {{ row.commerce_score|default:"-" }}
+                            </td>
+
+                            <td class="num">
+                                {{ row.content_score|default:"-" }}
+                            </td>
+
+                            <td class="num">
+                                {{ row.reaction_score|default:"-" }}
+                            </td>
+
+                            <td class="num">
+                                {{ row.search_score|default:"-" }}
+                            </td>
+
+
+                            <td class="num">
+                                {{ row.mention_count|default:0|intcomma }}
+                            </td>
+
+
+                            <td class="num">
+
+                                {% if row.purchase_rate is not None %}
+
+                                    {{ row.purchase_rate|floatformat:1 }}%
+
+                                {% else %}
+
+                                    -
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td class="num">
+
+                                {% if row.question_rate is not None %}
+
+                                    {{ row.question_rate|floatformat:1 }}%
+
+                                {% else %}
+
+                                    -
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td class="num">
+
+                                {% if row.positive_rate is not None %}
+
+                                    {{ row.positive_rate|floatformat:1 }}%
+
+                                {% else %}
+
+                                    -
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td class="num">
+
+                                {% if row.google_volume is not None %}
+
+                                    {{ row.google_volume|intcomma }}
+
+                                {% else %}
+
+                                    -
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td class="num">
+
+                                {% if row.naver_volume is not None %}
+
+                                    {{ row.naver_volume|intcomma }}
+
+                                {% else %}
+
+                                    -
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td
+                                colspan="18"
+                                style="
+                                    padding:40px;
+                                    text-align:center;
+                                    color:#999;
+                                "
+                            >
+
+                                조건에 맞는 트렌드 지표가 없습니다.
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
