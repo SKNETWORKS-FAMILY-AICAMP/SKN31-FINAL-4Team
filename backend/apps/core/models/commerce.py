@@ -365,6 +365,55 @@ class ProductSource(models.Model):
         )
 
 
+class ProductSourceRelation(models.Model):
+    class RelationType(models.TextChoices):
+        RESALE_OF = "RESALE_OF", "중고 매물의 원상품"
+
+    from_product_source = models.ForeignKey(
+        ProductSource,
+        on_delete=models.CASCADE,
+        related_name="outgoing_relations",
+    )
+    to_product_source = models.ForeignKey(
+        ProductSource,
+        on_delete=models.CASCADE,
+        related_name="incoming_relations",
+    )
+    relation_type = models.CharField(
+        max_length=50,
+        choices=RelationType.choices,
+    )
+    evidence_source = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = '"commerce"."product_source_relation"'
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "from_product_source",
+                    "to_product_source",
+                    "relation_type",
+                ],
+                name="uq_product_source_relation",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["from_product_source", "relation_type"],
+                name="idx_prod_src_rel_from",
+            ),
+            models.Index(
+                fields=["to_product_source", "relation_type"],
+                name="idx_prod_src_rel_to",
+            ),
+        ]
+
+
 class ProductSourceSnapshot(models.Model):
     product_source = models.ForeignKey(
         ProductSource,

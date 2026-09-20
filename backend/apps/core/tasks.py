@@ -134,6 +134,87 @@ def _enqueue_product_analysis(product_source_ids) -> str | None:
         return None
 
 
+def _ingest_discovered_product_raws(*, crawl_run, platform_data) -> dict:
+    """Create and ingest independently uploaded 1-hop PRODUCT raws."""
+    product_source_ids: list[int] = []
+    raw_document_ids: list[int] = []
+    errors: list[dict] = []
+
+    for item in (platform_data or {}).get("product_raws") or []:
+        source_code = str(item.get("source") or "").upper()
+        try:
+            source = Source.objects.get(code__iexact=source_code)
+            s3 = item.get("s3") or {}
+            child = create_raw_document(
+                crawl_run=crawl_run,
+                source=source,
+                document_type="PRODUCT",
+                external_id=item.get("source_entity_id"),
+                source_url=item.get("source_url"),
+                s3_bucket=s3["bucket"],
+                s3_key=s3["key"],
+                http_status=item.get("http_status"),
+                content_type=item.get("content_type"),
+                collected_at=item.get("collected_at"),
+            )
+            raw_document_ids.append(child.id)
+
+            if source_code == "MUSINSA":
+                from apps.core.services.source_ingestion import (
+                    ingest_musinsa_raw_document,
+                )
+                ingested = ingest_musinsa_raw_document(
+                    raw_document_id=child.id,
+                )
+            elif source_code == "MUSINSA_USED":
+                from collection.musinsa_used_v2.ingestion import (
+                    ingest_musinsa_used_v2_raw_document,
+                )
+                ingested = ingest_musinsa_used_v2_raw_document(
+                    raw_document_id=child.id,
+                )
+            else:
+                raise ValueError(f"Unsupported child source: {source_code}")
+
+            if ingested.get("failed"):
+                errors.extend(
+                    ingested.get("errors")
+                    or [{
+                        "source": source_code,
+                        "goods_no": item.get("source_entity_id"),
+                        "endpoint": "PRODUCT_INGESTION",
+                        "error_type": "IngestionFailed",
+                        "error_reason": "PRODUCT ingestion returned failed rows",
+                    }]
+                )
+            product_source_ids.extend(
+                ingested.get("product_source_ids") or []
+            )
+        except Exception as exc:
+            errors.append({
+                "source": source_code,
+                "goods_no": item.get("source_entity_id"),
+                "endpoint": "PRODUCT_INGESTION",
+                "error_type": exc.__class__.__name__,
+                "error_reason": str(exc),
+            })
+
+    relation_result = None
+    relations = (platform_data or {}).get("relations") or []
+    if relations:
+        from collection.musinsa_used_v2.ingestion import (
+            persist_resale_of_relations,
+        )
+        relation_result = persist_resale_of_relations(relations)
+
+    return {
+        "raw_document_ids": raw_document_ids,
+        "product_source_ids": sorted(set(product_source_ids)),
+        "errors": errors,
+        "relations": relation_result,
+    }
+
+
 # ============================================================
 # LIVE TARGET EXECUTOR
 # ============================================================
@@ -262,7 +343,7 @@ def run_live_target(
 
         if (
             source_code == "MUSINSA"
-            and entity_type == "RANKING"
+            and entity_type in {"RANKING", "PRODUCT"}
         ):
             from apps.core.services.source_ingestion import (
                 ingest_musinsa_raw_document,
@@ -331,7 +412,7 @@ def run_live_target(
         # ----------------------------------------------------
         if (
             source_code == "MUSINSA_USED"
-            and entity_type == "RANKING"
+            and entity_type in {"RANKING", "PRODUCT"}
         ):
             from collection.musinsa_used_v2.ingestion import (
                 ingest_musinsa_used_v2_raw_document,
@@ -348,7 +429,7 @@ def run_live_target(
                 or 0
             )
 
-            if failed:
+            if failed and entity_type == "PRODUCT":
                 errors = (
                     source_ingestion_result.get("errors")
                     or []
@@ -367,6 +448,26 @@ def run_live_target(
                 target.id,
                 raw_document.id,
                 source_ingestion_result,
+            )
+
+        discovered_product_result = None
+        if source_code == "MUSINSA_USED":
+            discovered_product_result = _ingest_discovered_product_raws(
+                crawl_run=crawl_run,
+                platform_data=result.get("platform_data") or {},
+            )
+            if source_ingestion_result is None:
+                source_ingestion_result = {}
+            source_ingestion_result["discovered_products"] = (
+                discovered_product_result
+            )
+            source_ingestion_result.setdefault("product_source_ids", [])
+            source_ingestion_result["product_source_ids"].extend(
+                discovered_product_result.get("product_source_ids") or []
+            )
+            result["failure_count"] = (
+                int(result.get("failure_count") or 0)
+                + len(discovered_product_result.get("errors") or [])
             )
 
         if source_code in {"ABLY", "MUSINSA_USED"} and source_ingestion_result:

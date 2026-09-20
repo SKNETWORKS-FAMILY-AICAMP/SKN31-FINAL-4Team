@@ -14,6 +14,7 @@ from apps.core.models import (
     BrandSource,
     CategorySource,
     ProductSource,
+    ProductSourceRelation,
     RawDocument,
     ResaleSnapshot,
     Source,
@@ -178,7 +179,67 @@ def _extract_products(
             )
         ]
 
+    if isinstance(payload.get("product"), dict):
+        return [payload]
+
     return []
+
+
+def _as_ingestion_product(record: dict) -> dict:
+    """Adapt a detailed PRODUCT RAW to the existing v2 writer shape."""
+    nested = record.get("product")
+    if not isinstance(nested, dict):
+        return record
+
+    brand = record.get("brand")
+    brand = brand if isinstance(brand, dict) else {}
+    snapshot = record.get("snapshot")
+    snapshot = snapshot if isinstance(snapshot, dict) else {}
+    category = nested.get("category")
+    category = category if isinstance(category, dict) else {}
+    deepest = None
+    for depth in range(4, 0, -1):
+        code = category.get(f"depth{depth}_code")
+        name = category.get(f"depth{depth}_name")
+        if code or name:
+            deepest = {
+                "source_category_id": code or name,
+                "name": name or code,
+                "source_category_path": ">".join(
+                    str(category.get(f"depth{i}_name"))
+                    for i in range(1, depth + 1)
+                    if category.get(f"depth{i}_name")
+                ),
+            }
+            break
+
+    genders = nested.get("genders")
+    return {
+        "source_product_id": nested.get("goods_no"),
+        "goods_no": nested.get("goods_no"),
+        "goodsName": nested.get("name"),
+        "product_name": nested.get("name"),
+        "source_name_en": nested.get("name_en"),
+        "style_no": nested.get("style_no"),
+        "thumbnail_url": nested.get("thumbnail_url"),
+        "product_url": (record.get("meta") or {}).get("final_url"),
+        "gender": ",".join(genders) if isinstance(genders, list) else genders,
+        "brand": brand.get("brand_code") or nested.get("brand_code"),
+        "brandName": brand.get("name_ko"),
+        "category": deepest or {},
+        "normal_price": snapshot.get("regular_price"),
+        "sale_price": snapshot.get("sale_price"),
+        "discount_rate": snapshot.get("discount_rate"),
+        "reviewCount": snapshot.get("review_count"),
+        "reviewScore": snapshot.get("satisfaction_score"),
+        "used_condition_grade": snapshot.get("used_condition_grade"),
+        "is_sold_out": snapshot.get("is_sold_out"),
+        "size": nested.get("size"),
+        "ranking_context": record.get("ranking_context") or {},
+        "detail_snapshot": snapshot,
+        "source_attributes": nested.get("source_attributes") or {},
+        "used_price_history": record.get("used_price_history") or {},
+    }
 
 
 def _observed_at(
@@ -406,15 +467,10 @@ def _condition_short(
     if value is None:
         return None
 
-    return (
-        value
-        .replace(
-            "등급",
-            "",
-        )
-        .strip()
-        or None
-    )
+    for grade in ("S+", "A+", "S", "A", "B"):
+        if value.upper().startswith(grade):
+            return grade
+    return None
 
 
 def _upsert_brand_source(
@@ -770,19 +826,17 @@ def _upsert_product_source(
         )
     )
 
-    obj = (
+    create_defaults = {}
+    if "product" in fields:
+        create_defaults["product"] = None
+    obj, created = (
         ProductSource.objects
-        .filter(
+        .select_for_update()
+        .get_or_create(
             source=source,
-            source_product_id=(
-                source_product_id
-            ),
+            source_product_id=source_product_id,
+            defaults=create_defaults,
         )
-        .first()
-    )
-
-    created = (
-        obj is None
     )
 
     observed_filter = {
@@ -823,6 +877,11 @@ def _upsert_product_source(
         attributes.update(
             obj.attributes
         )
+
+    if isinstance(product.get("source_attributes"), dict):
+        attributes["source_attributes"] = product["source_attributes"]
+    if isinstance(product.get("used_price_history"), dict):
+        attributes["used_price_history"] = product["used_price_history"]
 
     # ProductSource에는 "단색이다"를 확정 속성으로 넣지 않고
     # 관측 metadata 목록만 둔다.
@@ -931,21 +990,6 @@ def _upsert_product_source(
                 "musinsa_used_filter_attributes"
             ] = filter_attributes
 
-    if obj is None:
-        kwargs = {
-            "source":
-                source,
-            "source_product_id":
-                source_product_id,
-        }
-
-        if "product" in fields:
-            kwargs["product"] = None
-
-        obj = ProductSource(
-            **kwargs
-        )
-
     assignments = {
         "source_brand":
             brand_source,
@@ -953,6 +997,10 @@ def _upsert_product_source(
             category_source,
         "source_name":
             source_name,
+        "source_name_en":
+            _text(product.get("source_name_en")),
+        "style_no":
+            _text(product.get("style_no")),
         "thumbnail_url":
             thumbnail_url,
         "product_url":
@@ -1182,6 +1230,10 @@ def _upsert_resale_snapshot(
                 key
             ) is not None
         },
+        "detail_snapshot": _json_safe(product.get("detail_snapshot") or {}),
+        "used_price_history": _json_safe(
+            product.get("used_price_history") or {}
+        ),
     }
 
     # None top-level 제거.
@@ -1193,16 +1245,7 @@ def _upsert_resale_snapshot(
         if value is not None
     }
 
-    snapshot, created = (
-        ResaleSnapshot.objects
-        .update_or_create(
-            product_source=(
-                product_source
-            ),
-            observed_at=(
-                observed_at
-            ),
-            defaults={
+    defaults = {
                 # 현재 필터 1상품 = listing 1개 관측.
                 "listing_count":
                     1,
@@ -1211,7 +1254,9 @@ def _upsert_resale_snapshot(
                         0
                         if is_sold_out
                         is True
-                        else 1
+                        else (
+                            1 if is_sold_out is False else None
+                        )
                     ),
                 "min_price":
                     sale_price,
@@ -1221,11 +1266,58 @@ def _upsert_resale_snapshot(
                     sale_price,
                 "median_price":
                     sale_price,
+                "lowest_ask":
+                    (
+                        sale_price
+                        if is_sold_out is False
+                        else None
+                    ),
                 "market_metrics":
                     market_metrics,
-            },
-        )
+            }
+
+    latest = (
+        ResaleSnapshot.objects
+        .filter(product_source=product_source)
+        .order_by("-observed_at", "-id")
+        .first()
     )
+    compare_fields = (
+        "listing_count",
+        "available_count",
+        "min_price",
+        "max_price",
+        "avg_price",
+        "median_price",
+        "sold_count",
+        "lowest_ask",
+        "highest_bid",
+        "last_trade_price",
+        "trade_volume",
+        "resale_price_ratio",
+        "resale_index",
+    )
+    comparable_metrics = dict(market_metrics)
+    comparable_metrics.pop("ranking_context", None)
+    comparable_metrics.pop("rank_position", None)
+    unchanged = latest is not None and all(
+        getattr(latest, field) == defaults.get(field)
+        for field in compare_fields
+    )
+    if unchanged:
+        previous_metrics = dict(latest.market_metrics or {})
+        previous_metrics.pop("ranking_context", None)
+        previous_metrics.pop("rank_position", None)
+        unchanged = previous_metrics == comparable_metrics
+    if unchanged:
+        return latest, False
+
+    snapshot = ResaleSnapshot.objects.create(
+        product_source=product_source,
+        observed_at=observed_at,
+        **defaults,
+    )
+    created = True
 
     return snapshot, created
 
@@ -1379,6 +1471,9 @@ def ingest_musinsa_used_v2_raw_document(
         "snapshot_updated":
             0,
 
+        "snapshot_unchanged":
+            0,
+
         "failed":
             0,
         "errors":
@@ -1392,6 +1487,7 @@ def ingest_musinsa_used_v2_raw_document(
         result["products"] += 1
 
         try:
+            product = _as_ingestion_product(product)
             ranking_context = (
                 _build_ranking_context(
                     product=product,
@@ -1479,7 +1575,7 @@ def ingest_musinsa_used_v2_raw_document(
             result[
                 "snapshot_created"
                 if snapshot_created
-                else "snapshot_updated"
+                else "snapshot_unchanged"
             ] += 1
 
         except Exception as exc:
@@ -1631,3 +1727,56 @@ def ingest_pending_musinsa_used_v2_raw_documents(
             })
 
     return summary
+
+
+@transaction.atomic
+def persist_resale_of_relations(relations: list[dict]) -> dict:
+    """Persist only relations whose two independently ingested sources exist."""
+    created = 0
+    existing = 0
+    skipped = []
+    for relation in relations or []:
+        from_source = (
+            ProductSource.objects
+            .filter(
+                source__code__iexact=relation.get("from_source"),
+                source_product_id=str(
+                    relation.get("from_source_product_id") or ""
+                ),
+            )
+            .first()
+        )
+        to_source = (
+            ProductSource.objects
+            .filter(
+                source__code__iexact=relation.get("to_source"),
+                source_product_id=str(
+                    relation.get("to_source_product_id") or ""
+                ),
+            )
+            .first()
+        )
+        if from_source is None or to_source is None:
+            skipped.append(relation)
+            continue
+
+        _, was_created = ProductSourceRelation.objects.get_or_create(
+            from_product_source=from_source,
+            to_product_source=to_source,
+            relation_type=ProductSourceRelation.RelationType.RESALE_OF,
+            defaults={
+                "evidence_source": relation.get("evidence_source")
+                or "MUSINSA_RELATED_GOODS",
+            },
+        )
+        if was_created:
+            created += 1
+        else:
+            existing += 1
+
+    return {
+        "created": created,
+        "existing": existing,
+        "skipped": len(skipped),
+        "skipped_relations": skipped,
+    }

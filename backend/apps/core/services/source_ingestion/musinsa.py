@@ -150,6 +150,9 @@ def ingest_musinsa_raw_document(
         "snapshot_updated":
             0,
 
+        "snapshot_unchanged":
+            0,
+
         "brand_linked":
             0,
 
@@ -404,6 +407,10 @@ def ingest_musinsa_raw_document(
                     "snapshot_created"
                 ] += 1
 
+            elif snapshot_result.get("unchanged"):
+                result[
+                    "snapshot_unchanged"
+                ] += 1
             else:
                 result[
                     "snapshot_updated"

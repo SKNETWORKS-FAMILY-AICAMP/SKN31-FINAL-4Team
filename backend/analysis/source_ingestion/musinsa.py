@@ -26,6 +26,26 @@ from analysis.source_ingestion.product_name_preprocessor import (
 )
 
 
+_SNAPSHOT_TIME_KEYS = {
+    "observed_at",
+    "collected_at",
+    "created_at",
+    "updated_at",
+}
+
+
+def _snapshot_business_value(value):
+    if isinstance(value, dict):
+        return {
+            key: _snapshot_business_value(item)
+            for key, item in value.items()
+            if key not in _SNAPSHOT_TIME_KEYS
+        }
+    if isinstance(value, list):
+        return [_snapshot_business_value(item) for item in value]
+    return value
+
+
 def extract_deepest_category(
     product_data: dict | None,
 ) -> dict | None:
@@ -830,6 +850,8 @@ class MusinsaNormalizer:
         # SAVE
         # ============================================================
 
+        ProductSource.objects.select_for_update().get(pk=product_source.pk)
+
         defaults = {
             "list_price": list_price,
             "sale_price": sale_price,
@@ -842,23 +864,61 @@ class MusinsaNormalizer:
             "rating": rating,
             "review_count": review_count,
             "like_count": like_count,
+            "view_count": self._first_int(snapshot_data, "view_count"),
+            "sales_count": self._first_int(
+                snapshot_data,
+                "sales_count",
+                "purchase_total",
+            ),
 
             "stock_status": stock_status,
 
             "platform_metrics": platform_metrics,
         }
 
-        snapshot, created = (
+        latest = (
             ProductSourceSnapshot.objects
-            .update_or_create(
+            .filter(
+                product_source=product_source,
+                ranking_scope=ranking_scope,
+            )
+            .order_by("-observed_at", "-id")
+            .first()
+        )
+        compare_fields = (
+            "list_price",
+            "sale_price",
+            "discount_rate",
+            "rank_position",
+            "ranking_scope",
+            "ranking_context",
+            "rating",
+            "review_count",
+            "like_count",
+            "view_count",
+            "sales_count",
+            "stock_status",
+            "platform_metrics",
+        )
+        unchanged = latest is not None and all(
+            _snapshot_business_value(getattr(latest, field))
+            == _snapshot_business_value(defaults.get(field))
+            for field in compare_fields
+        )
+        if unchanged:
+            snapshot = latest
+            created = False
+        else:
+            snapshot = ProductSourceSnapshot.objects.create(
                 product_source=product_source,
                 observed_at=observed_at,
-                defaults=defaults,
+                **defaults,
             )
-        )
+            created = True
 
         return {
             "created": created,
+            "unchanged": not created,
             "snapshot": snapshot,
             "observed_at": observed_at,
         }

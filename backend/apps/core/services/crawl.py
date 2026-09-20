@@ -79,6 +79,7 @@ def mark_crawl_run_failed(
 def create_raw_document(
     *,
     crawl_run: CrawlRun,
+    source=None,
     document_type: str,
     external_id: str | None,
     source_url: str | None,
@@ -90,7 +91,7 @@ def create_raw_document(
     collected_at=None,
 ) -> RawDocument:
     return RawDocument.objects.create(
-        source=crawl_run.source,
+        source=source or crawl_run.source,
         crawl_run=crawl_run,
         document_type=document_type,
         external_id=external_id,

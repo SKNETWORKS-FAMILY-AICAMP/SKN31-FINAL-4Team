@@ -11,7 +11,12 @@ from .filter_config import (
     DEFAULT_PAGE_SIZE,
     DEFAULT_SLEEP_SECONDS,
     FILTER_PARAMETER_RULES,
+    PRICE_ANCHOR_URL,
+    PRODUCT_URL,
+    RELATED_GOODS_URL,
+    SALE_INFORMATION_URL,
 )
+from .product_parser import MusinsaUsedProductParser
 
 
 class MusinsaUsedFilterCollectError(RuntimeError):
@@ -100,10 +105,13 @@ class MusinsaUsedFilterCollector:
         url: str,
         *,
         params: dict | None = None,
+        referer: str | None = None,
     ) -> dict:
+        headers = {"Referer": referer} if referer else None
         response = self.session.get(
             url,
             params=params,
+            headers=headers,
             timeout=self.timeout,
         )
 
@@ -351,6 +359,61 @@ class MusinsaUsedFilterCollector:
         raise MusinsaUsedFilterCollectError(
             "category/filters metadata를 찾지 못했습니다. "
             f"category_id={category_id}"
+        )
+
+    def collect_product(
+        self,
+        goods_no: str,
+        *,
+        ranking_context: dict | None = None,
+    ) -> dict:
+        """Reuse the v2 collector session for one complete USED PRODUCT."""
+        goods_no = str(goods_no)
+        product_url = PRODUCT_URL.format(goods_no=goods_no)
+        response = self.session.get(product_url, timeout=self.timeout)
+        if response.status_code != 200:
+            raise MusinsaUsedFilterCollectError(
+                "MUSINSA_USED detail request failed "
+                f"goods_no={goods_no} status={response.status_code}"
+            )
+
+        enrichments: dict[str, dict | None] = {}
+        errors: list[dict] = []
+        endpoints = {
+            "sale_information": SALE_INFORMATION_URL,
+            "related_goods": RELATED_GOODS_URL,
+            "price_anchor": PRICE_ANCHOR_URL,
+        }
+        for name, template in endpoints.items():
+            try:
+                enrichments[name] = self._get_json(
+                    template.format(goods_no=goods_no),
+                    referer=product_url,
+                )
+            except Exception as exc:
+                enrichments[name] = None
+                errors.append({
+                    "source": "MUSINSA_USED",
+                    "goods_no": goods_no,
+                    "endpoint": name,
+                    "error_type": exc.__class__.__name__,
+                    "error_reason": str(exc),
+                })
+
+        return MusinsaUsedProductParser.parse(
+            response.text,
+            goods_no=goods_no,
+            sale_information=enrichments["sale_information"],
+            related_goods_response=enrichments["related_goods"],
+            price_anchor=enrichments["price_anchor"],
+            ranking_context=ranking_context,
+            meta={
+                "request_url": product_url,
+                "final_url": str(response.url),
+                "http_status": response.status_code,
+                "content_type": response.headers.get("Content-Type"),
+                "enrichment_errors": errors,
+            },
         )
 
     @staticmethod

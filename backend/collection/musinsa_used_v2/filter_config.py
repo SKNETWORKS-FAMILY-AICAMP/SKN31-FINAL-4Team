@@ -1,6 +1,19 @@
 from __future__ import annotations
 
 API_URL = "https://api.musinsa.com/api2/dp/v2/plp/goods"
+PRODUCT_URL = "https://www.musinsa.com/products/{goods_no}"
+SALE_INFORMATION_URL = (
+    "https://goods-detail.musinsa.com/api2/used/goods/"
+    "{goods_no}/sale-information"
+)
+RELATED_GOODS_URL = (
+    "https://goods-detail.musinsa.com/api2/used/goods/"
+    "{goods_no}/related-goods"
+)
+PRICE_ANCHOR_URL = (
+    "https://goods-detail.musinsa.com/api2/used/goods/"
+    "{goods_no}/price-anchor"
+)
 
 DEFAULT_SORT_CODE = "USED_SALE_PRICE_CHANGE_DATE"
 DEFAULT_PAGE_SIZE = 30
