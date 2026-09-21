@@ -265,7 +265,17 @@ def run_live_target(
             or ""
         ).strip().lower()
 
-        if source_code_for_pipeline == "musinsa_used":
+        if (
+            source_code_for_pipeline == "ably"
+            and (target.target_type or "").upper() in {"STORE", "STORE_PROFILE"}
+        ):
+            from collection.ably.store_profile_pipeline import (
+                AblyStoreProfilePipeline,
+            )
+
+            pipeline_class = AblyStoreProfilePipeline
+
+        elif source_code_for_pipeline == "musinsa_used":
             from collection.musinsa_used_v2.filter_pipeline import (
                 MusinsaUsedFilterPipeline,
             )
@@ -405,6 +415,15 @@ def run_live_target(
             source_ingestion_result = ingest_ably_raw_document(
                 raw_document_id=raw_document.id,
             )
+
+        if source_code == "ABLY" and entity_type == "STORE_PROFILE":
+            from apps.core.services.source_ingestion import (
+                ingest_ably_store_profile_raw_document,
+            )
+
+            source_ingestion_result = ingest_ably_store_profile_raw_document(
+                raw_document_id=raw_document.id,
+            )
         # ----------------------------------------------------
         # MUSINSA_USED V2
         # RawDocument -> BrandSource -> CategorySource
@@ -470,7 +489,11 @@ def run_live_target(
                 + len(discovered_product_result.get("errors") or [])
             )
 
-        if source_code in {"ABLY", "MUSINSA_USED"} and source_ingestion_result:
+        if (
+            source_code in {"ABLY", "MUSINSA_USED"}
+            and source_ingestion_result
+            and source_ingestion_result.get("product_source_ids")
+        ):
             product_analysis_task_id = _enqueue_product_analysis(
                 source_ingestion_result.get("product_source_ids") or []
             )

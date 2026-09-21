@@ -48,8 +48,28 @@ class AblyParser:
             else {}
         )
 
-        brand_sno = cls._to_int(raw.get("brand_sno"))
-        brand_name = cls._clean_text(raw.get("brand_name"))
+        brand = raw.get("brand") if isinstance(raw.get("brand"), dict) else {}
+        logging = (
+            raw.get("logging") if isinstance(raw.get("logging"), dict) else {}
+        )
+        analytics = (
+            logging.get("analytics")
+            if isinstance(logging.get("analytics"), dict)
+            else {}
+        )
+
+        brand_sno = cls._first_int(
+            raw.get("brand_sno"),
+            brand.get("sno"),
+            brand.get("brand_sno"),
+            analytics.get("BRAND_SNO"),
+        )
+        brand_name = cls._first_clean_text(
+            raw.get("brand_name"),
+            brand.get("name"),
+            brand.get("brand_name"),
+            analytics.get("BRAND_NAME"),
+        )
 
         return {
             "source_product_id": str(goods_sno),
@@ -58,10 +78,12 @@ class AblyParser:
             "product_url": PRODUCT_URL_TEMPLATE.format(goods_sno=goods_sno),
             "brand": (
                 {
-                    "source_brand_id": str(brand_sno),
+                    "source_brand_id": (
+                        str(brand_sno) if brand_sno is not None else None
+                    ),
                     "name": brand_name,
                 }
-                if brand_sno is not None
+                if brand_sno is not None or brand_name is not None
                 else None
             ),
             "market": {
@@ -137,6 +159,22 @@ class AblyParser:
     def _clean_id(cls, value: Any) -> str | None:
         number = cls._to_int(value)
         return str(number) if number is not None else None
+
+    @classmethod
+    def _first_clean_text(cls, *values: Any) -> str | None:
+        for value in values:
+            cleaned = cls._clean_text(value)
+            if cleaned is not None:
+                return cleaned
+        return None
+
+    @classmethod
+    def _first_int(cls, *values: Any) -> int | None:
+        for value in values:
+            number = cls._to_int(value)
+            if number is not None:
+                return number
+        return None
 
     @staticmethod
     def _to_int(value: Any) -> int | None:

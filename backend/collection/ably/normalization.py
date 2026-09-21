@@ -36,7 +36,14 @@ def normalize_ably_preview(product: dict, ranking_context: dict | None = None) -
         "sku_code": product.get("sku_code"),
         "market": market,
     })
-    source_brand = brand if brand.get("source_brand_id") or brand.get("name") else {}
+    market_attributes = None
+    if market:
+        market_attributes = _present({
+            "market_sno": market.get("source_market_id"),
+            "market_name": market.get("name"),
+        })
+
+    source_brand = brand if brand.get("name") else {}
     source_brand_kind = "BRAND"
     if not source_brand and market:
         source_brand = {
@@ -54,6 +61,13 @@ def normalize_ably_preview(product: dict, ranking_context: dict | None = None) -
             **source_brand,
             "source_brand_id": _name_fallback(prefix, source_brand.get("name")),
         }
+    brand_source_attributes = {"candidate_kind": source_brand_kind}
+    if market_attributes:
+        brand_source_attributes["markets"] = [market_attributes]
+    if source_brand_kind == "MARKET_FALLBACK" and brand.get("source_brand_id"):
+        brand_source_attributes["observed_brand_snos"] = [
+            str(brand["source_brand_id"])
+        ]
     source_category_id = category.get("source_category_id")
     source_category_name = category.get("name")
     category_kind = "SOURCE_CATEGORY"
@@ -98,7 +112,7 @@ def normalize_ably_preview(product: dict, ranking_context: dict | None = None) -
                 "source_id": None,
                 "source_brand_id": source_brand.get("source_brand_id"),
                 "name": source_brand.get("name"),
-                "attributes": {"candidate_kind": source_brand_kind},
+                "attributes": brand_source_attributes,
                 "brand_id": None,
                 "mapping_status": "UNMAPPED",
                 "_references": {"source": {"code": "ABLY"}},

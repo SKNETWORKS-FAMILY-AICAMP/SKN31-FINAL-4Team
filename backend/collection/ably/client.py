@@ -10,6 +10,7 @@ from .constants import (
     ANONYMOUS_TOKEN_ENV,
     DEFAULT_HEADERS,
     DEVICE_ID_ENV,
+    COMPONENT_LIST_API_URL,
     RANKING_FILTERS_API_URL,
     RANKING_GOODS_API_URL,
     RANKING_PAGE_URL,
@@ -92,6 +93,25 @@ class AblyClient:
 
     def get_ranking_filters(self) -> dict:
         return self.get_json(RANKING_FILTERS_API_URL)
+
+    def get_component_list(
+        self,
+        *,
+        category_sno: int,
+        next_token: str,
+    ) -> dict:
+        """브랜드관 COMPONENT_LIST 한 페이지를 조회한다.
+
+        ``next_token``은 opaque cursor이므로 decode/re-encode하지 않는다.
+        requests가 query string 전송 시 필요한 URL encoding만 담당한다.
+        """
+        return self.get_json(
+            COMPONENT_LIST_API_URL,
+            params={
+                "next_token": next_token,
+                "category_sno": category_sno,
+            },
+        )
 
     # ============================================================
     # AUTHENTICATED GET
