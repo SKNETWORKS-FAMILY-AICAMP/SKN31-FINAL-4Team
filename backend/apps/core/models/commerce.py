@@ -368,6 +368,7 @@ class ProductSource(models.Model):
 class ProductSourceRelation(models.Model):
     class RelationType(models.TextChoices):
         RESALE_OF = "RESALE_OF", "중고 매물의 원상품"
+        RELATED_USED = "RELATED_USED", "관련 중고 매물"
 
     from_product_source = models.ForeignKey(
         ProductSource,

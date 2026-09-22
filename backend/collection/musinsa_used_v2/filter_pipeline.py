@@ -210,6 +210,9 @@ class MusinsaUsedFilterPipeline(
             detail_errors: list[dict] = []
             used_records: dict[str, dict] = {}
             visited: set[tuple[str, str]] = set()
+            pending_original_nos: dict[str, None] = {}
+            pending_related_used: dict[str, dict] = {}
+            pending_relations: dict[tuple[str, str, str], dict] = {}
 
             def upload_product(*, source: str, goods_no: str, payload: dict):
                 uploaded = self.storage.upload_raw_json(
@@ -269,25 +272,77 @@ class MusinsaUsedFilterPipeline(
                     })
                     return None
 
-            with MusinsaCollector() as retail_collector:
-                for ranking_item in ranking_items:
-                    current_no = ranking_item.get("source_product_id")
-                    if not current_no:
-                        continue
-                    current_no = str(current_no)
-                    current = collect_used(
-                        current_no,
-                        {**ranking_item, "expand_related": True},
-                    )
-                    if current is None:
-                        continue
+            # First pass: collect every ranking product and accumulate the
+            # unique 1-hop ORIGINAL/USED identifiers. Do not interrupt this
+            # pass with related product lookups.
+            for ranking_item in ranking_items:
+                current_no = ranking_item.get("source_product_id")
+                if not current_no:
+                    continue
+                current_no = str(current_no)
+                current = collect_used(
+                    current_no,
+                    {**ranking_item, "expand_related": True},
+                )
+                if current is None:
+                    continue
 
-                    related = current.get("related_goods") or {}
-                    original = related.get("original_goods") or {}
-                    original_no = original.get("goods_no")
-                    if not original_no:
-                        continue
+                related = current.get("related_goods") or {}
+                original = related.get("original_goods") or {}
+                original_no = original.get("goods_no")
+                if original_no:
                     original_no = str(original_no)
+                    pending_original_nos.setdefault(original_no, None)
+
+                candidate_used_nos = [current_no]
+                candidate_used_nos.extend(
+                    str(item["goods_no"])
+                    for item in related.get("used_products") or []
+                    if isinstance(item, dict) and item.get("goods_no")
+                )
+                for related_no in dict.fromkeys(candidate_used_nos):
+                    if related_no != current_no:
+                        pending_related_used.setdefault(
+                            related_no,
+                            {
+                                "observation_type": "RELATED_GOODS",
+                                "discovered_from": current_no,
+                                "expand_related": False,
+                            },
+                        )
+                        relation_from, relation_to = sorted(
+                            (current_no, related_no)
+                        )
+                        related_relation = {
+                            "from_source": self.SOURCE,
+                            "from_source_product_id": relation_from,
+                            "to_source": self.SOURCE,
+                            "to_source_product_id": relation_to,
+                            "relation_type": "RELATED_USED",
+                            "evidence_source": "MUSINSA_RELATED_GOODS",
+                        }
+                        pending_relations.setdefault(
+                            (relation_from, relation_to, "RELATED_USED"),
+                            related_relation,
+                        )
+
+                    if original_no:
+                        relation = {
+                            "from_source": self.SOURCE,
+                            "from_source_product_id": related_no,
+                            "to_source": "MUSINSA",
+                            "to_source_product_id": original_no,
+                            "relation_type": "RESALE_OF",
+                            "evidence_source": "MUSINSA_RELATED_GOODS",
+                        }
+                        pending_relations.setdefault(
+                            (related_no, original_no, "RESALE_OF"),
+                            relation,
+                        )
+
+            # Second pass: query each accumulated ORIGINAL once.
+            with MusinsaCollector() as retail_collector:
+                for original_no in pending_original_nos:
                     original_key = ("MUSINSA", original_no)
                     if original_key not in visited:
                         visited.add(original_key)
@@ -312,30 +367,12 @@ class MusinsaUsedFilterPipeline(
                                 "error_reason": str(exc),
                             })
 
-                    candidate_used_nos = [current_no]
-                    candidate_used_nos.extend(
-                        str(item["goods_no"])
-                        for item in related.get("used_products") or []
-                        if isinstance(item, dict) and item.get("goods_no")
-                    )
-                    for related_no in dict.fromkeys(candidate_used_nos):
-                        if related_no != current_no:
-                            collect_used(
-                                related_no,
-                                {
-                                    "observation_type": "RELATED_GOODS",
-                                    "discovered_from": current_no,
-                                    "expand_related": False,
-                                },
-                            )
-                        relations.append({
-                            "from_source": self.SOURCE,
-                            "from_source_product_id": related_no,
-                            "to_source": "MUSINSA",
-                            "to_source_product_id": original_no,
-                            "relation_type": "RESALE_OF",
-                            "evidence_source": "MUSINSA_RELATED_GOODS",
-                        })
+            # Third pass: query each accumulated related USED product once.
+            # collect_used() also skips products already seen in the ranking.
+            for related_no, context in pending_related_used.items():
+                collect_used(related_no, context)
+
+            relations.extend(pending_relations.values())
 
         source_url = (
             target_url

@@ -1730,49 +1730,112 @@ def ingest_pending_musinsa_used_v2_raw_documents(
 
 
 @transaction.atomic
-def persist_resale_of_relations(relations: list[dict]) -> dict:
-    """Persist only relations whose two independently ingested sources exist."""
-    created = 0
-    existing = 0
+def persist_product_source_relations(
+    relations: list[dict],
+) -> dict:
+    """Persist MUSINSA evidence relations without canonical product mapping."""
     skipped = []
+    valid_relation_types = {
+        value
+        for value, _label in ProductSourceRelation.RelationType.choices
+    }
+    normalized_relations = []
+    lookup_keys: set[tuple[str, str]] = set()
     for relation in relations or []:
-        from_source = (
-            ProductSource.objects
-            .filter(
-                source__code__iexact=relation.get("from_source"),
-                source_product_id=str(
-                    relation.get("from_source_product_id") or ""
-                ),
-            )
-            .first()
+        relation_type = (
+            relation.get("relation_type")
+            or ProductSourceRelation.RelationType.RESALE_OF
         )
-        to_source = (
-            ProductSource.objects
-            .filter(
-                source__code__iexact=relation.get("to_source"),
-                source_product_id=str(
-                    relation.get("to_source_product_id") or ""
-                ),
-            )
-            .first()
-        )
-        if from_source is None or to_source is None:
-            skipped.append(relation)
+        if relation_type not in valid_relation_types:
+            skipped.append({**relation, "skip_reason": "INVALID_RELATION_TYPE"})
             continue
-
-        _, was_created = ProductSourceRelation.objects.get_or_create(
-            from_product_source=from_source,
-            to_product_source=to_source,
-            relation_type=ProductSourceRelation.RelationType.RESALE_OF,
-            defaults={
-                "evidence_source": relation.get("evidence_source")
-                or "MUSINSA_RELATED_GOODS",
-            },
+        from_key = (
+            str(relation.get("from_source") or "").upper(),
+            str(relation.get("from_source_product_id") or ""),
         )
-        if was_created:
-            created += 1
-        else:
-            existing += 1
+        to_key = (
+            str(relation.get("to_source") or "").upper(),
+            str(relation.get("to_source_product_id") or ""),
+        )
+        if not all((*from_key, *to_key)):
+            skipped.append({**relation, "skip_reason": "MISSING_SOURCE_KEY"})
+            continue
+        normalized_relations.append((relation, from_key, to_key, relation_type))
+        lookup_keys.update((from_key, to_key))
+
+    source_codes = {source_code for source_code, _source_id in lookup_keys}
+    source_product_ids = {source_id for _source_code, source_id in lookup_keys}
+    source_ids_by_code = {
+        source.code.upper(): source.pk
+        for source in Source.objects.all()
+        if source.code.upper() in source_codes
+    }
+    locked_sources = list(
+        ProductSource.objects.select_for_update()
+        .select_related("source")
+        .filter(
+            source_id__in=source_ids_by_code.values(),
+            source_product_id__in=source_product_ids,
+        )
+    )
+    sources_by_key = {
+        (source.source.code.upper(), str(source.source_product_id)): source
+        for source in locked_sources
+    }
+    edges: list[tuple[int, int]] = []
+    resolved_relations = []
+    for relation, from_key, to_key, relation_type in normalized_relations:
+        from_source = sources_by_key.get(from_key)
+        to_source = sources_by_key.get(to_key)
+        if from_source is None or to_source is None:
+            skipped.append({**relation, "skip_reason": "PRODUCT_SOURCE_NOT_FOUND"})
+            continue
+        resolved_relations.append((relation, from_source, to_source, relation_type))
+        edges.append((from_source.pk, to_source.pk))
+
+    requested_keys = {
+        (from_source.pk, to_source.pk, relation_type)
+        for _relation, from_source, to_source, relation_type
+        in resolved_relations
+    }
+    involved_ids = {source_id for edge in edges for source_id in edge}
+    existing_keys = set(
+        ProductSourceRelation.objects.filter(
+            from_product_source_id__in=involved_ids,
+            to_product_source_id__in=involved_ids,
+            relation_type__in=valid_relation_types,
+        ).values_list(
+            "from_product_source_id",
+            "to_product_source_id",
+            "relation_type",
+        )
+    ) if involved_ids else set()
+    relation_by_key = {
+        (from_source.pk, to_source.pk, relation_type): relation
+        for relation, from_source, to_source, relation_type
+        in resolved_relations
+    }
+    missing_keys = requested_keys - existing_keys
+    ProductSourceRelation.objects.bulk_create(
+        [
+            ProductSourceRelation(
+                from_product_source_id=from_id,
+                to_product_source_id=to_id,
+                relation_type=relation_type,
+                evidence_source=(
+                    relation_by_key[(from_id, to_id, relation_type)].get(
+                        "evidence_source"
+                    )
+                    or "MUSINSA_RELATED_GOODS"
+                ),
+            )
+            for from_id, to_id, relation_type in missing_keys
+        ],
+        batch_size=1000,
+        ignore_conflicts=True,
+    )
+    created = len(missing_keys)
+    existing = len(requested_keys) - created
 
     return {
         "created": created,
@@ -1780,3 +1843,8 @@ def persist_resale_of_relations(relations: list[dict]) -> dict:
         "skipped": len(skipped),
         "skipped_relations": skipped,
     }
+
+
+def persist_resale_of_relations(relations: list[dict]) -> dict:
+    """Backward-compatible entry point for all MUSINSA related-goods relations."""
+    return persist_product_source_relations(relations)
