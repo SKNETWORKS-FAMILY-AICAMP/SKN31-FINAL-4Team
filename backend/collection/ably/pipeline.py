@@ -65,6 +65,7 @@ class AblyPipeline(BasePlatformPipeline):
             "failure_count": ranking["failure_count"],
             "platform_data": {
                 "normalization_preview": normalization_summary,
+                "review_summary": ranking.get("review_summary") or {},
             },
         }
 

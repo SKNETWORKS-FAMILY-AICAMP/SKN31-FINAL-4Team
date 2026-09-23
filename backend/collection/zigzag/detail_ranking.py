@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlparse
 
@@ -22,6 +23,7 @@ from .reviews import (
 
 
 DEFAULT_DETAIL_MAX_RANK = 100
+logger = logging.getLogger(__name__)
 
 
 def collect_detail_category_ranking(
@@ -41,7 +43,9 @@ def collect_detail_category_ranking(
         name="max_rank",
     )
     order = str(params.get("order") or DEFAULT_ORDER).strip()
-    collect_reviews = bool(params.get("collect_reviews", False))
+    # Match the Musinsa/ABLY ranking contract: detail rankings collect review
+    # summaries and up to 20 review bodies unless explicitly disabled.
+    collect_reviews = bool(params.get("collect_reviews", True))
     review_limit = ZigzagReviewCollector._validate_limit(
         params.get("review_limit", DEFAULT_REVIEW_LIMIT)
     )
@@ -81,6 +85,13 @@ def collect_detail_category_ranking(
                         limit=review_limit,
                     )
                 except ZigzagReviewError as exc:
+                    logger.warning(
+                        "Zigzag review collection failed. "
+                        "source_product_id=%s error_type=%s error=%s",
+                        product_id,
+                        exc.__class__.__name__,
+                        exc,
+                    )
                     review_errors.append(
                         {
                             "stage": "REVIEW",
@@ -91,6 +102,34 @@ def collect_detail_category_ranking(
                     )
 
     collected_at = datetime.now(timezone.utc).isoformat()
+    collected_count = int(snapshot.get("collected_count") or 0)
+    review_bundles = [
+        product["reviews"]
+        for product in (snapshot.get("products") or [])
+        if isinstance(product.get("reviews"), dict)
+    ]
+    review_summary = {
+        "enabled": collect_reviews,
+        "requested_product_count": collected_count if collect_reviews else 0,
+        "successful_product_count": len(review_bundles),
+        "empty_product_count": sum(
+            not (bundle.get("items") or []) for bundle in review_bundles
+        ),
+        "item_count": sum(
+            len(bundle.get("items") or []) for bundle in review_bundles
+        ),
+        "failed_product_count": len(review_errors),
+        "status": (
+            "DISABLED"
+            if not collect_reviews
+            else "PARTIAL"
+            if review_errors and review_bundles
+            else "FAILED"
+            if review_errors
+            else "SUCCESS"
+        ),
+    }
+    logger.info("Zigzag review collection summary=%s", review_summary)
     row = {
         **snapshot,
         "category_id": detail_category_id,
@@ -103,8 +142,6 @@ def collect_detail_category_ranking(
         "tag_attribute": "category",
         "tag_name": detail_category_name,
     }
-    collected_count = int(snapshot.get("collected_count") or 0)
-
     payload = {
         "schema_version": "1.0",
         "source": "ZIGZAG",
@@ -130,6 +167,7 @@ def collect_detail_category_ranking(
             },
             "collect_reviews": collect_reviews,
             "review_limit": review_limit if collect_reviews else 0,
+            "review_summary": review_summary,
         },
         "groups": {"detail_category": [row]},
         "errors": review_errors,
@@ -149,6 +187,7 @@ def collect_detail_category_ranking(
         "discovered_count": collected_count,
         "success_count": collected_count,
         "failure_count": len(review_errors),
+        "platform_data": {"review_summary": review_summary},
     }
 
 

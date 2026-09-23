@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from urllib.parse import urlparse
 
 from .client import AblyClient
@@ -13,6 +14,9 @@ from .constants import (
 from .exceptions import AblyCollectError, AblyParseError
 from .parser import AblyParser
 from .reviews import normalize_review_bundle
+
+
+logger = logging.getLogger(__name__)
 
 
 class AblyCollector:
@@ -59,7 +63,9 @@ class AblyCollector:
             name="max_requests",
         )
         request_params = self._build_request_params(params)
-        collect_reviews = bool(params.get("collect_reviews", False))
+        # Ranking collection includes reviews by default.  Explicit False is
+        # still supported for maintenance/backfill jobs that only need products.
+        collect_reviews = bool(params.get("collect_reviews", True))
         review_limit = self._review_limit(
             params.get("review_limit", DEFAULT_REVIEW_LIMIT)
         )
@@ -198,6 +204,13 @@ class AblyCollector:
                         limit=review_limit,
                     )
                 except (AblyCollectError, AblyParseError) as exc:
+                    logger.warning(
+                        "ABLY review collection failed. "
+                        "source_product_id=%s error_type=%s error=%s",
+                        product_id,
+                        exc.__class__.__name__,
+                        exc,
+                    )
                     errors.append(
                         {
                             "stage": "REVIEW",
@@ -209,6 +222,39 @@ class AblyCollector:
 
         if errors:
             crawl_complete = False
+
+        review_errors = [
+            error
+            for error in errors
+            if str(error.get("stage") or "").upper() == "REVIEW"
+        ]
+        review_bundles = [
+            product["reviews"]
+            for product in products
+            if isinstance(product.get("reviews"), dict)
+        ]
+        review_summary = {
+            "enabled": collect_reviews,
+            "requested_product_count": len(products) if collect_reviews else 0,
+            "successful_product_count": len(review_bundles),
+            "empty_product_count": sum(
+                not (bundle.get("items") or []) for bundle in review_bundles
+            ),
+            "item_count": sum(
+                len(bundle.get("items") or []) for bundle in review_bundles
+            ),
+            "failed_product_count": len(review_errors),
+            "status": (
+                "DISABLED"
+                if not collect_reviews
+                else "PARTIAL"
+                if review_errors and review_bundles
+                else "FAILED"
+                if review_errors
+                else "SUCCESS"
+            ),
+        }
+        logger.info("ABLY review collection summary=%s", review_summary)
 
         return {
             "ranking": {
@@ -234,6 +280,7 @@ class AblyCollector:
                 "failure_count": len(errors),
                 "collect_reviews": collect_reviews,
                 "review_limit": review_limit if collect_reviews else 0,
+                "review_summary": review_summary,
             },
             "products": products,
             "errors": errors,

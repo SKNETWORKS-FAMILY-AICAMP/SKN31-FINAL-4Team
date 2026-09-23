@@ -695,6 +695,28 @@ def run_live_target(
                 if video_result
                 else 0
             ),
+            # Commerce reviews are intentionally retained in the S3 RAW only.
+            # These counters make that collection visible without implying a
+            # ContentItem/ProductReview DB write.
+            "raw_review_count": int(
+                (
+                    (result.get("platform_data") or {})
+                    .get("review_summary", {})
+                    .get("item_count")
+                )
+                or 0
+            ),
+            "raw_review_failed": int(
+                (
+                    (result.get("platform_data") or {})
+                    .get("review_summary", {})
+                    .get("failed_product_count")
+                )
+                or 0
+            ),
+            "raw_review_summary": (
+                (result.get("platform_data") or {}).get("review_summary")
+            ),
         }
 
     except Exception as exc:
