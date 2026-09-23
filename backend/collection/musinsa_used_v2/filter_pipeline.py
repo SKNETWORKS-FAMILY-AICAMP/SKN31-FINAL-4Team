@@ -310,21 +310,6 @@ class MusinsaUsedFilterPipeline(
                                 "expand_related": False,
                             },
                         )
-                        relation_from, relation_to = sorted(
-                            (current_no, related_no)
-                        )
-                        related_relation = {
-                            "from_source": self.SOURCE,
-                            "from_source_product_id": relation_from,
-                            "to_source": self.SOURCE,
-                            "to_source_product_id": relation_to,
-                            "relation_type": "RELATED_USED",
-                            "evidence_source": "MUSINSA_RELATED_GOODS",
-                        }
-                        pending_relations.setdefault(
-                            (relation_from, relation_to, "RELATED_USED"),
-                            related_relation,
-                        )
 
                     if original_no:
                         relation = {
@@ -338,6 +323,21 @@ class MusinsaUsedFilterPipeline(
                         pending_relations.setdefault(
                             (related_no, original_no, "RESALE_OF"),
                             relation,
+                        )
+                    elif related_no != current_no:
+                        # originalGoods가 없을 때만 발견된 USED를 검색의
+                        # 시작점인 부모 USED에 연결한다.
+                        related_relation = {
+                            "from_source": self.SOURCE,
+                            "from_source_product_id": related_no,
+                            "to_source": self.SOURCE,
+                            "to_source_product_id": current_no,
+                            "relation_type": "RELATED_USED",
+                            "evidence_source": "MUSINSA_RELATED_GOODS",
+                        }
+                        pending_relations.setdefault(
+                            (related_no, current_no, "RELATED_USED"),
+                            related_relation,
                         )
 
             # Second pass: query each accumulated ORIGINAL once.
