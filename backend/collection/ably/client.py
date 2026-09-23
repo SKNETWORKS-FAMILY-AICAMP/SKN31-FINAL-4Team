@@ -11,6 +11,7 @@ from .constants import (
     DEFAULT_HEADERS,
     DEVICE_ID_ENV,
     COMPONENT_LIST_API_URL,
+    GOODS_REVIEWS_API_URL_TEMPLATE,
     RANKING_FILTERS_API_URL,
     RANKING_GOODS_API_URL,
     RANKING_PAGE_URL,
@@ -93,6 +94,11 @@ class AblyClient:
 
     def get_ranking_filters(self) -> dict:
         return self.get_json(RANKING_FILTERS_API_URL)
+
+    def get_goods_reviews(self, goods_sno: str | int) -> dict:
+        return self.get_json(
+            GOODS_REVIEWS_API_URL_TEMPLATE.format(goods_sno=goods_sno)
+        )
 
     def get_component_list(
         self,

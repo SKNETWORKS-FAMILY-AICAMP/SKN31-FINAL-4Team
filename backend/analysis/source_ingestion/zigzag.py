@@ -217,13 +217,27 @@ class ZigzagNormalizer:
 
                     rank = self._to_int(product.get("rank")) or fallback_rank
                     resolved_category_id = clean_text(category_id or snapshot.get("category_id"))
+                    resolved_category_name = (
+                        clean_text(snapshot.get("category_name"))
+                        or CATEGORY_NAME_MAP.get(str(resolved_category_id or ""))
+                    )
 
                     row = dict(product)
                     row.update(
                         {
                             "source_product_id": source_product_id,
                             "category_id": resolved_category_id,
-                            "category_name": CATEGORY_NAME_MAP.get(str(resolved_category_id or "")),
+                            "category_name": resolved_category_name,
+                            "parent_category_id": clean_text(
+                                snapshot.get("parent_category_id")
+                            ),
+                            "parent_category_name": clean_text(
+                                snapshot.get("parent_category_name")
+                            ),
+                            "ranking_mode": (
+                                clean_text(snapshot.get("ranking_mode"))
+                                or "CNV_TAG"
+                            ),
                             "order": clean_text(snapshot.get("order")) or order,
                             "tag_group_key": group_key,
                             "tag_group": tag_group,
@@ -597,6 +611,7 @@ class ZigzagNormalizer:
             else []
         )
         best_rank = self._to_int(item.get("best_rank"))
+        ranking_mode = clean_text(item.get("ranking_mode")) or "CNV_TAG"
 
         best_observations = [
             obs
@@ -608,6 +623,11 @@ class ZigzagNormalizer:
             "source": "ZIGZAG_CNV",
             "category_id": clean_text(item.get("category_id")),
             "category_name": clean_text(item.get("category_name")),
+            "parent_category_id": clean_text(item.get("parent_category_id")),
+            "parent_category_name": clean_text(
+                item.get("parent_category_name")
+            ),
+            "ranking_mode": ranking_mode,
             "order": clean_text(item.get("order")),
             "observations": observed_tags,
             "best_observations": best_observations,
@@ -633,7 +653,7 @@ class ZigzagNormalizer:
             "sale_price": self._to_decimal(item.get("final_price")),
             "discount_rate": self._to_decimal(item.get("discount_rate")),
             "rank_position": best_rank,
-            "ranking_scope": "CNV_TAG",
+            "ranking_scope": ranking_mode,
             "ranking_context": ranking_context,
             "rating": self._to_decimal(item.get("review_score")),
             "review_count": self._to_int(item.get("review_count")),

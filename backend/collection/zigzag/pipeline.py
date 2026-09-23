@@ -44,6 +44,16 @@ class ZigzagPipeline(BasePlatformPipeline):
     ) -> dict:
         params = params or {}
 
+        # 신규 세부 카테고리 타깃만 별도 수집기로 보낸다. 기존 CNV 태그
+        # 타깃은 아래의 원래 흐름을 그대로 사용한다.
+        if params.get("ranking_mode") == "detail_category":
+            from .detail_ranking import collect_detail_category_ranking
+
+            return collect_detail_category_ranking(
+                target_url=target_url,
+                params=params,
+            )
+
         target_type = (
             target_type
             or ""

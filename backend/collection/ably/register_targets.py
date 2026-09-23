@@ -1,26 +1,42 @@
 from __future__ import annotations
 
+from django.db import transaction
+
 from apps.core.models import CrawlTarget, Source
 
-from .constants import BRAND_DEPARTMENT_CATEGORIES, COMPONENT_LIST_API_URL
+from .detail_categories import (
+    build_ably_detail_target_name,
+    iter_ably_detail_categories,
+)
+from .register_detail_ranking_targets import (
+    upsert_ably_detail_ranking_targets,
+)
 
 
-def upsert_ably_store_profile_target() -> CrawlTarget:
-    """Register the ABLY brand-department enrichment on the daily scheduler."""
+@transaction.atomic
+def replace_ably_targets_with_detail_rankings() -> list[CrawlTarget]:
+    """Deactivate old ABLY targets and activate only 27 detail rankings.
+
+    Historical targets are disabled instead of physically deleted because a
+    hard delete would cascade into their CrawlRun/RawDocument history.
+    """
 
     source = Source.objects.get(code__iexact="ABLY")
-    target, _ = CrawlTarget.objects.update_or_create(
-        source=source,
-        name="ABLY 브랜드관 STORE 프로필 DAILY",
-        defaults={
-            "target_type": CrawlTarget.TargetType.STORE,
-            "target_url": COMPONENT_LIST_API_URL,
-            "collection_mode": CrawlTarget.CollectionMode.LIVE,
-            "params": {"category_snos": list(BRAND_DEPARTMENT_CATEGORIES)},
-            "interval_minutes": 1440,
-            "priority": 5,
-            "is_active": True,
-        },
-    )
-    return target
+    detail_target_names = [
+        build_ably_detail_target_name(category)
+        for category in iter_ably_detail_categories()
+    ]
 
+    (
+        CrawlTarget.objects.filter(source=source, is_active=True)
+        .exclude(name__in=detail_target_names)
+        .update(is_active=False)
+    )
+
+    return upsert_ably_detail_ranking_targets(source=source)
+
+
+def upsert_ably_targets() -> list[CrawlTarget]:
+    """Default ABLY registration entry point."""
+
+    return replace_ably_targets_with_detail_rankings()
