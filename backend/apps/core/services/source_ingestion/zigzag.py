@@ -198,6 +198,12 @@ def ingest_zigzag_raw_document(
                 {},
             ),
 
+        "seller_sources":
+            result.get(
+                "seller_sources",
+                {},
+            ),
+
         "category_sources":
             result.get(
                 "category_sources",

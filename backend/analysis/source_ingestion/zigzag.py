@@ -101,6 +101,7 @@ class ZigzagNormalizer:
         aggregated_products = self.aggregate_product_observations(observations)
 
         brand_created = brand_updated = 0
+        seller_created = seller_updated = 0
         category_created = category_updated = 0
         product_created = product_updated = 0
         snapshot_created = snapshot_updated = 0
@@ -120,6 +121,11 @@ class ZigzagNormalizer:
                     brand_created += 1
                 elif result["brand_source"] is not None:
                     brand_updated += 1
+
+                if result["seller_source_created"]:
+                    seller_created += 1
+                elif result["seller_source"] is not None:
+                    seller_updated += 1
 
                 if result["category_source_created"]:
                     category_created += 1
@@ -158,6 +164,7 @@ class ZigzagNormalizer:
             "unique_product_count": len(aggregated_products),
             "processed_count": len(results),
             "brand_sources": {"created": brand_created, "updated": brand_updated},
+            "seller_sources": {"created": seller_created, "updated": seller_updated},
             "category_sources": {"created": category_created, "updated": category_updated},
             "product_sources": {"created": product_created, "updated": product_updated},
             "snapshots": {"created": snapshot_created, "updated": snapshot_updated},
@@ -300,11 +307,13 @@ class ZigzagNormalizer:
         observed_at: datetime,
         create_snapshot: bool = True,
     ) -> dict[str, Any]:
-        brand_result = self.normalize_brand_source(self._extract_store(item))
+        seller_result = self.normalize_seller_source(self._extract_store(item))
+        brand_result = self.normalize_product_brand_source(item.get("shop_name"))
         category_result = self.normalize_category_source(item)
         product_result = self.normalize_product_source(
             item,
             brand_source=brand_result["brand_source"],
+            seller_source=seller_result["brand_source"],
             category_source=category_result["category_source"],
             observed_at=observed_at,
         )
@@ -321,6 +330,8 @@ class ZigzagNormalizer:
             "source_product_id": product_result["product_source"].source_product_id,
             "brand_source": brand_result["brand_source"],
             "brand_source_created": brand_result["created"],
+            "seller_source": seller_result["brand_source"],
+            "seller_source_created": seller_result["created"],
             "category_source": category_result["category_source"],
             "category_source_created": category_result["created"],
             "product_source": product_result["product_source"],
@@ -330,7 +341,7 @@ class ZigzagNormalizer:
             "observed_tag_count": len(item.get("observed_tags") or []),
         }
 
-    def normalize_brand_source(
+    def normalize_seller_source(
         self,
         store: dict[str, Any] | None,
     ) -> dict[str, Any]:
@@ -348,7 +359,7 @@ class ZigzagNormalizer:
             or store.get("store_name")
         )
 
-        if source_brand_id is None and name is None:
+        if source_brand_id is None:
             return {
                 "created": False,
                 "brand_source": None,
@@ -356,50 +367,50 @@ class ZigzagNormalizer:
                 "matched_by": "NO_STORE",
             }
 
-        if source_brand_id is None:
-            source_brand_id = "name:" + normalize_brand_name(name)
-
         now = timezone.now()
 
-        brand_source = (
-            BrandSource.objects.select_related("brand")
-            .filter(source=self.source, source_brand_id=str(source_brand_id))
-            .first()
-        )
-        created = brand_source is None
-
-        if created:
-            canonical_brand = self._find_brand(name)
-            defaults = {
-                "brand": canonical_brand,
-                "source": self.source,
-                "source_brand_id": str(source_brand_id),
+        brand_source, created = BrandSource.objects.get_or_create(
+            source=self.source,
+            source_brand_id=str(source_brand_id),
+            defaults={
                 "name": name,
                 "first_seen_at": now,
                 "last_seen_at": now,
                 "detected_count": 1,
-                "attributes": {"zigzag_shop_id": str(source_brand_id)},
-            }
-
-            if canonical_brand is not None:
-                defaults["mapping_status"] = BrandSource.MappingStatus.AUTO_MAPPED
-                defaults["mapping_method"] = BrandSource.MappingMethod.EXACT_NAME
-                defaults["mapping_confidence"] = Decimal("1.0000")
-            else:
-                defaults["mapping_status"] = BrandSource.MappingStatus.UNMAPPED
-
-            brand_source = BrandSource.objects.create(**defaults)
-        else:
-            if name:
-                brand_source.name = name
-
+                "attributes": {
+                    "zigzag_shop_id": str(source_brand_id),
+                    "zigzag_entity_type": "SELLER",
+                },
+                "mapping_status": BrandSource.MappingStatus.EXCLUDED,
+            },
+        )
+        if not created:
             current_attributes = (
                 dict(brand_source.attributes)
                 if isinstance(brand_source.attributes, dict)
                 else {}
             )
+            profile = current_attributes.get("zigzag_brand")
+            profile_name = (
+                clean_text(profile.get("shop_name"))
+                if isinstance(profile, dict)
+                else None
+            )
+            # CNV cards can carry the product's brand as shop_name, while
+            # shop_id identifies the seller. Keep the seller profile name.
+            if profile_name:
+                brand_source.name = profile_name
+            elif name and not brand_source.name:
+                brand_source.name = name
+
             current_attributes["zigzag_shop_id"] = str(source_brand_id)
+            current_attributes["zigzag_entity_type"] = "SELLER"
             brand_source.attributes = current_attributes
+            if (
+                brand_source.brand_id is None
+                and brand_source.mapping_status == BrandSource.MappingStatus.UNMAPPED
+            ):
+                brand_source.mapping_status = BrandSource.MappingStatus.EXCLUDED
 
             if brand_source.first_seen_at is None:
                 brand_source.first_seen_at = now
@@ -414,6 +425,65 @@ class ZigzagNormalizer:
             "matched": brand_source.brand_id is not None,
             "matched_by": brand_source.mapping_method if brand_source.brand_id else "UNMAPPED",
         }
+
+    def normalize_product_brand_source(self, name: str | None) -> dict[str, Any]:
+        name = clean_text(name)
+        key = normalize_brand_name(name)
+        if not key:
+            return {"created": False, "brand_source": None}
+
+        source_brand_id = "brand:name:" + key
+        if len(source_brand_id) > 255:
+            return {"created": False, "brand_source": None}
+
+        now = timezone.now()
+        brand_source = (
+            BrandSource.objects.select_related("brand")
+            .filter(source=self.source, source_brand_id=source_brand_id)
+            .first()
+        )
+        if brand_source is not None:
+            brand_source.last_seen_at = now
+            brand_source.detected_count = (brand_source.detected_count or 0) + 1
+            brand_source.save(update_fields=["last_seen_at", "detected_count", "updated_at"])
+            return {"created": False, "brand_source": brand_source}
+
+        canonical_brand = self._find_brand(name)
+        defaults = {
+            "brand": canonical_brand,
+            "source": self.source,
+            "source_brand_id": source_brand_id,
+            "name": name,
+            "first_seen_at": now,
+            "last_seen_at": now,
+            "detected_count": 1,
+            "attributes": {
+                "zigzag_entity_type": "PRODUCT_BRAND",
+                "name_source": "CNV_CARD_SHOP_NAME",
+            },
+            "mapping_status": (
+                BrandSource.MappingStatus.AUTO_MAPPED
+                if canonical_brand is not None
+                else BrandSource.MappingStatus.UNMAPPED
+            ),
+        }
+        if canonical_brand is not None:
+            defaults["mapping_method"] = BrandSource.MappingMethod.EXACT_NAME
+            defaults["mapping_confidence"] = Decimal("1.0000")
+        brand_source, created = BrandSource.objects.get_or_create(
+            source=self.source,
+            source_brand_id=source_brand_id,
+            defaults={
+                key: value
+                for key, value in defaults.items()
+                if key not in ("source", "source_brand_id")
+            },
+        )
+        if not created:
+            brand_source.last_seen_at = now
+            brand_source.detected_count = (brand_source.detected_count or 0) + 1
+            brand_source.save(update_fields=["last_seen_at", "detected_count", "updated_at"])
+        return {"created": created, "brand_source": brand_source}
 
     def normalize_category_source(
         self,
@@ -480,6 +550,7 @@ class ZigzagNormalizer:
         item: dict[str, Any],
         *,
         brand_source: BrandSource | None,
+        seller_source: BrandSource | None,
         category_source: CategorySource | None,
         observed_at: datetime,
     ) -> dict[str, Any]:
@@ -511,10 +582,24 @@ class ZigzagNormalizer:
             else []
         )
 
+        seller_attributes = (
+            seller_source.attributes
+            if seller_source is not None
+            and isinstance(seller_source.attributes, dict)
+            else {}
+        )
+        seller_profile = seller_attributes.get("zigzag_brand")
+        seller_name = (
+            clean_text(seller_profile.get("shop_name"))
+            if isinstance(seller_profile, dict)
+            else None
+        )
         source_attributes = {
             "zigzag": {
                 "shop_id": clean_text(item.get("shop_id")),
                 "shop_name": clean_text(item.get("shop_name")),
+                "seller_name": seller_name,
+                "brand_name": clean_text(item.get("shop_name")),
                 "sales_status": clean_text(item.get("sales_status")),
                 "shipping_type": clean_text(item.get("shipping_type")),
                 "arrival_text": clean_text(item.get("arrival_text")),
@@ -567,6 +652,15 @@ class ZigzagNormalizer:
             )
         else:
             # canonical product 연결은 유지
+            if brand_source is None and product_source.source_brand_id:
+                previous_brand_source = product_source.source_brand
+                if (
+                    previous_brand_source is not None
+                    and isinstance(previous_brand_source.attributes, dict)
+                    and previous_brand_source.attributes.get("zigzag_entity_type")
+                    == "PRODUCT_BRAND"
+                ):
+                    brand_source = previous_brand_source
             product_source.source_brand = brand_source
             product_source.source_category = category_source
             product_source.source_name = source_name
@@ -584,6 +678,11 @@ class ZigzagNormalizer:
             product_source.product_url = product_url
 
             current_attributes = dict(existing_attributes)
+            previous_zigzag = existing_attributes.get("zigzag") or {}
+            if isinstance(previous_zigzag, dict):
+                for key in ("shop_id", "shop_name", "seller_name", "brand_name"):
+                    if source_attributes["zigzag"].get(key) is None:
+                        source_attributes["zigzag"][key] = previous_zigzag.get(key)
             current_attributes.update(source_attributes)
             product_source.attributes = current_attributes
 
@@ -680,8 +779,6 @@ class ZigzagNormalizer:
         return {
             "source_brand_id": item.get("shop_id"),
             "shop_id": item.get("shop_id"),
-            "name": item.get("shop_name"),
-            "shop_name": item.get("shop_name"),
         }
 
     @staticmethod

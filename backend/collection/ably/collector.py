@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from urllib.parse import urlparse
 
+from .brand_lookup import enrich_missing_brand_names
 from .client import AblyClient
 from .constants import (
     DEFAULT_MAX_RANK,
@@ -186,6 +187,8 @@ class AblyCollector:
         if errors:
             crawl_complete = False
 
+        brand_name_summary = enrich_missing_brand_names(products, self.client)
+
         if collect_reviews:
             for product in products:
                 product_id = product["source_product_id"]
@@ -281,6 +284,7 @@ class AblyCollector:
                 "collect_reviews": collect_reviews,
                 "review_limit": review_limit if collect_reviews else 0,
                 "review_summary": review_summary,
+                "brand_name_summary": brand_name_summary,
             },
             "products": products,
             "errors": errors,

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import base64
+import json
 from uuid import uuid4
 
 import requests
@@ -8,6 +10,7 @@ import requests
 from .constants import (
     ANONYMOUS_TOKEN_API_URL,
     ANONYMOUS_TOKEN_ENV,
+    BRAND_HOME_API_URL,
     DEFAULT_HEADERS,
     DEVICE_ID_ENV,
     COMPONENT_LIST_API_URL,
@@ -94,6 +97,12 @@ class AblyClient:
 
     def get_ranking_filters(self) -> dict:
         return self.get_json(RANKING_FILTERS_API_URL)
+
+    def get_brand_home(self, brand_sno: str | int) -> dict:
+        token = base64.b64encode(
+            json.dumps({"p": {"brand_sno": int(brand_sno)}}).encode("utf-8")
+        ).decode("ascii")
+        return self.get_json(BRAND_HOME_API_URL, params={"next_token": token})
 
     def get_goods_reviews(self, goods_sno: str | int) -> dict:
         return self.get_json(

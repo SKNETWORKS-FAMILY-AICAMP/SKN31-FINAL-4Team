@@ -43,7 +43,9 @@ def normalize_ably_preview(product: dict, ranking_context: dict | None = None) -
             "market_name": market.get("name"),
         })
 
-    source_brand = brand if brand.get("name") else {}
+    # Ranking responses can contain a brand ID without its name. Keep the
+    # product linked to that brand ID instead of treating its seller as a brand.
+    source_brand = brand if brand.get("source_brand_id") or brand.get("name") else {}
     source_brand_kind = "BRAND"
     if not source_brand and market:
         source_brand = {

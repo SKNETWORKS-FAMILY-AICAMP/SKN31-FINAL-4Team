@@ -4,6 +4,7 @@ ABLY_MOBILE_BASE_URL = "https://mobile.a-bly.com"
 RANKING_PAGE_URL = f"{ABLY_MOBILE_BASE_URL}/ranking"
 ANONYMOUS_TOKEN_API_URL = f"{ABLY_API_BASE_URL}/api/v2/anonymous/token/"
 RANKING_GOODS_API_URL = f"{ABLY_API_BASE_URL}/api/v2/goods/"
+BRAND_HOME_API_URL = f"{ABLY_API_BASE_URL}/api/v2/screens/BRAND_HOME/"
 RANKING_FILTERS_API_URL = (
     f"{ABLY_API_BASE_URL}/api/v2/goods/ranking-filters/"
 )

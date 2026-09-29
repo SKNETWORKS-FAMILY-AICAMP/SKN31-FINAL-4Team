@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from collection.ably.normalization import normalize_ably_preview
-from apps.core.models import RawDocument
+from apps.core.models import BrandSource, RawDocument
 
 from .common import ingest_preview_raw_document
+from .ably_brand_mapping import auto_map_ably_brand_sources
 
 
 def ingest_ably_raw_document(*, raw_document_id: int) -> dict:
@@ -12,11 +13,24 @@ def ingest_ably_raw_document(*, raw_document_id: int) -> dict:
         ranking["collected_at"] = raw_document.collected_at.isoformat()
         return normalize_ably_preview(product, ranking)
 
-    return ingest_preview_raw_document(
+    result = ingest_preview_raw_document(
         raw_document_id=raw_document_id,
         source_code="ABLY",
         preview_builder=build_preview,
     )
+    brand_source_ids = list(
+        BrandSource.objects.filter(
+            source__code__iexact="ABLY",
+            attributes__candidate_kind="BRAND",
+            product_sources__id__in=result["product_source_ids"],
+        ).values_list("id", flat=True).distinct()
+    )
+    result["auto_brand_mapping"] = (
+        auto_map_ably_brand_sources(brand_source_ids=brand_source_ids)
+        if brand_source_ids
+        else {"mapped": 0, "mapped_by_candidate_kind": {}, "brand_source_ids": []}
+    )
+    return result
 
 
 def ingest_pending_ably_raw_documents(
