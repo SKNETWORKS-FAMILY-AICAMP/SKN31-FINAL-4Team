@@ -11,6 +11,7 @@ from apps.core.models import RawDocument
 from analysis.source_ingestion.zigzag import (
     ZigzagNormalizer,
 )
+from .reviews import ingest_raw_document_reviews, require_complete_review_ingestion
 
 
 def _get_s3_client():
@@ -149,6 +150,13 @@ def ingest_zigzag_raw_document(
             f"first={errors[0]}"
         )
 
+    review_result = require_complete_review_ingestion(
+        ingest_raw_document_reviews(
+            raw_document_id=raw_document.id,
+            raw_data=raw,
+        )
+    )
+
     return {
         "raw_document_id":
             raw_document.id,
@@ -223,6 +231,7 @@ def ingest_zigzag_raw_document(
             ),
 
         "errors": [],
+        "reviews": review_result,
     }
 
 

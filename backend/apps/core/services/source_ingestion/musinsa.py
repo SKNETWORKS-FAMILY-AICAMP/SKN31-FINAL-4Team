@@ -12,6 +12,7 @@ from .common import (
     get_s3_client,
     load_raw_json,
 )
+from .reviews import ingest_raw_document_reviews, require_complete_review_ingestion
 
 
 def extract_products(
@@ -443,6 +444,12 @@ def ingest_musinsa_raw_document(
                 }
             )
 
+    result["reviews"] = require_complete_review_ingestion(
+        ingest_raw_document_reviews(
+            raw_document_id=raw_document.id,
+            raw_data=raw_data,
+        )
+    )
     return result
 
 

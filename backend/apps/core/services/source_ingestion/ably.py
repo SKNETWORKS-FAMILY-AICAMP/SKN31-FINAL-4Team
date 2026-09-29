@@ -5,6 +5,7 @@ from apps.core.models import BrandSource, RawDocument
 
 from .common import ingest_preview_raw_document
 from .ably_brand_mapping import auto_map_ably_brand_sources
+from .reviews import ingest_raw_document_reviews, require_complete_review_ingestion
 
 
 def ingest_ably_raw_document(*, raw_document_id: int) -> dict:
@@ -17,6 +18,13 @@ def ingest_ably_raw_document(*, raw_document_id: int) -> dict:
         raw_document_id=raw_document_id,
         source_code="ABLY",
         preview_builder=build_preview,
+        review_ingestor=lambda raw_document, raw_data: require_complete_review_ingestion(
+            ingest_raw_document_reviews(
+                raw_document_id=raw_document.id,
+                raw_data=raw_data,
+                create_missing_products=True,
+            )
+        ),
     )
     brand_source_ids = list(
         BrandSource.objects.filter(

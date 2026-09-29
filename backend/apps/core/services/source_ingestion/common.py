@@ -333,6 +333,7 @@ def ingest_preview_raw_document(
     raw_document_id: int,
     source_code: str,
     preview_builder: Callable[[dict, RawDocument, dict], dict],
+    review_ingestor: Callable[[RawDocument, dict], dict] | None = None,
 ) -> dict:
     raw_document = (
         RawDocument.objects.select_related("source", "crawl_run")
@@ -360,6 +361,10 @@ def ingest_preview_raw_document(
                         default_observed_at=raw_document.collected_at,
                     )
                 )
+            review_result = (
+                review_ingestor(raw_document, raw_data)
+                if review_ingestor else None
+            )
             RawDocument.objects.filter(pk=raw_document.id).update(
                 normalization_status=RawDocument.NormalizationStatus.SUCCESS,
                 normalization_error=None,
@@ -392,6 +397,8 @@ def ingest_preview_raw_document(
         "snapshots_created": sum(int(row["snapshot_created"]) for row in rows),
         "related_created": sum(row["related_created"] for row in rows),
     }
+    if review_result is not None:
+        summary["reviews"] = review_result
     logger.info(
         "[SOURCE_INGESTION][%s] DB_WRITE_EXECUTED=TRUE summary=%s",
         source_code.upper(),

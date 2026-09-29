@@ -374,7 +374,7 @@ def run_live_target(
             )
 
         # ----------------------------------------------------
-        # ZIGZAG CNV_CATEGORY -> Source Ingestion
+        # ZIGZAG CNV_CATEGORY / RANKING -> Source Ingestion
         #
         # RawDocument
         # -> BrandSource
@@ -384,7 +384,7 @@ def run_live_target(
         # ----------------------------------------------------
         if (
             source_code == "ZIGZAG"
-            and entity_type == "CNV_CATEGORY"
+            and entity_type in {"CNV_CATEGORY", "RANKING"}
         ):
             from apps.core.services.source_ingestion import (
                 ingest_zigzag_raw_document,
@@ -468,6 +468,11 @@ def run_live_target(
                 raw_document.id,
                 source_ingestion_result,
             )
+
+        review_ingestion_result = (
+            source_ingestion_result.get("reviews")
+            if source_ingestion_result else None
+        )
 
         discovered_product_result = None
         if source_code == "MUSINSA_USED":
@@ -683,6 +688,7 @@ def run_live_target(
                 0,
             ),
             "source_ingestion": source_ingestion_result,
+            "review_ingestion": review_ingestion_result,
             "product_analysis_task_id": product_analysis_task_id,
             "content_profile_id": profile_id,
             "content_item_count": (
@@ -695,9 +701,7 @@ def run_live_target(
                 if video_result
                 else 0
             ),
-            # Commerce reviews are intentionally retained in the S3 RAW only.
-            # These counters make that collection visible without implying a
-            # ContentItem/ProductReview DB write.
+            # RAW collection counts are separate from DB ingestion counts.
             "raw_review_count": int(
                 (
                     (result.get("platform_data") or {})
