@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, time
+from datetime import datetime, time, timezone as datetime_timezone
 
 from django.db import transaction
 from django.utils import timezone
@@ -55,10 +55,21 @@ def _review_date(value):
     if isinstance(value, datetime):
         parsed = value
     else:
+        text = str(value).strip()
+        # Zigzag sends Unix milliseconds; parsing the digits as an ISO date
+        # can yield either NULL or a plausible-looking year centuries ago.
+        if text.isascii() and text.isdigit():
+            if len(text) not in (10, 13):
+                return None
+            try:
+                timestamp = int(text) / (1000 if len(text) == 13 else 1)
+                return datetime.fromtimestamp(timestamp, tz=datetime_timezone.utc)
+            except (OverflowError, OSError, ValueError):
+                return None
         try:
-            parsed = parse_datetime(str(value))
+            parsed = parse_datetime(text)
             if parsed is None:
-                date = parse_date(str(value))
+                date = parse_date(text)
                 parsed = datetime.combine(date, time.min) if date else None
         except ValueError:
             parsed = None
