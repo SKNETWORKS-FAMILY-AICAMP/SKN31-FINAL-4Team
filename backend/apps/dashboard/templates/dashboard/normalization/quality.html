@@ -1,0 +1,194 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}데이터 품질 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
+<style>
+    /* 데이터 품질 — 정규화 화면의 카드 · 표 문법을 그대로 쓰고, 이 화면에만 필요한 것만 더한다 */
+    .dq-section { margin: 28px 0 10px; }
+    .dq-section h3 { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+    .dq-section p { font-size: 12px; color: var(--tx2); margin: 0; }
+    .dq-table td.num, .dq-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .dq-pct { display: block; font-size: 11px; color: var(--tx3); }
+    .dq-warn { color: var(--bad); font-weight: 600; }
+    .dq-warn .dq-pct { color: var(--bad); }
+    .dq-ids { font-size: 11px; color: var(--tx3); }
+    .dq-none { font-size: 12.5px; color: var(--tx2); padding: 18px 4px; }
+    .dq-table a, .nz-caption a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+</style>
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_normalized.html" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">FEEDIT ADMIN</p>
+        <h2 class="page-title">데이터 품질</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+<div class="nz-cards">
+    <div class="nz-card">
+        <span class="nz-label">플랫폼 상품</span>
+        <strong class="nz-value">{{ summary.product_sources|intcomma }}</strong>
+        <span class="nz-caption">product_source 전체</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">누락 {{ warn_pct|floatformat:0 }}% 넘는 칸</span>
+        <strong class="nz-value {% if summary.missing_hot %}bad{% else %}ok{% endif %}">{{ summary.missing_hot|intcomma }}</strong>
+        <span class="nz-caption">플랫폼 × 항목</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">중복 의심 상품 묶음</span>
+        <strong class="nz-value {% if summary.dup_product_groups %}bad{% else %}ok{% endif %}">{{ summary.dup_product_groups|intcomma }}</strong>
+        <span class="nz-caption">같은 브랜드 · 같은 정규화 이름</span>
+    </div>
+    <div class="nz-card">
+        <span class="nz-label">정규화 실패</span>
+        <strong class="nz-value {% if summary.norm_failed %}bad{% else %}ok{% endif %}">{{ summary.norm_failed|intcomma }}</strong>
+        <span class="nz-caption"><a href="{% url 'dashboard:normalization_failures' %}">실패 목록 보기</a></span>
+    </div>
+</div>
+
+{# ── ① 누락 ─────────────────────────────────────────── #}
+<div class="dq-section">
+    <h3>누락 — 플랫폼별 빈 칸</h3>
+    <p>화면과 지표가 실제로 쓰는 칸만 셉니다. 가격은 스냅숏에 있으므로 '가격 관측이 한 번도 없는 상품'을 셉니다. {{ warn_pct|floatformat:0 }}% 이상은 붉게 표시합니다.</p>
+</div>
+<div class="nz-table-card">
+{% if missing %}
+<table class="nz-table dq-table">
+    <thead>
+        <tr>
+            <th>플랫폼</th>
+            <th class="num">상품 수</th>
+            {% for name in fields %}<th class="num">{{ name }}</th>{% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in missing %}
+        <tr>
+            <td><span class="nz-plat">{{ row.label }}</span></td>
+            <td class="num">{{ row.total|intcomma }}</td>
+            {% for c in row.cells %}
+            <td class="num {% if c.warn %}dq-warn{% endif %}">
+                {{ c.count|intcomma }}<span class="dq-pct">{{ c.pct }}%</span>
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="dq-none">플랫폼 상품이 아직 적재되지 않았습니다.</p>
+{% endif %}
+</div>
+
+{# ── ② 중복 ─────────────────────────────────────────── #}
+<div class="dq-section">
+    <h3>중복 — 통합 상품</h3>
+    <p>같은 브랜드에 같은 정규화 이름으로 두 번 이상 들어간 상품입니다. 묶음 {{ dup_products.groups|intcomma }}개, 남는 행 {{ dup_products.extra_rows|intcomma }}개.</p>
+</div>
+<div class="nz-table-card">
+{% if dup_products.top %}
+<table class="nz-table dq-table">
+    <thead><tr><th>브랜드</th><th>정규화 이름</th><th class="num">개수</th><th>상품 ID</th></tr></thead>
+    <tbody>
+        {% for g in dup_products.top %}
+        <tr>
+            <td>{{ g.brand }}</td>
+            <td class="nz-ellip" title="{{ g.normalized_name }}">{{ g.normalized_name }}</td>
+            <td class="num dq-warn">{{ g.n }}</td>
+            <td class="dq-ids mono">{{ g.ids|join:", " }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="dq-none">중복 의심 상품이 없습니다.</p>
+{% endif %}
+</div>
+
+<div class="dq-section">
+    <h3>중복 — 브랜드</h3>
+    <p>대소문자와 앞뒤 공백만 다른 이름의 브랜드입니다. 묶음 {{ dup_brands.groups|intcomma }}개.</p>
+</div>
+<div class="nz-table-card">
+{% if dup_brands.top %}
+<table class="nz-table dq-table">
+    <thead><tr><th>이름(비교용)</th><th class="num">개수</th><th>브랜드 (ID · 코드)</th></tr></thead>
+    <tbody>
+        {% for g in dup_brands.top %}
+        <tr>
+            <td>{{ g.key }}</td>
+            <td class="num dq-warn">{{ g.n }}</td>
+            <td class="dq-ids">{% for b in g.rows %}{{ b.name }} ({{ b.id }} · {{ b.brand_code }}){% if not forloop.last %} / {% endif %}{% endfor %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="dq-none">이름이 겹치는 브랜드가 없습니다.</p>
+{% endif %}
+</div>
+
+<div class="dq-section">
+    <h3>중복 — 수집 문서</h3>
+    <p>같은 플랫폼에서 같은 원본(content_hash)을 두 번 이상 받은 문서입니다. 같은 페이지를 다시 받은 것이라 지표를 부풀릴 수 있습니다.</p>
+</div>
+<div class="nz-table-card">
+{% if dup_raw %}
+<table class="nz-table dq-table">
+    <thead><tr><th>플랫폼</th><th class="num">겹친 원본</th><th class="num">남는 문서</th></tr></thead>
+    <tbody>
+        {% for r in dup_raw %}
+        <tr>
+            <td><span class="nz-plat">{{ r.label }}</span></td>
+            <td class="num">{{ r.hashes|intcomma }}</td>
+            <td class="num dq-warn">{{ r.extra|intcomma }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="dq-none">같은 원본을 두 번 받은 문서가 없습니다.</p>
+{% endif %}
+</div>
+
+{# ── ③ 정규화 ───────────────────────────────────────── #}
+<div class="dq-section">
+    <h3>정규화 상태 — 플랫폼별</h3>
+    <p>수집 문서가 공통 구조로 옮겨졌는지 봅니다. 실패 비율 {{ warn_pct|floatformat:0 }}% 이상은 붉게 표시합니다.</p>
+</div>
+<div class="nz-table-card">
+{% if normalization %}
+<table class="nz-table dq-table">
+    <thead><tr><th>플랫폼</th><th class="num">문서</th><th class="num">성공</th><th class="num">대기 · 처리 중</th><th class="num">실패</th></tr></thead>
+    <tbody>
+        {% for r in normalization %}
+        <tr>
+            <td><span class="nz-plat">{{ r.label }}</span></td>
+            <td class="num">{{ r.total|intcomma }}</td>
+            <td class="num">{{ r.success|intcomma }}</td>
+            <td class="num">{{ r.pending|intcomma }}</td>
+            <td class="num {% if r.warn %}dq-warn{% endif %}">
+                {% if r.failed %}<a href="{% url 'dashboard:normalization_failures' %}?source={{ r.source.id }}">{{ r.failed|intcomma }}</a>{% else %}0{% endif %}
+                <span class="dq-pct">{{ r.fail_pct }}%</span>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="dq-none">수집 문서가 아직 없습니다.</p>
+{% endif %}
+</div>
+
+{% endblock %}

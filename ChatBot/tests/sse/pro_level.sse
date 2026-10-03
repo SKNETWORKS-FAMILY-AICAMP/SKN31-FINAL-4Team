@@ -1,0 +1,75 @@
+event: status
+data: {"stage": "lexicon"}
+
+event: status
+data: {"stage": "metric"}
+
+event: text
+data: {"delta": "<b>"}
+
+event: text
+data: {"delta": "발레코"}
+
+event: text
+data: {"delta": "어"}
+
+event: text
+data: {"delta": "</b>"}
+
+event: text
+data: {"delta": "의 트"}
+
+event: text
+data: {"delta": "렌드 "}
+
+event: text
+data: {"delta": "온도는"}
+
+event: text
+data: {"delta": " "}
+
+event: text
+data: {"delta": "<b>"}
+
+event: text
+data: {"delta": "86점"}
+
+event: text
+data: {"delta": " · "}
+
+event: text
+data: {"delta": "과열"}
+
+event: text
+data: {"delta": "</b>"}
+
+event: text
+data: {"delta": "입니다"}
+
+event: text
+data: {"delta": ". 언"}
+
+event: text
+data: {"delta": "급 3"}
+
+event: text
+data: {"delta": "33건"}
+
+event: text
+data: {"delta": " 기준"}
+
+event: text
+data: {"delta": "입니다"}
+
+event: text
+data: {"delta": "."}
+
+event: report
+data: {"ok": true, "kind": "general", "intent": "metric.level", "question": "발레코어 어때?", "as_of": {"metric": "2026-09-01", "generated_at": "2026-09-02T16:16:44+09:00"}, "metric_version": "feedit-l2-v2-shadow", "headline": "<b>발레코어</b>의 트렌드 온도는 <b>86점 · 과열</b>입니다. 언급 333건 기준입니다.", "terms": [{"canonical": "발레코어", "facet": "style", "facet_name": "스타일", "via": "free", "coverage": {"has_latest": true, "can_level": true, "can_direction": false, "can_delta14": true, "can_assoc": true, "can_sentiment": true, "thin_sample": false, "stale_days": 0, "obs7": 5, "obs14": 6, "obs28": 6, "reasons": [["SHORT_HISTORY", "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."], ["THIN_SENTIMENT", "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."]]}, "available": true, "observed_on": "2026-09-01", "raw_count": 333, "temp": 86, "temp_band": "과열", "pct_rank": null, "level": 75.97442650406038, "momentum": 99.99999680812233, "share_pct": null, "sources": [{"code": "musinsa", "name": "무신사", "raw_count": 125, "temp": 98, "observed_on": "2026-09-01"}, {"code": "zigzag", "name": "지그재그", "raw_count": 63, "temp": 98, "observed_on": "2026-09-01"}, {"code": "kream", "name": "크림", "raw_count": 60, "temp": 94, "observed_on": "2026-09-01"}, {"code": "ably", "name": "에이블리", "raw_count": 59, "temp": 95, "observed_on": "2026-09-01"}, {"code": "naver", "name": "네이버", "raw_count": 25, "temp": 98, "observed_on": "2026-09-01"}, {"code": "youtube", "name": "유튜브", "raw_count": 1, "temp": 23, "observed_on": "2026-09-01"}], "associations": [{"canonical": "아디다스", "facet": "brand", "facet_name": "브랜드", "co_count": 42, "lift": 16.042962962962964, "score": 100, "is_new": true}], "sentiment": {"index": 50, "n_total": 1, "pos_pct": 100.0, "neg_pct": 0.0, "top_pos": "considering", "top_neg": null}, "evidence": [{"source": "네이버", "kind": "블로그", "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 남겨두면서 실루엣을 과감하게 바꾼 점이 가장 흥미롭게 느껴졌어요.”...", "at": "20260902"}, {"source": "네이버", "kind": "블로그", "body": "더현대 서울 발레 팝업 후기｜취발러 당일입장 방문·구매 후기. 이 팝업에서는 메시아, 포타, 디아트레 세 브랜드의 발레웨어와 발레코어룩을 한자리에서 직접 볼 수 있었어요. 저는 발레를 시작한 지 얼마 안 된 취발러라 평소 온라인으로만 보던 발레복을 직접 입어보고...", "at": "20260902"}, {"source": "유튜브", "kind": "영상 설명", "body": "제니 아디다스 발레코어 메리제인 슈즈, 저렴하게 구매하는 방법!! (+초특가 정보). 제니 발레코어 아디다스 메리제인 슈즈 5만원대에 구매하는 법   바로 직전 모델인데, 이번에 나온 신상과 비슷하면서, 조금 더 무난한 ...", "at": "2026-09-01T13:03:44Z"}, {"source": "유튜브", "kind": "영상 설명", "body": "힙한 발레코어 신발! 윤승아 크록스. 윤승아 김무열 커플 신발 추천! 2만 보 걸어도 발 편한 1등 발레 플랫 크록스 커스텀 정보 배우 윤승아가 디즈니랜드 여행에서 김무열과 ...", "at": "2026-09-01T09:00:10Z"}]}], "modifiers": [], "notes": [{"code": "SHORT_HISTORY", "term": "발레코어", "message": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."}, {"code": "THIN_SENTIMENT", "term": "발레코어", "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."}], "locked": [], "plan": "PRO", "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준"}
+
+event: actions
+data: [{"label": "Style 탭에서 자세히", "type": "view", "view": "style", "style": "발레코어"}, {"label": "지표로 보기", "type": "view", "view": "trend", "part": "temp", "keyword": "발레코어"}]
+
+event: done
+data: {"ok": true, "intent": "metric.level", "as_of": {"metric": "2026-09-01", "generated_at": "2026-09-02T16:16:44+09:00"}}
+

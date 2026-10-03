@@ -1,59 +1,59 @@
 /* ══════════════ Style ══════════════ */
-.stCats{display:flex;gap:7px;flex-wrap:wrap}
-.stCat{border-radius:999px;padding:10px 17px;font-size:13px;cursor:none;color:var(--pink-1);
-  box-shadow:inset 0 0 0 1px var(--pink-3);transition:all .32s var(--ease)}
-.stCat:hover{color:var(--pink-0);box-shadow:inset 0 0 0 1px var(--pink-2);transform:translateY(-2px)}
-.stCat.on{background:var(--pink-0);color:var(--paper);box-shadow:none}
-/* 자동으로 바뀌는 쇼케이스 */
-.stShow{
-  position:relative;margin-top:clamp(24px,3.6vh,44px);border-radius:12px;overflow:hidden;
-  aspect-ratio:16/7;background:#e8e4dd;cursor:none;
+/* ★ 2026-09-20 — 스타일 홈 = [쇼케이스(작게, 위)] + [코어 · 원형 두 묶음의 에디토리얼 인덱스].
+   예전엔 알약 버튼 줄 · 쇼케이스 · 사진 타일 그리드가 따로 있었는데, 셋 다 누르면 같은 스타일로
+   가는 길이라 하나로 합쳤다. 칸 하나 = 사진 + [번호 · 한글명 · 영문명 · 화살표].
+   hover: 사진이 색을 되찾으며 살짝 커지고(예전 타일 모션), 아래 가는 선이 코랄로 차오르고,
+   글자가 밀리며 화살표가 나타난다. 들어올 때는 칸이 차례로 떠오른다. */
+.stCats{display:flex;flex-direction:column;gap:clamp(22px,3.2vh,36px);margin-top:clamp(22px,3.2vh,36px)}
+.stGroupHead{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.stGroupHead b{font-size:15px;font-weight:600;letter-spacing:-.03em}
+.stGroupHead em{font-style:normal;font-family:var(--num);font-size:10px;letter-spacing:.18em;color:var(--pink-2)}
+.stGroupHead span{font-size:12px;color:var(--pink-2);letter-spacing:-.01em}
+.stGroupRow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(12px,1.6vw,22px)}
+.stCat{
+  position:relative;display:flex;flex-direction:column;min-width:0;text-align:left;cursor:pointer;
+  color:var(--pink-0);animation:stCatIn .8s var(--ease) both;animation-delay:calc(var(--i,0) * 45ms);
 }
-.stShow .sl{position:absolute;inset:0;opacity:0;transition:opacity 1.1s var(--ease)}
-.stShow .sl.on{opacity:1}
-.stShow .sl img{width:100%;height:100%;object-fit:cover;transform:scale(1.06);
-  animation:stDrift 9s linear infinite alternate}
-@keyframes stDrift{from{transform:scale(1.04) translate3d(-1%,0,0)}to{transform:scale(1.12) translate3d(1%,-1%,0)}}
-.stShow .vg{position:absolute;inset:0;
-  background:linear-gradient(90deg,rgba(10,10,10,.72) 0%,rgba(10,10,10,.24) 46%,transparent 74%)}
-.stShow .cap{position:absolute;left:clamp(22px,3.4vw,48px);top:50%;transform:translateY(-50%);color:#fff}
-.stShow .cap em{font-style:normal;font-family:var(--num);font-size:9.5px;letter-spacing:.26em;
-  color:rgba(255,255,255,.62);display:block;margin-bottom:12px}
-.stShow .cap b{display:block;font-weight:600;font-size:clamp(26px,4vw,58px);letter-spacing:-.045em;line-height:1}
-.stShow .cap span{display:block;margin-top:12px;font-size:13px;color:rgba(255,255,255,.76);max-width:34ch}
-.stShow .dots{position:absolute;right:clamp(20px,2.6vw,34px);bottom:20px;display:flex;gap:6px}
-.stShow .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.34);
-  transition:background .4s,transform .4s}
-.stShow .dots i.on{background:var(--coral);transform:scale(1.4)}
-.stGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;
-  margin-top:clamp(22px,3vh,38px)}
-.stTile{position:relative;aspect-ratio:3/4;border-radius:9px;overflow:hidden;cursor:none;background:#e8e4dd}
-.stTile img{width:100%;height:100%;object-fit:cover;filter:grayscale(.3);
+/* ★ 2026-09-20 (2) — 16:11 로 낮췄더니 인물이 잘렸다. 예전 타일처럼 3:4 세로로 전신이 보이게 되돌린다. */
+.stCatPh{display:block;aspect-ratio:3/4;border-radius:9px;overflow:hidden;background:#e8e4dd}
+.stCatPh img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 20%;filter:grayscale(.3);
   transition:transform 1.1s var(--ease),filter 1.1s var(--ease)}
-.stTile:hover img{transform:scale(1.07);filter:grayscale(0)}
-.stTile b{position:absolute;left:14px;bottom:13px;color:#fff;font-size:14px;font-weight:500;
-  letter-spacing:-.03em;text-shadow:0 2px 18px rgba(0,0,0,.6)}
-/* 영문명은 평소엔 숨어 있다가 올려다볼 때만 따라 올라온다 */
-.stTile .stEn{
-  position:absolute;left:14px;bottom:13px;color:rgba(255,255,255,.66);
-  font-family:var(--num);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
-  opacity:0;transform:translateY(6px);transition:.5s var(--ease);
-  text-shadow:0 2px 14px rgba(0,0,0,.7);
+.stCat:hover .stCatPh img,.stCat:focus-visible .stCatPh img{transform:scale(1.07);filter:grayscale(0)}
+.stCatMeta{position:relative;display:flex;align-items:flex-start;gap:12px;margin-top:12px;
+  padding:13px 2px 4px;border-top:1px solid var(--pink-3)}
+/* 위쪽 선 위로 코랄 선이 차오른다 */
+.stCatMeta::before{
+  content:"";position:absolute;left:0;right:0;top:-1px;height:1.5px;background:var(--coral);
+  transform:scaleX(0);transform-origin:left;transition:transform .7s var(--ease);
 }
-.stTile:hover b{transform:translateY(-15px);transition:transform .5s var(--ease)}
-.stTile:hover .stEn{opacity:1;transform:translateY(0)}
-.stTile b{transition:transform .5s var(--ease)}
-/* 코어 / 원형 구분 띠 — 그리드 한 줄을 통째로 쓴다 */
-.stBand{
-  grid-column:1/-1;display:flex;align-items:baseline;gap:12px;
-  padding:clamp(10px,1.4vh,18px) 2px 4px;
+.stCat:hover .stCatMeta::before,.stCat:focus-visible .stCatMeta::before{transform:scaleX(1)}
+.stCat:focus-visible{outline:none}
+.stCatNo{
+  flex:none;padding-top:3px;font-family:var(--num);font-size:10.5px;letter-spacing:.08em;
+  color:var(--pink-2);font-feature-settings:'tnum' 1;transition:color .4s var(--ease);
 }
-.stBand:first-child{padding-top:0}
-.stBand b{font-size:15px;font-weight:600;letter-spacing:-.03em}
-.stBand em{font-style:normal;font-family:var(--num);font-size:10px;letter-spacing:.16em;
-  color:var(--pink-2)}
-.stBand span{margin-left:auto;font-size:12px;color:var(--pink-2);letter-spacing:-.01em}
-
+.stCatTx{display:flex;flex-direction:column;gap:5px;min-width:0;transition:transform .6s var(--ease)}
+.stCatTx b{font-size:clamp(14.5px,1.2vw,16.5px);font-weight:600;letter-spacing:-.035em;line-height:1.2;white-space:nowrap}
+.stCatTx em{
+  font-style:normal;font-family:var(--num);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--pink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.stCatGo{
+  margin-left:auto;flex:none;width:16px;height:16px;margin-top:2px;color:var(--pink-0);
+  opacity:0;transform:translate(-6px,6px);transition:opacity .45s var(--ease),transform .6s var(--ease);
+}
+.stCatGo svg{display:block;width:100%;height:100%}
+.stCat:hover .stCatNo,.stCat:focus-visible .stCatNo{color:var(--coral)}
+.stCat:hover .stCatTx,.stCat:focus-visible .stCatTx{transform:translateX(4px)}
+.stCat:hover .stCatGo,.stCat:focus-visible .stCatGo{opacity:1;transform:none}
+@keyframes stCatIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media (max-width:1024px){ .stGroupRow{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:720px){
+  .stGroupRow{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stGroupHead span{display:none}
+  .stCatGo{opacity:.35;transform:none}   /* 터치 화면엔 hover 가 없으니 화살표를 옅게 둔다 */
+}
+@media (prefers-reduced-motion:reduce){ .stCat{animation:none} }
 /* 스타일 상세 */
 .stHero{position:relative;min-height:clamp(320px,52vh,520px);display:flex;align-items:flex-end;
   overflow:hidden;border-radius:12px;background:#e8e4dd}
@@ -77,30 +77,97 @@
   border-bottom:1px solid var(--pink-3)}
 .stAbout dt{font-size:12.5px;color:var(--pink-2)}
 .stAbout dd{font-size:13px;text-align:right;letter-spacing:-.02em}
-.infFeed{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.infFeed{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.acctModal .infFeed{grid-template-columns:repeat(5,1fr)}
 .infC{background:#fff;border:1px solid var(--pink-3);border-radius:9px;overflow:hidden}
-.infC .im{aspect-ratio:1;overflow:hidden;background:#e8e4dd}
+.infC .im{aspect-ratio:2/3;overflow:hidden;background:#e8e4dd}
 .infC .im img{width:100%;height:100%;object-fit:cover;filter:grayscale(.2);
   transition:transform 1s var(--ease)}
 .infC:hover .im img{transform:scale(1.06)}
-.infC .bd{padding:16px 18px;display:flex;align-items:center;gap:11px}
-.infC .av{width:32px;height:32px;border-radius:50%;background:var(--pink-3);flex:0 0 auto;
-  display:grid;place-items:center;font-size:10px;color:var(--pink-1);text-align:center;line-height:1;margin-top:0}
-.infC .bd b{display:block;font-size:14.5px;font-weight:500}
-.infC .bd span:not(.av){display:block;font-size:12px;color:var(--pink-2);margin-top:3px}
+/* 아이템 카테고리 (2026-09-23) — 전체/아우터/상의/하의/원피스/신발 */
+.itCats{display:flex;flex-wrap:wrap;align-items:center;gap:4px 22px;margin:0 0 20px}
+.itCat{padding:4px 0;border:0;background:none;color:#999;font-size:13.5px;font-weight:500;
+  letter-spacing:-.02em;cursor:pointer;transition:color .15s ease}
+.itCat:hover{color:#555}
+.itCat.on{color:#111;font-weight:700}
 .itGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px}
-.itC{background:#fff;border:1px solid var(--pink-3);border-radius:9px;overflow:hidden;cursor:none}
-.itC .im{aspect-ratio:1;overflow:hidden;position:relative;
+.itGrid .itemCard[hidden]{display:none}
+/* ── 아이템 카드(공용) — 스타일 상세('이 스타일의 아이템')와 마이페이지('오늘의 추천'),
+   찜 목록 모달까지 전부 같은 마크업(itemCard/itemFig/itemBody)과 이 CSS를 그대로 쓴다.
+   화면마다 비율 · 여백을 따로 덮어쓰지 않는다 — 완전히 같은 카드여야 하니까. */
+.itemCard{background:#fff;border:1px solid var(--pink-3);border-radius:9px;overflow:hidden;
+  cursor:pointer;transition:transform .35s var(--ease),border-color .3s}
+.itemCard[data-product-url]:focus-visible{outline:2px solid var(--coral);outline-offset:3px}
+.itemCard:hover{transform:translateY(-4px);border-color:var(--pink-2-line)}
+.itemFig{aspect-ratio:1;overflow:hidden;position:relative;
   background:linear-gradient(150deg,#efe9df 0%,#e4ddd2 42%,#d8cfc0 68%,#ffb49c 100%)}
-.itC .im img{width:100%;height:100%;object-fit:cover;filter:grayscale(.24);
+.itemFig img{width:100%;height:100%;object-fit:cover;filter:grayscale(.24);
   transition:transform 1s var(--ease),filter 1s var(--ease)}
-.itC:hover .im img{transform:scale(1.06);filter:grayscale(0)}
-.itC .im u{position:absolute;left:10px;top:10px;background:rgba(255,255,255,.93);border-radius:99px;
-  padding:5px 10px;font-family:var(--num);font-size:9px;letter-spacing:.12em;color:var(--pink-0)}
-.itC .bd{padding:13px 15px}
-.itC .bd em{font-style:normal;font-family:var(--num);font-size:9.5px;letter-spacing:.16em;color:var(--pink-2)}
-.itC .bd b{display:block;margin-top:7px;font-size:13.5px;font-weight:500;letter-spacing:-.025em}
-.itC .bd span{display:block;margin-top:8px;font-family:var(--num);font-size:12.5px;
+.itemNoImage{width:100%;height:100%;display:grid;place-items:center;color:var(--pink-2);
+  font-size:12px;letter-spacing:.08em;background:linear-gradient(150deg,#f3eee7,#e5ded4)}
+.itemCard:hover .itemFig img{transform:scale(1.06);filter:grayscale(0)}
+.matchTag{position:absolute;left:9px;top:9px;background:rgba(10,10,10,.78);color:#fff;
+  font-family:var(--num);font-size:10px;letter-spacing:.02em;padding:4px 9px;border-radius:999px;z-index:2}
+/* 찜 — 원형 배경 없이 사진 위에 하트만 올린다. 하트 안쪽은 불투명한 흰색으로 꽉 채우고,
+   높이는 왼쪽 'FEEDiT Pick!' 라벨과 같은 줄에 맞춘다(둘 다 top:9px · 높이 23px) */
+.likeBtn{position:absolute;right:9px;top:9px;z-index:3;width:26px;height:23px;
+  border:none;background:none;padding:0;display:grid;place-items:center;cursor:pointer;
+  transition:transform .25s var(--ease)}
+.likeBtn:hover{transform:scale(1.1)}
+.likeBtn svg{width:23px;height:23px;display:block;fill:#fff;stroke:none;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.28));transition:fill .2s}
+.likeBtn.on svg{fill:#e8352b}   /* 찜하면 빨간색 */
+.pickTag{position:absolute;left:9px;top:9px;z-index:2;display:inline-flex;align-items:center;height:23px;
+  background:var(--coral);color:#fff;
+  font-size:10.5px;font-weight:700;letter-spacing:.01em;padding:0 10px;border-radius:999px;
+  box-shadow:0 2px 8px rgba(255,107,74,.35)}
+.itemBody{padding:13px 15px}
+.itemBody .br{font-family:var(--num);font-size:9.5px;letter-spacing:.16em;color:var(--pink-2);
+  text-transform:uppercase;margin-bottom:6px}
+.itemBody .nm{font-size:13.5px;font-weight:500;letter-spacing:-.025em;margin-bottom:7px;line-height:1.35;
+  /* 상품명은 최대 두 줄 — 넘치면 둘째 줄 끝에 … . 한 줄짜리도 두 줄 높이를 잡아 카드 높이를 맞춘다 */
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;
+  min-height:calc(1.35em * 2);word-break:break-all}
+.itemBody .pr{font-family:var(--num);font-size:12.5px;font-weight:600;
   font-feature-settings:'tnum' 1,'zero' 0}
-.itMore{display:flex;justify-content:center;padding:34px 0 8px;
-  font-family:var(--num);font-size:10px;letter-spacing:.24em;color:var(--pink-2)}
+.itMoreWrap{display:flex;justify-content:center;padding:34px 0 8px}
+.itMore{font:inherit;font-size:12.5px;letter-spacing:-.01em;color:var(--pink-0);background:#fff;
+  border:1px solid var(--pink-2-line);border-radius:999px;padding:12px 30px;cursor:pointer;transition:.2s var(--ease)}
+.itMore:hover:not(:disabled){background:var(--pink-0);color:#fff;border-color:var(--pink-0)}
+.itMore:disabled{cursor:default;border-color:var(--pink-3);color:var(--pink-2);background:none;
+  font-family:var(--num);font-size:10.5px;letter-spacing:.18em}
+.itMore.retry{color:var(--coral);border-color:var(--coral)}
+.itState{grid-column:1/-1;min-height:180px;display:grid;place-items:center;text-align:center;
+  color:var(--pink-2);font-size:13px;line-height:1.7;border:1px dashed var(--pink-3);border-radius:9px}
+
+/* ── 이 스타일의 아이템 — 개수는 제목 옆에 작게, 오른쪽 자리는 정렬 드롭다운 ── */
+.stItemCount{margin-left:8px;font-family:var(--num);font-size:11px;font-weight:500;letter-spacing:.14em;color:var(--pink-2);vertical-align:middle}
+.stSortWrap{position:relative;display:inline-block;text-align:left}
+.stSortBtn{display:inline-flex;align-items:center;gap:10px;font:inherit;font-size:12.5px;color:var(--pink-0);
+  background:#fff;border:1px solid var(--pink-3);border-radius:999px;padding:8px 15px;cursor:pointer;transition:border-color .2s}
+.stSortBtn:hover,.stSortWrap.open .stSortBtn{border-color:var(--pink-1)}
+.stSortCaret{width:6px;height:6px;border-right:1.5px solid var(--pink-1);border-bottom:1.5px solid var(--pink-1);
+  transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s}
+.stSortWrap.open .stSortCaret{transform:rotate(-135deg)}
+.stSortMenu{display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:20;min-width:152px;
+  background:#fff;border:1px solid var(--pink-3);border-radius:12px;padding:6px;
+  box-shadow:0 14px 34px rgba(10,10,10,.14)}
+.stSortWrap.open .stSortMenu{display:block}
+.stSortRow{display:flex;align-items:center;gap:4px}
+/* 글자는 오른쪽 정렬, ⓘ 는 줄 맨 왼쪽 */
+.stSortOpt{flex:1;text-align:right;font:inherit;font-size:12.5px;color:var(--pink-1);background:none;border:none;
+  border-radius:8px;padding:9px 11px;cursor:pointer;transition:.18s}
+.stSortOpt:hover{background:rgba(10,10,10,.05);color:var(--pink-0)}
+.stSortOpt.on{color:var(--pink-0);font-weight:600}
+.stSortRow.hasInfo{position:relative}
+.stSortInfoBtn{flex:none;width:20px;height:20px;margin-left:7px;border:none;border-radius:50%;
+  background:var(--pink-2-line);color:#fff;font-family:var(--num);font-size:11px;font-weight:700;
+  line-height:1;cursor:pointer;transition:.18s}
+.stSortInfoBtn:hover,.stSortInfoBtn[aria-expanded="true"]{background:var(--pink-0)}
+/* 안내창 — 검은 말풍선. ⓘ 아래에서 왼쪽으로 펼쳐진다 */
+.stSortInfo{position:absolute;z-index:30;left:auto;right:calc(100% - 34px);top:calc(100% + 9px);
+  width:max-content;max-width:min(272px,74vw);
+  background:#101010;color:#fff;border-radius:12px;padding:13px 15px;
+  font-size:11.5px;line-height:1.7;letter-spacing:-.01em;box-shadow:0 16px 36px rgba(10,10,10,.28)}
+.stSortInfo::before{content:'';position:absolute;right:16px;top:-6px;width:13px;height:13px;
+  background:#101010;border-radius:2px;transform:rotate(45deg)}

@@ -4,12 +4,13 @@ from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlparse
 
 from collection.common.pipeline import BasePlatformPipeline
+from collection.common.schemas import CollectionResult
 
 from .collector import MusinsaCollector
 
 
 class MusinsaPipeline(BasePlatformPipeline):
-    SOURCE = "MUSINSA"
+    SOURCE_CODE = "MUSINSA"
 
     def collect(
         self,
@@ -17,13 +18,18 @@ class MusinsaPipeline(BasePlatformPipeline):
         target_type: str,
         target_url: str | None,
         params: dict,
-    ) -> dict:
+    ) -> CollectionResult:
+
         if not target_url:
             raise ValueError(
                 "MUSINSA target_url이 없습니다."
             )
 
-        target_type = (target_type or "").upper()
+        target_type = (
+            target_type
+            or ""
+        ).upper().strip()
+
         params = params or {}
 
         if target_type == "PRODUCT":
@@ -52,28 +58,36 @@ class MusinsaPipeline(BasePlatformPipeline):
         *,
         target_url: str,
         params: dict,
-    ) -> dict:
+    ) -> CollectionResult:
+
+        collect_options = params.get(
+            "collect_options",
+            True,
+        )
+
+        collect_reviews = params.get(
+            "collect_reviews",
+            True,
+        )
+
+        review_limit = int(
+            params.get(
+                "review_limit",
+                50,
+            )
+        )
+
         with MusinsaCollector() as collector:
             data = collector.collect_product(
                 target_url,
-                collect_options=params.get(
-                    "collect_options",
-                    True,
-                ),
-                collect_reviews=params.get(
-                    "collect_reviews",
-                    True,
-                ),
-                review_limit=int(
-                    params.get(
-                        "review_limit",
-                        50,
-                    )
-                ),
+                collect_options=collect_options,
+                collect_reviews=collect_reviews,
+                review_limit=review_limit,
             )
 
         product = data.get("product") or {}
         meta = data.get("meta") or {}
+
         goods_no = product.get("goods_no")
 
         if goods_no is None:
@@ -83,27 +97,29 @@ class MusinsaPipeline(BasePlatformPipeline):
 
         collected_at = datetime.now(
             timezone.utc
-        ).isoformat()
+        )
 
-        return {
-            "entity_type": "PRODUCT",
-            "source_entity_id": str(goods_no),
-            "source_url": (
+        return CollectionResult(
+            source_code=self.SOURCE_CODE,
+            entity_type="PRODUCT",
+            source_entity_id=str(goods_no),
+            source_url=(
                 meta.get("final_url")
                 or meta.get("request_url")
                 or target_url
             ),
-            "collected_at": collected_at,
-            "http_status": meta.get("http_status"),
-            "content_type": (
-                meta.get("content_type")
-                or "application/json"
-            ),
-            "payload": data,
-            "discovered_count": 1,
-            "success_count": 1,
-            "failure_count": 0,
-        }
+            collected_at=collected_at,
+            http_status=meta.get("http_status"),
+            payload=data,
+            discovered_count=1,
+            success_count=1,
+            failure_count=0,
+            metadata={
+                "collect_options": collect_options,
+                "collect_reviews": collect_reviews,
+                "review_limit": review_limit,
+            },
+        )
 
     # ============================================================
     # RANKING
@@ -114,7 +130,8 @@ class MusinsaPipeline(BasePlatformPipeline):
         *,
         target_url: str,
         params: dict,
-    ) -> dict:
+    ) -> CollectionResult:
+
         limit = params.get("limit")
 
         if limit is not None:
@@ -145,18 +162,36 @@ class MusinsaPipeline(BasePlatformPipeline):
             if limit is not None:
                 ranking_items = ranking_items[:limit]
 
-            products: list[dict] = []
-            errors: list[dict] = []
+            products = []
+            errors = []
 
-            for ranking_context in ranking_items:
+            total = len(ranking_items)
+
+            for index, ranking_context in enumerate(
+                ranking_items,
+                start=1,
+            ):
+                goods_no = ranking_context.get(
+                    "goods_no"
+                )
+
+                print(
+                    f"      상품 수집 "
+                    f"{index}/{total}"
+                    f" | goods_no={goods_no}"
+                )
+
                 try:
                     data = collector.collect_product(
-                        ranking_context["product_url"],
+                        ranking_context[
+                            "product_url"
+                        ],
                         ranking_context=ranking_context,
                         collect_options=collect_options,
                         collect_reviews=collect_reviews,
                         review_limit=review_limit,
                     )
+
                     products.append(data)
 
                 except Exception as exc:
@@ -165,22 +200,29 @@ class MusinsaPipeline(BasePlatformPipeline):
                             "rank": ranking_context.get(
                                 "rank"
                             ),
-                            "goods_no": ranking_context.get(
-                                "goods_no"
-                            ),
-                            "product_url": ranking_context.get(
-                                "product_url"
+                            "goods_no": goods_no,
+                            "product_url": (
+                                ranking_context.get(
+                                    "product_url"
+                                )
                             ),
                             "error_type": (
-                                exc.__class__.__name__
+                                type(exc).__name__
                             ),
                             "error_message": str(exc),
                         }
                     )
 
+                    print(
+                        f"      실패 "
+                        f"{index}/{total}"
+                        f" | goods_no={goods_no}"
+                        f" | {type(exc).__name__}"
+                    )
+
         collected_at = datetime.now(
             timezone.utc
-        ).isoformat()
+        )
 
         ranking_scope = self._parse_ranking_scope(
             target_url
@@ -190,44 +232,43 @@ class MusinsaPipeline(BasePlatformPipeline):
             "ranking": {
                 **ranking_scope,
                 "source_url": target_url,
-                "collected_at": collected_at,
+                "collected_at": (
+                    collected_at.isoformat()
+                ),
                 "discovered_count": len(
                     ranking_items
                 ),
-                "success_count": len(
-                    products
-                ),
-                "failure_count": len(
-                    errors
-                ),
+                "success_count": len(products),
+                "failure_count": len(errors),
             },
             "ranking_items": ranking_items,
             "products": products,
             "errors": errors,
         }
 
-        return {
-            "entity_type": "RANKING",
-            "source_entity_id": (
+        return CollectionResult(
+            source_code=self.SOURCE_CODE,
+            entity_type="RANKING",
+            source_entity_id=(
                 self._build_ranking_id(
                     ranking_scope
                 )
             ),
-            "source_url": target_url,
-            "collected_at": collected_at,
-            "http_status": None,
-            "content_type": "application/json",
-            "payload": payload,
-            "discovered_count": len(
+            source_url=target_url,
+            collected_at=collected_at,
+            payload=payload,
+            discovered_count=len(
                 ranking_items
             ),
-            "success_count": len(
-                products
-            ),
-            "failure_count": len(
-                errors
-            ),
-        }
+            success_count=len(products),
+            failure_count=len(errors),
+            metadata={
+                "limit": limit,
+                "collect_options": collect_options,
+                "collect_reviews": collect_reviews,
+                "review_limit": review_limit,
+            },
+        )
 
     # ============================================================
     # RANKING SCOPE
@@ -237,6 +278,7 @@ class MusinsaPipeline(BasePlatformPipeline):
     def _parse_ranking_scope(
         target_url: str,
     ) -> dict:
+
         query = parse_qs(
             urlparse(target_url).query,
             keep_blank_values=True,
@@ -289,13 +331,11 @@ class MusinsaPipeline(BasePlatformPipeline):
     def _build_ranking_id(
         scope: dict,
     ) -> str:
+
         values = [
-            scope.get("period")
-            or "DAILY",
-            scope.get("gender")
-            or "A",
-            scope.get("category_code")
-            or "ALL",
+            scope.get("period") or "DAILY",
+            scope.get("gender") or "A",
+            scope.get("category_code") or "ALL",
             scope.get("age_band")
             or "AGE_BAND_ALL",
         ]

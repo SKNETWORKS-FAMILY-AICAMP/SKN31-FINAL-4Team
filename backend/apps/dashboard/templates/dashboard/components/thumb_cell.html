@@ -6,7 +6,8 @@
         <img src="{{ url|small_thumb }}" alt="" loading="lazy" decoding="async"
              width="{{ w }}" height="{{ h }}"
              style="width:{{ w }}px;height:{{ h }}px;object-fit:contain;display:block;"
-             onerror="this.style.visibility='hidden';">
+             onerror="this.hidden=true;this.nextElementSibling.hidden=false;">
+        <span hidden style="align-items:center;justify-content:center;width:{{ w }}px;height:{{ h }}px;font-size:9px;color:#9ca3af;">URL 오류</span>
     </a>
     {% else %}
     <span style="display:flex;align-items:center;justify-content:center;width:{{ w }}px;height:{{ h }}px;border-radius:5px;background:rgba(0,0,0,.06);font-size:10px;color:#9ca3af;">없음</span>

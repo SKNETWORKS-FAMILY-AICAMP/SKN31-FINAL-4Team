@@ -1,0 +1,10 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
+
+{% block content %}
+{% include "dashboard/components/page_header.html" %}
+<section class="panel">
+    {% include "dashboard/components/empty_state.html" %}
+</section>
+{% endblock %}

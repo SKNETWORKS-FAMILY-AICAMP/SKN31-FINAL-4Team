@@ -1,0 +1,109 @@
+# FEEDiT CI — main 에 올리거나 PR 을 열면 세 영역의 시험을 돌린다 (2026-09-27, OPERATIONS-001).
+#
+#   frontend  vite build + npm test (jsdom UI 시험 29건)
+#   chatbot   Python unittest + JS 시험(run.sh — frontend 의 jsdom 을 빌려 쓴다)
+#   backend   빈 Postgres(pgvector)에 migrate → 마이그레이션 누락 검사 → Django 시험
+#
+# ★ 배포는 하지 않는다. 프런트는 지금처럼 Vercel 이 main 을 받아 배포하고,
+#   API · 챗봇의 운영 배포는 서버 설정을 따로 확인한다(docs/DEPLOYMENT.md).
+#   여기서는 '올려도 되는 상태인가' 만 본다.
+# ★ 비밀 값이 필요 없다. 외부 API(OpenAI · RDS · S3)를 부르는 시험은 없다.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
+  chatbot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: ChatBot/requirements.txt
+      - name: 의존성
+        run: |
+          python -m pip install -r ChatBot/requirements.txt
+          npm ci --prefix frontend
+      - name: Python 시험
+        run: PYTHONPATH=ChatBot python -m unittest discover -s ChatBot/tests -p 'test_*.py'
+      - name: JS 시험
+        run: bash ChatBot/tests/run.sh
+
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        # 0032 마이그레이션이 pgvector 확장을 만든다
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: feedit
+          POSTGRES_PASSWORD: feedit
+          POSTGRES_DB: feedit
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U feedit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_NAME: feedit
+      DB_USER: feedit
+      DB_PASSWORD: feedit
+      DB_HOST: 127.0.0.1
+      DB_PORT: "5432"
+      # 시험 전용 값 — 운영 키가 아니다. settings.py 는 비어 있으면 기동을 멈춘다.
+      DJANGO_SECRET_KEY: ci-only-not-a-secret
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: backend/requirements-api.txt
+      - name: 의존성
+        # rapidfuzz · beautifulsoup4 — 시험이 수집 · 정규화 모듈(apps.core.services.source_ingestion)을
+        # 불러오는데, API 이미지(requirements-api.txt)에는 없다. 크롤 서버에만 있는 의존성이다.
+        run: python -m pip install -r requirements-api.txt rapidfuzz beautifulsoup4
+      - name: 마이그레이션
+        run: python manage.py migrate --noinput
+      - name: 마이그레이션 누락 검사
+        run: python manage.py makemigrations --check --dry-run
+      - name: Django 시험
+        run: python manage.py test apps --noinput

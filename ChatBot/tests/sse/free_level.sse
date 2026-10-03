@@ -1,0 +1,75 @@
+event: status
+data: {"stage": "lexicon"}
+
+event: status
+data: {"stage": "metric"}
+
+event: text
+data: {"delta": "<b>"}
+
+event: text
+data: {"delta": "발레코"}
+
+event: text
+data: {"delta": "어"}
+
+event: text
+data: {"delta": "</b>"}
+
+event: text
+data: {"delta": "의 트"}
+
+event: text
+data: {"delta": "렌드 "}
+
+event: text
+data: {"delta": "온도는"}
+
+event: text
+data: {"delta": " "}
+
+event: text
+data: {"delta": "<b>"}
+
+event: text
+data: {"delta": "86점"}
+
+event: text
+data: {"delta": " · "}
+
+event: text
+data: {"delta": "과열"}
+
+event: text
+data: {"delta": "</b>"}
+
+event: text
+data: {"delta": "입니다"}
+
+event: text
+data: {"delta": ". 언"}
+
+event: text
+data: {"delta": "급 3"}
+
+event: text
+data: {"delta": "33건"}
+
+event: text
+data: {"delta": " 기준"}
+
+event: text
+data: {"delta": "입니다"}
+
+event: text
+data: {"delta": "."}
+
+event: report
+data: {"ok": true, "kind": "general", "intent": "metric.level", "question": "발레코어 어때?", "as_of": {"metric": "2026-09-01", "generated_at": "2026-09-02T16:16:45+09:00"}, "metric_version": "feedit-l2-v2-shadow", "headline": "<b>발레코어</b>의 트렌드 온도는 <b>86점 · 과열</b>입니다. 언급 333건 기준입니다.", "terms": [{"canonical": "발레코어", "facet": "style", "facet_name": "스타일", "via": "free", "coverage": {"has_latest": true, "can_level": true, "can_direction": false, "can_delta14": true, "can_assoc": true, "can_sentiment": true, "thin_sample": false, "stale_days": 0, "obs7": 5, "obs14": 6, "obs28": 6, "reasons": [["SHORT_HISTORY", "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."], ["THIN_SENTIMENT", "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."]]}, "available": true, "observed_on": "2026-09-01", "raw_count": 333, "temp": 86, "temp_band": "과열", "pct_rank": null, "evidence": [{"source": "네이버", "kind": "블로그", "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 남겨두면서 실루엣을 과감하게 바꾼 점이 가장 흥미롭게 느껴졌어요.”...", "at": "20260902"}]}], "modifiers": [], "notes": [{"code": "SHORT_HISTORY", "term": "발레코어", "message": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."}, {"code": "THIN_SENTIMENT", "term": "발레코어", "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."}], "locked": ["associations", "level", "momentum", "sentiment", "share_pct", "sources"], "plan": "FREE", "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준", "upsell": {"type": "upsell", "plan": "PRO", "locked": ["associations", "level", "momentum", "sentiment", "share_pct", "sources"], "why": "이 질문에 더 답하려면 구매의향 · 연관어 · 플랫폼별 분해가 필요합니다.", "unlocks": ["구매의향", "연관어", "플랫폼별 분해", "점유율", "수준 분해", "모멘텀"]}}
+
+event: actions
+data: [{"label": "Style 탭에서 자세히", "type": "view", "view": "style", "style": "발레코어"}, {"label": "지표로 보기", "type": "view", "view": "trend", "part": "temp", "keyword": "발레코어"}]
+
+event: done
+data: {"ok": true, "intent": "metric.level", "as_of": {"metric": "2026-09-01", "generated_at": "2026-09-02T16:16:45+09:00"}}
+

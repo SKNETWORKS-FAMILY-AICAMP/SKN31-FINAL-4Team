@@ -1,0 +1,2970 @@
+{
+ "level": {
+  "ok": true,
+  "kind": "general",
+  "intent": "metric.level",
+  "question": "발레코어 어때?",
+  "as_of": {
+   "metric": "2026-09-01",
+   "generated_at": "2026-09-02T17:36:36+09:00"
+  },
+  "metric_version": "feedit-l2-v2-shadow",
+  "headline": "<b>발레코어</b>의 트렌드 온도는 <b>86점 · 과열</b>입니다. 언급 333건 기준입니다.",
+  "terms": [
+   {
+    "canonical": "발레코어",
+    "facet": "style",
+    "facet_name": "스타일",
+    "via": "free",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": false,
+     "can_delta14": true,
+     "can_assoc": true,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 5,
+     "obs14": 6,
+     "obs28": 6,
+     "reasons": [
+      [
+       "SHORT_HISTORY",
+       "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+      ],
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 333,
+    "temp": 86,
+    "temp_band": "과열",
+    "pct_rank": null,
+    "level": 75.97442650406038,
+    "momentum": 99.99999680812233,
+    "share_pct": null,
+    "sources": [
+     {
+      "code": "musinsa",
+      "name": "무신사",
+      "raw_count": 125,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "zigzag",
+      "name": "지그재그",
+      "raw_count": 63,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "kream",
+      "name": "크림",
+      "raw_count": 60,
+      "temp": 94,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "ably",
+      "name": "에이블리",
+      "raw_count": 59,
+      "temp": 95,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "naver",
+      "name": "네이버",
+      "raw_count": 25,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "youtube",
+      "name": "유튜브",
+      "raw_count": 1,
+      "temp": 23,
+      "observed_on": "2026-09-01"
+     }
+    ],
+    "associations": [
+     {
+      "canonical": "아디다스",
+      "facet": "brand",
+      "facet_name": "브랜드",
+      "co_count": 42,
+      "lift": 16.042962962962964,
+      "score": 100,
+      "is_new": true
+     }
+    ],
+    "sentiment": {
+     "index": 50,
+     "n_total": 1,
+     "pos_pct": 100.0,
+     "neg_pct": 0.0,
+     "top_pos": "considering",
+     "top_neg": null
+    },
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 남겨두면서 실루엣을 과감하게 바꾼 점이 가장 흥미롭게 느껴졌어요.”...",
+      "at": "20260902"
+     },
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "더현대 서울 발레 팝업 후기｜취발러 당일입장 방문·구매 후기. 이 팝업에서는 메시아, 포타, 디아트레 세 브랜드의 발레웨어와 발레코어룩을 한자리에서 직접 볼 수 있었어요. 저는 발레를 시작한 지 얼마 안 된 취발러라 평소 온라인으로만 보던 발레복을 직접 입어보고...",
+      "at": "20260902"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "제니 아디다스 발레코어 메리제인 슈즈, 저렴하게 구매하는 방법!! (+초특가 정보). 제니 발레코어 아디다스 메리제인 슈즈 5만원대에 구매하는 법   바로 직전 모델인데, 이번에 나온 신상과 비슷하면서, 조금 더 무난한 ...",
+      "at": "2026-09-01T13:03:44Z"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "힙한 발레코어 신발! 윤승아 크록스. 윤승아 김무열 커플 신발 추천! 2만 보 걸어도 발 편한 1등 발레 플랫 크록스 커스텀 정보 배우 윤승아가 디즈니랜드 여행에서 김무열과 ...",
+      "at": "2026-09-01T09:00:10Z"
+     }
+    ]
+   }
+  ],
+  "modifiers": [],
+  "notes": [
+   {
+    "code": "SHORT_HISTORY",
+    "term": "발레코어",
+    "message": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "발레코어",
+    "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "locked": [],
+  "plan": "PRO",
+  "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준",
+  "blocks": [
+   {
+    "type": "rank",
+    "slot": "left",
+    "title": "발레코어",
+    "meta": "스타일 · 2026-09-01",
+    "rows": [
+     {
+      "k": "트렌드 온도",
+      "small": "과열",
+      "v": "86점",
+      "up": true
+     },
+     {
+      "k": "언급량",
+      "small": "6개 소스",
+      "v": "333건",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "bars",
+    "slot": "right",
+    "title": "플랫폼별 언급량",
+    "meta": "2026-09-01",
+    "items": [
+     {
+      "k": "무신사",
+      "w": 100,
+      "v": "125"
+     },
+     {
+      "k": "지그재그",
+      "w": 50,
+      "v": "63"
+     },
+     {
+      "k": "크림",
+      "w": 48,
+      "v": "60"
+     },
+     {
+      "k": "에이블리",
+      "w": 47,
+      "v": "59"
+     },
+     {
+      "k": "네이버",
+      "w": 20,
+      "v": "25"
+     },
+     {
+      "k": "유튜브",
+      "w": 1,
+      "v": "1"
+     }
+    ]
+   },
+   {
+    "type": "quotes",
+    "slot": "right",
+    "title": "원문 근거",
+    "meta": "4건",
+    "items": [
+     {
+      "src": "네이버",
+      "kind": "블로그",
+      "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 "
+     },
+     {
+      "src": "네이버",
+      "kind": "블로그",
+      "body": "더현대 서울 발레 팝업 후기｜취발러 당일입장 방문·구매 후기. 이 팝업에서는 메시아, 포타, 디아트레 세 브랜드의 발레웨어와 발레코어룩을 한자리에서 직접 볼 수 있었어요. 저는 발레를 시작한 지 얼마 안 된 취발러라"
+     },
+     {
+      "src": "유튜브",
+      "kind": "영상 설명",
+      "body": "제니 아디다스 발레코어 메리제인 슈즈, 저렴하게 구매하는 방법!! (+초특가 정보). 제니 발레코어 아디다스 메리제인 슈즈 5만원대에 구매하는 법   바로 직전 모델인데, 이번에 나온 신상과 비슷하면서, 조금 더 무"
+     }
+    ]
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "nlu": {
+   "intent": "metric.level",
+   "source": "rule",
+   "confidence": 1.0,
+   "rule_intent": "metric.level"
+  }
+ },
+ "level_free": {
+  "ok": true,
+  "kind": "general",
+  "intent": "metric.level",
+  "question": "발레코어 어때?",
+  "as_of": {
+   "metric": "2026-09-01",
+   "generated_at": "2026-09-02T17:36:36+09:00"
+  },
+  "metric_version": "feedit-l2-v2-shadow",
+  "headline": "<b>발레코어</b>의 트렌드 온도는 <b>86점 · 과열</b>입니다. 언급 333건 기준입니다.",
+  "terms": [
+   {
+    "canonical": "발레코어",
+    "facet": "style",
+    "facet_name": "스타일",
+    "via": "free",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": false,
+     "can_delta14": true,
+     "can_assoc": true,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 5,
+     "obs14": 6,
+     "obs28": 6,
+     "reasons": [
+      [
+       "SHORT_HISTORY",
+       "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+      ],
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 333,
+    "temp": 86,
+    "temp_band": "과열",
+    "pct_rank": null,
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 남겨두면서 실루엣을 과감하게 바꾼 점이 가장 흥미롭게 느껴졌어요.”...",
+      "at": "20260902"
+     }
+    ]
+   }
+  ],
+  "modifiers": [],
+  "notes": [
+   {
+    "code": "SHORT_HISTORY",
+    "term": "발레코어",
+    "message": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "발레코어",
+    "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "locked": [
+   "associations",
+   "level",
+   "momentum",
+   "sentiment",
+   "share_pct",
+   "sources"
+  ],
+  "plan": "FREE",
+  "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준",
+  "upsell": {
+   "type": "upsell",
+   "plan": "PRO",
+   "locked": [
+    "associations",
+    "level",
+    "momentum",
+    "sentiment",
+    "share_pct",
+    "sources"
+   ],
+   "why": "이 질문에 더 답하려면 구매의향 · 연관어 · 플랫폼별 분해가 필요합니다.",
+   "unlocks": [
+    "구매의향",
+    "연관어",
+    "플랫폼별 분해",
+    "점유율",
+    "수준 분해",
+    "모멘텀"
+   ]
+  },
+  "blocks": [
+   {
+    "type": "rank",
+    "slot": "left",
+    "title": "발레코어",
+    "meta": "스타일 · 2026-09-01",
+    "rows": [
+     {
+      "k": "트렌드 온도",
+      "small": "과열",
+      "v": "86점",
+      "up": true
+     },
+     {
+      "k": "언급량",
+      "small": "",
+      "v": "333건",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "quotes",
+    "slot": "right",
+    "title": "원문 근거",
+    "meta": "1건",
+    "items": [
+     {
+      "src": "네이버",
+      "kind": "블로그",
+      "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 "
+     }
+    ]
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   },
+   {
+    "type": "upsell",
+    "slot": "right",
+    "title": "더 볼 수 있는 것",
+    "meta": "PRO",
+    "why": "이 질문에 더 답하려면 구매의향 · 연관어 · 플랫폼별 분해가 필요합니다.",
+    "unlocks": [
+     "구매의향",
+     "연관어",
+     "플랫폼별 분해",
+     "점유율"
+    ]
+   }
+  ],
+  "nlu": {
+   "intent": "metric.level",
+   "source": "rule",
+   "confidence": 1.0,
+   "rule_intent": "metric.level"
+  }
+ },
+ "direction": {
+  "ok": true,
+  "kind": "general",
+  "intent": "metric.direction",
+  "question": "티셔츠 꺾였어?",
+  "as_of": {
+   "metric": "2026-09-01",
+   "generated_at": "2026-09-02T17:36:36+09:00"
+  },
+  "metric_version": "feedit-l2-v2-shadow",
+  "headline": "<b>티셔츠</b>는 <b>완만한 상승</b>입니다. 최근 7일 평균이 4주 평균의 1.41배입니다.",
+  "terms": [
+   {
+    "canonical": "티셔츠",
+    "facet": "item",
+    "facet_name": "아이템",
+    "via": "free",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": true,
+     "can_delta14": true,
+     "can_assoc": true,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 7,
+     "obs14": 14,
+     "obs28": 28,
+     "reasons": [
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 4건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 659,
+    "temp": 88,
+    "temp_band": "과열",
+    "pct_rank": null,
+    "level": 84.97186992441856,
+    "momentum": 92.03339012618942,
+    "share_pct": null,
+    "direction": {
+     "ratio": 1.41,
+     "label": "완만한 상승",
+     "tone": "up",
+     "ma7": 44.24,
+     "ma28": 31.42
+    },
+    "sources": [
+     {
+      "code": "musinsa",
+      "name": "무신사",
+      "raw_count": 276,
+      "temp": 100,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "ably",
+      "name": "에이블리",
+      "raw_count": 160,
+      "temp": 100,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "kream",
+      "name": "크림",
+      "raw_count": 140,
+      "temp": 99,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "zigzag",
+      "name": "지그재그",
+      "raw_count": 67,
+      "temp": 99,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "musinsa_used",
+      "name": "무신사 유즈드",
+      "raw_count": 11,
+      "temp": 100,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "youtube",
+      "name": "유튜브",
+      "raw_count": 3,
+      "temp": 70,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "naver",
+      "name": "네이버",
+      "raw_count": 2,
+      "temp": 63,
+      "observed_on": "2026-09-01"
+     }
+    ],
+    "associations": [
+     {
+      "canonical": "셔츠",
+      "facet": "item",
+      "facet_name": "아이템",
+      "co_count": 33,
+      "lift": 1.9824091332712024,
+      "score": 100,
+      "is_new": false
+     },
+     {
+      "canonical": "코튼",
+      "facet": "material",
+      "facet_name": "소재",
+      "co_count": 20,
+      "lift": 4.372526851328435,
+      "score": 100,
+      "is_new": false
+     },
+     {
+      "canonical": "니트",
+      "facet": "material",
+      "facet_name": "소재",
+      "co_count": 33,
+      "lift": 3.143534482758621,
+      "score": 0,
+      "is_new": false
+     }
+    ],
+    "sentiment": {
+     "index": 52,
+     "n_total": 4,
+     "pos_pct": 100.0,
+     "neg_pct": 0.0,
+     "top_pos": "buy_done",
+     "top_neg": null
+    },
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "여자 옷 추천 당일발송 도착보장 [애니원모어] [덤브 스웨이드 블루..... 스웨이드 소재감도 부드러워서 나시나 기본 티셔츠, 반바지 어디에나 매치하기 딱이더라고요! 얼리 어텀 연합전 30% 할인 쿠폰까지 적용해서 특가로 살 수 있으니 가을 아우터 찾으시는 분들은 완전...",
+      "at": "20260901"
+     },
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "아디다스 Stadium 루스 핏 롱 슬리브 티셔츠 편안한 착용감으로 일상 ..... 최근에 패션 브랜드들이 품질 관리가 중요한데, 아디다스는 그 부분에 있어 믿음직하더라고요. 제품 번호도 확인해보니, 신상품이라 그런지 품질이 우수할 것 같은 느낌이었어요. 사실 이 가격에 이렇게...",
+      "at": "20260901"
+     },
+     {
+      "source": "유튜브",
+      "kind": "댓글",
+      "body": "✅ 할인링크 : 전체 착장 제품은 제 유튜브 프로필 링크 \"제품 구매정보\"에서 쉽게 확인 가능합니다!  ✅ 코디정보 [신체스펙 : 169cm / 60kg] 🔹LOOK1) 드로우핏 고티에 오버사이즈드 체크 셔츠 NAVY M 르아르 소프트 유넥 이너 티셔츠 [그레이] M 애습 커브드 와이드 데님 - 중청 M 드로우핏 워싱 레더 폴딩 토트백 [WASHED BROWN] 킨치 KAT - 835 (a) 270 카시오 MTP-1183E-7",
+      "at": "2026-09-01T13:34:11Z"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "가을 코디 시작은 체크셔츠가 딱임. ✅ 할인링크 : 전체 착장 제품은 제 유튜브 프로필 링크 \"제품 구매정보\"에서 쉽게 확인 가능합니다!  ✅ 코디정보 [신체스펙 : 169cm / 60kg] 🔹LOOK1) 드로우핏 고티에 오버사이즈드 체크 셔츠 NAVY M 르아르 소프트 유넥 이너 티셔츠 [그레이] M 애습 커브드 와이드 데님 - 중청 M 드로우핏 워싱 레더 폴딩 토트백 [WASHED BROWN] 킨치 KAT - 835 (a)",
+      "at": "2026-09-01T13:33:57Z"
+     },
+     {
+      "source": "무신사",
+      "kind": "product_review",
+      "body": "티셔츠 프린팅이 과하지 않아서 좋았어요! 소매기장도 적당한길이여서 팔뚝이 얇아 보여 좋더라구요 기장감도 살짝 크롭한듯 허리선에 딱 맞게 예쁘게 제작 되어서 다리길이도 길어보이고 좋습니다!! 무엇보다 티셔츠가 귀여워요! 티셔츠 프린팅이 과하지 않아서 좋았어요! 소매기장도 적당한길이여서 팔뚝이 얇아 보여 좋더라구요 기장감도 살짝 크롭한듯 허리선에 딱 맞게 예쁘게 제작 되어서 다리길이도 길어보이고 좋습니다!! 무엇보다 티셔츠가 귀여",
+      "at": "2026-08-24"
+     }
+    ]
+   }
+  ],
+  "modifiers": [],
+  "notes": [
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "티셔츠",
+    "message": "구매의향 표본이 4건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "locked": [],
+  "plan": "PRO",
+  "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준",
+  "blocks": [
+   {
+    "type": "kpis",
+    "slot": "full",
+    "items": [
+     {
+      "k": "방향",
+      "v": "완만한 상승",
+      "unit": "",
+      "note": "최근 7일 대 4주",
+      "up": true
+     },
+     {
+      "k": "7일 / 4주",
+      "v": "1.41",
+      "unit": "배",
+      "note": "1보다 크면 오르는 중",
+      "up": true
+     },
+     {
+      "k": "7일 평균",
+      "v": "44.24",
+      "unit": "",
+      "note": "",
+      "up": true
+     },
+     {
+      "k": "4주 평균",
+      "v": "31.42",
+      "unit": "",
+      "note": "",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "rank",
+    "slot": "left",
+    "title": "티셔츠",
+    "meta": "아이템 · 2026-09-01",
+    "rows": [
+     {
+      "k": "트렌드 온도",
+      "small": "과열",
+      "v": "88점",
+      "up": true
+     },
+     {
+      "k": "언급량",
+      "small": "7개 소스",
+      "v": "659건",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "bars",
+    "slot": "right",
+    "title": "플랫폼별 언급량",
+    "meta": "2026-09-01",
+    "items": [
+     {
+      "k": "무신사",
+      "w": 100,
+      "v": "276"
+     },
+     {
+      "k": "에이블리",
+      "w": 58,
+      "v": "160"
+     },
+     {
+      "k": "크림",
+      "w": 51,
+      "v": "140"
+     },
+     {
+      "k": "지그재그",
+      "w": 24,
+      "v": "67"
+     },
+     {
+      "k": "무신사 유즈드",
+      "w": 4,
+      "v": "11"
+     },
+     {
+      "k": "유튜브",
+      "w": 1,
+      "v": "3"
+     },
+     {
+      "k": "네이버",
+      "w": 1,
+      "v": "2"
+     }
+    ]
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "구매의향 표본이 4건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "nlu": {
+   "intent": "metric.direction",
+   "source": "rule",
+   "confidence": 1.0,
+   "rule_intent": "metric.direction"
+  }
+ },
+ "assoc": {
+  "ok": true,
+  "kind": "general",
+  "intent": "metric.assoc",
+  "question": "데님이랑 같이 뜨는 거 뭐야?",
+  "as_of": {
+   "metric": "2026-09-01",
+   "generated_at": "2026-09-02T17:36:36+09:00"
+  },
+  "metric_version": "feedit-l2-v2-shadow",
+  "headline": "<b>데님</b>과 가장 자주 같이 나오는 말은 <b>셔츠</b>입니다.",
+  "terms": [
+   {
+    "canonical": "데님",
+    "facet": "material",
+    "facet_name": "소재",
+    "via": "free",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": true,
+     "can_delta14": true,
+     "can_assoc": true,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 7,
+     "obs14": 14,
+     "obs28": 27,
+     "reasons": [
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 185,
+    "temp": 86,
+    "temp_band": "과열",
+    "pct_rank": null,
+    "level": 77.61522106370283,
+    "momentum": 97.59616966192871,
+    "share_pct": null,
+    "direction": {
+     "ratio": 1.62,
+     "label": "가파른 상승",
+     "tone": "up",
+     "ma7": 40.46,
+     "ma28": 25.02
+    },
+    "sources": [
+     {
+      "code": "musinsa",
+      "name": "무신사",
+      "raw_count": 102,
+      "temp": 97,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "kream",
+      "name": "크림",
+      "raw_count": 33,
+      "temp": 88,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "ably",
+      "name": "에이블리",
+      "raw_count": 27,
+      "temp": 87,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "zigzag",
+      "name": "지그재그",
+      "raw_count": 18,
+      "temp": 85,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "youtube",
+      "name": "유튜브",
+      "raw_count": 3,
+      "temp": 70,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "naver",
+      "name": "네이버",
+      "raw_count": 2,
+      "temp": 63,
+      "observed_on": "2026-09-01"
+     }
+    ],
+    "associations": [
+     {
+      "canonical": "셔츠",
+      "facet": "item",
+      "facet_name": "아이템",
+      "co_count": 27,
+      "lift": 2.5773787486116255,
+      "score": 100,
+      "is_new": false
+     }
+    ],
+    "sentiment": {
+     "index": 50,
+     "n_total": 1,
+     "pos_pct": 100.0,
+     "neg_pct": 0.0,
+     "top_pos": "buy_done",
+     "top_neg": null
+    },
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "CJ온스타일 09/05(토) 22:30~드베르타 26FW 롱데님 셔링 스커트 /외. FAUX 스웨이드 자수 베스트 79900원 26FW 드베로타 이태리 COFIL사 얀 스페이스 다잉 가디건 149000원 먼저... 이런 보호무드 스타일 블라우스 찾으시면 고고씽~ &gt; 이제 스웨이드베스트 가을가을한 인조 스웨이드...",
+      "at": "20260902"
+     },
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "“172cm 큰 키인데 발은 245mm…” 권나라, 일자핏 청바지에 로퍼 신자 ..... 브라운 계열 스웨이드 재킷에 화이트 이너, 일자로 떨어지는 데님을 매치했는데 전체적으로 힘을 뺀... 브라운 스웨이드 재킷에 워싱이 들어간 블루 데님을 붙이면서 전체적으로 빈티지한 분위기가 살아났다....",
+      "at": "20260902"
+     },
+     {
+      "source": "유튜브",
+      "kind": "답글",
+      "body": "질문: 거울샷 디스 데님 어디꺼에요??❤ 답글: 에드윈 빈티지!",
+      "at": "2026-09-01T22:42:20Z"
+     },
+     {
+      "source": "유튜브",
+      "kind": "답글",
+      "body": "질문: 일반 스트레이트 나 세미와이드 데님  숏버전도 만들어주세요!! 답글: 이번에 잘되면...! 바로 갑니다!!",
+      "at": "2026-09-01T14:13:32Z"
+     },
+     {
+      "source": "무신사",
+      "kind": "product_review",
+      "body": "하트 포인트가 너무 귀여워서 입는 순간 분위기가 살아나는 티셔츠🫶🏻 심플하면서도 포인트가 있어서 데님이나 스커트 어디에나 잘 어울리고, 코디하기도 정말 쉬웠어요 원단도 부드럽고 착용감이 편해서 데일리룩으로 손이 자주 갈 것 같은 아이템❤️ 하트 포인트가 너무 귀여워서 입는 순간 분위기가 살아나는 티셔츠🫶🏻 심플하면서도 포인트가 있어서 데님이나 스커트 어디에나 잘 어울리고, 코디하기도 정말 쉬웠어요 원단도 부드럽고 착용감이 편해",
+      "at": "2026-08-04"
+     }
+    ]
+   }
+  ],
+  "modifiers": [],
+  "notes": [
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "데님",
+    "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "locked": [],
+  "plan": "PRO",
+  "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준",
+  "blocks": [
+   {
+    "type": "rank",
+    "slot": "left",
+    "title": "같이 언급되는 말",
+    "meta": "1개",
+    "rows": [
+     {
+      "k": "셔츠",
+      "small": "아이템",
+      "v": "27회",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "bars",
+    "slot": "right",
+    "title": "축별 비중",
+    "meta": "연관어 수",
+    "items": [
+     {
+      "k": "아이템",
+      "w": 100,
+      "v": "1"
+     }
+    ]
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "nlu": {
+   "intent": "metric.assoc",
+   "source": "rule",
+   "confidence": 1.0,
+   "rule_intent": "metric.assoc"
+  }
+ },
+ "sentiment": {
+  "ok": true,
+  "kind": "general",
+  "intent": "metric.sentiment",
+  "question": "청바지 사람들 반응 어때?",
+  "as_of": {
+   "metric": "2026-09-01",
+   "generated_at": "2026-09-02T17:36:36+09:00"
+  },
+  "metric_version": "feedit-l2-v2-shadow",
+  "headline": "<b>청바지</b>의 구매의향 지수는 <b>50점</b>입니다. 표본 1건 기준입니다.",
+  "terms": [
+   {
+    "canonical": "청바지",
+    "facet": "item",
+    "facet_name": "아이템",
+    "via": "token:청바지|unfold",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": true,
+     "can_delta14": true,
+     "can_assoc": true,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 7,
+     "obs14": 14,
+     "obs28": 27,
+     "reasons": [
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 22,
+    "temp": 50,
+    "temp_band": "따뜻함",
+    "pct_rank": null,
+    "level": 21.23925501432665,
+    "momentum": 92.39683809754406,
+    "share_pct": null,
+    "direction": {
+     "ratio": 1.42,
+     "label": "완만한 상승",
+     "tone": "up",
+     "ma7": 27.65,
+     "ma28": 19.53
+    },
+    "sources": [
+     {
+      "code": "musinsa",
+      "name": "무신사",
+      "raw_count": 22,
+      "temp": 85,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "youtube",
+      "name": "유튜브",
+      "raw_count": 15,
+      "temp": 90,
+      "observed_on": "2026-08-31"
+     },
+     {
+      "code": "naver",
+      "name": "네이버",
+      "raw_count": 7,
+      "temp": 82,
+      "observed_on": "2026-08-31"
+     }
+    ],
+    "associations": [
+     {
+      "canonical": "셔츠",
+      "facet": "item",
+      "facet_name": "아이템",
+      "co_count": 24,
+      "lift": 2.4961678096006454,
+      "score": 100,
+      "is_new": false
+     }
+    ],
+    "sentiment": {
+     "index": 50,
+     "n_total": 1,
+     "pos_pct": 100.0,
+     "neg_pct": 0.0,
+     "top_pos": "buy_done",
+     "top_neg": null
+    },
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "“172cm 큰 키인데 발은 245mm…” 권나라, 일자핏 청바지에 로퍼 신자 ..... 브라운 계열 스웨이드 재킷에 화이트 이너, 일자로 떨어지는 데님을 매치했는데 전체적으로 힘을 뺀... 브라운 스웨이드 재킷에 워싱이 들어간 블루 데님을 붙이면서 전체적으로 빈티지한 분위기가 살아났다....",
+      "at": "20260902"
+     },
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "여성 봄 가을 맨투맨 추천 레터링 프린팅 루즈핏 긴팔 티셔츠 데일..... 티셔츠를 선호하는 분 편안한 루즈핏을 좋아하는 분 봄 가을 데일리룩이 필요한 분 청바지와 쉽게... ▼▼▼ 여자 여성 봄 가을 레터링 프린팅 루즈핏 맨투맨 긴팔 티셔츠 라운드넥 데일리룩 캐주얼룩...",
+      "at": "20260831"
+     },
+     {
+      "source": "유튜브",
+      "kind": "자막",
+      "body": "후두둑 비가 조금씩 떨어지는 오늘 외근 있는 날이라 오전에 잠깐 회사에 들렀다가 짐만 챙겨 바로 외출했어요 비 때문에 공기가 한층 더 습해져서 가볍게 입을 수 있는 화이트 셔츠에 너무 길지도 짧지도 않은 적당한 길이감의 카프리팬츠 그리고 샌들 대신 양말에 로퍼 조합으로 깔끔히 차려입어봤습니다 여름과 가을에 걸쳐진 느낌으로 악세사리는 무겁게 옷은 가볍게 매칭했어요 점심 먹고 받은 동기들의 카톡에 잠시 멘탈이 나갈 뻔했지만 오늘은",
+      "at": "2026-09-01T11:30:22Z"
+     },
+     {
+      "source": "유튜브",
+      "kind": "답글",
+      "body": "질문: *무신사 큐레이터 활동의 일환으로 아래 링크를 통해 구매가 발생할 시 일정 수수료가 발생하며 채널 운영에 활용됩니다*  ✅오늘 영상에 키미가 입고 있는 제품은? [영상 속 제품]입니다!  *바로 구매가 가능한 링크!* 📌 *스토커즈 큐레이션 샵*📌 https://www.musinsa.com/curator/shop/eslYUy?curationId=01M0YJ1XXH559DYZD37C4CXF4J  🌟PRODUCT INFO🌟",
+      "at": "2026-09-01T11:12:18Z"
+     },
+     {
+      "source": "무신사",
+      "kind": "product_review",
+      "body": "슬랙스 청바지 면팬츠 다 잘 어울리네요 겨울에 코트랑 입어도 엄청 이쁠거 같아요 슬랙스 청바지 면팬츠 다 잘 어울리네요 겨울에 코트랑 입어도 엄청 이쁠거 같아요 ... 더보기",
+      "at": "2026-08-24"
+     }
+    ]
+   }
+  ],
+  "modifiers": [],
+  "notes": [
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "청바지",
+    "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "locked": [],
+  "plan": "PRO",
+  "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준",
+  "blocks": [
+   {
+    "type": "kpis",
+    "slot": "full",
+    "items": [
+     {
+      "k": "구매의향 지수",
+      "v": "50",
+      "unit": "점",
+      "note": "표본 1건",
+      "up": true
+     },
+     {
+      "k": "긍정 신호",
+      "v": "100.0",
+      "unit": "%",
+      "note": "buy_done",
+      "up": true
+     },
+     {
+      "k": "부정 신호",
+      "v": "0.0",
+      "unit": "%",
+      "note": "",
+      "up": false
+     }
+    ]
+   },
+   {
+    "type": "rank",
+    "slot": "left",
+    "title": "청바지",
+    "meta": "아이템 · 2026-09-01",
+    "rows": [
+     {
+      "k": "트렌드 온도",
+      "small": "따뜻함",
+      "v": "50점",
+      "up": true
+     },
+     {
+      "k": "언급량",
+      "small": "3개 소스",
+      "v": "22건",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "quotes",
+    "slot": "right",
+    "title": "원문 근거",
+    "meta": "5건",
+    "items": [
+     {
+      "src": "네이버",
+      "kind": "블로그",
+      "body": "“172cm 큰 키인데 발은 245mm…” 권나라, 일자핏 청바지에 로퍼 신자 ..... 브라운 계열 스웨이드 재킷에 화이트 이너, 일자로 떨어지는 데님을 매치했는데 전체적으로 힘을 뺀... 브라운 스웨이드 재킷에 "
+     },
+     {
+      "src": "네이버",
+      "kind": "블로그",
+      "body": "여성 봄 가을 맨투맨 추천 레터링 프린팅 루즈핏 긴팔 티셔츠 데일..... 티셔츠를 선호하는 분 편안한 루즈핏을 좋아하는 분 봄 가을 데일리룩이 필요한 분 청바지와 쉽게... ▼▼▼ 여자 여성 봄 가을 레터링 프린팅"
+     },
+     {
+      "src": "유튜브",
+      "kind": "자막",
+      "body": "후두둑 비가 조금씩 떨어지는 오늘 외근 있는 날이라 오전에 잠깐 회사에 들렀다가 짐만 챙겨 바로 외출했어요 비 때문에 공기가 한층 더 습해져서 가볍게 입을 수 있는 화이트 셔츠에 너무 길지도 짧지도 않은 적당한 길이"
+     }
+    ]
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "nlu": {
+   "intent": "metric.sentiment",
+   "source": "rule",
+   "confidence": 1.0,
+   "rule_intent": "metric.sentiment"
+  }
+ },
+ "platform": {
+  "ok": true,
+  "kind": "general",
+  "intent": "metric.platform",
+  "question": "발레코어 무신사에서 어때?",
+  "as_of": {
+   "metric": "2026-09-01",
+   "generated_at": "2026-09-02T17:36:36+09:00"
+  },
+  "metric_version": "feedit-l2-v2-shadow",
+  "headline": "<b>발레코어</b>의 트렌드 온도는 <b>86점 · 과열</b>입니다. 언급 333건 기준입니다.",
+  "terms": [
+   {
+    "canonical": "발레코어",
+    "facet": "style",
+    "facet_name": "스타일",
+    "via": "free",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": false,
+     "can_delta14": true,
+     "can_assoc": true,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 5,
+     "obs14": 6,
+     "obs28": 6,
+     "reasons": [
+      [
+       "SHORT_HISTORY",
+       "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+      ],
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 333,
+    "temp": 86,
+    "temp_band": "과열",
+    "pct_rank": null,
+    "level": 75.97442650406038,
+    "momentum": 99.99999680812233,
+    "share_pct": null,
+    "sources": [
+     {
+      "code": "musinsa",
+      "name": "무신사",
+      "raw_count": 125,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "zigzag",
+      "name": "지그재그",
+      "raw_count": 63,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "kream",
+      "name": "크림",
+      "raw_count": 60,
+      "temp": 94,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "ably",
+      "name": "에이블리",
+      "raw_count": 59,
+      "temp": 95,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "naver",
+      "name": "네이버",
+      "raw_count": 25,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "youtube",
+      "name": "유튜브",
+      "raw_count": 1,
+      "temp": 23,
+      "observed_on": "2026-09-01"
+     }
+    ],
+    "associations": [
+     {
+      "canonical": "아디다스",
+      "facet": "brand",
+      "facet_name": "브랜드",
+      "co_count": 42,
+      "lift": 16.042962962962964,
+      "score": 100,
+      "is_new": true
+     }
+    ],
+    "sentiment": {
+     "index": 50,
+     "n_total": 1,
+     "pos_pct": 100.0,
+     "neg_pct": 0.0,
+     "top_pos": "considering",
+     "top_neg": null
+    },
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 남겨두면서 실루엣을 과감하게 바꾼 점이 가장 흥미롭게 느껴졌어요.”...",
+      "at": "20260902"
+     },
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "더현대 서울 발레 팝업 후기｜취발러 당일입장 방문·구매 후기. 이 팝업에서는 메시아, 포타, 디아트레 세 브랜드의 발레웨어와 발레코어룩을 한자리에서 직접 볼 수 있었어요. 저는 발레를 시작한 지 얼마 안 된 취발러라 평소 온라인으로만 보던 발레복을 직접 입어보고...",
+      "at": "20260902"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "제니 아디다스 발레코어 메리제인 슈즈, 저렴하게 구매하는 방법!! (+초특가 정보). 제니 발레코어 아디다스 메리제인 슈즈 5만원대에 구매하는 법   바로 직전 모델인데, 이번에 나온 신상과 비슷하면서, 조금 더 무난한 ...",
+      "at": "2026-09-01T13:03:44Z"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "힙한 발레코어 신발! 윤승아 크록스. 윤승아 김무열 커플 신발 추천! 2만 보 걸어도 발 편한 1등 발레 플랫 크록스 커스텀 정보 배우 윤승아가 디즈니랜드 여행에서 김무열과 ...",
+      "at": "2026-09-01T09:00:10Z"
+     }
+    ]
+   }
+  ],
+  "modifiers": [],
+  "notes": [
+   {
+    "code": "SHORT_HISTORY",
+    "term": "발레코어",
+    "message": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "발레코어",
+    "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "locked": [],
+  "plan": "PRO",
+  "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준",
+  "blocks": [
+   {
+    "type": "rank",
+    "slot": "left",
+    "title": "발레코어",
+    "meta": "스타일 · 2026-09-01",
+    "rows": [
+     {
+      "k": "트렌드 온도",
+      "small": "과열",
+      "v": "86점",
+      "up": true
+     },
+     {
+      "k": "언급량",
+      "small": "6개 소스",
+      "v": "333건",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "table",
+    "slot": "right",
+    "title": "플랫폼별 온도",
+    "meta": "0–100",
+    "head": [
+     "플랫폼",
+     "",
+     "온도"
+    ],
+    "rows": [
+     {
+      "k": "무신사",
+      "w": 98,
+      "v": "98°",
+      "up": true
+     },
+     {
+      "k": "지그재그",
+      "w": 98,
+      "v": "98°",
+      "up": true
+     },
+     {
+      "k": "크림",
+      "w": 94,
+      "v": "94°",
+      "up": true
+     },
+     {
+      "k": "에이블리",
+      "w": 95,
+      "v": "95°",
+      "up": true
+     },
+     {
+      "k": "네이버",
+      "w": 98,
+      "v": "98°",
+      "up": true
+     },
+     {
+      "k": "유튜브",
+      "w": 23,
+      "v": "23°",
+      "up": false
+     }
+    ]
+   },
+   {
+    "type": "bars",
+    "slot": "right",
+    "title": "플랫폼별 언급량",
+    "meta": "2026-09-01",
+    "items": [
+     {
+      "k": "무신사",
+      "w": 100,
+      "v": "125"
+     },
+     {
+      "k": "지그재그",
+      "w": 50,
+      "v": "63"
+     },
+     {
+      "k": "크림",
+      "w": 48,
+      "v": "60"
+     },
+     {
+      "k": "에이블리",
+      "w": 47,
+      "v": "59"
+     },
+     {
+      "k": "네이버",
+      "w": 20,
+      "v": "25"
+     },
+     {
+      "k": "유튜브",
+      "w": 1,
+      "v": "1"
+     }
+    ]
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "nlu": {
+   "intent": "metric.platform",
+   "source": "rule",
+   "confidence": 1.0,
+   "rule_intent": "metric.platform"
+  }
+ },
+ "compare": {
+  "ok": true,
+  "kind": "general",
+  "intent": "metric.compare",
+  "question": "발레코어랑 고프코어 비교해줘",
+  "as_of": {
+   "metric": "2026-09-01",
+   "generated_at": "2026-09-02T17:36:36+09:00"
+  },
+  "metric_version": "feedit-l2-v2-shadow",
+  "headline": "<b>고프코어</b>의 트렌드 온도는 <b>55점 · 따뜻함</b>입니다. 언급 65건 기준입니다.",
+  "terms": [
+   {
+    "canonical": "고프코어",
+    "facet": "style",
+    "facet_name": "스타일",
+    "via": "free",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": false,
+     "can_delta14": true,
+     "can_assoc": false,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 5,
+     "obs14": 7,
+     "obs28": 7,
+     "reasons": [
+      [
+       "SHORT_HISTORY",
+       "최근 28일 중 관측이 7일뿐이라 오르는지 내리는지 말할 수 없습니다."
+      ],
+      [
+       "NO_ASSOC",
+       "아직 계산된 연관어가 없습니다."
+      ],
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 65,
+    "temp": 55,
+    "temp_band": "따뜻함",
+    "pct_rank": null,
+    "level": 25.53727356612112,
+    "momentum": 99.99983016834783,
+    "share_pct": null,
+    "sources": [
+     {
+      "code": "musinsa",
+      "name": "무신사",
+      "raw_count": 63,
+      "temp": 95,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "naver",
+      "name": "네이버",
+      "raw_count": 4,
+      "temp": 68,
+      "observed_on": "2026-08-31"
+     },
+     {
+      "code": "ably",
+      "name": "에이블리",
+      "raw_count": 2,
+      "temp": 24,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "youtube",
+      "name": "유튜브",
+      "raw_count": 1,
+      "temp": 16,
+      "observed_on": "2026-08-30"
+     }
+    ],
+    "sentiment": {
+     "index": 50,
+     "n_total": 1,
+     "pos_pct": 100.0,
+     "neg_pct": 0.0,
+     "top_pos": "considering",
+     "top_neg": null
+    },
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "김포현대아울렛 김현아 스컬프스토어 할인 캐피탈 니들스 엔지니어..... SCULP STORE 스트릿 웨어 매니아들 사이에서 스컬프 스토어는 단순한 옷가게가 아닙니다. &quot;아메카지·고프코어·컨템포러리패션 성지&quot;이자 해외의 감각적인 신진 브랜드를 가장 빠르게 소개하는 프리미엄...",
+      "at": "20260902"
+     },
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "오클리 덱스 선글라스 가스캔 OO9014-43. 단순한 스포츠 아이웨어를 넘어 스트릿 무드와 고프코어 감성을 완벽하게 아우르는 오클리의 대표 모델 가스캔을 소개합니다! 직선적이고 볼드한 스퀘어 프레임이 뿜어내는 강렬한 포스는 평범한...",
+      "at": "20260901"
+     },
+     {
+      "source": "유튜브",
+      "kind": "댓글",
+      "body": "LOOK2의 퍼플셔츠와 화이트진,휠라에샤페LX초코의 조합룩 너무예뻐서 몇번더다시봤어요❤❤  휠라에샤페의 과하지않으면서 슬림한유니크디자인! 그리고 힙한 고프코어스타일이 퍼플셔츠와 에샤페브라운과 딱 일치를이룬거같았어요👍👍😍 에샤페와 케쥬얼, 그리고 심플한정장느낌의대명사인 퍼플셔츠  모두잘소화해내는 디자인같아요!^^ 편안해보이면서도 꾸미지않는듯한멋스러움에 에샤페만의 독보적인 디자인과재질👍👍   한겨울패딩이나 여름나시룩과도 너무잘어울",
+      "at": "2026-08-30T18:11:16Z"
+     }
+    ]
+   },
+   {
+    "canonical": "발레코어",
+    "facet": "style",
+    "facet_name": "스타일",
+    "via": "free",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": false,
+     "can_delta14": true,
+     "can_assoc": true,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 5,
+     "obs14": 6,
+     "obs28": 6,
+     "reasons": [
+      [
+       "SHORT_HISTORY",
+       "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+      ],
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 333,
+    "temp": 86,
+    "temp_band": "과열",
+    "pct_rank": null,
+    "level": 75.97442650406038,
+    "momentum": 99.99999680812233,
+    "share_pct": null,
+    "sources": [
+     {
+      "code": "musinsa",
+      "name": "무신사",
+      "raw_count": 125,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "zigzag",
+      "name": "지그재그",
+      "raw_count": 63,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "kream",
+      "name": "크림",
+      "raw_count": 60,
+      "temp": 94,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "ably",
+      "name": "에이블리",
+      "raw_count": 59,
+      "temp": 95,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "naver",
+      "name": "네이버",
+      "raw_count": 25,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "youtube",
+      "name": "유튜브",
+      "raw_count": 1,
+      "temp": 23,
+      "observed_on": "2026-09-01"
+     }
+    ],
+    "associations": [
+     {
+      "canonical": "아디다스",
+      "facet": "brand",
+      "facet_name": "브랜드",
+      "co_count": 42,
+      "lift": 16.042962962962964,
+      "score": 100,
+      "is_new": true
+     }
+    ],
+    "sentiment": {
+     "index": 50,
+     "n_total": 1,
+     "pos_pct": 100.0,
+     "neg_pct": 0.0,
+     "top_pos": "considering",
+     "top_neg": null
+    },
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 남겨두면서 실루엣을 과감하게 바꾼 점이 가장 흥미롭게 느껴졌어요.”...",
+      "at": "20260902"
+     },
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "더현대 서울 발레 팝업 후기｜취발러 당일입장 방문·구매 후기. 이 팝업에서는 메시아, 포타, 디아트레 세 브랜드의 발레웨어와 발레코어룩을 한자리에서 직접 볼 수 있었어요. 저는 발레를 시작한 지 얼마 안 된 취발러라 평소 온라인으로만 보던 발레복을 직접 입어보고...",
+      "at": "20260902"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "제니 아디다스 발레코어 메리제인 슈즈, 저렴하게 구매하는 방법!! (+초특가 정보). 제니 발레코어 아디다스 메리제인 슈즈 5만원대에 구매하는 법   바로 직전 모델인데, 이번에 나온 신상과 비슷하면서, 조금 더 무난한 ...",
+      "at": "2026-09-01T13:03:44Z"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "힙한 발레코어 신발! 윤승아 크록스. 윤승아 김무열 커플 신발 추천! 2만 보 걸어도 발 편한 1등 발레 플랫 크록스 커스텀 정보 배우 윤승아가 디즈니랜드 여행에서 김무열과 ...",
+      "at": "2026-09-01T09:00:10Z"
+     }
+    ]
+   }
+  ],
+  "modifiers": [],
+  "notes": [
+   {
+    "code": "SHORT_HISTORY",
+    "term": "고프코어",
+    "message": "최근 28일 중 관측이 7일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "code": "NO_ASSOC",
+    "term": "고프코어",
+    "message": "아직 계산된 연관어가 없습니다."
+   },
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "고프코어",
+    "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   },
+   {
+    "code": "SHORT_HISTORY",
+    "term": "발레코어",
+    "message": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "발레코어",
+    "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "locked": [],
+  "plan": "PRO",
+  "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준",
+  "blocks": [
+   {
+    "type": "bars",
+    "slot": "full",
+    "title": "나란히 보기",
+    "meta": "2026-09-01",
+    "items": [
+     {
+      "k": "고프코어",
+      "w": 64,
+      "v": "55점"
+     },
+     {
+      "k": "발레코어",
+      "w": 100,
+      "v": "86점"
+     }
+    ]
+   },
+   {
+    "type": "rank",
+    "slot": "left",
+    "title": "고프코어",
+    "meta": "스타일 · 2026-09-01",
+    "rows": [
+     {
+      "k": "트렌드 온도",
+      "small": "따뜻함",
+      "v": "55점",
+      "up": true
+     },
+     {
+      "k": "언급량",
+      "small": "4개 소스",
+      "v": "65건",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "bars",
+    "slot": "right",
+    "title": "플랫폼별 언급량",
+    "meta": "2026-09-01",
+    "items": [
+     {
+      "k": "무신사",
+      "w": 100,
+      "v": "63"
+     },
+     {
+      "k": "네이버",
+      "w": 6,
+      "v": "4"
+     },
+     {
+      "k": "에이블리",
+      "w": 3,
+      "v": "2"
+     },
+     {
+      "k": "유튜브",
+      "w": 2,
+      "v": "1"
+     }
+    ]
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "최근 28일 중 관측이 7일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "아직 계산된 연관어가 없습니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "nlu": {
+   "intent": "metric.compare",
+   "source": "rule",
+   "confidence": 1.0,
+   "rule_intent": "metric.compare"
+  }
+ },
+ "salmal": {
+  "ok": true,
+  "kind": "salmal",
+  "intent": "buy.verdict",
+  "question": "발레코어 지금 살만 해?",
+  "as_of": {
+   "metric": "2026-09-01",
+   "generated_at": "2026-09-02T17:36:36+09:00"
+  },
+  "metric_version": "feedit-l2-v2-shadow",
+  "headline": "아직 <b>살지 말지</b>는 판단하지 못합니다. 지금 아는 것만 알려드립니다 — <b>발레코어</b>의 트렌드 온도는 <b>86점 · 과열</b>입니다. 언급 333건 기준입니다.",
+  "terms": [
+   {
+    "canonical": "발레코어",
+    "facet": "style",
+    "facet_name": "스타일",
+    "via": "free",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": false,
+     "can_delta14": true,
+     "can_assoc": true,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 5,
+     "obs14": 6,
+     "obs28": 6,
+     "reasons": [
+      [
+       "SHORT_HISTORY",
+       "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+      ],
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 333,
+    "temp": 86,
+    "temp_band": "과열",
+    "pct_rank": null,
+    "level": 75.97442650406038,
+    "momentum": 99.99999680812233,
+    "share_pct": null,
+    "sources": [
+     {
+      "code": "musinsa",
+      "name": "무신사",
+      "raw_count": 125,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "zigzag",
+      "name": "지그재그",
+      "raw_count": 63,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "kream",
+      "name": "크림",
+      "raw_count": 60,
+      "temp": 94,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "ably",
+      "name": "에이블리",
+      "raw_count": 59,
+      "temp": 95,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "naver",
+      "name": "네이버",
+      "raw_count": 25,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "youtube",
+      "name": "유튜브",
+      "raw_count": 1,
+      "temp": 23,
+      "observed_on": "2026-09-01"
+     }
+    ],
+    "associations": [
+     {
+      "canonical": "아디다스",
+      "facet": "brand",
+      "facet_name": "브랜드",
+      "co_count": 42,
+      "lift": 16.042962962962964,
+      "score": 100,
+      "is_new": true
+     }
+    ],
+    "sentiment": {
+     "index": 50,
+     "n_total": 1,
+     "pos_pct": 100.0,
+     "neg_pct": 0.0,
+     "top_pos": "considering",
+     "top_neg": null
+    },
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 남겨두면서 실루엣을 과감하게 바꾼 점이 가장 흥미롭게 느껴졌어요.”...",
+      "at": "20260902"
+     },
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "더현대 서울 발레 팝업 후기｜취발러 당일입장 방문·구매 후기. 이 팝업에서는 메시아, 포타, 디아트레 세 브랜드의 발레웨어와 발레코어룩을 한자리에서 직접 볼 수 있었어요. 저는 발레를 시작한 지 얼마 안 된 취발러라 평소 온라인으로만 보던 발레복을 직접 입어보고...",
+      "at": "20260902"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "제니 아디다스 발레코어 메리제인 슈즈, 저렴하게 구매하는 방법!! (+초특가 정보). 제니 발레코어 아디다스 메리제인 슈즈 5만원대에 구매하는 법   바로 직전 모델인데, 이번에 나온 신상과 비슷하면서, 조금 더 무난한 ...",
+      "at": "2026-09-01T13:03:44Z"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "힙한 발레코어 신발! 윤승아 크록스. 윤승아 김무열 커플 신발 추천! 2만 보 걸어도 발 편한 1등 발레 플랫 크록스 커스텀 정보 배우 윤승아가 디즈니랜드 여행에서 김무열과 ...",
+      "at": "2026-09-01T09:00:10Z"
+     }
+    ]
+   }
+  ],
+  "modifiers": [],
+  "notes": [
+   {
+    "code": "SALMAL_INDEX_PENDING",
+    "term": "",
+    "message": "살!말?지수는 아직 계산하지 못합니다.\n가격 이력과 수명주기 데이터가 더 쌓여야 합니다."
+   },
+   {
+    "code": "SHORT_HISTORY",
+    "term": "발레코어",
+    "message": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "발레코어",
+    "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "locked": [],
+  "plan": "PRO",
+  "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준",
+  "pending": {
+   "code": "SALMAL_INDEX_PENDING",
+   "message": "살!말?지수는 아직 계산하지 못합니다.\n가격 이력과 수명주기 데이터가 더 쌓여야 합니다."
+  },
+  "blocks": [
+   {
+    "type": "rank",
+    "slot": "left",
+    "title": "발레코어",
+    "meta": "스타일 · 2026-09-01",
+    "rows": [
+     {
+      "k": "트렌드 온도",
+      "small": "과열",
+      "v": "86점",
+      "up": true
+     },
+     {
+      "k": "언급량",
+      "small": "6개 소스",
+      "v": "333건",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "bars",
+    "slot": "right",
+    "title": "플랫폼별 언급량",
+    "meta": "2026-09-01",
+    "items": [
+     {
+      "k": "무신사",
+      "w": 100,
+      "v": "125"
+     },
+     {
+      "k": "지그재그",
+      "w": 50,
+      "v": "63"
+     },
+     {
+      "k": "크림",
+      "w": 48,
+      "v": "60"
+     },
+     {
+      "k": "에이블리",
+      "w": 47,
+      "v": "59"
+     },
+     {
+      "k": "네이버",
+      "w": 20,
+      "v": "25"
+     },
+     {
+      "k": "유튜브",
+      "w": 1,
+      "v": "1"
+     }
+    ]
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "살!말?지수는 아직 계산하지 못합니다.\n가격 이력과 수명주기 데이터가 더 쌓여야 합니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "nlu": {
+   "intent": "buy.verdict",
+   "source": "rule",
+   "confidence": 0.3,
+   "rule_intent": "buy.verdict"
+  }
+ },
+ "refusal": {
+  "ok": false,
+  "reason": "NOT_IN_LEXICON",
+  "message": "사전에 없는 말입니다.\n\nFEEDiT 는 스타일 · 소재 · 아이템 · 브랜드 네 가지로만 트렌드를 셉니다.\n사전에 없으면 언급량을 셀 수가 없어 답을 만들 수 없습니다.",
+  "near_label": "많이 찾는 키워드",
+  "near": [
+   {
+    "canonical": "니트",
+    "facet": "material"
+   },
+   {
+    "canonical": "티셔츠",
+    "facet": "item"
+   },
+   {
+    "canonical": "스니커즈",
+    "facet": "item"
+   }
+  ],
+  "surface_guess": "회의했어요",
+  "action": {
+   "type": "lexicon_request",
+   "label": "등록 요청"
+  },
+  "generated_at": "2026-09-02T17:36:36+09:00",
+  "intent": "metric.level",
+  "question": "우리 랩실에서 회의했어요",
+  "nlu": {
+   "intent": "metric.level",
+   "source": "rule",
+   "confidence": 0.3,
+   "rule_intent": "metric.level"
+  }
+ },
+ "web": {
+  "ok": true,
+  "kind": "general",
+  "intent": "knowledge.origin",
+  "question": "고프코어는 어떻게 시작됐어?",
+  "as_of": {
+   "metric": "2026-09-01",
+   "generated_at": "2026-09-02T17:36:36+09:00"
+  },
+  "metric_version": "feedit-l2-v2-shadow",
+  "headline": "<b>고프코어</b>의 트렌드 온도는 <b>55점 · 따뜻함</b>입니다. 언급 65건 기준입니다.",
+  "terms": [
+   {
+    "canonical": "고프코어",
+    "facet": "style",
+    "facet_name": "스타일",
+    "via": "free",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": false,
+     "can_delta14": true,
+     "can_assoc": false,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 5,
+     "obs14": 7,
+     "obs28": 7,
+     "reasons": [
+      [
+       "SHORT_HISTORY",
+       "최근 28일 중 관측이 7일뿐이라 오르는지 내리는지 말할 수 없습니다."
+      ],
+      [
+       "NO_ASSOC",
+       "아직 계산된 연관어가 없습니다."
+      ],
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 65,
+    "temp": 55,
+    "temp_band": "따뜻함",
+    "pct_rank": null,
+    "level": 25.53727356612112,
+    "momentum": 99.99983016834783,
+    "share_pct": null,
+    "sources": [
+     {
+      "code": "musinsa",
+      "name": "무신사",
+      "raw_count": 63,
+      "temp": 95,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "naver",
+      "name": "네이버",
+      "raw_count": 4,
+      "temp": 68,
+      "observed_on": "2026-08-31"
+     },
+     {
+      "code": "ably",
+      "name": "에이블리",
+      "raw_count": 2,
+      "temp": 24,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "youtube",
+      "name": "유튜브",
+      "raw_count": 1,
+      "temp": 16,
+      "observed_on": "2026-08-30"
+     }
+    ],
+    "sentiment": {
+     "index": 50,
+     "n_total": 1,
+     "pos_pct": 100.0,
+     "neg_pct": 0.0,
+     "top_pos": "considering",
+     "top_neg": null
+    },
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "김포현대아울렛 김현아 스컬프스토어 할인 캐피탈 니들스 엔지니어..... SCULP STORE 스트릿 웨어 매니아들 사이에서 스컬프 스토어는 단순한 옷가게가 아닙니다. &quot;아메카지·고프코어·컨템포러리패션 성지&quot;이자 해외의 감각적인 신진 브랜드를 가장 빠르게 소개하는 프리미엄...",
+      "at": "20260902"
+     },
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "오클리 덱스 선글라스 가스캔 OO9014-43. 단순한 스포츠 아이웨어를 넘어 스트릿 무드와 고프코어 감성을 완벽하게 아우르는 오클리의 대표 모델 가스캔을 소개합니다! 직선적이고 볼드한 스퀘어 프레임이 뿜어내는 강렬한 포스는 평범한...",
+      "at": "20260901"
+     },
+     {
+      "source": "유튜브",
+      "kind": "댓글",
+      "body": "LOOK2의 퍼플셔츠와 화이트진,휠라에샤페LX초코의 조합룩 너무예뻐서 몇번더다시봤어요❤❤  휠라에샤페의 과하지않으면서 슬림한유니크디자인! 그리고 힙한 고프코어스타일이 퍼플셔츠와 에샤페브라운과 딱 일치를이룬거같았어요👍👍😍 에샤페와 케쥬얼, 그리고 심플한정장느낌의대명사인 퍼플셔츠  모두잘소화해내는 디자인같아요!^^ 편안해보이면서도 꾸미지않는듯한멋스러움에 에샤페만의 독보적인 디자인과재질👍👍   한겨울패딩이나 여름나시룩과도 너무잘어울",
+      "at": "2026-08-30T18:11:16Z"
+     }
+    ]
+   }
+  ],
+  "modifiers": [],
+  "notes": [
+   {
+    "code": "SHORT_HISTORY",
+    "term": "고프코어",
+    "message": "최근 28일 중 관측이 7일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "code": "NO_ASSOC",
+    "term": "고프코어",
+    "message": "아직 계산된 연관어가 없습니다."
+   },
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "고프코어",
+    "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "locked": [],
+  "plan": "PRO",
+  "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준",
+  "blocks": [
+   {
+    "type": "prose",
+    "slot": "left",
+    "title": "고프코어",
+    "meta": "웹에서 찾음",
+    "text": "고프코어는 등산·트레일 장비를 도심에서 입는 흐름입니다.\n2017년 뉴욕 매거진이 이름을 붙였습니다."
+   },
+   {
+    "type": "links",
+    "slot": "left",
+    "items": [
+     {
+      "title": "Gorpcore, explained",
+      "url": "https://www.thecut.com/2017/g.html"
+     },
+     {
+      "title": "\"><img src=x onerror=alert(1)>",
+      "url": "https://evil.example.com/x"
+     }
+    ]
+   },
+   {
+    "type": "rank",
+    "slot": "left",
+    "title": "고프코어",
+    "meta": "스타일 · 2026-09-01",
+    "rows": [
+     {
+      "k": "트렌드 온도",
+      "small": "따뜻함",
+      "v": "55점",
+      "up": true
+     },
+     {
+      "k": "언급량",
+      "small": "4개 소스",
+      "v": "65건",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "최근 28일 중 관측이 7일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "아직 계산된 연관어가 없습니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   },
+   {
+    "type": "quotes",
+    "slot": "right",
+    "title": "원문 근거",
+    "meta": "3건",
+    "items": [
+     {
+      "src": "네이버",
+      "kind": "블로그",
+      "body": "김포현대아울렛 김현아 스컬프스토어 할인 캐피탈 니들스 엔지니어..... SCULP STORE 스트릿 웨어 매니아들 사이에서 스컬프 스토어는 단순한 옷가게가 아닙니다. &quot;아메카지·고프코어·컨템포러리패션 성지&"
+     },
+     {
+      "src": "네이버",
+      "kind": "블로그",
+      "body": "오클리 덱스 선글라스 가스캔 OO9014-43. 단순한 스포츠 아이웨어를 넘어 스트릿 무드와 고프코어 감성을 완벽하게 아우르는 오클리의 대표 모델 가스캔을 소개합니다! 직선적이고 볼드한 스퀘어 프레임이 뿜어내는 강렬"
+     },
+     {
+      "src": "유튜브",
+      "kind": "댓글",
+      "body": "LOOK2의 퍼플셔츠와 화이트진,휠라에샤페LX초코의 조합룩 너무예뻐서 몇번더다시봤어요❤❤  휠라에샤페의 과하지않으면서 슬림한유니크디자인! 그리고 힙한 고프코어스타일이 퍼플셔츠와 에샤페브라운과 딱 일치를이룬거같았어요👍"
+     }
+    ]
+   }
+  ],
+  "nlu": {
+   "intent": "knowledge.origin",
+   "source": "rule",
+   "confidence": 1.0,
+   "rule_intent": "knowledge.origin"
+  },
+  "web": {
+   "answer": "고프코어는 등산·트레일 장비를 도심에서 입는 흐름입니다.\n2017년 뉴욕 매거진이 이름을 붙였습니다.",
+   "sources": [
+    {
+     "title": "Gorpcore, explained",
+     "url": "https://www.thecut.com/2017/g.html"
+    },
+    {
+     "title": "\"><img src=x onerror=alert(1)>",
+     "url": "https://evil.example.com/x"
+    }
+   ]
+  }
+ },
+ "pro_level": {
+  "ok": true,
+  "kind": "general",
+  "intent": "metric.level",
+  "question": "발레코어 어때?",
+  "as_of": {
+   "metric": "2026-09-01",
+   "generated_at": "2026-09-02T17:36:36+09:00"
+  },
+  "metric_version": "feedit-l2-v2-shadow",
+  "headline": "<b>발레코어</b>의 트렌드 온도는 <b>86점 · 과열</b>입니다. 언급 333건 기준입니다.",
+  "terms": [
+   {
+    "canonical": "발레코어",
+    "facet": "style",
+    "facet_name": "스타일",
+    "via": "free",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": false,
+     "can_delta14": true,
+     "can_assoc": true,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 5,
+     "obs14": 6,
+     "obs28": 6,
+     "reasons": [
+      [
+       "SHORT_HISTORY",
+       "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+      ],
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 333,
+    "temp": 86,
+    "temp_band": "과열",
+    "pct_rank": null,
+    "level": 75.97442650406038,
+    "momentum": 99.99999680812233,
+    "share_pct": null,
+    "sources": [
+     {
+      "code": "musinsa",
+      "name": "무신사",
+      "raw_count": 125,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "zigzag",
+      "name": "지그재그",
+      "raw_count": 63,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "kream",
+      "name": "크림",
+      "raw_count": 60,
+      "temp": 94,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "ably",
+      "name": "에이블리",
+      "raw_count": 59,
+      "temp": 95,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "naver",
+      "name": "네이버",
+      "raw_count": 25,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "youtube",
+      "name": "유튜브",
+      "raw_count": 1,
+      "temp": 23,
+      "observed_on": "2026-09-01"
+     }
+    ],
+    "associations": [
+     {
+      "canonical": "아디다스",
+      "facet": "brand",
+      "facet_name": "브랜드",
+      "co_count": 42,
+      "lift": 16.042962962962964,
+      "score": 100,
+      "is_new": true
+     }
+    ],
+    "sentiment": {
+     "index": 50,
+     "n_total": 1,
+     "pos_pct": 100.0,
+     "neg_pct": 0.0,
+     "top_pos": "considering",
+     "top_neg": null
+    },
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 남겨두면서 실루엣을 과감하게 바꾼 점이 가장 흥미롭게 느껴졌어요.”...",
+      "at": "20260902"
+     },
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "더현대 서울 발레 팝업 후기｜취발러 당일입장 방문·구매 후기. 이 팝업에서는 메시아, 포타, 디아트레 세 브랜드의 발레웨어와 발레코어룩을 한자리에서 직접 볼 수 있었어요. 저는 발레를 시작한 지 얼마 안 된 취발러라 평소 온라인으로만 보던 발레복을 직접 입어보고...",
+      "at": "20260902"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "제니 아디다스 발레코어 메리제인 슈즈, 저렴하게 구매하는 방법!! (+초특가 정보). 제니 발레코어 아디다스 메리제인 슈즈 5만원대에 구매하는 법   바로 직전 모델인데, 이번에 나온 신상과 비슷하면서, 조금 더 무난한 ...",
+      "at": "2026-09-01T13:03:44Z"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "힙한 발레코어 신발! 윤승아 크록스. 윤승아 김무열 커플 신발 추천! 2만 보 걸어도 발 편한 1등 발레 플랫 크록스 커스텀 정보 배우 윤승아가 디즈니랜드 여행에서 김무열과 ...",
+      "at": "2026-09-01T09:00:10Z"
+     }
+    ]
+   }
+  ],
+  "modifiers": [],
+  "notes": [
+   {
+    "code": "SHORT_HISTORY",
+    "term": "발레코어",
+    "message": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "발레코어",
+    "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "locked": [],
+  "plan": "PRO",
+  "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준",
+  "blocks": [
+   {
+    "type": "rank",
+    "slot": "left",
+    "title": "발레코어",
+    "meta": "스타일 · 2026-09-01",
+    "rows": [
+     {
+      "k": "트렌드 온도",
+      "small": "과열",
+      "v": "86점",
+      "up": true
+     },
+     {
+      "k": "언급량",
+      "small": "6개 소스",
+      "v": "333건",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "bars",
+    "slot": "right",
+    "title": "플랫폼별 언급량",
+    "meta": "2026-09-01",
+    "items": [
+     {
+      "k": "무신사",
+      "w": 100,
+      "v": "125"
+     },
+     {
+      "k": "지그재그",
+      "w": 50,
+      "v": "63"
+     },
+     {
+      "k": "크림",
+      "w": 48,
+      "v": "60"
+     },
+     {
+      "k": "에이블리",
+      "w": 47,
+      "v": "59"
+     },
+     {
+      "k": "네이버",
+      "w": 20,
+      "v": "25"
+     },
+     {
+      "k": "유튜브",
+      "w": 1,
+      "v": "1"
+     }
+    ]
+   },
+   {
+    "type": "quotes",
+    "slot": "right",
+    "title": "원문 근거",
+    "meta": "4건",
+    "items": [
+     {
+      "src": "네이버",
+      "kind": "블로그",
+      "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 "
+     },
+     {
+      "src": "네이버",
+      "kind": "블로그",
+      "body": "더현대 서울 발레 팝업 후기｜취발러 당일입장 방문·구매 후기. 이 팝업에서는 메시아, 포타, 디아트레 세 브랜드의 발레웨어와 발레코어룩을 한자리에서 직접 볼 수 있었어요. 저는 발레를 시작한 지 얼마 안 된 취발러라"
+     },
+     {
+      "src": "유튜브",
+      "kind": "영상 설명",
+      "body": "제니 아디다스 발레코어 메리제인 슈즈, 저렴하게 구매하는 방법!! (+초특가 정보). 제니 발레코어 아디다스 메리제인 슈즈 5만원대에 구매하는 법   바로 직전 모델인데, 이번에 나온 신상과 비슷하면서, 조금 더 무"
+     }
+    ]
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "nlu": {
+   "intent": "metric.level",
+   "source": "rule",
+   "confidence": 1.0,
+   "rule_intent": "metric.level"
+  }
+ },
+ "free_level": {
+  "ok": true,
+  "kind": "general",
+  "intent": "metric.level",
+  "question": "발레코어 어때?",
+  "as_of": {
+   "metric": "2026-09-01",
+   "generated_at": "2026-09-02T17:36:36+09:00"
+  },
+  "metric_version": "feedit-l2-v2-shadow",
+  "headline": "<b>발레코어</b>의 트렌드 온도는 <b>86점 · 과열</b>입니다. 언급 333건 기준입니다.",
+  "terms": [
+   {
+    "canonical": "발레코어",
+    "facet": "style",
+    "facet_name": "스타일",
+    "via": "free",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": false,
+     "can_delta14": true,
+     "can_assoc": true,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 5,
+     "obs14": 6,
+     "obs28": 6,
+     "reasons": [
+      [
+       "SHORT_HISTORY",
+       "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+      ],
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 333,
+    "temp": 86,
+    "temp_band": "과열",
+    "pct_rank": null,
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 남겨두면서 실루엣을 과감하게 바꾼 점이 가장 흥미롭게 느껴졌어요.”...",
+      "at": "20260902"
+     }
+    ]
+   }
+  ],
+  "modifiers": [],
+  "notes": [
+   {
+    "code": "SHORT_HISTORY",
+    "term": "발레코어",
+    "message": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "발레코어",
+    "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "locked": [
+   "associations",
+   "level",
+   "momentum",
+   "sentiment",
+   "share_pct",
+   "sources"
+  ],
+  "plan": "FREE",
+  "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준",
+  "upsell": {
+   "type": "upsell",
+   "plan": "PRO",
+   "locked": [
+    "associations",
+    "level",
+    "momentum",
+    "sentiment",
+    "share_pct",
+    "sources"
+   ],
+   "why": "이 질문에 더 답하려면 구매의향 · 연관어 · 플랫폼별 분해가 필요합니다.",
+   "unlocks": [
+    "구매의향",
+    "연관어",
+    "플랫폼별 분해",
+    "점유율",
+    "수준 분해",
+    "모멘텀"
+   ]
+  },
+  "blocks": [
+   {
+    "type": "rank",
+    "slot": "left",
+    "title": "발레코어",
+    "meta": "스타일 · 2026-09-01",
+    "rows": [
+     {
+      "k": "트렌드 온도",
+      "small": "과열",
+      "v": "86점",
+      "up": true
+     },
+     {
+      "k": "언급량",
+      "small": "",
+      "v": "333건",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "quotes",
+    "slot": "right",
+    "title": "원문 근거",
+    "meta": "1건",
+    "items": [
+     {
+      "src": "네이버",
+      "kind": "블로그",
+      "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 "
+     }
+    ]
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   },
+   {
+    "type": "upsell",
+    "slot": "right",
+    "title": "더 볼 수 있는 것",
+    "meta": "PRO",
+    "why": "이 질문에 더 답하려면 구매의향 · 연관어 · 플랫폼별 분해가 필요합니다.",
+    "unlocks": [
+     "구매의향",
+     "연관어",
+     "플랫폼별 분해",
+     "점유율"
+    ]
+   }
+  ],
+  "nlu": {
+   "intent": "metric.level",
+   "source": "rule",
+   "confidence": 1.0,
+   "rule_intent": "metric.level"
+  }
+ },
+ "salmal_hint": {
+  "ok": true,
+  "kind": "salmal",
+  "intent": "buy.verdict",
+  "question": "발레코어 지금 살만 해?",
+  "as_of": {
+   "metric": "2026-09-01",
+   "generated_at": "2026-09-02T17:36:36+09:00"
+  },
+  "metric_version": "feedit-l2-v2-shadow",
+  "headline": "아직 <b>살지 말지</b>는 판단하지 못합니다. 지금 아는 것만 알려드립니다 — <b>발레코어</b>의 트렌드 온도는 <b>86점 · 과열</b>입니다. 언급 333건 기준입니다.",
+  "terms": [
+   {
+    "canonical": "발레코어",
+    "facet": "style",
+    "facet_name": "스타일",
+    "via": "free",
+    "coverage": {
+     "has_latest": true,
+     "can_level": true,
+     "can_direction": false,
+     "can_delta14": true,
+     "can_assoc": true,
+     "can_sentiment": true,
+     "thin_sample": false,
+     "stale_days": 0,
+     "obs7": 5,
+     "obs14": 6,
+     "obs28": 6,
+     "reasons": [
+      [
+       "SHORT_HISTORY",
+       "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+      ],
+      [
+       "THIN_SENTIMENT",
+       "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+      ]
+     ]
+    },
+    "available": true,
+    "observed_on": "2026-09-01",
+    "raw_count": 333,
+    "temp": 86,
+    "temp_band": "과열",
+    "pct_rank": null,
+    "level": 75.97442650406038,
+    "momentum": 99.99999680812233,
+    "share_pct": null,
+    "sources": [
+     {
+      "code": "musinsa",
+      "name": "무신사",
+      "raw_count": 125,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "zigzag",
+      "name": "지그재그",
+      "raw_count": 63,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "kream",
+      "name": "크림",
+      "raw_count": 60,
+      "temp": 94,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "ably",
+      "name": "에이블리",
+      "raw_count": 59,
+      "temp": 95,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "naver",
+      "name": "네이버",
+      "raw_count": 25,
+      "temp": 98,
+      "observed_on": "2026-09-01"
+     },
+     {
+      "code": "youtube",
+      "name": "유튜브",
+      "raw_count": 1,
+      "temp": 23,
+      "observed_on": "2026-09-01"
+     }
+    ],
+    "associations": [
+     {
+      "canonical": "아디다스",
+      "facet": "brand",
+      "facet_name": "브랜드",
+      "co_count": 42,
+      "lift": 16.042962962962964,
+      "score": 100,
+      "is_new": true
+     }
+    ],
+    "sentiment": {
+     "index": 50,
+     "n_total": 1,
+     "pos_pct": 100.0,
+     "neg_pct": 0.0,
+     "top_pos": "considering",
+     "top_neg": null
+    },
+    "evidence": [
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "블랙 발레코어 스니커즈가 이렇게 달라 보일 줄이야 &lt;아디다스&gt; [제..... 발레코어와 스포츠 무드를 동시에 좋아하는 분들이라면 자연스럽게 시선이 갈 만한 디자인이에요. 디테일 “슈퍼스타의 익숙한 요소를 남겨두면서 실루엣을 과감하게 바꾼 점이 가장 흥미롭게 느껴졌어요.”...",
+      "at": "20260902"
+     },
+     {
+      "source": "네이버",
+      "kind": "블로그",
+      "body": "더현대 서울 발레 팝업 후기｜취발러 당일입장 방문·구매 후기. 이 팝업에서는 메시아, 포타, 디아트레 세 브랜드의 발레웨어와 발레코어룩을 한자리에서 직접 볼 수 있었어요. 저는 발레를 시작한 지 얼마 안 된 취발러라 평소 온라인으로만 보던 발레복을 직접 입어보고...",
+      "at": "20260902"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "제니 아디다스 발레코어 메리제인 슈즈, 저렴하게 구매하는 방법!! (+초특가 정보). 제니 발레코어 아디다스 메리제인 슈즈 5만원대에 구매하는 법   바로 직전 모델인데, 이번에 나온 신상과 비슷하면서, 조금 더 무난한 ...",
+      "at": "2026-09-01T13:03:44Z"
+     },
+     {
+      "source": "유튜브",
+      "kind": "영상 설명",
+      "body": "힙한 발레코어 신발! 윤승아 크록스. 윤승아 김무열 커플 신발 추천! 2만 보 걸어도 발 편한 1등 발레 플랫 크록스 커스텀 정보 배우 윤승아가 디즈니랜드 여행에서 김무열과 ...",
+      "at": "2026-09-01T09:00:10Z"
+     }
+    ]
+   }
+  ],
+  "modifiers": [],
+  "notes": [
+   {
+    "code": "SALMAL_INDEX_PENDING",
+    "term": "",
+    "message": "살!말?지수는 아직 계산하지 못합니다.\n가격 이력과 수명주기 데이터가 더 쌓여야 합니다."
+   },
+   {
+    "code": "SHORT_HISTORY",
+    "term": "발레코어",
+    "message": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "code": "THIN_SENTIMENT",
+    "term": "발레코어",
+    "message": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "locked": [],
+  "plan": "PRO",
+  "source_note": "무신사·유튜브 등 수집 소스 통합 · 2026-09-01 기준",
+  "pending": {
+   "code": "SALMAL_INDEX_PENDING",
+   "message": "살!말?지수는 아직 계산하지 못합니다.\n가격 이력과 수명주기 데이터가 더 쌓여야 합니다."
+  },
+  "blocks": [
+   {
+    "type": "rank",
+    "slot": "left",
+    "title": "발레코어",
+    "meta": "스타일 · 2026-09-01",
+    "rows": [
+     {
+      "k": "트렌드 온도",
+      "small": "과열",
+      "v": "86점",
+      "up": true
+     },
+     {
+      "k": "언급량",
+      "small": "6개 소스",
+      "v": "333건",
+      "up": true
+     }
+    ]
+   },
+   {
+    "type": "bars",
+    "slot": "right",
+    "title": "플랫폼별 언급량",
+    "meta": "2026-09-01",
+    "items": [
+     {
+      "k": "무신사",
+      "w": 100,
+      "v": "125"
+     },
+     {
+      "k": "지그재그",
+      "w": 50,
+      "v": "63"
+     },
+     {
+      "k": "크림",
+      "w": 48,
+      "v": "60"
+     },
+     {
+      "k": "에이블리",
+      "w": 47,
+      "v": "59"
+     },
+     {
+      "k": "네이버",
+      "w": 20,
+      "v": "25"
+     },
+     {
+      "k": "유튜브",
+      "w": 1,
+      "v": "1"
+     }
+    ]
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "살!말?지수는 아직 계산하지 못합니다.\n가격 이력과 수명주기 데이터가 더 쌓여야 합니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "최근 28일 중 관측이 6일뿐이라 오르는지 내리는지 말할 수 없습니다."
+   },
+   {
+    "type": "note",
+    "slot": "left",
+    "text": "구매의향 표본이 1건이라 중립 쪽으로 보정됩니다."
+   }
+  ],
+  "nlu": {
+   "intent": "buy.verdict",
+   "source": "rule",
+   "confidence": 0.3,
+   "rule_intent": "buy.verdict"
+  }
+ }
+}

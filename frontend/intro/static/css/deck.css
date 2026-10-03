@@ -58,7 +58,7 @@ body.lightHero .hero .hint .bar{background:linear-gradient(180deg,rgba(10,10,10,
 
 /* 우상단 — 설명을 건너뛰고 바로 메인으로. 01~05 에서만 뜬다. */
 .jump{
-  position:fixed;right:48px;top:36px;z-index:7;cursor:none;
+  position:fixed;right:48px;top:36px;z-index:7;
   display:inline-flex;align-items:center;gap:9px;
   padding:11px 20px;border-radius:999px;white-space:nowrap;
   font-family:var(--logo);font-weight:600;font-size:13px;letter-spacing:-.01em;

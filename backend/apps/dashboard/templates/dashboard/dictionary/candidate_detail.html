@@ -1,60 +1,7 @@
-{% extends "dashboard/base.html" %}
-{% load static humanize %}
-{% block title %}{{ candidate.raw_term }} | FEEDIT Admin{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">{% endblock %}
-{% block sub_sidebar %}{% include "dashboard/components/sidebar_dictionary.html" %}{% endblock %}
-
-{% block content %}
-<div class="page-header">
-    <div>
-        <p class="eyebrow"><a href="{% url 'dashboard:dictionary_candidates' %}" class="nz-reset">← 용어 후보</a></p>
-        <h2 class="page-title">{{ candidate.raw_term }}</h2>
-        <p class="sub">
-            {% if candidate.suggested_type %}{{ candidate.suggested_type }} · {% endif %}
-            발견 {{ candidate.detected_count|intcomma }}회 · 출처 {{ candidate.source_count }}곳
-        </p>
-    </div>
-</div>
-
-<div class="nz-cards">
-    <div class="nz-card"><span class="nz-label">판정</span><strong class="nz-value" style="font-size:20px;">{{ candidate.get_decision_display }}</strong><span class="nz-caption">{{ candidate.decision }}</span></div>
-    <div class="nz-card"><span class="nz-label">처리 상태</span><strong class="nz-value" style="font-size:20px;">{{ candidate.get_status_display }}</strong><span class="nz-caption">{{ candidate.status }}</span></div>
-    <div class="nz-card"><span class="nz-label">유사 용어</span><strong class="nz-value" style="font-size:20px;">{% if candidate.nearest_term %}{{ candidate.nearest_term.canonical_name }}{% else %}-{% endif %}</strong><span class="nz-caption">유사도 {{ candidate.similarity_score|default:"-" }}</span></div>
-    <div class="nz-card"><span class="nz-label">관측 수</span><strong class="nz-value">{{ observation_count|intcomma }}</strong><span class="nz-caption">OBSERVATION</span></div>
-</div>
-
-{% if candidate.decision_reason or candidate.note %}
-<div class="nz-reasons">
-    {% if candidate.decision_reason %}
-    <p class="nz-reasons-title">자동 판정 사유</p>
-    <div class="nz-reason"><span class="nz-reason-t">{{ candidate.decision_reason }}</span></div>
-    {% endif %}
-    {% if candidate.note %}
-    <p class="nz-reasons-title" style="margin-top:14px;">검토 메모</p>
-    <div class="nz-reason"><span class="nz-reason-t">{{ candidate.note }}</span></div>
-    {% endif %}
-</div>
-{% endif %}
-
-<p class="nz-count">관측 문맥 <b>{{ observation_count|intcomma }}</b>건 중 최근 50건</p>
-
-<div class="nz-table-card">
-<table class="nz-table">
-    <colgroup><col style="width:118px"><col style="width:96px"><col style="width:150px"><col style="width:150px"><col></colgroup>
-    <thead><tr><th>발견일시</th><th>플랫폼</th><th>데이터 유형</th><th>발견 표현</th><th>원본 문맥</th></tr></thead>
-    <tbody>
-    {% for obs in observations %}
-        <tr>
-            <td class="nz-date">{{ obs.detected_at|date:"Y-m-d H:i" }}</td>
-            <td>{% if obs.source %}<span class="nz-plat">{{ obs.source.code }}</span>{% else %}<span class="nz-none">-</span>{% endif %}</td>
-            <td><span class="nz-badge off">{{ obs.source_type }}</span></td>
-            <td><strong>{{ obs.detected_phrase }}</strong></td>
-            <td><span class="nz-ellip" title="{{ obs.raw_text }}">{{ obs.raw_text|truncatechars:120 }}</span></td>
-        </tr>
-    {% empty %}
-        <tr><td colspan="5" class="nz-empty">관측 기록이 없습니다.</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
-</div>
-{% endblock %}
+{% extends "dashboard/base.html" %}{% load static humanize %}
+{% block title %}{{ candidate.raw_term }} 검수 | FEEDIT Admin{% endblock %}{% block extra_css %}<link rel="stylesheet" href="{% static 'dashboard/css/dictionary.css' %}">{% endblock %}{% block sub_sidebar %}{% include "dashboard/components/sidebar_dictionary.html" %}{% endblock %}
+{% block content %}<header class="dict-head"><div><p class="dict-kicker"><a class="dict-panel-link" href="{% url 'dashboard:dictionary_candidates' %}">← REVIEW QUEUE</a></p><h1 class="dict-title">{{ candidate.raw_term }}</h1><p class="dict-sub">{{ candidate.get_suggested_type_display|default:'유형 미정' }} · {{ candidate.detected_count|intcomma }}회 발견 · {{ candidate.source_count }}개 출처</p></div><div class="dict-actions"><span class="dict-badge {% if candidate.status == 'RESOLVED' %}ok{% elif candidate.status == 'REJECTED' %}{% else %}hot{% endif %}">{{ candidate.get_status_display }}</span></div></header>
+<div class="review-layout"><main><section class="review-card"><div class="dict-panel-head"><h2 class="dict-panel-title">후보와 기존 용어 비교</h2><span class="dict-panel-meta">SIMILARITY {{ candidate.similarity_score|default:'-' }}</span></div><div class="review-compare"><div class="review-entity"><small>발견된 표현</small><strong>{{ candidate.raw_term }}</strong><span class="dict-secondary">{{ candidate.normalized_term }}</span></div><div class="review-arrow">→</div><div class="review-entity"><small>가장 가까운 표준 용어</small><strong>{{ candidate.nearest_term.canonical_name|default:'일치 용어 없음' }}</strong><span class="dict-secondary">{% if candidate.nearest_term %}{{ candidate.nearest_term.get_term_type_display }} · {{ candidate.nearest_term.term_code|default:'코드 없음' }}{% else %}신규 용어 가능성 확인{% endif %}</span></div></div>{% if candidate.decision_reason %}<p class="dict-sub"><b>자동 판정:</b> {{ candidate.decision_reason }}</p>{% endif %}</section>
+<section class="review-card" style="margin-top:14px"><div class="dict-panel-head"><h2 class="dict-panel-title">원문 근거</h2><span class="dict-panel-meta">최근 {{ observation_count|intcomma }}건 중 50건</span></div>{% for obs in observations %}<article class="observation"><div class="observation-meta"><span class="dict-badge">{{ obs.get_source_type_display }}</span><span>{{ obs.source.code|default:'출처 미상' }}</span><time>{{ obs.detected_at|date:'Y-m-d H:i' }}</time></div><p><mark>{{ obs.detected_phrase }}</mark> · {{ obs.raw_text }}</p>{% if obs.source_field %}<span class="dict-secondary">{{ obs.source_field }} · {{ obs.source_entity_id|default:'-' }}</span>{% endif %}</article>{% empty %}<div class="dict-empty">보관된 원문 근거가 없습니다.</div>{% endfor %}</section></main>
+<aside class="review-card sticky"><div class="dict-panel-head"><h2 class="dict-panel-title">검수 판정</h2><span class="dict-panel-meta">HUMAN REVIEW</span></div><form method="post" action="{% url 'dashboard:dictionary_candidate_review' candidate.pk %}" class="review-form" id="candidate-review">{% csrf_token %}<label for="note">검토 메모</label><textarea id="note" name="note" placeholder="판정 근거를 남겨주세요">{{ candidate.note|default:'' }}</textarea><label for="term-type">신규 용어 유형</label><select id="term-type" name="term_type"><option value="">유형 선택</option>{% for value,label in type_choices %}<option value="{{ value }}" {% if candidate.suggested_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="dict-button primary" name="action" value="new_term" type="submit">신규 표준 용어로 승인</button><label for="target-term">기존 용어의 별칭으로 병합</label><select id="target-term" name="target_term_id"><option value="">대상 표준 용어 선택</option>{% for term in suggestions %}<option value="{{ term.pk }}" {% if candidate.nearest_term_id == term.pk %}selected{% endif %}>{{ term.canonical_name }} · {{ term.get_term_type_display }}</option>{% endfor %}</select><button class="dict-button" name="action" value="alias" type="submit">선택한 용어에 병합</button><div class="review-actions"><button name="action" value="reject" type="submit" data-confirm="이 후보를 사전 반영 대상에서 제외할까요?">제외</button>{% if candidate.status == 'RESOLVED' or candidate.status == 'REJECTED' %}<button name="action" value="reopen" type="submit">재검토</button>{% endif %}</div></form><p class="dict-sub">승인하면 표준 용어 또는 별칭이 실제 사전에 생성됩니다. 원문 근거를 먼저 확인하세요.</p></aside></div>
+{% endblock %}{% block extra_js %}<script>document.getElementById('candidate-review').addEventListener('click',function(e){var m=e.target.dataset.confirm;if(m&&!confirm(m)){e.preventDefault();}});</script>{% endblock %}

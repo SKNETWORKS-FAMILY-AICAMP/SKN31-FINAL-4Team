@@ -31,7 +31,7 @@
   color:var(--pink-1);text-transform:uppercase;margin-bottom:clamp(20px,2.8vh,32px);
   border:1px solid var(--pink-3);border-radius:999px;padding:6px 13px;
 }
-.mKicker b{color:var(--coral);font-weight:500}
+.mKicker b{color:var(--coral-ink);font-weight:500}   /* 작은 코랄 글자 — 대비(USABILITY-002) */
 .mStatement{font-weight:600;line-height:1.0;letter-spacing:-.048em;font-size:clamp(40px,6.4vw,112px)}
 .mStatement .ln{display:block;overflow:hidden}
 .mStatement .wd{display:inline-block;will-change:transform,opacity}
@@ -65,7 +65,7 @@
 /* Hot Trend Top 10 — 배경 없이 글자만. 오른쪽에 붙어 위로 열린다. */
 .hot{width:100%;position:relative;z-index:7;display:flex;justify-content:flex-end}
 .hotBar{
-  display:flex;align-items:center;gap:12px;cursor:none;
+  display:flex;align-items:center;gap:12px;
   background:none;color:var(--pink-0);padding:4px 2px 6px;
   transition:opacity .32s var(--ease);
 }
@@ -84,13 +84,19 @@
   transition:color .35s var(--ease);
 }
 .hot.open .hotTop .lbl{color:var(--pink-1)}
-.hotTop .lbl u{color:var(--coral);text-decoration:none}
+.hotTop .lbl u{color:var(--coral-ink);text-decoration:none}   /* 작은 코랄 글자 — 대비 */
+/* ★ 2026-09-21 — 폭을 고정하고 넘치는 글자를 잘라 냈더니 살!말? 모드의
+   긴 상품명이 앞뒤로 잘려 나갔다. 이제 내용만큼 넓어지고, 그래도 모자라면
+   줄을 바꿔 **전부 보인다**. 세로 롤 애니메이션은 그대로(한 칸에 겹쳐 쌓는다). */
 .hotRoll{
-  width:clamp(190px,19vw,270px);height:1.5em;overflow:hidden;position:relative;
+  display:grid;width:max-content;
+  min-width:clamp(190px,19vw,270px);max-width:min(560px,86vw);
+  min-height:1.5em;overflow:hidden;position:relative;
 }
 .hotRoll i{
-  position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;
-  gap:9px;font-style:normal;font-size:13.5px;letter-spacing:-.02em;white-space:nowrap;
+  grid-area:1/1;position:relative;display:flex;align-items:center;justify-content:flex-end;
+  flex-wrap:wrap;gap:4px 9px;font-style:normal;font-size:13.5px;letter-spacing:-.02em;
+  text-align:right;word-break:keep-all;overflow-wrap:anywhere;line-height:1.5;
   color:var(--pink-0);
 }
 .hotRoll i b{
@@ -98,25 +104,29 @@
   font-feature-settings:'tnum' 1,'zero' 0;
 }
 .hotRoll i em{font-style:normal;font-family:var(--num);font-size:11px;color:var(--pink-2)}
+.hotRoll i em.up{color:var(--coral)}
 .hotBar .cv{font-size:10px;color:var(--pink-2);transition:transform .4s var(--ease)}
 .hot.open .hotBar .cv{transform:rotate(180deg)}
 
 /* 펼침 — 글자만 위로 올라온다. 폭은 내용만큼만 잡아 좌측 문구를 가리지 않는다. */
 .hotList{
-  width:max-content;max-width:min(340px,60vw);
+  width:max-content;max-width:min(560px,86vw);
   height:0;overflow:hidden;text-align:right;
 }
 .hotList button{
   display:flex;justify-content:flex-end;align-items:center;gap:12px;width:100%;
-  padding:6px 2px;cursor:none;background:none;opacity:0;
+  padding:6px 2px;background:none;opacity:0;
   transition:opacity .3s;
 }
 .hotList button:hover .k{color:var(--coral)}
+/* 기준일·출처 한 줄 (2026-09-19) — 숫자가 어디서 왔는지 밝힌다 */
+.hotList .hotNote{padding:6px 2px 2px;font-size:10px;letter-spacing:-.01em;color:var(--pink-2);opacity:.85}
 .hotList .n{
   font-family:var(--num);font-size:10px;color:var(--pink-2);
   font-feature-settings:'zero' 0;order:-1;
 }
-.hotList .k{font-size:13px;letter-spacing:-.025em;color:var(--pink-0);transition:color .3s}
+.hotList .k{font-size:13px;letter-spacing:-.025em;color:var(--pink-0);transition:color .3s;
+  text-align:right;word-break:keep-all;overflow-wrap:anywhere}
 .hotList .ph{display:none}
 .hotList .d{
   font-family:var(--num);font-size:11px;min-width:52px;text-align:right;
@@ -126,15 +136,49 @@
 .hotList .d.dn{color:var(--pink-2)}
 
 /* 챗바 — 예시 질문이 안에서 굴러간다 */
-.chatWrap{width:100%;position:relative}
+/* 챗바 위: 이미지 미리보기 자리. 비어 있으면 [hidden]이라 간격도 같이 사라진다 */
+.chatWrap{width:100%;position:relative;display:flex;flex-direction:column;gap:12px}
+/* Virtual Try On 바로가기 — 챗봇 팝업의 살!말? 모드에서만 보인다. */
+.vtonQuick{
+  display:none;position:relative;isolation:isolate;overflow:hidden;align-items:center;
+  gap:10px;border:1px solid rgba(255,107,74,.28);border-radius:14px;
+  background:rgba(255,255,255,.78);color:var(--pink-0);text-align:left;
+  box-shadow:0 12px 30px -24px rgba(255,107,74,.9);
+  transition:transform .28s var(--ease),border-color .28s,background .28s,box-shadow .28s;
+}
+.vtonQuick::after{
+  content:"";position:absolute;z-index:-1;inset:-80% -45%;pointer-events:none;
+  background:linear-gradient(105deg,transparent 38%,rgba(255,107,74,.12) 50%,transparent 62%);
+  transform:translateX(-70%);animation:vtonQuickSheen 5.2s ease-in-out infinite;
+}
+.vtonQuick:hover{
+  transform:translateY(-2px);border-color:rgba(255,107,74,.62);background:#fff;
+  box-shadow:0 18px 34px -24px rgba(255,107,74,.95);
+}
+.vtonQuick:active{transform:translateY(0)}
+.vtonQuickIcon{
+  width:30px;height:30px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;
+  background:var(--coral);color:#fff;font-size:14px;box-shadow:0 8px 18px -10px var(--coral);
+  animation:vtonQuickStar 3.8s var(--ease) infinite;
+}
+.vtonQuickCopy{display:flex;flex-direction:column;gap:2px;min-width:0;line-height:1.1}
+.vtonQuickCopy b{font-family:var(--num);font-size:12px;font-weight:600;letter-spacing:.04em}
+.vtonQuickCopy small{font-size:10.5px;color:var(--pink-2);letter-spacing:-.01em}
+.vtonQuickArrow{margin-left:auto;color:var(--coral);font-size:13px;transition:transform .28s var(--ease)}
+.vtonQuick:hover .vtonQuickArrow{transform:translateX(3px)}
+@keyframes vtonQuickIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes vtonQuickSheen{0%,68%{transform:translateX(-70%)}88%,100%{transform:translateX(70%)}}
+@keyframes vtonQuickStar{0%,76%,100%{transform:rotate(0) scale(1)}84%{transform:rotate(18deg) scale(1.08)}92%{transform:rotate(-8deg) scale(1)}}
 .chatbar{
-  display:flex;align-items:center;gap:8px;position:relative;
+  display:flex;align-items:center;gap:8px;position:relative;width:100%;min-width:0;
   background:#fff;border:1px solid var(--pink-3);border-radius:999px;
   padding:7px 7px 7px 8px;
   box-shadow:0 1px 0 rgba(10,10,10,.03),0 20px 46px -30px rgba(10,10,10,.4);
-  transition:box-shadow .4s var(--ease),border-color .3s;
+  transition:box-shadow .4s var(--ease),border-color .3s,outline-color .2s;
 }
-.chatbar:focus-within{border-color:var(--pink-2);box-shadow:0 26px 62px -32px rgba(10,10,10,.55)}
+/* 사진을 끌어다 놓는 동안 */
+.chatbar.dragOver{outline:2px dashed var(--coral);outline-offset:2px}
+.chatbar:focus-within{border-color:var(--pink-2-line);box-shadow:0 26px 62px -32px rgba(10,10,10,.55)}
 /* 입력칸만의 영역. 예시 질문은 이 안에서만 움직여서
    왼쪽 살!말? 버튼 뒤로 숨는 일이 없다. */
 .cfield{position:relative;flex:1;min-width:0;display:flex}
@@ -166,29 +210,76 @@
   overflow:hidden;text-overflow:ellipsis;
 }
 .ghostQ .qline i b{color:var(--coral);font-weight:400}
+/* 일반/살!말? 전환 — 작은 on/off 슬라이드 스위치. 챗바 안, 맨 왼쪽에 둔다.
+   켜고 끄는 동작은 이 스위치 하나(썸 슬라이드 + 트랙 색)가 전부다 — 그 밖의
+   모션(회전·링 등)은 두지 않는다(chat.js smSwitch 참고). */
 .salmalBtn{
-  display:inline-flex;align-items:center;gap:7px;cursor:none;flex:0 0 auto;z-index:2;
-  border-radius:999px;padding:10px 14px;font-size:12.5px;white-space:nowrap;
-  box-shadow:inset 0 0 0 1px var(--pink-3);color:var(--pink-1);background:#fff;
-  transition:color .3s,box-shadow .3s;
+  position:relative;flex:0 0 auto;width:72px;height:34px;border-radius:999px;
+  overflow:hidden;background:var(--pink-3);
+  box-shadow:inset 0 0 0 1px rgba(10,10,10,.05);
+  transition:background-color .28s var(--ease),box-shadow .28s var(--ease);
 }
-.salmalBtn:hover{color:var(--coral);box-shadow:inset 0 0 0 1px var(--coral)}
+.salmalBtn:hover{box-shadow:inset 0 0 0 1px var(--pink-1)}
+.salmalBtn[aria-pressed="true"]{background:var(--coral);box-shadow:none}
+.salmalBtn[aria-pressed="true"]:hover{background:#ff8464}
+/* 흰 원 — OFF일 땐 왼쪽, ON일 땐 오른쪽 끝까지 슬라이드. 이 transform 전이 하나가
+   "켜고 끄는 모션"의 전부다. */
+.salmalBtn .thumb{
+  position:absolute;top:2px;left:2px;width:30px;height:30px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 2px rgba(10,10,10,.28),0 1px 0 rgba(10,10,10,.06);
+  transition:transform .28s cubic-bezier(.19,1,.22,1);
+}
+.salmalBtn[aria-pressed="true"] .thumb{transform:translateX(38px)}
+/* 문구 — 원(thumb)이 없는 쪽 빈 공간 한가운데에 앉힌다(가장자리에 붙이지 않는다).
+   thumb과 같은 2px 인셋을 기준으로 빈 공간의 실제 폭(38px)만큼만 박스를 잡고
+   그 안에서 justify-content:center로 정렬한다 — OFF는 오른쪽 빈 공간("일반"),
+   ON은 왼쪽 빈 공간("살!말?"). 위치·색 둘 다 aria-pressed 하나로 CSS가 정하고,
+   smSwitch(chat.js)는 글자만 바꿔 단다. */
+.salmalBtn .tx{
+  position:absolute;top:0;bottom:0;width:38px;right:2px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10.5px;font-weight:600;letter-spacing:-.02em;white-space:nowrap;
+  color:var(--pink-1);transition:color .28s var(--ease);
+}
+.salmalBtn[aria-pressed="true"] .tx{left:2px;right:auto;color:#fff}
+/* 전환 버튼과 + 버튼 사이 구분선 */
+.barSep{flex:0 0 auto;width:1px;height:20px;background:var(--pink-3);border-radius:1px}
+/* + 버튼 — 이미지 첨부. 테두리는 두지 않는다 — 평소엔 투명하다가
+   마우스를 올렸을 때만 첨부 이미지 칩(.imgChip)과 같은 둥근 사각형 톤의
+   배경이 생긴다. */
+.imgAddBtn{
+  width:40px;height:40px;border-radius:12px;flex:0 0 auto;z-index:2;
+  display:grid;place-items:center;font-size:19px;line-height:1;color:var(--pink-1);
+  background:transparent;
+  transition:color .2s,background-color .2s;
+}
+.imgAddBtn i{font-style:normal}
+.imgAddBtn:hover{background:var(--pink-3);color:var(--pink-0)}
+/* 첨부한 사진 — 챗바 바로 위에 작은 칩으로 뜬다. 비어 있으면 [hidden] */
+.imgAttach{display:flex;gap:8px;flex-wrap:wrap;padding:0 4px}
+#mImgAttach{width:100%;justify-content:flex-end}
+.imgChip{
+  position:relative;width:52px;height:52px;border-radius:12px;overflow:hidden;
+  box-shadow:0 1px 0 rgba(10,10,10,.03),0 10px 22px -14px rgba(10,10,10,.4);
+}
+.imgChip img{width:100%;height:100%;object-fit:cover;display:block}
+.imgChip button{
+  position:absolute;top:2px;right:2px;width:17px;height:17px;border-radius:50%;
+  background:rgba(20,18,17,.62);color:#fff;font-size:11px;line-height:1;
+  display:grid;place-items:center;transition:background .2s;
+}
+.imgChip button:hover{background:rgba(20,18,17,.86)}
+
+@media(prefers-reduced-motion:reduce){
+  .vtonQuick,.vtonQuick::after,.vtonQuickIcon{animation:none!important;transition:none}
+}
+
 .sendBtn{
   width:40px;height:40px;border-radius:50%;background:var(--pink-0);color:var(--paper);
-  display:grid;place-items:center;font-size:15px;flex:0 0 auto;cursor:none;z-index:2;
+  display:grid;place-items:center;font-size:15px;flex:0 0 auto;z-index:2;
   transition:transform .35s var(--ease);
 }
 .sendBtn:hover{transform:scale(1.08)}
-/* 예시 질문 — 여유 있게 키우고 챗바와 같은 오른쪽 기준으로 맞춘다 */
-.chips{display:flex;gap:8px;flex-wrap:wrap;width:100%;justify-content:flex-end}
-.chip{
-  border-radius:999px;padding:10px 15px;font-size:12.5px;cursor:none;white-space:nowrap;
-  color:var(--pink-1);box-shadow:inset 0 0 0 1px var(--pink-3);
-  transition:color .3s,box-shadow .3s,transform .3s var(--ease);
-}
-.chip:hover{color:var(--pink-0);box-shadow:inset 0 0 0 1px var(--pink-2);transform:translateY(-2px)}
-.chip.on{background:var(--pink-0);color:var(--paper);box-shadow:none}
-
 /* 답변 패널 */
 .mAns{padding-bottom:clamp(60px,9vh,110px)}
 .ansCard{background:#fff;border:1px solid var(--pink-3);border-radius:10px;overflow:hidden;
@@ -208,7 +299,7 @@
   color:var(--pink-2);font-feature-settings:'zero' 0}
 .rank{display:flex;flex-direction:column}
 .rank .row{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:12px;
-  padding:10px 0;border-bottom:1px solid var(--pink-3);cursor:none}
+  padding:10px 0;border-bottom:1px solid var(--pink-3)}
 .rank .row:last-child{border-bottom:0}
 .rank .row:hover .k{color:var(--coral)}
 .rank .n{font-family:var(--num);font-size:11.5px;color:var(--pink-2);font-feature-settings:'zero' 0}
@@ -264,6 +355,37 @@ body[data-view="trend"] .mFoot{display:none}
   word-break:keep-all;overflow-wrap:break-word;white-space:normal}
 .msg.ai .say b{color:var(--coral);font-weight:500}
 .msg.ai .act{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+/* 말풍선 안의 마크다운 (서버 mdclean.to_html 이 만든 태그만 온다).
+   ★ 예전 경로는 한 줄 결론이라 문단이랄 게 없었다. 새 경로는 목록과 강조가 있는
+     여러 문단이라 그 자리를 만들어 준다. 없으면 전부 한 덩어리로 흐른다. */
+.msg.ai .say p{margin:0 0 10px}
+.msg.ai .say p:last-child{margin-bottom:0}
+.msg.ai .say ul,.msg.ai .say ol{margin:0 0 10px;padding-left:1.15em}
+.msg.ai .say li{margin:3px 0}
+.msg.ai .say li::marker{color:var(--pink-2)}
+.msg.ai .say a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+/* 이어 갈 질문 — 카드 다음, 안내 줄 앞.
+   ★ 크기는 본문(.say)과 같다. 이건 챗봇이 사용자에게 거는 말이지 각주가 아니다.
+     작게 두면 읽고 답할 문장인데 읽히지 않는다. (2026-09-10) */
+.msg.ai .nextQ{
+  margin-top:6px;max-width:76ch;
+  font-size:16.5px;line-height:1.8;letter-spacing:-.02em;
+  word-break:keep-all;overflow-wrap:break-word;
+}
+/* 못 한 것 한 줄 — 카드 다음, 버튼 앞 (chat_api.notesHTML).
+   ★ 답을 가리면 안 되는 글이다. 본문(.say 16.5px)보다 확실히 작게 두고 색도
+     한 단 낮춘다 — 읽으려 들면 읽히되, 먼저 눈에 들어오지는 않는 크기.
+   ★ 카드 안 .note(weekly_report.css)를 재사용하지 않는다. 그쪽은 카드 여백을
+     전제로 한 규칙이라 말풍선 아래에서는 간격이 어긋난다. */
+.msg.ai .cue{display:flex;flex-direction:column;gap:5px;margin-top:2px;max-width:76ch}
+.msg.ai .cue .cueRow{
+  display:flex;gap:7px;align-items:flex-start;
+  font-size:11px;line-height:1.6;letter-spacing:-.01em;color:var(--pink-2);
+  word-break:keep-all;overflow-wrap:break-word;
+}
+.msg.ai .cue .cueRow i{
+  font-style:normal;color:var(--coral);flex:0 0 auto;font-size:9px;line-height:1.95;
+}
 /* 답을 기다리는 동안 — 별이 돌고, 별+FEEDiT 글자가 옅어졌다 밝아지며 "생각 중"을 말한다 */
 /* ✧ 글자 자체가 90˚마다 거의 대칭이라 회전만 주면 눈에 잘 안 띈다 —
    크기까지 같이 들썩여야 "돌고 있다"가 확실히 읽힌다 */
@@ -273,9 +395,26 @@ body[data-view="trend"] .mFoot{display:none}
   100%{transform:rotate(360deg) scale(1)}
 }
 @keyframes cpPulse{0%,100%{opacity:.3}50%{opacity:1}}
+/* 무엇을 조회하고 있는지 — 헤더 옆에 한 줄. 답이 뜨면 사라진다.
+   .who 의 자간(.22em)은 라틴 소문자 기준이라 한글에는 넓다. 여기서만 좁힌다. */
+.msg.ai .who .cpStage{
+  letter-spacing:-.01em;font-size:11.5px;opacity:.9;
+}
+.msg.ai .who .cpStage:not(:empty)::before{content:'·';margin:0 7px 0 3px;opacity:.5}
 .msg.ai.thinking .who i.cpStar{animation:cpSpin 1.1s ease-in-out infinite}
 .msg.ai.thinking .who{animation:cpPulse 1.1s ease-in-out infinite}
 /* 답 카드는 타이핑이 끝난 뒤 살짝 떠오르며 나타난다 */
 .ansCard.reveal{opacity:0;transform:translateY(10px);
   transition:opacity .5s var(--ease),transform .5s var(--ease)}
 .ansCard.reveal.in{opacity:1;transform:none}
+
+/* 홈 화면 오른쪽 하단 — 챗봇 팝업 진입 버튼 (말풍선) */
+.chatFab{
+  position:fixed;right:clamp(18px,3vw,34px);bottom:clamp(18px,3vw,34px);z-index:40;
+  width:56px;height:56px;border-radius:50%;background:var(--pink-0);color:var(--paper);
+  display:grid;place-items:center;box-shadow:0 16px 32px -12px rgba(0,0,0,.4);
+  transition:transform .3s var(--ease),background .3s var(--ease);
+}
+.chatFab svg{width:24px;height:24px}
+.chatFab:hover{transform:translateY(-2px) scale(1.05)}
+body.smOn .chatFab{background:var(--coral)}

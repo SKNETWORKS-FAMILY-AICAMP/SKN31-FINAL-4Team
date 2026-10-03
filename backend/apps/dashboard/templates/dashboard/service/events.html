@@ -1,0 +1,9 @@
+{% extends "dashboard/base.html" %}{% load static %}
+{% block title %}활동 로그 | FEEDIT Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'dashboard/css/operations.css' %}">{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_service.html" %}{% endblock %}
+{% block content %}
+<div class="op-head"><div><p class="op-eyebrow">USER ACTIVITY</p><h2 class="op-title">활동 로그</h2><p class="op-sub">행동 유형과 공개 가능한 대상만 봅니다. 이벤트 metadata 원문은 개인정보 유입 가능성이 있어 표시하지 않습니다.</p></div></div>
+<form class="op-filter"><select name="type"><option value="">전체 행동</option>{% for value,label in event_types %}<option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button>적용</button></form>
+<div class="op-table-wrap"><table class="op-table"><thead><tr><th>시각</th><th>사용자</th><th>행동</th><th>대상</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ row.created_at|date:"Y-m-d H:i:s" }}</td><td>{{ row.nickname_public }}</td><td><span class="op-badge">{{ row.get_event_type_display }}</span></td><td>{{ row.target_public|truncatechars:80 }}</td></tr>{% empty %}<tr><td colspan="4">활동 로그가 없습니다.</td></tr>{% endfor %}</tbody></table></div>{% include "dashboard/operations/_pagination.html" %}
+{% endblock %}

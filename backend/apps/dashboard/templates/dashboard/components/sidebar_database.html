@@ -1,0 +1,7 @@
+{% with u=request.resolver_match.url_name %}
+<aside class="sub-sidebar">
+  <p>DATABASE</p>
+  <a href="{% url 'dashboard:database_overview' %}" {% if u == 'database_overview' %}class="active"{% endif %}>테이블 · ERD</a>
+  <a href="{% url 'dashboard:database_query' %}" {% if u == 'database_query' %}class="active"{% endif %}>읽기 전용 SQL</a>
+</aside>
+{% endwith %}

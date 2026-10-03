@@ -21,9 +21,9 @@
           <div id="sEdit"></div>
         </div>
         <div class="sFoot onDark" id="sFoot">
-          <span class="av">혁</span>
+          <span class="av"></span>
           <!-- 이름 아래에 직위, 뱃지는 오른쪽 끝에 -->
-          <span class="who"><b>혁진</b><em id="sFootPlan">ADMIN · 서울</em></span>
+          <span class="who"><b></b><em id="sFootPlan"></em></span>
           <span class="sFootRk" id="sFootRk"></span>
         </div>
       </aside>
@@ -37,9 +37,9 @@
           </div>
           <!-- 내 피드에서는 제목 대신 프로필이 선다 -->
           <div class="trProfile" id="trProfile" hidden>
-            <div class="trProfAv" id="trProfAv">혁</div>
+            <div class="trProfAv" id="trProfAv"></div>
             <div class="trProfInfo">
-              <div class="trProfName"><b id="trProfNm">혁진</b><span id="trProfRk"></span></div>
+              <div class="trProfName"><b id="trProfNm"></b><span id="trProfRk"></span></div>
               <div class="trProfDivider"></div>
               <!-- 소개글. 비어 있으면 예시가 흐리게 서 있고, 연필을 누르면 그 자리에서 고친다 -->
               <div class="trBioRow">
@@ -56,7 +56,7 @@
               </div>
             </div>
           </div>
-          <span style="font-family:var(--num);font-size:10px;letter-spacing:.24em;color:var(--pink-2)">2026 · W33</span>
+          <span style="font-family:var(--num);font-size:10px;letter-spacing:.24em;color:var(--pink-2)">2026.08 · W2</span>
         </div>
         <div class="trTabs" id="trTabs"></div>
 
@@ -67,10 +67,13 @@
             <div class="fsBar" id="fsBar">
               <span class="fsIc">◎</span>
               <input type="text" id="fsInput" autocomplete="off" spellcheck="false" placeholder="소재 · 아이템 · 스타일 · 브랜드로 검색">
-              <span class="fsGhost" id="fsGhost"><span class="fsQ" id="fsQ"><i>“<b>살로몬 XT-6</b>&nbsp;리세일 시세 아직 버텨?”</i></span></span>
+              <span class="fsGhost" id="fsGhost"><span class="fsQ" id="fsQ"></span></span>
               <button class="fsClear" id="fsClear" type="button" hidden="">×</button>
             </div>
-            <button class="fsMore" id="fsMore" type="button">세부 검색 <u>▾</u></button>
+            <div class="fsSide">
+              <button class="fsMore" id="fsMore" type="button">세부 검색 <u>▾</u></button>
+              <button class="fsMore fsDictBtn" type="button" data-dict-open>사전</button>
+            </div>
           </div>
           <div class="fsSug" id="fsSug" hidden=""></div>
           <div class="fsChips" id="fsChips" hidden=""></div>

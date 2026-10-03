@@ -1,0 +1,12 @@
+{% extends "dashboard/base.html" %}{% load static humanize dashboard_extras %}
+{% block title %}살!말? 게시글 | FEEDIT Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'dashboard/css/operations.css' %}"><style>.vote-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}.vote-card{display:grid;grid-template-columns:74px 1fr;gap:12px}.vote-copy{min-width:0}.vote-copy h3{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vote-copy p{margin-top:6px;color:var(--tx2);font-size:11px;line-height:1.5}</style>{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_service.html" %}{% endblock %}
+{% block content %}
+<div class="op-head"><div><p class="op-eyebrow">BUY OR PASS</p><h2 class="op-title">살!말? 게시글</h2><p class="op-sub">게시글과 투표·댓글·신고 현황을 함께 확인합니다.</p></div></div>
+<form class="op-filter"><select name="status"><option value="">전체 상태</option>{% for value,label in statuses %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button>적용</button></form>
+<div class="vote-grid">{% for row in rows %}<article class="op-card vote-card">
+  {% if row.display_image %}<div><img class="op-thumb" src="{{ row.display_image|small_thumb }}" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><a class="op-thumb op-thumb-fallback" href="{{ row.display_image }}" target="_blank" rel="noopener" hidden>원본 URL</a></div>{% else %}<div class="op-thumb op-thumb-fallback">이미지 없음</div>{% endif %}
+  <div class="vote-copy"><span class="op-badge {% if row.status == 'ACTIVE' %}good{% endif %}">{{ row.get_status_display }}</span><h3 title="{{ row.title }}">{{ row.title }}</h3><p>{{ row.nickname_public }} · {{ row.created_at|date:"Y-m-d H:i" }}</p><p>투표 {{ row.ballot_count|intcomma }} · 댓글 {{ row.comment_count|intcomma }} · 신고 {{ row.report_count|intcomma }}</p></div>
+</article>{% empty %}<div class="op-card">게시글이 없습니다.</div>{% endfor %}</div>{% include "dashboard/operations/_pagination.html" %}
+{% endblock %}

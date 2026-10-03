@@ -55,11 +55,13 @@
 .wkScale span.on{color:var(--pink-0);font-weight:500}
 /* 판정 */
 .wkCopy{padding:30px 32px 28px;display:flex;flex-direction:column;justify-content:center}
+.wkCopy .pill{align-self:flex-start}
 .wkState{font-family:var(--num);font-size:9px;letter-spacing:.18em;color:var(--coral);
   text-transform:uppercase;margin-bottom:9px}
 .wkCopy h3{font-size:clamp(22px,2.4vw,32px);font-weight:600;line-height:1.18;letter-spacing:-.05em}
 .wkCopy h3 em{font-style:normal;box-shadow:inset 0 -.24em 0 rgba(255,107,74,.16)}
-.wkCopy>p{margin-top:12px;font-size:13px;line-height:1.78;color:var(--pink-1);max-width:58ch}
+.wkCopy>p{margin-top:12px;font-size:13px;line-height:1.78;color:var(--pink-1)}
+.wkCopy>p b{font-weight:600;color:var(--pink-0)}
 .wkLedger{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:25px;
   border-top:1px solid var(--pink-3)}
 .wkLedger>div{padding:16px 14px 0 0;min-width:0}
@@ -125,6 +127,8 @@
   line-height:1.65;color:var(--pink-2)}
 .wkNote i{font-style:normal;color:var(--coral);font-size:8px;margin-top:3px}
 .wkNote b{font-weight:600;color:var(--pink-1)}
+/* 집계 규칙을 밝히는 곁말 — 본문보다 한 단계 옅게 */
+.wkNote .wkNoteSub{font-style:normal;color:var(--pink-3)}
 
 /* 요일 막대 */
 .wkDays{height:170px;display:flex;align-items:stretch}
@@ -141,8 +145,11 @@
 .wkDay.today .l{color:var(--coral);font-weight:600}
 
 /* 취향 지분 */
-.wkTasteList{display:flex;flex-direction:column;gap:13px}
-.wkTaste{display:grid;grid-template-columns:76px 1fr auto auto;align-items:center;gap:10px}
+.wkTasteList{display:flex;flex-direction:column}
+.wkTaste{display:grid;grid-template-columns:76px 1fr auto auto;align-items:center;gap:10px;
+  padding:15px 0;border-bottom:1px solid var(--pink-3)}
+.wkTasteList .wkTaste:first-child{padding-top:2px}
+.wkTasteList .wkTaste:last-child{border-bottom:none;padding-bottom:2px}
 .wkTaste>span{font-size:12px;color:var(--pink-1);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis}
 .wkTaste .rail{height:6px;background:rgba(10,10,10,.055);border-radius:99px;overflow:hidden}
@@ -225,6 +232,11 @@
 .wkNextGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .wkNextCard{border:1px solid var(--pink-3);border-radius:9px;padding:16px 17px;background:#fff;
   transition:border-color .4s var(--ease),transform .5s var(--ease)}
+/* ★ 2026-09-19 — 스타일 페이지와 같은 사진(SIMG)을 카드 위에 얹는다. */
+.wkNextImg{aspect-ratio:16/9;border-radius:7px;overflow:hidden;background:#e8e4dd;margin-bottom:11px}
+.wkNextImg img{width:100%;height:100%;object-fit:cover;filter:grayscale(.25);transition:filter .3s var(--ease)}
+.wkNextCard:hover .wkNextImg img{filter:grayscale(0)}
+
 .wkNextCard:hover{border-color:var(--pink-1);transform:translateY(-2px)}
 .wkNextHead{display:flex;align-items:center;gap:8px;margin-bottom:9px}
 .wkNextHead i{width:6px;height:6px;border-radius:50%;background:var(--coral);flex:none}
@@ -236,6 +248,83 @@
 .wkFoot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:30px;
   padding-top:18px;border-top:1px solid var(--pink-3);font-family:var(--num);font-size:8.5px;
   letter-spacing:.16em;color:var(--pink-2);text-transform:uppercase}
+
+/* 관심 스타일 히어로 이미지 — .wkHero 왼쪽 칸(예전엔 점수 다이얼) 자리를 대신 채운다 */
+.wkHeroImg{position:relative;overflow:hidden;background:#e8e4dd}
+.wkHeroImg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+/* 사진이 없는 키워드(색상 · TPO 등) — 키워드 이름을 크게 적은 글자 판 */
+.wkHeroType{display:flex;align-items:center;justify-content:center;padding:24px;min-height:220px;background:#f3f0eb}
+.wkHeroType b{font-size:clamp(28px,3.4vw,46px);font-weight:600;letter-spacing:-.05em;color:var(--pink-0,#111);
+  text-align:center;word-break:keep-all}
+/* 이미지를 받아 오는 동안 — 원형 스피너와 작은 안내 문구 */
+.wkHeroLoad{flex-direction:column;gap:14px;background:#f3f0eb}
+.wkHeroLoad small{font-size:12px;letter-spacing:-.01em;color:var(--pink-2,#9a938a);word-break:keep-all}
+.wkHeroSpin{width:28px;height:28px;border-radius:50%;
+  border:3px solid rgba(10,10,10,.09);border-top-color:var(--pink-3,#f0846a);
+  animation:wkHeroSpin .9s linear infinite}
+@keyframes wkHeroSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){ .wkHeroSpin{animation-duration:2.4s} }
+
+/* 상품 사진이 없을 때 세우는 연관 스타일 대표컷 — 오른쪽 아래에 작은 꼬리표 */
+.wkHeroAlt{display:block;padding:0;background:#e8e4dd}
+.wkHeroAlt img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.wkHeroAltTag{position:absolute;left:12px;bottom:12px;z-index:2;
+  padding:5px 10px;border-radius:999px;background:rgba(10,10,10,.62);color:#fff;
+  font-size:10.5px;letter-spacing:-.01em;backdrop-filter:blur(3px)}
+
+/* 사진도 연관 스타일도 없을 때 — 조용한 판. 거짓 근거를 붙이지 않는다 */
+.wkHeroPlain{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  padding:24px;min-height:220px;text-align:center;
+  background:linear-gradient(150deg,#f4f1ec 0%,#ece7e0 58%,#e4ded6 100%)}
+.wkHeroPlainFacet{font-family:var(--num);font-size:10px;letter-spacing:.22em;color:var(--pink-2)}
+.wkHeroPlain b{font-size:clamp(24px,3vw,40px);font-weight:600;letter-spacing:-.05em;
+  color:var(--pink-0,#111);word-break:keep-all}
+.wkHeroPlainNote{font-size:11.5px;color:var(--pink-2);word-break:keep-all}
+
+/* 히어로 안 통계가 4칸이 아니라 3칸일 때 */
+.wkLedger.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* 추천 영상 — 실제 유튜브 검색 결과를 그대로 불러오는 16:9 플레이어 */
+.wkVideoFrame{position:relative;width:100%;padding-top:56.25%;border-radius:9px;
+  overflow:hidden;background:#000}
+.wkVideoFrame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.wkVideoLoading,.wkVideoEmpty{aspect-ratio:16/9;border-radius:9px;background:#111;color:#fff;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:13px;text-align:center}
+.wkVideoLoading span,.wkVideoEmpty span{font-size:11px;line-height:1.7;color:rgba(255,255,255,.58)}
+.wkVideoLoading i{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.2);
+  border-top-color:var(--coral);animation:wkVideoSpin .8s linear infinite}
+.wkVideoEmpty b{font-size:13px;font-weight:600}
+.wkVideoInfo{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-top:12px}
+.wkVideoInfo>span{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:11px;color:var(--pink-1);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wkVideoInfo b{font-size:10px;color:var(--pink-2);font-weight:500}
+.wkVideoInfo a{flex:0 0 auto;font-size:10px;color:var(--coral);text-decoration:underline;text-underline-offset:3px}
+@keyframes wkVideoSpin{to{transform:rotate(360deg)}}
+
+/* 추천 웹매거진 — 매체별 실제 검색 결과로 바로 연결하는 링크 목록 */
+/* 추천 웹매거진 — 찾는 중 · 못 찾음. 영상 자리와 달리 검은 판 없이 카드의 흰 배경 그대로 둔다 */
+.wkMagLoading,.wkMagEmpty{min-height:160px;background:#fff;color:var(--ink,#111);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center}
+.wkMagLoading span,.wkMagEmpty span{font-size:11px;line-height:1.7;color:rgba(0,0,0,.45)}
+.wkMagLoading i{width:18px;height:18px;border-radius:50%;border:2px solid rgba(0,0,0,.1);
+  border-top-color:var(--coral);animation:wkVideoSpin .8s linear infinite}
+.wkMagEmpty b{font-size:13px;font-weight:600}
+/* 못 찾았을 때의 '다시 찾기' — 새로고침보다 이쪽이 빠르다(서버가 캐시해 둔다) */
+.wkMagRetry{margin-top:2px;padding:9px 16px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--pink-3);background:#fff;color:var(--pink-1);
+  font-size:11.5px;font-family:inherit}
+.wkMagRetry:hover{background:var(--pink-0);border-color:var(--pink-0);color:var(--paper)}
+.wkMagList{display:flex;flex-direction:column;gap:6px}
+.wkMagRow{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 4px;border-bottom:1px solid var(--pink-3);color:inherit;
+  transition:padding-left .3s var(--ease)}
+.wkMagList .wkMagRow:last-child{border-bottom:none}
+.wkMagRow:hover{padding-left:8px}
+.wkMagRow .tx{display:flex;flex-direction:column;gap:4px;min-width:0}
+.wkMagRow .tx b{font-size:13px;font-weight:600;letter-spacing:-.02em;color:var(--pink-0)}
+.wkMagRow .tx span{font-size:11px;color:var(--pink-2)}
+.wkMagRow svg{flex:0 0 auto;color:var(--pink-2);transition:color .3s var(--ease)}
+.wkMagRow:hover svg{color:var(--coral)}
 
 @media(max-width:1080px){
   .wkHero{grid-template-columns:1fr}
@@ -261,14 +350,15 @@
 .gHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
 .gHead h3{font-size:14px;font-weight:500;letter-spacing:-.025em}
 .gSel{display:inline-flex;gap:3px;padding:3px;border-radius:999px;background:rgba(10,10,10,.05);flex:0 0 auto}
-.gSel button{padding:5px 11px;border-radius:999px;cursor:none;
+.gSel button{padding:5px 11px;border-radius:999px;
   font-family:var(--num);font-size:9.5px;letter-spacing:.1em;color:var(--pink-2);
   transition:background .22s,color .22s}
 .gSel button.on{background:#fff;color:var(--pink-0);box-shadow:0 1px 3px rgba(10,10,10,.12)}
 .chartBox{position:relative}
 .chartBox svg{display:block;width:100%;height:auto;overflow:visible;touch-action:none}
 .chartBox .grid{stroke:var(--pink-3);stroke-width:1;stroke-dasharray:2 4}
-.chartBox .axl{font-family:var(--num);font-size:8.5px;letter-spacing:.1em;fill:var(--pink-2)}
+/* 차트는 실제 px 폭으로 그린다(chart_engine.gPaint) — 글씨 크기가 곧 화면 크기다 */
+.chartBox .axl{font-family:var(--num);font-size:10.5px;letter-spacing:.06em;fill:var(--pink-2-line)}
 .chartBox .ln{fill:none;stroke:var(--pink-0);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .chartBox .ln2{fill:none;stroke:var(--coral);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .chartBox .ar{fill:url(#gFill)}
@@ -354,6 +444,14 @@
   min-width:60px;overflow:hidden}
 .mTable .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--pink-0);border-radius:99px}
 .mTable .bar i.c{background:var(--coral)}
+/* lg / xl — 옆 칸(차트)이 길어 아래쪽에 빈 공백이 남는 표 전용으로,
+   행 간격을 넉넉히 벌려 표 자체가 어느 정도 채우게 한다. 옆 칸(그래프 카드)과는
+   trGrid 기본 stretch로 높이를 맞추므로, 이 표가 늘어나도 옆 칸을 밀어 늘리지 않는다.
+   xl 은 행이 3개뿐인 표용 — lg보다 한 단계 더 여유 있게 잡는다. */
+.mTable.lg td{padding:16px 10px 16px 0}
+.mTable.lg .bar{height:6px}
+.mTable.xl td{padding:26px 10px 26px 0}
+.mTable.xl .bar{height:6px;max-width:140px}
 /* 주의/안내 한 줄 */
 .note{display:flex;gap:9px;align-items:flex-start;margin-top:14px;
   font-size:11.5px;line-height:1.65;color:var(--pink-2)}
@@ -374,6 +472,15 @@
   border-bottom:1px solid var(--pink-3)}
 .axHead .dot{width:7px;height:7px;border-radius:50%;background:var(--coral);flex:0 0 auto}
 .axHead h3{font-size:14.5px;font-weight:600;letter-spacing:-.025em}
+.axSortToggle{margin-left:auto;display:inline-flex;border:1px solid rgba(0,0,0,.12);
+  border-radius:4px;overflow:hidden}
+.axSortBtn{padding:2px 7px;border:0;cursor:pointer;font-size:10px;font-weight:600;
+  transition:background .2s,color .2s}
+.axSortBtn+.axSortBtn{border-left:1px solid rgba(0,0,0,.12)}
+.axSortBtn.on{background:#333;color:#fff}
+.axSortBtn:not(.on){background:#fff;color:#333}
+@keyframes axRefresh{0%{opacity:1}30%{opacity:.7}100%{opacity:1}}
+.axList.refreshing{animation:axRefresh .3s ease-out}
 .axList{display:flex;flex-direction:column;gap:8px}
 .axRow{display:grid;grid-template-columns:16px minmax(0,auto) 1fr auto;align-items:center;
   gap:10px;padding:11px 12px;border-radius:8px;background:rgba(10,10,10,.025);text-align:left;width:100%}
@@ -391,6 +498,22 @@
 @media(max-width:1180px){ .assocGrid{grid-template-columns:repeat(3,minmax(0,1fr))} }
 @media(max-width:820px){ .assocGrid{grid-template-columns:1fr} }
 .axRow.on{box-shadow:inset 0 0 0 1.5px var(--coral)}
+/* 연관어 — 5개에서 10개까지만 펼치고 이후 순위는 페이지로 넘긴다 */
+.axMoreBtn{margin-top:2px;padding:8px 12px;border:0;background:none;color:var(--pink-2);
+  font-size:11.5px;font-weight:600;letter-spacing:-.01em;text-align:center;width:100%;
+  cursor:pointer;transition:color .15s ease}
+.axMoreBtn:hover,.axCollapseBtn:hover{color:var(--coral)}
+.axCollapseBtn{padding:7px 12px;border:0;background:none;color:var(--pink-2);font-size:11px;
+  font-weight:600;white-space:nowrap;cursor:pointer;transition:color .15s ease}
+.axList>.axCollapseBtn{margin-top:3px;width:100%;border-top:1px solid var(--pink-3)}
+.axPager{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-top:3px;padding-top:9px;
+  border-top:1px solid var(--pink-3)}
+.axPagerSlot{display:flex;justify-content:flex-start}
+.axPagerSlot.next{justify-content:flex-end}
+.axPageBtn{width:30px;height:28px;border:1px solid var(--pink-3);border-radius:8px;background:#fff;
+  color:var(--pink-1);font-size:15px;line-height:1;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+.axPageBtn:hover{border-color:var(--coral);color:var(--coral);background:rgba(255,107,74,.05)}
+.axPageNow{font-family:var(--num);font-size:10px;color:var(--pink-2);font-feature-settings:'tnum' 1,'zero' 0}
 .tag:hover{transform:translateY(-1px)}
 .tag .tbadge{font-family:var(--num);font-size:9.5px;font-feature-settings:'tnum' 1,'zero' 0}
 .tag .tbadge.up{color:var(--coral)}
@@ -409,7 +532,7 @@
 .apHead span{font-size:11px;color:var(--pink-2)}
 .apClose{position:absolute;right:10px;top:8px;width:22px;height:22px;border-radius:50%;
   color:var(--pink-2);font-size:15px;line-height:1;display:grid;place-items:center;
-  transition:background .2s,color .2s;cursor:none}
+  transition:background .2s,color .2s}
 .apClose:hover{background:var(--paper);color:var(--pink-0)}
 .apSpark{padding:0 16px 12px;border-bottom:1px solid var(--pink-3)}
 .apSpark svg{width:100%;height:40px;display:block}
@@ -450,3 +573,128 @@
 .vBadge.safe{background:rgba(241,239,234,.06);color:rgba(241,239,234,.7);
   box-shadow:inset 0 0 0 1px rgba(241,239,234,.22)}
 
+
+/* 막대 차트(cfg.type:'bar') — 긍부정 반응 건수 */
+.chartBox .gBar{transform-box:fill-box;transform-origin:50% 100%}
+.chartBox .gCol{fill:rgba(10,10,10,.045);opacity:0;transition:opacity .16s}
+.chartBox.hov .gCol{opacity:1}
+.gLegend i.sq{width:9px;height:9px;border-radius:2px}
+
+/* ══════════════════════════════════════════════════════
+   로딩 표시 (★ 2026-09-19)
+   기다리는 자리에 '…' · '–' 같은 글자를 박아 두지 않는다.
+   · wkDots — 점 세 개가 차례로 뛴다 (키워드 · 이미지 자리)
+   · wkSkel — 값이 들어올 자리만 지키는 뼈대. 값이 오면 숫자가 굴러 올라온다.
+   ══════════════════════════════════════════════════════ */
+.wkDots{display:inline-flex;align-items:center;gap:5px;line-height:1;vertical-align:middle}
+.wkDots i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.22;
+  animation:wkDotJump 1.3s ease-in-out infinite}
+.wkDots i:nth-child(2){animation-delay:.16s}
+.wkDots i:nth-child(3){animation-delay:.32s}
+.wkDots.xs i{width:4px;height:4px;gap:4px}
+/* 값이 들어올 자리(트렌드 온도 · 지난주 대비 · 수명주기 단계 · 지표 카드) */
+.wkDots.val{gap:5px;height:19px;color:var(--pink-1,#6b6b6b)}
+.wkDots.val i{width:5px;height:5px;opacity:.34}
+.wkLedger b .wkDots.val,.wkMetric .wkDots.val{vertical-align:middle}
+.wkDots.md i{width:9px;height:9px}
+.wkDots.md{gap:8px}
+.wkDots.lg i{width:12px;height:12px}
+.wkDots.lg{gap:11px}
+@keyframes wkDotJump{
+  0%,66%,100%{transform:translateY(0);opacity:.22}
+  28%{transform:translateY(-6px);opacity:.85}}
+/* 로딩 중 히어로 버튼 — 자리를 먼저 잡아 두고, 키워드가 오면 살아난다 */
+.pill.wkBtnWait{opacity:.42;pointer-events:none}
+/* 히어로 이미지 자리 — 글자판 대신 점만 둔다 */
+.wkHeroWait b{color:var(--pink-1,#6b6b6b)}
+.wkSkel{display:inline-block;width:46px;height:.58em;border-radius:3px;vertical-align:baseline;
+  background:linear-gradient(90deg,rgba(10,10,10,.06),rgba(10,10,10,.14),rgba(10,10,10,.06));
+  background-size:220% 100%;animation:wkSkelShine 1.3s ease-in-out infinite}
+.wkSkel.sm{width:32px}
+@keyframes wkSkelShine{0%{background-position:120% 0}100%{background-position:-120% 0}}
+@media (prefers-reduced-motion:reduce){
+  .wkDots i,.wkSkel{animation:none}
+  .wkDots i{opacity:.4}}
+
+/* ══ 검색량 카드 — 플랫폼 비중 · 월별 컬럼 · 지역 지도 (2026-09-23) ══ */
+/* ① 플랫폼 — 절대값은 숫자로, 비교는 비중 막대 한 줄로 */
+.svcKpis{display:flex;gap:30px;margin:2px 0 14px}
+.svcKpi span{display:block;font-size:11px;color:var(--pink-2);margin-bottom:3px}
+.svcKpi b{font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1;color:var(--pink-0)}
+.svcKpi em{font-style:normal;font-size:11.5px;color:var(--pink-1);margin-left:6px}
+/* 두 조각 사이는 선이 아니라 2px 틈으로 가른다 */
+.svcShare{display:flex;gap:2px;height:20px;border-radius:5px;overflow:hidden}
+.svcShare i{display:block;height:100%}
+.svcShare i.nv{background:var(--coral)}
+.svcShare i.gg{background:#0d6f9c}
+.svcShare i:first-child{border-radius:5px 0 0 5px}
+.svcShare i:last-child{border-radius:0 5px 5px 0}
+.svcShareLb{display:flex;justify-content:space-between;margin-top:7px;
+  font-size:11.5px;color:var(--pink-1)}
+.svcShareLb b{font-weight:700;color:var(--pink-0)}
+.svcShareLb u{display:inline-block;width:8px;height:8px;border-radius:2px;
+  margin-right:5px;text-decoration:none;vertical-align:-1px}
+.svcShareLb u.nv{background:var(--coral)}
+.svcShareLb u.gg{background:#0d6f9c}
+
+/* ② 월별 — 세로 컬럼. 시간은 왼쪽에서 오른쪽으로 흐른다. */
+.svcSeason{min-width:0;position:relative}   /* 말풍선을 이 안에 절대배치한다 */
+.svcColsHead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.svcColsHead h4{font-size:12.5px;font-weight:700;letter-spacing:-.02em;color:var(--pink-0);margin:0}
+.svcColsHead span{font-size:11.5px;color:var(--pink-2);font-variant-numeric:tabular-nums}
+.svcCols{display:flex;align-items:flex-end;gap:3px;height:190px;
+  border-bottom:1px solid rgba(10,10,10,.1)}
+.svcCol{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;
+  align-items:center;height:100%;cursor:default}
+.svcCol i{display:block;width:100%;background:rgba(10,10,10,.16);border-radius:4px 4px 0 0;
+  transition:background .15s ease}
+.svcCol:hover i{background:rgba(10,10,10,.28)}
+.svcCol.on i{background:var(--coral)}
+.svcCol u{text-decoration:none;font-style:normal;font-size:10.5px;font-weight:700;color:var(--coral);
+  margin-bottom:5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.svcXax{display:flex;gap:3px;margin-top:7px}
+.svcXax span{flex:1;min-width:0;text-align:center;font-size:10px;color:var(--pink-2);
+  font-variant-numeric:tabular-nums}
+.svcXax span.on{color:var(--pink-0);font-weight:700}
+
+/* 막대 위에 뜨는 값 말풍선 — 마우스를 따라다니지 않고 막대에 붙는다 */
+.svcTip{position:absolute;z-index:6;pointer-events:none;white-space:nowrap;
+  padding:6px 9px;border-radius:7px;background:rgba(28,26,23,.92);color:#fff;
+  font-size:11px;line-height:1.35;box-shadow:0 3px 10px rgba(0,0,0,.16)}
+.svcTip b{display:block;font-weight:600;opacity:.7;font-size:10px;letter-spacing:.01em}
+.svcTip span{font-variant-numeric:tabular-nums;font-weight:700}
+
+/* ③ 배치 — 왼쪽 칸에 [플랫폼 비중 + 월별 차트]를 세로로, 오른쪽 칸은 지도만 */
+.svcGrid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:26px;
+  align-items:start;margin-top:14px}
+.svcLeft{min-width:0;display:flex;flex-direction:column;gap:30px}  /* 두 지표 사이 간격 */
+.svcLeft .svcKpis{margin-bottom:14px}
+.svcGrid .rgWrap{margin-top:0}
+@media(max-width:900px){ .svcGrid{grid-template-columns:1fr} }
+
+/* ══ 시·도별 관심도 — 지도 히트맵 (2026-09-23) ══
+   검색량 카드 안에 들어간다.
+   ★ .rgMap 의 높이는 반드시 있어야 한다. 높이가 0 이면 Leaflet 이 타일을 한 장도
+     안 그리고, leaflet.heat 는 빈 캔버스를 읽다가
+     "getImageData ... source height is 0" 으로 죽는다. */
+.rgWrap{margin-top:12px}
+.rgHead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+.rgHead h4{font-size:12.5px;font-weight:700;letter-spacing:-.02em;color:var(--pink-0);margin:0}
+.rgHead span{font-size:11.5px;color:var(--pink-2);font-variant-numeric:tabular-nums;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rgMapBox{position:relative;border-radius:10px;overflow:hidden;background:rgba(10,10,10,.04);
+  width:100%;max-width:400px;margin:0 auto}
+.rgMap{height:420px;width:100%}
+@media(max-width:460px){ .rgMap{height:360px} }
+/* 지도 위에 얹는 범례 — 히트맵 색 순서와 같은 그라데이션 */
+.rgScale{position:absolute;left:10px;bottom:10px;z-index:500;display:flex;align-items:center;gap:6px;
+  padding:5px 9px;border-radius:99px;background:rgba(255,255,255,.9);backdrop-filter:blur(4px);
+  font-size:10.5px;color:#555;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.rgScale i{display:block;width:84px;height:6px;border-radius:99px;
+  background:linear-gradient(90deg,#2b4bff,#22d3ee,#4ade80,#facc15,#fb923c,#ef4444)}
+.rgNote{padding:10px 2px;font-size:11.5px;color:var(--pink-2)}
+/* 칠할 값이 없을 때 — 지도는 그대로 두고 색만 빼서 '아직 비어 있음'을 보여 준다 */
+.rgMapBox.isEmpty .rgMap{filter:grayscale(1);opacity:.55}
+/* Leaflet 기본 글꼴이 본문과 달라 출처 표시만 눈에 띈다 — 작게 낮춘다 */
+.rgMapBox .leaflet-container{font-family:inherit;background:#eef1f4}
+.rgMapBox .leaflet-control-attribution{font-size:9.5px;opacity:.7}

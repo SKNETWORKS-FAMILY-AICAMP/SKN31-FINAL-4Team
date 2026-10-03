@@ -17,6 +17,7 @@
 }
 .acct .cInput:focus{box-shadow:inset 0 0 0 1.5px var(--pink-0)}
 .acct .cInput.err{box-shadow:inset 0 0 0 1.5px #c73a24}
+.acct .cInput[readonly]{background:#f3f1ec;color:var(--pink-2);cursor:not-allowed}
 .acct select.cInput{
   appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:34px;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23999' stroke-width='1.6'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5'/%3E%3C/svg%3E");
@@ -43,7 +44,7 @@
   box-shadow:0 50px 100px -60px rgba(10,10,10,.4);
 }
 .acct .authEyebrow{
-  font-family:var(--num);font-size:10.5px;letter-spacing:.18em;color:var(--coral);
+  font-family:var(--num);font-size:10.5px;letter-spacing:.18em;color:var(--coral-ink);   /* 대비(USABILITY-002) */
   text-transform:uppercase;margin-bottom:10px;
 }
 .acct .authTitle{font-size:clamp(22px,3vw,27px);font-weight:600;letter-spacing:-.03em;margin-bottom:8px}
@@ -55,17 +56,44 @@
 }
 .acct .googleBtn:hover{box-shadow:inset 0 0 0 1px var(--pink-0);transform:translateY(-2px)}
 .acct .googleBtn svg{width:18px;height:18px;flex-shrink:0}
+/* Google 가입 모드에서 버튼·구분선을 숨긴다.
+   위의 display 지정이 기본 [hidden] 규칙을 이기므로 따로 못 박는다. */
+.acct .googleBtn[hidden],
+.acct .divider[hidden]{display:none}
+/* Google · 카카오 버튼은 한 줄에 반씩 — 아주 좁은 화면에서만 위아래로 */
+.acct .socialRow{display:flex;gap:10px}
+.acct .socialRow .googleBtn{flex:1;min-width:0;white-space:nowrap;padding:0 14px;gap:8px;font-size:13px}
+@media(max-width:360px){ .acct .socialRow{flex-direction:column} }
+.acct .googleBtn.kakaoBtn{background:#FEE500;color:rgba(0,0,0,.85);box-shadow:none}
+.acct .googleBtn.kakaoBtn:hover{box-shadow:none;filter:brightness(.97)}
+/* 이메일 + [인증번호 받기], 인증번호 + [확인] 한 줄 */
+.acct .cInline{display:flex;gap:8px}
+.acct .cInline[hidden]{display:none}
+.acct .cInline .cInput{flex:1;min-width:0}
+.acct .cSideBtn{
+  flex:0 0 auto;padding:0 15px;border-radius:10px;background:var(--pink-0);color:var(--paper);
+  font-size:12.5px;white-space:nowrap;transition:opacity .25s;
+}
+.acct .cSideBtn:disabled{opacity:.4;cursor:default}
 .acct .divider{
   display:flex;align-items:center;gap:14px;margin:24px 0;
   color:var(--pink-2);font-size:11.5px;letter-spacing:.02em;
 }
 .acct .divider::before, .acct .divider::after{content:"";flex:1;height:1px;background:var(--pink-3)}
 .acct .authForm .cField{margin-bottom:16px}
+.acct .signupConsent{
+  display:grid;gap:9px;margin:20px 0 4px;padding:15px 16px;
+  background:var(--paper);border:1px solid var(--pink-3);border-radius:12px;
+}
+.acct .signupConsent label{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.55;color:var(--pink-1);cursor:pointer}
+.acct .signupConsent input{width:15px;height:15px;margin-top:2px;accent-color:var(--coral);flex:0 0 auto}
+.acct .signupConsent b{font-weight:600;color:var(--coral-ink)}   /* 작은 코랄 글자 — 대비 */
+.acct .signupConsent a{color:var(--pink-0);text-decoration:underline;text-underline-offset:3px}
 .acct .authSubmit{
   width:100%;justify-content:center;margin-top:6px;padding:15px;font-size:14px;
 }
 .acct .authFoot{text-align:center;font-size:12.5px;color:var(--pink-1);margin-top:22px;line-height:1.8}
-.acct .authFoot a{color:var(--coral);font-weight:600}
+.acct .authFoot a{color:var(--coral-ink);font-weight:600}   /* 작은 코랄 글자 — 대비 */
 .acct .authFoot a:hover{text-decoration:underline}
 .acct .miniLink{font-size:12px;color:var(--pink-2);text-align:right;display:block;margin:-8px 0 18px}
 .acct .miniLink:hover{color:var(--pink-0)}
@@ -78,7 +106,7 @@
 .acct .pageHead{margin-bottom:clamp(24px,3.4vh,34px)}
 .acct .pageHead h1{font-size:clamp(24px,3vw,30px);font-weight:600;letter-spacing:-.035em;margin-bottom:8px}
 .acct .pageHead p{font-size:13.5px;color:var(--pink-1);line-height:1.6}
-.acct .myGrid{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}
+.acct .myGrid{display:grid;grid-template-columns:320px max-content minmax(240px,1fr);gap:20px;align-items:start}
 .acct .myCol{display:flex;flex-direction:column;gap:18px}
 .acct .panel{background:#fff;border:1px solid var(--pink-3);border-radius:16px;padding:24px}
 .acct .panelHead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:20px}
@@ -125,7 +153,6 @@
   display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
   max-height:56vh;overflow-y:auto;padding-right:2px;
 }
-.acct .itemCard{background:var(--paper);border:1px solid var(--pink-3);border-radius:12px;overflow:hidden}
 @media(max-width:560px){
   .acct .itemGrid{grid-template-columns:repeat(2,1fr)}
 }
@@ -142,12 +169,7 @@
 .acct .rangeSlider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--coral);cursor:pointer;box-shadow:0 2px 10px rgba(255,107,74,.45)}
 .acct .rangeSlider::-moz-range-thumb{width:18px;height:18px;border:none;border-radius:50%;background:var(--coral);cursor:pointer}
 .acct .rangeLab{display:flex;justify-content:space-between;font-size:10.5px;color:var(--pink-2);margin-top:9px}
-.acct .recGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.acct .recCard{
-  background:var(--paper);border:1px solid var(--pink-3);border-radius:12px;overflow:hidden;
-  cursor:pointer;transition:transform .35s var(--ease),border-color .3s;
-}
-.acct .recCard:hover{transform:translateY(-4px);border-color:var(--pink-2)}
+.acct .recGrid{display:grid;grid-template-columns:repeat(3,var(--recCardW));gap:14px}
 @media(max-width:980px){
   .acct .myGrid{grid-template-columns:1fr}
   .acct .recGrid{grid-template-columns:repeat(2,1fr)}
@@ -160,9 +182,11 @@
 /* 앱 안에 얹으면서 손본 것 — 세 화면 공통 지면과 헤더 여백 */
 .acct{padding-top:clamp(30px,4vh,54px);padding-bottom:clamp(48px,8vh,96px)}
 .acct .wrap,.acct .authWrap{width:min(1180px,90vw);margin:0 auto}
+/* 마이페이지만 지면을 넓게 쓴다 — 오른쪽에 피드백 칸이 하나 더 붙기 때문이다.
+   ★ 넓어진 만큼 추천 카드를 키우지 않는다. 카드 폭은 --recCardW 로 고정이고,
+     남는 폭은 전부 피드백 칸이 가져간다. */
+.acct .myWrap{width:min(1300px,94vw)}
 .acct .authWrap{display:grid;place-items:center;min-height:calc(100vh - 200px)}
-/* 계정 화면의 칩은 우리 챗 칩과 다른 물건이다 — 여기서만 쓰는 모양 */
-.acct .chip{cursor:none}
 .acctModal{
   position:fixed;inset:0;z-index:60;display:none;place-items:center;
   background:rgba(10,10,10,.42);backdrop-filter:blur(3px);padding:24px;
@@ -181,7 +205,7 @@
    여기서는 헤더 안에 그냥 놓이는 버튼이니 배치를 원위치시킨다. */
 .acctModal .modalClose{position:static;width:30px;height:30px;border-radius:8px;
   display:grid;place-items:center;flex:0 0 auto;box-shadow:none;background:none;
-  color:var(--pink-2);cursor:none;transition:.3s var(--ease)}
+  color:var(--pink-2);transition:.3s var(--ease)}
 .acctModal .modalClose:hover{transform:none}
 .acctModal .modalClose:hover{background:rgba(10,10,10,.05);color:var(--pink-0)}
 .acctModal .modalClose svg{width:16px;height:16px}
@@ -196,8 +220,6 @@
   transition:color .3s var(--ease);
 }
 .mAuth .pill.me:hover{background:none;color:var(--pink-0);transform:none}
-.mAuth .meAv{width:26px;height:26px;border-radius:50%;background:var(--pink-0);color:var(--paper);
-  display:grid;place-items:center;font-size:11px;font-weight:600;flex:0 0 auto}
 /* 이름 뒤 작은 갈매기 — 메뉴가 열리면 뒤집힌다 */
 .mAuth .meCaret{
   width:9px;height:9px;flex:0 0 auto;opacity:.42;margin-left:-2px;
@@ -209,7 +231,7 @@
 /* ── 이식하면서 놓쳤던 것들 ──────────────────────────────
    1) .panel 은 이 목업에서 이미 '덱 한 장(100vw × 100vh)' 이다.
       마이페이지 패널이 그걸 물려받아 화면을 통째로 먹고 있었다. 여기서 끊는다.
-   2) 카드 안쪽(.recFig / .recBody / .itemFig …) 규칙이 추출에서 빠져
+   2) 카드 안쪽(.itemFig / .itemBody / .itemFig …) 규칙이 추출에서 빠져
       사진이 크기 제한 없이 늘어났다. 원본 규칙을 그대로 가져온다. */
 .acct .panel{
   flex:0 1 auto;width:auto;height:auto;min-height:0;
@@ -221,7 +243,14 @@
 .acct .pageHead{margin-bottom:clamp(24px,3.4vh,34px)}
 .acct .pageHead h1{font-size:clamp(24px,3vw,30px);font-weight:600;letter-spacing:-.035em;margin-bottom:8px}
 .acct .pageHead p{font-size:13.5px;color:var(--pink-1);line-height:1.6}
-.acct .myGrid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:20px;align-items:start}
+/* ★ 2026-09-20 — 세 칸이다.
+   왼쪽: 프로필 · 즐겨입는 스타일 / 가운데: 오늘의 추천 / 오른쪽: 살!말? 피드백 */
+/* 추천 카드 한 장 폭 — 4열이던 예전 화면의 카드와 같은 크기다.
+   (지면 1180px · 왼쪽 320px 기준 (1180-320-20-48-42)/4 ≈ 188px) */
+.acct{--recCardW:188px}
+.acct .myGrid{display:grid;
+  grid-template-columns:320px max-content minmax(220px,1fr);
+  gap:20px;align-items:start}
 .acct .myCol{display:flex;flex-direction:column;gap:18px;min-width:0}
 /* 로그아웃 버튼을 걷어낸 만큼 위아래 여백을 고르게 다시 나눠 준다.
    패널이 위로 쏠리지 않게 padding 을 키우고 각 요소 간격을 비례로 늘렸다. */
@@ -270,7 +299,7 @@
   background-size:240% 100%;background-repeat:no-repeat;
   animation:rkGloss 7s var(--ease) infinite;pointer-events:none;
 }
-.acct .xpNext{font-size:10.5px;color:var(--pink-2);margin-top:8px;line-height:1.5}
+.acct .xpNext{display:none;font-size:10.5px;color:var(--pink-2);margin-top:8px;line-height:1.5}
 /* 최고 레벨 문구까지 등급색으로 칠하면 바와 경쟁한다. 색은 Lv 글자에만 준다 */
 .acct .profileName{font-size:18px;font-weight:600;letter-spacing:-.02em}
 .acct .profileEmail{font-size:12px;color:var(--pink-2);margin-top:5px;margin-bottom:18px}
@@ -279,6 +308,25 @@
    양쪽을 모두 잡는다. 한쪽만 잡으면 모달에서 em 이 인라인으로 풀려
    입력칸 아래로 흘러내린다. */
 .acct .cPair, .acctModal .cPair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.acct .cBodyGenderRow, .acctModal .cBodyGenderRow{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start}
+.acct .cBodyGenderRow .cField, .acctModal .cBodyGenderRow .cField{min-width:0;margin-bottom:0}
+.acct .cGenderField, .acctModal .cGenderField{min-width:0;margin:0;padding:0;border:0}
+.acct .cGenderField legend, .acctModal .cGenderField legend{padding:0;margin-bottom:7px}
+.acct .cGenderChoices, .acctModal .cGenderChoices{display:flex;gap:6px}
+.acct .cGenderChoice, .acctModal .cGenderChoice{
+  display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;flex:1;height:46px;
+  border-radius:10px;box-shadow:inset 0 0 0 1px var(--pink-3);font-size:12px;
+  color:var(--pink-1);cursor:pointer;background:#fff;transition:box-shadow .2s,background .2s,color .2s;
+}
+.acct .cGenderChoice span, .acctModal .cGenderChoice span{font-size:17px;line-height:1}
+.acct .cGenderChoice input, .acctModal .cGenderChoice input{position:absolute;width:1px;height:1px;opacity:0}
+.acct .cGenderChoice:has(input:checked), .acctModal .cGenderChoice:has(input:checked){
+  background:var(--pink-0);color:#fff;box-shadow:none;
+}
+.acct .cGenderChoice:has(input:focus-visible), .acctModal .cGenderChoice:has(input:focus-visible){outline:2px solid var(--coral);outline-offset:2px}
+@media(max-width:480px){
+  .acct .cBodyGenderRow, .acctModal .cBodyGenderRow{grid-template-columns:1fr;gap:12px}
+}
 .acct .cUnit, .acctModal .cUnit{position:relative;display:block}
 .acct .cUnit .cInput, .acctModal .cUnit .cInput{
   width:100%;padding-right:36px;appearance:textfield;-moz-appearance:textfield}
@@ -289,7 +337,7 @@
 .acct .cUnit em, .acctModal .cUnit em{
   position:absolute;right:13px;top:50%;transform:translateY(-50%);
   font-style:normal;font-family:var(--num);font-size:11.5px;line-height:1;
-  color:rgba(74,62,54,.5);            /* 잉크보다 따뜻한 회갈색 — 값과 헷갈리지 않게 */
+  color:rgba(74,62,54,.78);           /* 잉크보다 따뜻한 회갈색 — 값과 헷갈리지 않게 (.5 → .78, 대비 USABILITY-002) */
   letter-spacing:.02em;pointer-events:none;
 }
 
@@ -304,7 +352,7 @@
 .acct .leaveBtn:hover{color:#c83a2c;text-decoration-color:rgba(200,58,44,.7)}
 .acct .statRow{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--pink-3);
   border:1px solid var(--pink-3);border-radius:12px;overflow:hidden;margin-top:18px}
-.acct .statCell{background:var(--paper);padding:15px 4px;width:100%;cursor:none;
+.acct .statCell{background:var(--paper);padding:15px 4px;width:100%;
   transition:background .25s var(--ease)}
 .acct .statCell:hover{background:#fff}
 .acct .statCell .n{font-family:var(--num);font-size:17px;font-weight:600;color:var(--pink-0);
@@ -370,7 +418,7 @@
 .bgTiles{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
 .bgTile{
   display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;
-  padding:10px 3px;border-radius:12px;cursor:none;
+  padding:10px 3px;border-radius:12px;
   transition:background .22s var(--ease),transform .4s var(--ease);
 }
 .bgTile:hover{background:#fff;transform:translateY(-2px)}
@@ -399,6 +447,13 @@
 @media(max-width:640px){ .bgTiles{grid-template-columns:repeat(4,1fr)} }
 
 .acctModal .fieldMsg{font-size:11.5px;color:var(--pink-2)}
+/* ★ 2026-09-23 — 모달은 .acct 바깥(body 바로 아래)에 있어서 위쪽의
+   `.acct .fieldMsg.err` 규칙이 닿지 않았다. 그래서 오류 문구가 회색으로 떴다.
+   모달 안에서도 오류는 빨갛게, 확인은 초록으로 보이게 여기서 다시 건다. */
+.acctModal .fieldMsg.err{color:#c73a24}
+.acctModal .fieldMsg.ok{color:#1f9d64}
+/* ★ 2026-09-19 — 빈 목록 안내는 줄을 넘기지 않는다 */
+.acctModal .fieldMsg.oneLine{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .acct .panelHead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:20px}
 .acct .panelHead h3{font-size:15px;font-weight:600;letter-spacing:-.02em}
 .acct .panelHead .sub{font-size:11.5px;color:var(--pink-2)}
@@ -406,31 +461,13 @@
 .acct .formRow:last-child{margin-bottom:0}
 .acct .formRow>label{display:block;font-size:12.5px;font-weight:600;color:var(--pink-1);margin-bottom:11px}
 .acct .formRow>label span{font-weight:400;color:var(--pink-2);margin-left:5px}
-.acct .recGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.acct .recCard{background:var(--paper);border:1px solid var(--pink-3);border-radius:12px;
-  overflow:hidden;cursor:none;transition:transform .35s var(--ease),border-color .3s}
-.acct .recCard:hover{transform:translateY(-4px);border-color:var(--pink-2)}
-.acct .recFig{aspect-ratio:3/4;position:relative;overflow:hidden;background:#e8e4dd}
-.acct .recFig img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.acct .recFig .fitTag{position:absolute;left:9px;top:9px;background:rgba(10,10,10,.78);color:#fff;
-  font-family:var(--num);font-size:10px;letter-spacing:.02em;padding:4px 9px;border-radius:999px;z-index:2}
-.acct .recBody{padding:12px 13px}
-.acct .recBody .br{font-family:var(--num);font-size:9.5px;letter-spacing:.09em;color:var(--pink-2);
-  text-transform:uppercase;margin-bottom:4px}
-.acct .recBody .nm{font-size:12.5px;font-weight:600;margin-bottom:6px;line-height:1.35}
-.acct .recBody .pr{font-family:var(--num);font-size:12.5px;font-weight:600;
-  font-feature-settings:'tnum' 1,'zero' 0}
 .acctModal .itemGrid{max-height:56vh;overflow-y:auto;padding-right:2px}
-.acctModal .recCard{background:var(--paper);border:1px solid var(--pink-3);border-radius:12px;overflow:hidden}
-.acctModal .recFig{aspect-ratio:3/4;position:relative;overflow:hidden;background:#e8e4dd}
-.acctModal .recFig img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.acctModal .recFig .fitTag{position:absolute;left:8px;top:8px;background:rgba(10,10,10,.78);color:#fff;
-  font-family:var(--num);font-size:9.5px;padding:3px 8px;border-radius:999px;z-index:2}
-.acctModal .recBody{padding:10px 11px}
-.acctModal .recBody .br{font-family:var(--num);font-size:9px;letter-spacing:.09em;color:var(--pink-2);
-  text-transform:uppercase;margin-bottom:3px}
-.acctModal .recBody .nm{font-size:12px;font-weight:600;line-height:1.35;margin-bottom:4px}
-.acctModal .recBody .pr{font-family:var(--num);font-size:12px;font-weight:600}
+/* 1280px 아래에서는 세 칸을 넣으면 추천 카드가 엄지손톱만 해진다.
+   그 폭에서는 피드백이 아래로 내려와 가로로 눕는다. */
+@media(max-width:1279px){
+  .acct .myGrid{grid-template-columns:320px max-content}
+  .acct .myColFb{grid-column:1 / -1}
+}
 @media(max-width:1080px){
   .acct .myGrid{grid-template-columns:1fr}
   .acct .recGrid{grid-template-columns:repeat(2,1fr)}
@@ -447,7 +484,7 @@
 }
 .acctMenu.on{opacity:1;visibility:visible;transform:translateY(0)}
 .acctMenu button{
-  display:flex;align-items:center;gap:9px;width:100%;cursor:none;
+  display:flex;align-items:center;gap:9px;width:100%;
   padding:10px 12px;border-radius:8px;font-size:13px;color:var(--pink-1);
   letter-spacing:-.02em;transition:.24s var(--ease);text-align:left;
 }
@@ -455,3 +492,63 @@
 .acctMenu button i{font-style:normal;font-size:12px;color:var(--pink-2);width:14px}
 .acctMenu hr{border:0;border-top:1px solid var(--pink-3);margin:4px 6px}
 .acctMenu button.out:hover{color:var(--coral)}
+/* ★ 2026-09-19 — 위 display:flex 가 hidden 을 덮어써 '직업 인증 심사'가 모든 사용자에게 보였다 */
+.acctMenu button[hidden]{display:none}
+
+
+/* ── 오늘의 추천 패널 — 높이는 profile.js 가 왼쪽 칸(프로필+즐겨입는 스타일)
+   높이에 맞춰 인라인으로 박는다(syncTodayRecHeight). 카드가 그 높이를 넘으면
+   잘리지 않고 스크롤한다.
+   ★ 2026-09-20 — 스크롤하는 것은 패널이 아니라 **안쪽 칸(.recScroll)** 이다.
+     패널이 직접 스크롤하면 막대가 패널의 둥근 모서리(16px) 위에 얹혀
+     오른쪽 위아래 모서리가 각져 보였다. 안쪽에서 스크롤하면 막대가
+     패널 안쪽 여백(24px) 안에 서므로 모서리를 건드리지 않는다. */
+.acct #todayRecPanel{display:flex;flex-direction:column;overflow:hidden}
+.acct #todayRecPanel .recScroll{flex:1;min-height:0;overflow-y:auto;padding-right:6px}
+
+/* 살!말? 피드백도 같은 높이로 선다(syncTodayRecHeight). 목록이 길면 안쪽에서 스크롤한다 —
+   여기서도 스크롤하는 것은 패널이 아니라 안쪽 칸이다. */
+.acct .fbPanel{display:flex;flex-direction:column;overflow:hidden}
+.acct .fbPanel #fbPanelBody{flex:1;min-height:0;overflow-y:auto;padding-right:6px}
+/* 두 칸(내 취향 / 지금 뜨는 코어) — 칸 제목은 패널 제목보다 한 단계 작게 */
+.acct .recBlock+.recBlock{margin-top:28px;padding-top:22px;border-top:1px solid var(--pink-3)}
+.acct .recBlockHead{font-size:12.5px;font-weight:600;color:var(--pink-1);margin-bottom:12px}
+.acct .recEmpty{color:var(--pink-1)}
+
+/* ── 즐겨입는 스타일 저장 버튼 (마이페이지 필터 패널) ── */
+.acct .styleSaveBtn{display:block;width:100%;justify-content:center}
+
+/* ── 가입 완료 후 뜨는 '즐겨입는 스타일' 선택 팝업 ── */
+.acctModal .styleHint{font-size:11px;color:var(--pink-2);margin-top:12px;text-align:center}
+.styleSelectSave{display:block;width:100%;justify-content:center;margin-top:16px}
+.styleSelectGrid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+  max-height:56vh;overflow-y:auto;padding-right:2px;margin-top:2px;
+}
+.styleSelCard{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:10px 6px 12px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--pink-3);
+  transition:all .25s var(--ease);text-align:center;
+}
+.styleSelCard img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;display:block}
+.styleSelCard span{font-size:12px;color:var(--pink-1);font-weight:500}
+.styleSelCard:hover{box-shadow:inset 0 0 0 1px var(--pink-0)}
+.styleSelCard.on{box-shadow:inset 0 0 0 2px var(--coral)}
+.styleSelCard.on span{color:var(--pink-0);font-weight:600}
+@media(max-width:640px){
+  .styleSelectGrid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* 등급 기준 확정 전에는 숨긴다 (rank.js RANK_ON) */
+.xpWrap[hidden]{display:none!important}
+
+/* 로그인 복구 중 (2026-10-02) — [로그인] 대신 자리만 잡아 둔다. 지난번 이름을 아는 브라우저는
+   이름을 먼저 보여 주되(.me.pending), 복구가 끝나기 전에는 누를 수 없다. */
+.mAuth .pill.authPending{
+  min-width:66px;height:32px;padding:0;border-color:transparent;color:transparent;pointer-events:none;
+  background:linear-gradient(90deg,#efece7 0%,#f7f5f1 50%,#efece7 100%);background-size:200% 100%;
+  animation:authShimmer 1.2s ease-in-out infinite;
+}
+@keyframes authShimmer{from{background-position:100% 0}to{background-position:-100% 0}}
+@media (prefers-reduced-motion:reduce){.mAuth .pill.authPending{animation:none}}
+.mAuth .pill.me.pending{pointer-events:none}

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="520" viewBox="0 0 1440 520" role="img" aria-labelledby="title desc">
+<title id="title">FEEDiT — Read the trend. Find your fit.</title><desc id="desc">Fashion intelligence platform. Coral trend line on a warm paper and black editorial layout.</desc>
+<rect width="1440" height="520" rx="22" fill="#f1efea"/>
+<path d="M950 0H1418Q1440 0 1440 22V498Q1440 520 1418 520H950Z" fill="#0a0a0a"/>
+<g font-family="Pretendard, Arial, sans-serif" fill="#0a0a0a"><text x="64" y="63" font-size="15" letter-spacing="4">FASHION INTELLIGENCE / FEEDiT</text><text x="56" y="242" font-size="172" font-weight="800" letter-spacing="-12">FEEDiT<tspan fill="#ff6b4a">.</tspan></text><text x="64" y="310" font-size="34" font-weight="600" letter-spacing="-1">Read the trend. Find your fit.</text><text x="64" y="350" font-size="18" fill="#68645e">From cultural signals to personal style.</text></g>
+<path d="M64 408H880" stroke="#ccc8c0"/>
+<g font-family="Arial, sans-serif" font-size="14" fill="#55514c" letter-spacing="2"><text x="64" y="457">01 / DISCOVER</text><text x="332" y="457">02 / UNDERSTAND</text><text x="626" y="457">03 / DECIDE</text></g>
+<g stroke="#292929"><path d="M998 135H1390M998 215H1390M998 295H1390M998 375H1390M1048 115V400M1128 115V400M1208 115V400M1288 115V400M1368 115V400"/></g>
+<text x="994" y="65" font-family="Arial, sans-serif" font-size="14" letter-spacing="3" fill="#f1efea">THE SIGNAL EDIT</text>
+<path d="M994 352L1054 329L1114 345L1174 243L1234 269L1294 174L1368 132" fill="none" stroke="#ff6b4a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1368" cy="132" r="21" fill="#ff6b4a" opacity=".15"/><circle cx="1368" cy="132" r="8" fill="#ff6b4a"/>
+<text x="994" y="457" font-family="Arial, sans-serif" font-size="13" letter-spacing="2" fill="#a9a69f">DATA → INSIGHT → YOUR NEXT FIT</text></svg>

@@ -1,0 +1,23 @@
+# 의존성
+node_modules/
+
+# 빌드 결과물 — Vercel 이 알아서 만든다. 커밋하지 말 것.
+dist/
+.vite/
+
+# 로컬 환경
+.env
+.env.local
+.env.*.local
+
+# 에디터 · OS
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# 로그
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*

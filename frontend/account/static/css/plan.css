@@ -1,0 +1,118 @@
+/* ══════════════════════════════════════════════════════════════
+   요금제 — account/static/js/plan.js · pricing/static/js/pricing.js 와 짝 (2026-10-03)
+
+   ★ 여기 있는 것은 전부 베타가 끝난 뒤(서버 billing.enforced)에만 화면에 나온다.
+     베타 동안에는 이 클래스들을 붙이는 코드가 돌지 않는다.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 요금제 카드 — 이용 중 · 신청 심사 중 ── */
+.prCard .prState{
+  font-style:normal;font-size:10.5px;font-weight:500;letter-spacing:-.01em;
+  padding:3px 9px;border-radius:99px;background:#f3f1ec;color:var(--pink-1);white-space:nowrap;
+}
+/* 표시가 붙은 카드만 — 좁은 화면에서 이름 · 추천 · 표시가 한 줄에 안 들어가면 표시를 다음 줄로 내린다
+   (그대로 두면 '프로' 가 '프/로' 로 세로로 쪼개졌다) */
+.prCard.current .pl,.prCard.pending .pl{min-width:0}
+.prCard.current .bd1,.prCard.pending .bd1{flex-wrap:wrap;row-gap:6px}
+.prCard.current .bd1 b,.prCard.pending .bd1 b,
+.prCard.current .bd1 u,.prCard.pending .bd1 u{white-space:nowrap;flex:0 0 auto}
+.prCard.current .prState{background:var(--pink-0);color:#fff}
+.prCard.pending .prState{background:rgba(255,107,74,.12);color:#b8452c}
+
+/* ── 신청 · 해지 창 ── */
+.planForm .planLead{font-size:13px;line-height:1.75;color:var(--pink-1);margin:-6px 0 14px}
+.planForm .planLead b{color:var(--pink-0);font-weight:600}
+.planForm .planNote{font-size:12px;line-height:1.7;color:var(--pink-2);margin:0 0 14px;
+  padding:10px 12px;border-radius:10px;background:#f7f5f1}
+.planForm .planField{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.planForm .planField label{font-size:11.5px;font-weight:600;color:var(--pink-1)}
+.planForm .planField label span{color:var(--pink-2);font-weight:400;margin-left:5px}
+.planForm .planField input,
+.planForm .planField textarea{
+  width:100%;padding:12px 13px;border-radius:10px;font-family:inherit;font-size:13px;
+  background:#fff;border:none;box-shadow:inset 0 0 0 1px var(--pink-3);outline:none;color:var(--pink-0);
+  resize:vertical;transition:box-shadow .25s var(--ease);
+}
+.planForm .planField input:focus,
+.planForm .planField textarea:focus{box-shadow:inset 0 0 0 1.5px var(--pink-0)}
+.planForm .fieldMsg{margin-top:2px;white-space:pre-line;line-height:1.6}
+.planForm .pill:disabled{opacity:.55;cursor:wait;transform:none}
+
+/* ── 관리자 심사 목록 — 직업 인증 심사(job.css 의 .jr*)를 그대로 쓰고 칸만 바꾼다 ── */
+.jrItem.prq{grid-template-columns:minmax(0,1fr) auto}
+.jrItem.prq.approved.live{opacity:1}
+.prqActs{align-items:center}
+.prqReason{width:132px;padding:7px 10px;border-radius:999px;border:0;font-family:inherit;font-size:11.5px;
+  box-shadow:inset 0 0 0 1px var(--pink-3);outline:none;color:var(--pink-0);background:#fff}
+.prqReason:focus{box-shadow:inset 0 0 0 1.5px var(--pink-0)}
+.prqBeta{font-size:12px;line-height:1.7;color:#b8452c;background:rgba(255,107,74,.08);
+  border-radius:10px;padding:10px 12px;margin:0 0 12px}
+.planBadge{
+  display:inline-flex;align-items:center;height:16px;padding:0 6px;border-radius:4px;
+  background:#1c1a17;color:#fff;font-size:10px;font-weight:600;line-height:1;white-space:nowrap;
+}
+.planBadge.pro{background:var(--coral,#ff6b4a)}
+.planBadge.business{background:#3d5a6c}
+@media (max-width:520px){
+  .jrItem.prq{grid-template-columns:minmax(0,1fr)}
+  .prqActs{flex-wrap:wrap}
+  .prqReason{flex:1 1 100%;width:auto}
+}
+
+/* ── 트렌드 분석 — 잠긴 EDIT 탭 ── */
+.planLock{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  min-height:340px;padding:40px 24px;
+}
+.planLockTag{
+  font-family:var(--num);font-size:9px;letter-spacing:.2em;padding:5px 11px;border-radius:99px;
+  background:var(--coral,#ff6b4a);color:var(--pink-0);margin-bottom:16px;
+}
+.planLock h4{font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.planLock p{margin:9px 0 20px;font-size:13px;line-height:1.75;opacity:.65;max-width:400px}
+/* 사이드바 — 잠긴 항목 오른쪽에 작은 PRO 표시 (사이드바를 펼쳤을 때만 글자와 함께 보인다) */
+.sItem.planLocked .tx::after{
+  content:"PRO";margin-left:8px;font-family:var(--num);font-size:8px;letter-spacing:.14em;
+  padding:2px 6px;border-radius:99px;background:rgba(241,239,234,.12);color:rgba(241,239,234,.75);
+  vertical-align:2px;
+}
+
+/* ── 데이터 API 키 — 비즈니스 요금제 (account/static/js/data_api.js · 2026-10-03) ── */
+#dataApiBody .jrLead{margin-top:-8px}
+.daFresh{border-radius:12px;padding:14px 16px;margin:0 0 14px;background:rgba(255,107,74,.08);
+  box-shadow:inset 0 0 0 1px rgba(255,107,74,.35)}
+.daFresh b{font-size:13px;font-weight:600}
+.daFresh p{font-size:12px;color:var(--pink-1);line-height:1.6;margin:4px 0 10px}
+.daFreshRow{display:flex;gap:8px;align-items:center}
+.daFreshRow code{flex:1;min-width:0;overflow-x:auto;white-space:nowrap;font-family:ui-monospace,Menlo,monospace;
+  font-size:12px;padding:9px 11px;border-radius:8px;background:#fff;box-shadow:inset 0 0 0 1px var(--pink-3)}
+.daKeys{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.daKey{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;
+  padding:11px 14px;border:1px solid var(--pink-3);border-radius:12px;background:#fff}
+.daKey div{display:flex;gap:8px;align-items:baseline;min-width:0}
+.daKey b{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.daKey span{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--pink-2)}
+.daKey em{font-style:normal;font-size:11px;color:var(--pink-2);white-space:nowrap}
+.daEmpty{font-size:12.5px;color:var(--pink-2);text-align:center;padding:16px 0}
+.daMake{display:flex;gap:8px;margin-bottom:6px}
+.daMake input{flex:1;min-width:0;padding:9px 12px;border-radius:999px;border:0;font-family:inherit;font-size:12.5px;
+  box-shadow:inset 0 0 0 1px var(--pink-3);outline:none;color:var(--pink-0);background:#fff}
+.daMake input:focus{box-shadow:inset 0 0 0 1.5px var(--pink-0)}
+.daMake .pill:disabled,.daKey .pill:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.daNote{font-size:11.5px;color:var(--pink-2);line-height:1.7;margin:6px 0}
+.daNote code{font-family:ui-monospace,Menlo,monospace;font-size:11px}
+.daGuide{margin-top:18px;padding-top:16px;border-top:1px solid var(--pink-3)}
+.daGuide h4{font-size:13.5px;font-weight:600;margin-bottom:6px}
+.daGuide > p{font-size:12px;color:var(--pink-1);line-height:1.7}
+.daCode{margin:10px 0 12px;padding:12px 14px;border-radius:10px;background:#1c1a17;color:#f1efea;
+  font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.6;white-space:pre;overflow-x:auto}
+.daTbl{width:100%;border-collapse:collapse;font-size:12px}
+.daTbl th,.daTbl td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--pink-3);vertical-align:top;line-height:1.5}
+.daTbl thead th{font-size:11px;color:var(--pink-2);font-weight:500}
+.daTbl tbody th{font-family:ui-monospace,Menlo,monospace;font-weight:500;white-space:nowrap}
+.daTbl td:last-child{color:var(--pink-2)}
+@media (max-width:560px){
+  .daKey{grid-template-columns:minmax(0,1fr) auto}
+  .daKey em{grid-column:1/-1;grid-row:2}
+  .daTbl tr > :last-child{display:none}   /* 머리와 칸을 함께 — 받는 값은 넓은 화면에서 본다 */
+}

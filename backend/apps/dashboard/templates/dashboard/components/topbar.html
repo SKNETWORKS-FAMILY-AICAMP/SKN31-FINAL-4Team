@@ -1,4 +1,5 @@
-{% load static %}
+{% load static dashboard_extras %}
+{% dashboard_session_seconds as session_seconds %}
 {% with url_name=request.resolver_match.url_name %}
 <div class="top">
   <div class="topIn">
@@ -8,22 +9,39 @@
     </a>
     
     <div class="tabs">
-      <a href="{% url 'dashboard:platform_status' %}" class="btn {% if url_name in 'platform_status,collection_targets,run_crawl,collection_runs,crawl_rules,robots_check' %}on{% endif %}">수집</a>
+      <a href="{% url 'dashboard:platform_status' %}" class="btn {% if url_name == 'platform_status' or url_name == 'collection_targets' or url_name == 'run_crawl' or url_name == 'collection_runs' or url_name == 'crawl_rules' or url_name == 'robots_check' %}on{% endif %}">수집</a>
       
       <a href="{% url 'dashboard:raw_documents' %}" class="btn {% if url_name == 'raw_documents' %}on{% endif %}">원본데이터</a>
       
-      <a href="{% url 'dashboard:normalized_products' %}" class="btn {% if url_name in 'normalized_products,normalization_failures,normalized_musinsa,normalized_zigzag,normalized_ably,normalized_kream,normalized_musinsa_used,normalized_youtube,normalized_naver' %}on{% endif %}">정규화데이터</a>
+      <a href="{% url 'dashboard:pipeline_overview' %}" class="btn {% if url_name == 'pipeline_overview' or url_name == 'normalized_products' or url_name == 'normalization_failures' or url_name == 'data_quality' or url_name == 'normalized_musinsa' or url_name == 'normalized_zigzag' or url_name == 'normalized_ably' or url_name == 'normalized_kream' or url_name == 'normalized_musinsa_used' or url_name == 'normalized_youtube' or url_name == 'normalized_naver' or url_name == 'text_youtube' or url_name == 'text_musinsa' or url_name == 'text_zigzag' or url_name == 'text_ably' or url_name == 'text_naver' %}on{% endif %}">정규화데이터</a>
       
-      <a href="{% url 'dashboard:trend_metrics' %}" class="btn {% if url_name in 'trend_metrics,term_metrics,product_metrics,product_snapshot' %}on{% endif %}">데이터분석</a>
+      <a href="{% url 'dashboard:trend_metrics' %}" class="btn {% if url_name == 'trend_metrics' or url_name == 'term_metrics' or url_name == 'product_metrics' or url_name == 'product_snapshot' %}on{% endif %}">데이터분석</a>
       
-      <a href="{% url 'dashboard:system_status' %}" class="btn {% if url_name in 'system_status,jobs,system_api,system_aws,system_celery' %}on{% endif %}">시스템</a>
+      <a href="{% url 'dashboard:service_users' %}" class="btn {% if url_name == 'feedback_list' or url_name == 'report_list' or url_name == 'service_users' or url_name == 'service_events' or url_name == 'service_votes' or url_name == 'service_comments' or url_name == 'service_notices' %}on{% endif %}">서비스</a>
+
+      <a href="{% url 'dashboard:database_overview' %}" class="btn {% if url_name == 'database_overview' or url_name == 'database_query' %}on{% endif %}">데이터베이스</a>
+
+      <a href="{% url 'dashboard:system_status' %}" class="btn {% if url_name == 'system_status' or url_name == 'jobs' or url_name == 'system_api' or url_name == 'system_aws' or url_name == 'system_celery' %}on{% endif %}">시스템</a>
       
-      <a href="{% url 'dashboard:dictionary_terms' %}" class="btn {% if url_name in 'dictionary_terms,dictionary_candidates,dictionary_candidate_detail,brand_sources' %}on{% endif %}">사전</a>
+      <a href="{% url 'dashboard:dictionary_overview' %}" class="btn {% if url_name == 'dictionary_overview' or url_name == 'dictionary_terms' or url_name == 'dictionary_term_detail' or url_name == 'dictionary_candidates' or url_name == 'dictionary_candidate_detail' or url_name == 'dictionary_candidate_review' or url_name == 'dictionary_quality' or url_name == 'brand_sources' or url_name == 'brand_search' or url_name == 'brands' or url_name == 'categories' or url_name == 'products' %}on{% endif %}">사전</a>
     </div>
     
     <div class="live">
       SYSTEM LIVE <div class="dot on"></div>
       {% if request.user.is_authenticated %}
+      {% if session_seconds %}
+      <div
+        class="session-clock"
+        id="dashboardSessionClock"
+        data-seconds="{{ session_seconds }}"
+        data-ping-url="{% url 'dashboard:session_ping' %}"
+        data-login-url="{% url 'dashboard:login' %}"
+        title="마지막 활동 후 자동 로그아웃까지 남은 시간"
+      >
+        <span>SESSION</span>
+        <b aria-live="off">60:00</b>
+      </div>
+      {% endif %}
       <span style="margin-left: 15px; color: var(--tx2); text-transform: none;">{{ request.user.username }} 님</span>
       <a href="{% url 'dashboard:logout' %}" style="margin-left: 10px; color: var(--tx2); text-decoration: none;">로그아웃</a>
       {% endif %}
@@ -75,4 +93,142 @@
   .tabs .btn { padding: 8px 15px; border-radius: 9px; font-size: 13px; color: var(--tx2); transition: .25s var(--ease); text-decoration: none; border: none; background: transparent; }
   .tabs .btn:hover { background: rgba(10,10,10,.05); }
   .tabs .btn.on { background: var(--ink); color: #f1efea; }
+  .session-clock {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 6px;
+    padding: 5px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255,255,255,.56);
+    color: var(--tx3);
+    white-space: nowrap;
+    letter-spacing: .11em;
+  }
+  .session-clock b {
+    min-width: 34px;
+    color: var(--tx2);
+    font: 600 10px/1 var(--num);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .04em;
+    text-align: right;
+  }
+  .session-clock.is-warning { border-color: rgba(201,138,27,.35); }
+  .session-clock.is-warning b { color: var(--warn); }
+  .session-clock.is-danger { border-color: rgba(178,59,59,.35); }
+  .session-clock.is-danger b { color: var(--bad); }
 </style>
+
+{% if session_seconds %}
+<script>
+(() => {
+  const clock = document.getElementById('dashboardSessionClock');
+  if (!clock || clock.dataset.ready === '1') return;
+  clock.dataset.ready = '1';
+
+  const value = clock.querySelector('b');
+  const sessionSeconds = Number.parseInt(clock.dataset.seconds, 10) || 3600;
+  const storageKey = 'feedit.dashboard.sessionPingAt';
+  const readStoredPingAt = () => {
+    try {
+      return Number.parseInt(window.sessionStorage.getItem(storageKey), 10);
+    } catch (error) {
+      return Number.NaN;
+    }
+  };
+  const storePingAt = (timestamp) => {
+    try {
+      window.sessionStorage.setItem(storageKey, String(timestamp));
+    } catch (error) {
+      // 저장소가 차단된 브라우저에서도 세션 heartbeat 자체는 계속 동작한다.
+    }
+  };
+  const storedPingAt = readStoredPingAt();
+  let deadline = Date.now() + sessionSeconds * 1000;
+  let lastPingAt = Number.isFinite(storedPingAt) ? storedPingAt : 0;
+  let activitySincePing = true;
+  let pinging = false;
+  let expired = false;
+
+  const csrfToken = () => {
+    const item = document.cookie.split('; ').find((cookie) => cookie.startsWith('csrftoken='));
+    return item ? decodeURIComponent(item.slice('csrftoken='.length)) : '';
+  };
+
+  const goToLogin = () => {
+    if (expired) return;
+    expired = true;
+    const next = `${window.location.pathname}${window.location.search}`;
+    window.location.assign(`${clock.dataset.loginUrl}?next=${encodeURIComponent(next)}`);
+  };
+
+  const render = () => {
+    const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    const minutes = Math.floor(remaining / 60);
+    const seconds = String(remaining % 60).padStart(2, '0');
+    value.textContent = `${minutes}:${seconds}`;
+    clock.classList.toggle('is-warning', remaining > 60 && remaining <= 300);
+    clock.classList.toggle('is-danger', remaining <= 60);
+    if (remaining === 0) goToLogin();
+  };
+
+  const ping = async () => {
+    if (pinging || expired || !activitySincePing) return;
+    pinging = true;
+    activitySincePing = false;
+    try {
+      const response = await fetch(clock.dataset.pingUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: {
+          'X-CSRFToken': csrfToken(),
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+      if (response.redirected && response.url.includes('/admin-dashboard/login/')) {
+        goToLogin();
+        return;
+      }
+      if (response.status === 401) {
+        goToLogin();
+        return;
+      }
+      if (!response.ok) throw new Error(`session ping failed: ${response.status}`);
+      const payload = await response.json();
+      const remaining = Number.parseInt(payload.remaining_seconds, 10) || sessionSeconds;
+      lastPingAt = Date.now();
+      storePingAt(lastPingAt);
+      deadline = lastPingAt + remaining * 1000;
+      render();
+    } catch (error) {
+      activitySincePing = true;
+      console.debug('[dashboard] session heartbeat deferred', error);
+    } finally {
+      pinging = false;
+    }
+  };
+
+  const noteActivity = (event) => {
+    if (event && event.isTrusted === false) return;
+    activitySincePing = true;
+    deadline = Date.now() + sessionSeconds * 1000;
+    render();
+    if (Date.now() - lastPingAt >= 55000) ping();
+  };
+
+  ['pointerdown', 'keydown', 'input', 'touchstart'].forEach((name) => {
+    document.addEventListener(name, noteActivity, { passive: true, capture: true });
+  });
+  document.addEventListener('scroll', noteActivity, { passive: true, capture: true });
+
+  render();
+  if (Date.now() - lastPingAt >= 55000) ping();
+  window.setInterval(render, 1000);
+  window.setInterval(() => {
+    if (activitySincePing && Date.now() - lastPingAt >= 55000) ping();
+  }, 15000);
+})();
+</script>
+{% endif %}

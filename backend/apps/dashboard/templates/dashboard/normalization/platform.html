@@ -1,11 +1,62 @@
 {% extends "dashboard/base.html" %}
-{% load static humanize %}
+{% load static humanize dashboard_extras %}
 
 {% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
 <link rel="stylesheet" href="{% static 'dashboard/css/pages/analytics.css' %}">
+<style>
+/* 카드 색 보강 */
+.nz-value.ok{color:#137333}
+.nz-value.warn{color:#b06000}
+
+/* 정규화 태그 미리보기 */
+.nz-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.nz-chip{display:inline-block;padding:1px 7px;border-radius:9px;font-size:11px;
+line-height:1.5;background:#eef1f4;color:#3c4043;white-space:nowrap}
+.nz-chip.more{background:transparent;color:#9aa0a6}
+.nz-open{display:inline-flex;align-items:center;justify-content:center;min-width:62px;
+border:1px solid #d6d9dd;background:#fff;border-radius:5px;padding:3px 8px;
+font-size:11px;color:#444;cursor:pointer;white-space:nowrap;box-sizing:border-box}
+.nz-open:hover{background:#f1f3f4}
+.nz-open[aria-expanded="true"]{background:#222;color:#fff;border-color:#222}
+tr.nz-detail-row > td{background:#fafbfc;border-top:0;padding:0}
+.nz-detail{padding:14px 18px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:1200px){.nz-detail{grid-template-columns:1fr}}
+.nz-detail h5{margin:0 0 7px;font-size:12px;font-weight:600;color:#5f6368;
+letter-spacing:.02em}
+.nz-kv{width:100%;border-collapse:collapse;font-size:12px;background:#fff;
+border:1px solid #e3e5e8;border-radius:6px;overflow:hidden}
+.nz-kv th{width:66px;text-align:left;padding:5px 10px;font-weight:500;color:#80868b;
+background:#f8f9fa;border-bottom:1px solid #eceff1;vertical-align:top}
+.nz-kv td{padding:5px 10px;border-bottom:1px solid #eceff1}
+.nz-kv tr:last-child th,.nz-kv tr:last-child td{border-bottom:0}
+.nz-dash{color:#c0c4c8}
+.nz-json{margin:0;background:#1e1f22;color:#e6e6e6;padding:11px 13px;border-radius:6px;
+font-size:11.5px;line-height:1.55;max-height:300px;overflow:auto;white-space:pre-wrap;
+word-break:break-word}
+.nz-body{margin:0;background:#fff;border:1px solid #e3e5e8;border-radius:6px;
+padding:11px 13px;font-size:12px;line-height:1.65;max-height:300px;overflow:auto;
+white-space:pre-wrap;word-break:break-word;color:#3c4043}
+.nz-meta-line{font-size:11px;color:#80868b;margin-bottom:8px}
+.nz-meta-line b{color:#3c4043;font-weight:600}
+.nz-cand{display:inline-block;padding:1px 7px;border-radius:9px;font-size:11px;
+margin:2px 3px 0 0;background:#fef7e0;color:#8a5300}
+.nz-prod{display:inline-block;padding:1px 7px;border-radius:9px;font-size:11px;
+margin:2px 3px 0 0;background:#e8f0fe;color:#1967d2}
+.nz-format{display:block;width:max-content;margin-top:5px;padding:2px 7px;border-radius:999px;
+font-size:10px;font-weight:600;background:#f1f3f4;color:#5f6368;white-space:nowrap}
+.nz-format.VERDICT{background:#fce8e6;color:#c5221f}
+.nz-format.RECOMMEND{background:#e8f0fe;color:#1967d2}
+.nz-format.REVIEW{background:#fef7e0;color:#8a5300}
+.nz-format.HAUL{background:#f3e8fd;color:#8430ce}
+.nz-format.STYLING{background:#e6f4ea;color:#137333}
+.nz-video-labels{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.nz-video-labels span{padding:4px 9px;border:1px solid #e3e5e8;border-radius:999px;
+background:#fff;color:#5f6368;font-size:11px}
+.nz-video-labels b{color:#202124;font-weight:600}
+</style>
 {% endblock %}
 
 {% block sub_sidebar %}
@@ -65,6 +116,12 @@
         <option value="">전체 유형</option>
         {% for value in content_types %}
         <option value="{{ value }}" {% if selected_content_type == value %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+    </select>
+    <select name="content_format">
+        <option value="">전체 영상 분류</option>
+        {% for value, label in format_choices %}
+        <option value="{{ value }}" {% if selected_format == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
     </select>
     <input type="text" name="q" value="{{ search_query }}" placeholder="제목 / 콘텐츠 ID / 채널명">
@@ -142,6 +199,7 @@
     <colgroup>
         <col style="width:56px"><col style="width:150px"><col><col style="width:128px"><col style="width:70px">
         <col style="width:84px"><col style="width:74px"><col style="width:68px"><col style="width:92px">
+        <col style="width:82px">
     </colgroup>
     <thead>
         <tr>
@@ -154,6 +212,7 @@
             <th class="ta-r">좋아요</th>
             <th class="ta-r">댓글</th>
             <th>게시일</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -168,16 +227,87 @@
                 <strong class="nz-name" title="{{ row.title }}">{{ row.title|default:"-" }}</strong>
                 {% endif %}
                 <span class="nz-sub2">{{ row.external_content_id }}{% if row.duration_seconds %} · {{ row.duration_seconds }}초{% endif %}</span>
+                {% with chips=row.analysis_tags|tag_summary:5 n=row.analysis_tags|tag_count %}
+                {% if chips %}
+                <div class="nz-tags">
+                    {% for chip in chips %}<span class="nz-chip">{{ chip }}</span>{% endfor %}
+                    {% if n > 5 %}<span class="nz-chip more">+{{ n|add:"-5" }}</span>{% endif %}
+                </div>
+                {% endif %}
+                {% endwith %}
             </td>
             <td>{% if row.profile %}{{ row.profile.name|default:"-" }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
-            <td><span class="nz-plat">{{ row.content_type|default:"-" }}</span></td>
+            <td>
+                <span class="nz-plat">{{ row.get_content_type_display|default:"-" }}</span>
+                <span class="nz-format {{ row.content_format }}">{{ row.get_content_format_display|default:"미분류" }}</span>
+            </td>
             <td class="ta-r mono">{% if row.latest_snapshot %}{{ row.latest_snapshot.view_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
             <td class="ta-r mono">{% if row.latest_snapshot %}{{ row.latest_snapshot.like_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
             <td class="ta-r mono">{% if row.latest_snapshot %}{{ row.latest_snapshot.comment_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
             <td class="nz-date">{{ row.published_at|date:"Y-m-d"|default:"-" }}</td>
+            <td>
+                <button type="button" class="nz-open" aria-expanded="false"
+                        data-target="nzd-{{ row.id }}">▶ 상세</button>
+            </td>
+        </tr>
+        <tr class="nz-detail-row" id="nzd-{{ row.id }}" hidden>
+            <td colspan="10">
+                <div class="nz-detail">
+                    <div>
+                        <div class="nz-video-labels">
+                            <span>영상 분류 <b>{{ row.get_content_format_display|default:"미분류" }}</b></span>
+                            <span>광고·제휴 <b>{{ row.get_ad_disclosure_display|default:"미분류" }}</b></span>
+                        </div>
+                        {% with meta=row.analysis_tags|get_key:"_meta" %}
+                        {% if meta %}
+                        <p class="nz-meta-line">
+                            본문 <b>{% if meta.source == 'transcript' %}위스퍼 대본{% else %}설명란{% endif %}</b>
+                            · {{ meta.text_len|intcomma }}자
+                            · 용어 <b>{{ meta.terms|default:"?" }}개</b>
+                            {% if meta.threshold %} (기준 {{ meta.threshold }}개){% endif %}
+                            {% if meta.judged_at %} · {{ meta.judged_at }} 판정{% endif %}
+                        </p>
+                        {% endif %}
+                        {% endwith %}
+
+                        <h5>사전 태그</h5>
+                        <table class="nz-kv">
+                            {% for label, values in row.analysis_tags|tag_slots %}
+                            <tr>
+                                <th>{{ label }}</th>
+                                <td>
+                                    {% for v in values %}<span class="nz-chip">{{ v }}</span>{% empty %}<span class="nz-dash">-</span>{% endfor %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+
+                        {% with products=row.analysis_tags|get_key:"products" %}
+                        {% if products %}
+                        <h5 style="margin-top:12px">상품명 <span style="font-weight:400;color:#9aa0a6">{{ products|length }}개</span></h5>
+                        <div>{% for p in products %}<span class="nz-prod">{{ p }}</span>{% endfor %}</div>
+                        {% endif %}
+                        {% endwith %}
+
+                        {% with cands=row.analysis_tags|get_key:"candidates" %}
+                        {% if cands %}
+                        <h5 style="margin-top:12px">사전 밖 표현 <span style="font-weight:400;color:#9aa0a6">{{ cands|length }}개</span></h5>
+                        <div>{% for c in cands %}<span class="nz-cand" title="{{ c.guess }}">{{ c.term }}</span>{% endfor %}</div>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+
+                    <div>
+                        <h5>본문</h5>
+                        <pre class="nz-body">{{ row.description|default:"(없음)" }}</pre>
+                        <h5 style="margin-top:12px">analysis_tags 원본</h5>
+                        <pre class="nz-json">{{ row.analysis_tags|pretty_json|default:"(없음)" }}</pre>
+                    </div>
+                </div>
+            </td>
         </tr>
         {% empty %}
-        <tr><td colspan="9" class="nz-empty">조건에 맞는 콘텐츠가 없습니다.</td></tr>
+        <tr><td colspan="10" class="nz-empty">조건에 맞는 콘텐츠가 없습니다.</td></tr>
         {% endfor %}
     </tbody>
 </table>
@@ -185,6 +315,19 @@
 </div>
 
 {% include "dashboard/components/pagination_qs.html" %}
+
+<script>
+document.querySelectorAll('.nz-open').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var row = document.getElementById(btn.dataset.target);
+        if (!row) { return; }
+        var open = row.hidden;
+        row.hidden = !open;
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        btn.textContent = open ? '닫기' : '▶ 상세';
+    });
+});
+</script>
 
 {% endif %}
 

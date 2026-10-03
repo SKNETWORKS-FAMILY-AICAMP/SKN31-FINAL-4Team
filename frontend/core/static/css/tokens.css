@@ -24,7 +24,10 @@ html,body{height:100%}
 body{
   background:var(--bg);color:var(--ink);overflow:hidden;
   font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
-  -webkit-font-smoothing:antialiased;letter-spacing:-.02em;cursor:none;
+  -webkit-font-smoothing:antialiased;letter-spacing:-.02em;
 }
 ::selection{background:#fff;color:#000}
-button{font:inherit;color:inherit;background:none;border:none;cursor:none}
+button{font:inherit;color:inherit;background:none;border:none}
+/* 카드 · 팝업 썸네일을 클릭할 때 브라우저 기본 드래그(반투명 고스트 이미지)가
+   뜨지 않게 막는다 — 클릭 자체는 그대로 동작한다 */
+img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none}

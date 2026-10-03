@@ -35,8 +35,14 @@
           </div>
 
           <div class="chatWrap">
+            <div class="imgAttach" id="mImgAttach" hidden></div>
             <div class="chatbar">
-              <button class="salmalBtn" id="smToggle" type="button" aria-pressed="false"><span class="lbl"><i class="ic">◑</i><span class="tx">살!말?</span></span></button>
+              <button class="salmalBtn" id="smToggle" type="button" aria-pressed="false">
+                <i class="thumb"></i><span class="tx">일반</span>
+              </button>
+              <i class="barSep"></i>
+              <button class="imgAddBtn" id="mImgAdd" type="button" aria-label="이미지 첨부"><i>+</i></button>
+              <input type="file" id="mImgFile" accept="image/*" multiple hidden>
               <div class="cfield">
                 <div class="ghostQ" id="ghostQ">
                   <span class="spark">✧</span>
@@ -47,7 +53,6 @@
               <button class="sendBtn" id="mSend" aria-label="보내기">→</button>
             </div>
           </div>
-          <div class="chips" id="mChips"></div>
         </div>
       </div>
     </div>
@@ -59,6 +64,13 @@
         <button class="pill ghost" id="newChat" style="margin:26px auto 0;display:flex">↺ 새 대화</button>
       </div>
     </div>
+
+    <!-- 화면 오른쪽 하단 — 챗봇 팝업을 곧장 띄우는 진입점 -->
+    <button class="chatFab" id="chatFab" type="button" aria-label="챗봇 열기">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 5.5C4 4.67157 4.67157 4 5.5 4H18.5C19.3284 4 20 4.67157 20 5.5V15.5C20 16.3284 19.3284 17 18.5 17H9L5 20.5V17H5.5C4.67157 17 4 16.3284 4 15.5V5.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+      </svg>
+    </button>
   </section>
 
 <!-- 586-618행: 챗봇 팝업(cpOverlay) -->
@@ -68,7 +80,7 @@
     <div class="cpBox" id="cpBox">
       <aside class="cpSide">
         <div class="cpProfile">
-          <div class="cpAv" id="cpAv"></div>
+          <div class="cpAv" id="cpAv" role="button" tabindex="0" title="일반 / 살말 모드 전환 (Tab)" aria-label="일반 / 살말 모드 전환" aria-keyshortcuts="Tab"></div>
           <div class="cpProfileText">
             <b id="cpName">일반 모드</b>
             <p id="cpDesc"></p>
@@ -80,12 +92,19 @@
       </aside>
       <div class="cpMain">
         <div class="cpThreadWrap" id="cpThreadWrap">
-          <div class="cpEmpty"><p id="cpEmptyText">궁금한 걸 물어보세요.</p></div>
+          <div class="cpEmpty" id="cpEmpty"><p id="cpEmptyText">궁금한 걸 물어보세요.</p></div>
           <div class="thread cpThread" id="cpThread"></div>
         </div>
-        <div class="cpInputRow">
-          <textarea id="cpInput" rows="1" placeholder="궁금한 점을 질문해 주세요." autocomplete="off"></textarea>
-          <button class="cpSend" id="cpSend" aria-label="보내기">→</button>
+        <!-- 살말 모드에서 즐겨입는 스타일이 비어 있을 때만 뜬다(취향 = 판단의 35%) -->
+        <div class="cpTaste" id="cpTaste" hidden></div>
+        <div class="cpInputWrap">
+          <div class="imgAttach cpImgAttach" id="cpImgAttach" hidden></div>
+          <div class="cpInputRow">
+            <button type="button" class="imgAddBtn cpImgAddBtn" id="cpImgAdd" aria-label="이미지 첨부"><i>+</i></button>
+            <input type="file" id="cpImgFile" accept="image/*" multiple hidden>
+            <textarea id="cpInput" rows="1" placeholder="궁금한 점을 질문해 주세요." autocomplete="off"></textarea>
+            <button class="cpSend" id="cpSend" aria-label="보내기">→</button>
+          </div>
         </div>
       </div>
     </div>

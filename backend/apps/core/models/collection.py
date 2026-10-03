@@ -15,7 +15,8 @@ class Source(models.Model):
     class SourceType(models.TextChoices):
         COMMERCE = "COMMERCE", "Commerce"
         CONTENT = "CONTENT", "Content"
-
+        SEARCH = "SEARCH", "Search"
+        
     class CollectionMethod(models.TextChoices):
         API = "API", "API"
         JSON = "JSON", "JSON"

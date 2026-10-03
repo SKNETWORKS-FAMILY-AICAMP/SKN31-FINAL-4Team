@@ -31,22 +31,36 @@ export const BADGES=[
   {id:'b07',cat:'참여/기여',icon:'shield',n:'살말 백전',tier:'500',d:'누적 투표 500회 달성',earned:true,date:'2026.08.05'},
   {id:'b08',cat:'참여/기여',icon:'shield',n:'살말 백전',tier:'1000',d:'누적 투표 1,000회 달성',earned:false,progress:'500/1,000'},
 
-  {id:'b09',cat:'참여/기여',icon:'comment',n:'성실 피드백러',tier:'10',d:'사후 만족도 피드백 10회 응답',earned:false,progress:'4/10'},
-  {id:'b10',cat:'참여/기여',icon:'comment',n:'성실 피드백러',tier:'50',d:'사후 만족도 피드백 50회 응답',earned:false,progress:'4/50'},
-  {id:'b11',cat:'참여/기여',icon:'comment',n:'성실 피드백러',tier:'100',d:'사후 만족도 피드백 100회 응답',earned:false,progress:'4/100'},
+  {id:'b09',cat:'참여/기여',icon:'comment',n:'성실 피드백러',tier:'10',d:'마감된 내 카드에 구매 후기 10회 남기기',earned:false,progress:'4/10'},
+  {id:'b10',cat:'참여/기여',icon:'comment',n:'성실 피드백러',tier:'50',d:'마감된 내 카드에 구매 후기 50회 남기기',earned:false,progress:'4/50'},
+  {id:'b11',cat:'참여/기여',icon:'comment',n:'성실 피드백러',tier:'100',d:'마감된 내 카드에 구매 후기 100회 남기기',earned:false,progress:'4/100'},
 
-  {id:'b12',cat:'참여/기여',icon:'calendar',n:'개근상',tier:'7',d:'7일 연속 방문',earned:true,date:'2026.08.18'},
-  {id:'b13',cat:'참여/기여',icon:'calendar',n:'개근상',tier:'30',d:'30일 연속 방문',earned:false,progress:'7/30'},
-  {id:'b14',cat:'참여/기여',icon:'calendar',n:'개근상',tier:'100',d:'100일 연속 방문',earned:false,progress:'7/100'},
+  {id:'b12',cat:'참여/기여',icon:'calendar',n:'개근상',tier:'7',d:'7일 연속 활동 (투표·댓글·카드·찜·검색·챗봇 중 하나라도 한 날)',earned:true,date:'2026.08.18'},
+  {id:'b13',cat:'참여/기여',icon:'calendar',n:'개근상',tier:'30',d:'30일 연속 활동 (투표·댓글·카드·찜·검색·챗봇 중 하나라도 한 날)',earned:false,progress:'7/30'},
+  {id:'b14',cat:'참여/기여',icon:'calendar',n:'개근상',tier:'100',d:'100일 연속 활동 (투표·댓글·카드·찜·검색·챗봇 중 하나라도 한 날)',earned:false,progress:'7/100'},
 
-  {id:'b15',cat:'안목/선구안',icon:'target',n:'연속 적중',tier:'5',d:'살/말 판단이 실제 만족도와 5회 연속 일치',earned:false,progress:'3/5'},
-  {id:'b16',cat:'안목/선구안',icon:'target',n:'연속 적중',tier:'10',d:'살/말 판단이 실제 만족도와 10회 연속 일치',earned:false,progress:'3/10'},
-  {id:'b17',cat:'안목/선구안',icon:'target',n:'연속 적중',tier:'20',d:'살/말 판단이 실제 만족도와 20회 연속 일치',earned:false,progress:'3/20'},
+  {id:'b15',cat:'안목/선구안',icon:'target',n:'연속 적중',tier:'5',d:'내 살/말 투표가 글쓴이의 실제 구매 결과와 5회 연속 일치',earned:false,progress:'3/5'},
+  {id:'b16',cat:'안목/선구안',icon:'target',n:'연속 적중',tier:'10',d:'내 살/말 투표가 글쓴이의 실제 구매 결과와 10회 연속 일치',earned:false,progress:'3/10'},
+  {id:'b17',cat:'안목/선구안',icon:'target',n:'연속 적중',tier:'20',d:'내 살/말 투표가 글쓴이의 실제 구매 결과와 20회 연속 일치',earned:false,progress:'3/20'},
 
   {id:'b18',cat:'안목/선구안',icon:'tag',n:'카테고리 안목러',tier:'',d:'특정 카테고리(ex. 아우터) 판단 정확도 상위 도달',earned:false,progress:'상위 24%'},
 
   {id:'b19',cat:'소셜/공유',icon:'share',n:'결산 공유러',tier:'',d:'시즌 취향 결산 또는 취향 리포트 공유',earned:false}
 ];
+/* ★ 2026-09-19 — 위 목록의 earned·date·progress 는 시연용 목업이었다.
+   이제 정의(이름·설명·아이콘)만 쓰고, 상태는 서버가 실제 기록으로 계산해 준다(badges.py).
+   로그인 전에는 전부 잠금이다. */
+export function badgesApply(states){
+  const st=states||{};
+  BADGES.forEach(b=>{
+    const s=st[b.id]||{};
+    b.earned=Boolean(s.earned);
+    b.date=s.date||'';
+    b.progress=s.progress||(Object.keys(st).length?'':'로그인하면 계산됩니다');
+  });
+}
+badgesApply(null);
+
 function bgMedal(b){
   const corner = b.earned
     ? (b.tier ? '<span class="chip">'+b.tier+'</span>' : '')
@@ -75,6 +89,16 @@ export function bgDetail(b){
       '</div>'+
     '</div>';
 }
+/* 알림(뱃지 달성)에서 그 뱃지 설명 창을 바로 연다 — notify.js openTarget (2026-09-19) */
+export function bgSelect(id){
+  const b=BADGES.find(x=>x.id===id); if(!b)return false;
+  bgRender.sel=id;
+  bgDetail(b);
+  $$('.bgTile').forEach(t=>t.classList.toggle('active', t.dataset.badge===id));
+  const tile=$('.bgTile[data-badge="'+id+'"]');
+  if(tile&&tile.scrollIntoView)tile.scrollIntoView({block:'nearest'});
+  return true;
+}
 export function bgRender(){
   const host=$('#badgeGrid'); if(!host)return;
   const cats=[...new Set(BADGES.map(b=>b.cat))];
@@ -92,7 +116,7 @@ export function bgRender(){
   if(bar){ bar.style.width='0%'; void bar.offsetWidth;
            bar.style.width=(got/BADGES.length*100)+'%' }
   /* 처음 열면 가장 최근에 딴 것을 보여 준다 */
-  const recent=[...BADGES].filter(b=>b.earned).sort((a,b2)=>a.date<b2.date?1:-1)[0]||BADGES[0];
+  const recent=[...BADGES].filter(b=>b.earned).sort((a,b2)=>a.date<b2.date?1:-1)[0]||BADGES[0];   /* 딴 게 없으면 첫 배지 */
   bgRender.sel=recent.id;
   bgDetail(recent);
   const tile=$('.bgTile[data-badge="'+recent.id+'"]',host);

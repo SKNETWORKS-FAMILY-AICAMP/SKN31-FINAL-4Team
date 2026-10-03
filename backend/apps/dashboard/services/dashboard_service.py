@@ -5,7 +5,7 @@
 
 from datetime import timedelta
 
-from django.db.models import Count, Q
+from django.db.models import Count, Max, Min, Q
 from django.utils import timezone
 
 from apps.core.models import (
@@ -40,6 +40,94 @@ SOURCE_ORDER = [
 
 def _label(source):
     return SOURCE_LABELS.get(source.code, source.name or source.code)
+
+
+# ── 장기 미갱신 경고 (2026-09-27, DATA_STATUS-003) ──────────────
+#
+# 소스마다 '마지막으로 정상 수집한 때' 를 보고, 기대 주기의 2배가 지나도록 새로
+# 받지 못했으면 지연으로 본다. 기대 주기는 그 소스의 **활성 LIVE 타깃 중 가장 짧은 주기**,
+# 타깃이 없으면 Source.crawl_interval_minutes, 그것도 없으면 하루다.
+# 활성 타깃이 하나도 없는 소스는 일부러 멈춘 것이므로 경고하지 않는다('수집 안 함').
+STALE_FACTOR = 2
+DEFAULT_INTERVAL_MINUTES = 1440
+OK_RUN_STATUSES = ("SUCCESS", "PARTIAL_SUCCESS")
+
+
+def source_freshness(now=None):
+    """소스 id → 신선도 한 줄.
+
+    state: ok(기준 안) · late(기준 초과) · never(활성 타깃이 있는데 성공 기록이 없음) · idle(활성 타깃 없음)
+    """
+    now = now or timezone.now()
+    # finished_at 이 비어 있는 옛 기록은 시작 시각으로 대신한다
+    last_ok = {
+        r["source_id"]: r["fin"] or r["st"]
+        for r in CrawlRun.objects.filter(status__in=OK_RUN_STATUSES)
+        .values("source_id").annotate(fin=Max("finished_at"), st=Max("started_at"))
+    }
+    last_doc = dict(
+        RawDocument.objects.values("source_id").annotate(at=Max("collected_at"))
+        .values_list("source_id", "at")
+    )
+    live = dict(
+        CrawlTarget.objects.filter(is_active=True, collection_mode="LIVE")
+        .values("source_id").annotate(m=Min("interval_minutes"))
+        .values_list("source_id", "m")
+    )
+    active = set(
+        CrawlTarget.objects.filter(is_active=True).values_list("source_id", flat=True)
+    )
+
+    out = {}
+    for source in Source.objects.all():
+        interval = (live.get(source.id) or source.crawl_interval_minutes
+                    or DEFAULT_INTERVAL_MINUTES)
+        limit = timedelta(minutes=interval * STALE_FACTOR)
+        at = last_ok.get(source.id)
+        age = (now - at) if at else None
+        if source.id not in active:
+            state = "idle"
+        elif at is None:
+            state = "never"
+        elif age > limit:
+            state = "late"
+        else:
+            state = "ok"
+        out[source.id] = {
+            "state": state,
+            "last_success_at": at,
+            "last_doc_at": last_doc.get(source.id),
+            "age_hours": round(age.total_seconds() / 3600, 1) if age is not None else None,
+            "interval_minutes": interval,
+            "limit_hours": round(limit.total_seconds() / 3600, 1),
+        }
+    return out
+
+
+def stale_alerts(freshness=None, now=None):
+    """대시보드 '점검이 필요한 항목' 에 붙일 경고 — 지연 · 기록 없음만."""
+    freshness = freshness if freshness is not None else source_freshness(now)
+    names = {s.id: _label(s) for s in Source.objects.filter(id__in=freshness)}
+    late = [(sid, f) for sid, f in freshness.items() if f["state"] == "late"]
+    never = [sid for sid, f in freshness.items() if f["state"] == "never"]
+    alerts = []
+    if late:
+        late.sort(key=lambda x: -(x[1]["age_hours"] or 0))
+        parts = [f"{names.get(sid, sid)} {f['age_hours']:g}시간 전(기준 {f['limit_hours']:g}시간)"
+                 for sid, f in late]
+        alerts.append({
+            "level": "danger",
+            "title": f"장기 미갱신 {len(late)}곳",
+            "detail": "마지막 정상 수집: " + " · ".join(parts),
+        })
+    if never:
+        alerts.append({
+            "level": "warning",
+            "title": f"정상 수집 기록 없음 {len(never)}곳",
+            "detail": "활성 타깃이 있는데 성공한 실행이 없습니다: "
+                      + " · ".join(str(names.get(sid, sid)) for sid in never),
+        })
+    return alerts
 
 
 def _percent(part, whole):
@@ -235,7 +323,7 @@ def get_dashboard_context():
     # ---------------- 점검이 필요한 항목 ----------------
     stale_running = run_agg["stale"]
 
-    alerts = []
+    alerts = stale_alerts(now=now)
     if stats["failed_runs"] and total_runs:
         rate = round(stats["failed_runs"] / total_runs * 100, 1)
         if rate >= 20:

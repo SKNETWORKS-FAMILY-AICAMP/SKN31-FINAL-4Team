@@ -145,7 +145,7 @@ def collect_detail_category_ranking(
     payload = {
         "schema_version": "1.0",
         "source": "ZIGZAG",
-        "entity_type": "CNV_CATEGORY",
+        "entity_type": "RANKING",
         "collected_at": collected_at,
         "ranking_mode": "detail_category",
         "cnv": {
@@ -174,7 +174,7 @@ def collect_detail_category_ranking(
     }
 
     return {
-        "entity_type": "CNV_CATEGORY",
+        "entity_type": "RANKING",
         "source_entity_id": (
             "zigzag-detail-ranking:"
             f"{parent_category_id or 'unknown'}:{detail_category_id}"

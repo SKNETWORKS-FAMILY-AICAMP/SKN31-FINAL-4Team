@@ -27,26 +27,24 @@ ERAS.forEach((e,ei)=>e.imgs.forEach(src=>ALL.push({src,ei})));
 export const slot=$('#slot');
 const gY=$('#gY'), gM=$('#gM'), gRail=$('#gRail');
 const stage=$('#stage');
+/* ★ 2026-09-27 — 인트로 칸(#slot)이 없는 문서에서 불러와도 멈추지 않는다.
+   router.js → deck.js 를 거쳐 이 모듈이 따라 들어오는데, 인트로가 없는 문서
+   (account.html 참고 사본, 챗봇 팝업만 띄우는 시험 화면)에서는 아래 준비를 건너뛴다. */
+const INTRO=!!slot;
 
-ALL.forEach(o=>{
+if(INTRO)ALL.forEach(o=>{
   const im=document.createElement('img');
   im.src=o.src; im.alt=''; im.decoding='async';
   slot.appendChild(im); o.el=im;
 });
 
-/* ---------- 커서 ---------- */
+/* ---------- 커서 ----------
+   커스텀 점+링 커서는 껐다 — 기본 마우스 포인터를 그대로 쓴다.
+   (본문 전체의 cursor:none 도 함께 제거했다 — core/static/css/tokens.css 등) */
 (function cursor(){
   const dot=$('#cur'), ring=$('#curRing');
-  if(!dot||!window.matchMedia||!matchMedia('(hover:hover) and (pointer:fine)').matches){
-    if(dot)dot.style.display='none'; if(ring)ring.style.display='none'; return;
-  }
-  let mx=innerWidth/2,my=innerHeight/2,rx=mx,ry=my;
-  addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
-  (function l(){requestAnimationFrame(l);
-    rx+=(mx-rx)*.16; ry+=(my-ry)*.16;
-    dot.style.transform='translate3d('+mx+'px,'+my+'px,0)';
-    ring.style.transform='translate3d('+rx+'px,'+ry+'px,0)';
-  })();
+  if(dot)dot.style.display='none';
+  if(ring)ring.style.display='none';
 })();
 
 /* ============================================================
@@ -273,9 +271,11 @@ function skip(){
   }
   finish();
 }
-$('#skip').addEventListener('click',skip);
-addEventListener('keydown',e=>{if(e.key==='Escape'||e.key===' ')skip()});
-$('#again').addEventListener('click',()=>{
+if(INTRO){
+  $('#skip')?.addEventListener('click',skip);
+  addEventListener('keydown',e=>{if(e.key==='Escape'||e.key===' ')skip()});
+}
+$('#again')?.addEventListener('click',()=>{
   /* 로딩을 다시 보려면 설명 페이지를 접고 처음 상태로 되돌린다 */
   const back=()=>{
     scrollTo(0,0);
@@ -292,6 +292,18 @@ $('#again').addEventListener('click',()=>{
 /* 이미지 + 폰트 프리로드 후 시작
    (Syne 이 늦게 오면 글자 분할 폭이 어긋나므로 폰트를 먼저 기다린다) */
 (function boot(){
+  if(!INTRO)return;
+  /* ★ 새로고침 복원 — 이미 본문을 보던 세션이면 로딩 시퀀스를 건너뛴다 */
+  try{
+    /* 인트로를 이미 본 사람(localStorage)이거나 보던 세션이면 건너뛴다 */
+    let seen=false;
+    try{ seen=localStorage.getItem('feedit.introSeen.v1')==='1' }catch(e){}
+    if(seen||sessionStorage.getItem('feedit.nav.v1')){
+      stage.style.opacity=0;
+      const g=$('#gauge'); if(g)g.style.opacity=0;
+      return;
+    }
+  }catch(e){}
   let n=0, done=false;
   const start=()=>{
     const f=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();

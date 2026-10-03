@@ -13,10 +13,11 @@
   white-space:nowrap}
 /* 좁은 조각의 숫자는 감추지 않고 tight 로 밖에 흘려 보낸다 (아래 참조) */
 .smBar i span{transition:opacity .3s var(--ease)}
-.smBar .buy{background:var(--coral);color:#fff;padding-left:16px}
-.smBar .no{background:var(--pink-0);color:var(--paper);justify-content:flex-end;padding-right:16px}
+.smBar .buy{background:var(--coral);color:#fff;padding-left:16px;flex:0 0 auto}
+/* .no 는 flex:1 로 .buy 가 차지하고 남은 자리를 통째로 먹는다 — vote_app.css 와 동일 이유 */
+.smBar .no{background:var(--pink-0);color:var(--paper);justify-content:flex-end;padding-right:16px;flex:1 1 0%}
 .smBtns{display:flex;gap:9px;margin-top:14px}
-.smBtns button{flex:1;border-radius:999px;padding:14px;font-size:14px;cursor:none;
+.smBtns button{flex:1;border-radius:999px;padding:14px;font-size:14px;
   box-shadow:inset 0 0 0 1px var(--pink-3);color:var(--pink-1);transition:all .35s var(--ease)}
 .smBtns button:hover{color:var(--pink-0);box-shadow:inset 0 0 0 1px var(--pink-0)}
 .smBtns button.picked{background:var(--pink-0);color:var(--paper);box-shadow:none}

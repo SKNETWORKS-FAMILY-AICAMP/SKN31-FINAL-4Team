@@ -5,12 +5,44 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/discount/facets",
+      "destination": "/api/discount?__facets=1"
+    },
+    {
+      "source": "/api/resale/products",
+      "destination": "/api/resale?__products=1"
+    },
+    {
+      "source": "/api/salmal/cards/:id",
+      "destination": "/api/salmal/cards?__card=:id"
+    },
+    {
+      "source": "/api/data/:metric",
+      "destination": "/api/data?__metric=:metric"
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/v1/virtual-fitting.js": {
+      "maxDuration": 300
+    },
+    "api/v1/[name].js": {
+      "maxDuration": 120
+    },
+    "api/**/*.js": {
+      "maxDuration": 30
+    }
+  }
 }

@@ -100,7 +100,7 @@
           <div class="panel profilePanel">
             <!-- 아바타 자체를 눌러 바꾼다. 연필은 오른쪽 아래 모서리에 붙는다 -->
             <div class="avatarWrap">
-              <div class="avatarCircle" id="avatarInitial">혁</div>
+              <div class="avatarCircle" id="avatarInitial"></div>
               <button type="button" class="avatarEdit" id="avatarEditBtn" title="아이콘 변경" aria-label="아이콘 변경">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M4.5 16.5h3.2L18.9 5.3a1.9 1.9 0 0 0-2.7-2.7L5 13.8v2.7z"/>
@@ -117,8 +117,10 @@
               </div>
               <div class="xpBar"><i id="xpFill"></i></div>
               <div class="xpNext" id="xpNext"></div>
+              <!-- 오늘 · 이번 주 요약 — 누르면 경험치 창 (account/static/js/xp_panel.js) -->
+              <button type="button" class="xpMore" id="xpMore" hidden><span id="xpMoreText"></span><i aria-hidden="true">›</i></button>
             </div>
-            <div class="profileName" id="profileName">혁진</div>
+            <div class="profileName" id="profileName"></div>
             <div class="profileEmail" id="profileEmail">hyeokjin@feedit.co.kr</div>
             <button type="button" class="editProfileBtn" id="editProfileBtn">회원 정보 수정</button>
             <div class="statRow">
@@ -129,26 +131,27 @@
             <button type="button" class="leaveBtn" id="leaveBtn">회원 탈퇴</button>
           </div>
           <div class="panel">
-            <div class="panelHead"><h3>필터</h3></div>
+            <div class="panelHead"><h3>즐겨입는 스타일</h3></div>
             <div class="formRow">
               <label>이런 스타일이 좋아요 <span>복수 선택</span></label>
               <div class="chipRow" id="styleWrap"></div>
             </div>
             <div class="formRow">
-              <label>추천 성향 <span>안정 ↔ 실험</span></label>
-              <input type="range" class="rangeSlider" id="myRange" min="0" max="100" value="38">
-              <div class="rangeLab"><span>무난템 · 국밥템</span><span>하이엔드 · 실험적</span></div>
+              <button type="button" class="pill styleSaveBtn" id="styleSaveBtn">저장</button>
             </div>
           </div>
         </div>
         <div class="myCol">
-          <div class="panel">
-            <div class="panelHead"><h3>오늘의 추천</h3><span class="sub" id="recSub">매칭도 순</span></div>
-            <div class="recGrid" id="recGrid"></div>
-          </div>
-          <div class="panel">
-            <div class="panelHead"><h3>무난템 · 국밥템</h3><span class="sub">실패 확률이 낮은 기본 아이템</span></div>
-            <div class="recGrid" id="basicGrid"></div>
+          <div class="panel" id="todayRecPanel">
+            <div class="panelHead"><h3>오늘의 추천</h3></div>
+            <div class="recBlock">
+              <div class="recBlockHead" id="recMineTitle">내 취향 0개 기준</div>
+              <div class="recGrid" id="recMine"></div>
+            </div>
+            <div class="recBlock">
+              <div class="recBlockHead">지금 뜨는 코어 기준</div>
+              <div class="recGrid" id="recHot"></div>
+            </div>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlparse
 
 from collection.common.pipeline import BasePlatformPipeline
+from collection.common.schemas import CollectionResult
 
 from .config import (
     DEFAULT_ACTION_ID,
@@ -20,20 +21,23 @@ from .service import ZigzagCnvService
 
 class ZigzagPipeline(BasePlatformPipeline):
     """
-    FEEDIT Zigzag CNV pipeline.
+    FEEDIT Zigzag collection pipeline.
 
-    역할:
-    CrawlTarget
-      -> Zigzag CNV category/tag item collection
-      -> BasePlatformPipeline
-      -> S3 raw JSON
-      -> RawDocument
+    지원 수집 유형:
+    1. CNV
+       - 카테고리별 trend/style tag 상품 관측
 
-    이 파일에서는 S3/RawDocument를 직접 저장하지 않는다.
-    공통 BasePlatformPipeline의 기존 저장 프로세스를 그대로 사용한다.
+    2. RANKING
+       - 세부 카테고리별 상품 랭킹
+       - 선택적으로 상품 리뷰 수집
+
+    이 클래스는 수집 결과만 CollectionResult로 반환한다.
+
+    S3 RAW 저장, RawDocument 생성, CrawlRun 처리는
+    collection.common.runner에서 담당한다.
     """
 
-    SOURCE = "ZIGZAG"
+    SOURCE_CODE = "ZIGZAG"
 
     def collect(
         self,
@@ -41,29 +45,70 @@ class ZigzagPipeline(BasePlatformPipeline):
         target_type: str,
         target_url: str | None,
         params: dict,
-    ) -> dict:
+    ) -> CollectionResult:
         params = params or {}
 
-        # 신규 세부 카테고리 타깃만 별도 수집기로 보낸다. 기존 CNV 태그
-        # 타깃은 아래의 원래 흐름을 그대로 사용한다.
-        if params.get("ranking_mode") == "detail_category":
-            from .detail_ranking import collect_detail_category_ranking
+        collection_type = str(
+            params.get("collection_type") or ""
+        ).upper().strip()
 
-            return collect_detail_category_ranking(
+        ranking_mode = str(
+            params.get("ranking_mode") or ""
+        ).lower().strip()
+
+        # ============================================================
+        # RANKING
+        # ============================================================
+
+        if (
+            collection_type == "RANKING"
+            or ranking_mode == "detail_category"
+        ):
+            if ranking_mode not in {
+                "",
+                "detail_category",
+            }:
+                raise ValueError(
+                    "지원하지 않는 Zigzag "
+                    f"ranking_mode: {ranking_mode}"
+                )
+
+            from .detail_ranking import (
+                collect_detail_category_ranking,
+            )
+
+            raw_result = collect_detail_category_ranking(
                 target_url=target_url,
                 params=params,
             )
 
-        target_type = (
+            return self._to_collection_result(
+                raw_result
+            )
+
+        # ============================================================
+        # CNV
+        # ============================================================
+
+        if collection_type not in {
+            "",
+            "CNV",
+        }:
+            raise ValueError(
+                "지원하지 않는 Zigzag "
+                f"collection_type: {collection_type}"
+            )
+
+        normalized_target_type = (
             target_type
             or ""
         ).upper().strip()
 
-        if target_type != "RANKING":
+        if normalized_target_type != "RANKING":
             raise ValueError(
-                "새 ZigzagPipeline은 "
-                f"RANKING target만 지원합니다. "
-                f"target_type={target_type}"
+                "ZigzagPipeline은 현재 "
+                "RANKING CrawlTarget만 지원합니다. "
+                f"target_type={normalized_target_type}"
             )
 
         category_id = self._resolve_category_id(
@@ -71,7 +116,10 @@ class ZigzagPipeline(BasePlatformPipeline):
             params=params,
         )
 
-        groups = params.get("groups") or DEFAULT_GROUPS
+        groups = (
+            params.get("groups")
+            or DEFAULT_GROUPS
+        )
 
         limits = {
             **DEFAULT_LIMITS,
@@ -112,6 +160,10 @@ class ZigzagPipeline(BasePlatformPipeline):
             )
         )
 
+        # ============================================================
+        # CNV COLLECTION
+        # ============================================================
+
         with ZigzagCnvService(
             layout_id=layout_id,
             action_id=action_id,
@@ -128,10 +180,19 @@ class ZigzagPipeline(BasePlatformPipeline):
 
         collected_at = datetime.now(
             timezone.utc
-        ).isoformat()
+        )
+
+        collected_at_iso = (
+            collected_at.isoformat()
+        )
+
+        # ============================================================
+        # CNV STATISTICS
+        # ============================================================
 
         tag_snapshot_count = 0
         product_occurrence_count = 0
+
         unique_product_ids: set[str] = set()
 
         group_stats: dict[str, dict] = {}
@@ -140,14 +201,27 @@ class ZigzagPipeline(BasePlatformPipeline):
             group_occurrences = 0
 
             for row in rows:
-                products = row.get("products") or []
+                products = (
+                    row.get("products")
+                    or []
+                )
 
                 tag_snapshot_count += 1
-                product_occurrence_count += len(products)
-                group_occurrences += len(products)
+
+                product_occurrence_count += (
+                    len(products)
+                )
+
+                group_occurrences += (
+                    len(products)
+                )
 
                 for product in products:
-                    product_id = product.get("product_id")
+                    product_id = (
+                        product.get(
+                            "product_id"
+                        )
+                    )
 
                     if product_id:
                         unique_product_ids.add(
@@ -155,7 +229,9 @@ class ZigzagPipeline(BasePlatformPipeline):
                         )
 
             group_stats[group] = {
-                "tag_snapshot_count": len(rows),
+                "tag_snapshot_count":
+                    len(rows),
+
                 "product_occurrence_count":
                     group_occurrences,
             }
@@ -164,52 +240,214 @@ class ZigzagPipeline(BasePlatformPipeline):
             unique_product_ids
         )
 
+        # ============================================================
+        # RAW PAYLOAD
+        # ============================================================
+
         payload = {
             "schema_version": "1.0",
-            "source": self.SOURCE,
+            "source": "ZIGZAG",
             "entity_type": "CNV_CATEGORY",
-            "collected_at": collected_at,
+            "collected_at": collected_at_iso,
+
             "cnv": {
-                "category_id": category_id,
-                "order": order,
-                "groups": groups,
-                "limits": limits,
-                "layout_id": layout_id,
-                "module_slot_id": module_slot_id,
+                "category_id":
+                    category_id,
+
+                "order":
+                    order,
+
+                "groups":
+                    groups,
+
+                "limits":
+                    limits,
+
+                "layout_id":
+                    layout_id,
+
+                "module_slot_id":
+                    module_slot_id,
+
                 "tag_snapshot_count":
                     tag_snapshot_count,
+
                 "product_occurrence_count":
                     product_occurrence_count,
+
                 "unique_product_count":
                     unique_product_count,
-                "group_stats": group_stats,
+
+                "group_stats":
+                    group_stats,
             },
-            "groups": data["groups"],
+
+            "groups":
+                data["groups"],
         }
 
-        return {
-            "entity_type": "CNV_CATEGORY",
-            "source_entity_id": (
+        source_url = (
+            target_url
+            or (
+                "https://zigzag.kr/pages/"
+                "srp-clp-category"
+                f"?category_id={category_id}"
+            )
+        )
+
+        # ============================================================
+        # COLLECTION RESULT
+        # ============================================================
+
+        return CollectionResult(
+            source_code="ZIGZAG",
+            entity_type="CNV_CATEGORY",
+            source_entity_id=(
                 f"zigzag-cnv:{category_id}"
             ),
-            "source_url": (
-                target_url
-                or (
-                    "https://zigzag.kr/pages/"
-                    "srp-clp-category"
-                    f"?category_id={category_id}"
+            source_url=source_url,
+            collected_at=collected_at,
+            http_status=200,
+            payload=payload,
+            discovered_count=(
+                unique_product_count
+            ),
+            success_count=(
+                unique_product_count
+            ),
+            failure_count=0,
+        )
+
+    # ================================================================
+    # LEGACY DICT -> COLLECTION RESULT
+    # ================================================================
+
+    @staticmethod
+    def _to_collection_result(
+        raw_result,
+    ) -> CollectionResult:
+        """
+        detail_ranking.py의 기존 반환 형식을
+        공통 CollectionResult 계약으로 변환한다.
+
+        detail_ranking.py 자체는 수정하지 않는다.
+        """
+
+        if isinstance(
+            raw_result,
+            CollectionResult,
+        ):
+            return raw_result
+
+        if not isinstance(
+            raw_result,
+            dict,
+        ):
+            raise TypeError(
+                "Zigzag detail ranking 결과는 "
+                "dict 또는 CollectionResult여야 합니다. "
+                f"actual={type(raw_result).__name__}"
+            )
+
+        required_fields = (
+            "entity_type",
+            "source_entity_id",
+            "source_url",
+            "collected_at",
+            "payload",
+            "discovered_count",
+            "success_count",
+            "failure_count",
+        )
+
+        missing_fields = [
+            field
+            for field in required_fields
+            if field not in raw_result
+        ]
+
+        if missing_fields:
+            raise ValueError(
+                "Zigzag detail ranking 결과에 "
+                "필수 필드가 없습니다: "
+                + ", ".join(missing_fields)
+            )
+
+        collected_at = (
+            raw_result["collected_at"]
+        )
+
+        if isinstance(
+            collected_at,
+            str,
+        ):
+            collected_at = (
+                datetime.fromisoformat(
+                    collected_at.replace(
+                        "Z",
+                        "+00:00",
+                    )
+                )
+            )
+
+        return CollectionResult(
+            source_code="ZIGZAG",
+
+            entity_type=(
+                raw_result[
+                    "entity_type"
+                ]
+            ),
+
+            source_entity_id=(
+                raw_result[
+                    "source_entity_id"
+                ]
+            ),
+
+            source_url=(
+                raw_result[
+                    "source_url"
+                ]
+            ),
+
+            collected_at=collected_at,
+
+            http_status=(
+                raw_result.get(
+                    "http_status",
+                    200,
                 )
             ),
-            "collected_at": collected_at,
-            "http_status": 200,
-            "content_type": "application/json",
-            "payload": payload,
 
-            # CrawlRun count는 태그 중복을 제외한 unique product 기준.
-            "discovered_count": unique_product_count,
-            "success_count": unique_product_count,
-            "failure_count": 0,
-        }
+            payload=(
+                raw_result[
+                    "payload"
+                ]
+            ),
+
+            discovered_count=int(
+                raw_result[
+                    "discovered_count"
+                ]
+            ),
+
+            success_count=int(
+                raw_result[
+                    "success_count"
+                ]
+            ),
+
+            failure_count=int(
+                raw_result[
+                    "failure_count"
+                ]
+            ),
+        )
+
+    # ================================================================
+    # CATEGORY
+    # ================================================================
 
     @staticmethod
     def _resolve_category_id(
@@ -217,29 +455,49 @@ class ZigzagPipeline(BasePlatformPipeline):
         target_url: str | None,
         params: dict,
     ) -> str:
-        category_id = params.get("category_id")
+        category_id = (
+            params.get(
+                "category_id"
+            )
+        )
 
         if category_id not in {
             None,
             "",
         }:
-            return str(category_id)
+            return str(
+                category_id
+            )
 
         if target_url:
-            parsed = urlparse(target_url)
-            query = parse_qs(parsed.query)
+            parsed = urlparse(
+                target_url
+            )
+
+            query = parse_qs(
+                parsed.query
+            )
 
             for key in (
                 "category_id",
                 "middle_category_id",
             ):
-                values = query.get(key)
+                values = query.get(
+                    key
+                )
 
-                if values and values[0]:
-                    return str(values[0])
+                if (
+                    values
+                    and values[0]
+                ):
+                    return str(
+                        values[0]
+                    )
 
         raise ValueError(
-            "Zigzag category_id를 찾지 못했습니다. "
-            "CrawlTarget.params.category_id 또는 "
-            "target URL의 category_id를 설정하세요."
+            "Zigzag category_id를 "
+            "찾지 못했습니다. "
+            "CrawlTarget.params.category_id "
+            "또는 target URL의 "
+            "category_id를 설정하세요."
         )

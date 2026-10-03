@@ -65,6 +65,7 @@ class DictionaryTerm(models.Model):
         COLOR = "COLOR", "색상"
         TPO = "TPO", "TPO"
         PERSON = "PERSON", "인물"
+        TARGET = "TARGET", "타깃"
 
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", "활성"
@@ -188,6 +189,7 @@ class DictionaryTerm(models.Model):
                         "COLOR",
                         "TPO",
                         "PERSON",
+                        "TARGET",
                     ]
                 ),
                 name="ck_dict_term_type",
@@ -651,6 +653,33 @@ class Category(models.Model):
             f"[{self.category_type}] "
             f"{self.name}"
         )
+
+class Target(models.Model):
+
+    class TargetType(models.TextChoices):
+        HEIGHT = "HEIGHT", "신장"
+        BODY_SHAPE = "BODY_SHAPE", "체형"
+        SIZE = "SIZE", "사이즈"
+        AGE = "AGE", "연령"
+        GENDER = "GENDER", "성별"
+        LIFE_STAGE = "LIFE_STAGE", "라이프스테이지"
+        ETC = "ETC", "기타"
+
+    term = models.OneToOneField(
+        "DictionaryTerm",
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="target",
+    )
+
+    target_type = models.CharField(
+        max_length=30,
+        choices=TargetType.choices,
+        default=TargetType.ETC,
+    )
+
+    class Meta:
+        db_table = '"dictionary"."target"'
 
 
 # ============================================================
@@ -1529,6 +1558,11 @@ class TermCandidateObservation(models.Model):
 # ============================================================
 
 class Brand(models.Model):
+    class PriceTier(models.TextChoices):
+        LOW = "LOW", "저가"
+        MID = "MID", "중가"
+        HIGH = "HIGH", "고가"
+        LUXURY = "LUXURY", "럭셔리"
 
     class Status(models.TextChoices):
         ACTIVE = "ACTIVE", "활성"
@@ -1578,6 +1612,27 @@ class Brand(models.Model):
         help_text="FEEDIT 브랜드 카테고리",
     )
 
+    price_tier = models.CharField(
+        max_length=20,
+        choices=PriceTier.choices,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="가격 포지션",
+        help_text="브랜드의 전반적인 가격 포지션",
+    )
+
+    product_categories = models.ManyToManyField(
+        Category,
+        blank=True,
+        related_name="brands_by_product_focus",
+        limit_choices_to={
+            "category_type": "PRODUCT",
+        },
+        verbose_name="주요 상품군",
+        help_text="브랜드가 주력으로 전개하는 FEEDIT 상품 카테고리",
+    )
+
     country_code = models.CharField(
         max_length=10,
         blank=True,
@@ -1608,19 +1663,20 @@ class Brand(models.Model):
         ),
     )
 
-    styles = models.ManyToManyField(
-        Style,
-        blank=True,
-        related_name="brands",
-        help_text="FEEDIT 표준 스타일",
-    )
-
     website_url = models.URLField(
         max_length=1000,
         blank=True,
         null=True,
     )
 
+    terms = models.ManyToManyField(
+        DictionaryTerm,
+        blank=True,
+        related_name="brands",
+        verbose_name="연관 키워드",
+        help_text="브랜드를 설명하는 FEEDIT Dictionary Term",
+    )
+    
     is_verified = models.BooleanField(
         default=False,
         db_index=True,

@@ -1,87 +1,139 @@
 import { $, $$, HAS_A, aAnimate, aStagger } from '../../../core/static/js/dom.js';
-import { IMG } from '../../../home/static/js/chat.js';
+import { IMG, STYLES } from '../../../home/static/js/chat.js';
 
 /* ── 금주의 리포트 데이터 ──
-   시장 지표가 아니라 이 사람의 한 주다. 내가 뭘 했고, 그게 맞았나. */
+   실제로 셀 수 없는 것(판단 적중률 · 아낀 돈 · 재고 변화 · 내 결정이 옳았는지)은
+   전부 뺐다. 대신 이 사람이 사이트에서 실제로 한 행동 — 무엇을 검색했고,
+   무엇에 투표했고, 어떤 스타일을 오래 봤는지 — 그 로그만으로 채운다. */
 export const WK={
-  range:'2026 · W33 · 8/13 – 8/19',
-  hit:78,                     /* 판단 적중률 — 참을 것/살 것을 얼마나 맞췄나 */
-  saved:214500, missed:2, decided:9, streak:6,
-  /* 최근 6주 아낀 돈 — 이 서비스를 계속 쓸 이유를 숫자로 보여준다 */
-  savedHist:[86000,41000,132000,98000,176000,214500],
-  savedTotal:747500, planMonths:7.2, planMonthsAll:24.9,
-  /* 놓친 2건이 왜 놓쳤나 — 다음 주 행동으로 이어지는 분해 */
-  missReason:[['재고 소진',78],['가격 반등',14],['판단 지연',8]],
-  percentile:12, peerGap:63400,
-  note:'가격 판단은 안정적이었습니다. 다음 주의 개선 포인트는 <b>“가격보다 먼저 움직이는 재고 신호”</b>입니다.',
-  noteTag:'NEXT ACTION · STOCK ALERT',
-  search:34, searchD:11, fav:5, favTotal:23, vote:12, voteHit:83, read:18, readMin:4.2,
+  updateDay:'일요일',                 /* 지표는 매주 이 요일에 갱신된다 */
+  /* 이번 주 가장 많이 검색·투표한 스타일 — 리포트 전체가 이 스타일을 중심으로 짜인다 */
+  topStyle:'block',
+  topSearchN:14, topVoteN:5,
+  search:34, searchD:11, fav:5, favTotal:23, vote:12, voteD:4,
+  /* 트렌드 분석 — 이번 주 챗봇 사용 시간(분) 합계와 1회 평균(분) */
+  chatMin:76, chatAvgMin:4.2,
   days:[6,11,9,14,21,17,8], today:'수', bestDay:'금', peak:'21시 – 23시',
   taste:[['발레코어',42,6],['아메카지',28,-3],['워크웨어',18,2],['고프코어',12,5]],
-  newTaste:'고프코어',
-  /* 내가 내린 결정과 그 뒤에 실제로 벌어진 일 */
-  log:[
-    {act:'미룸', k:"ARC'TERYX 감마 SL 셸", when:'8/14 참기 선택',
-     res:'−12% · 412,000 → 362,500원', badge:'safe',
-     msg:'잘 참았습니다. 지금 사면 49,500원을 덜 냅니다. 할인 초반이라 한 주 더 볼 여지도 있습니다.'},
-    {act:'찜', k:'스투시 8볼 후디', when:'8/15 찜',
-     res:'M · L 사이즈 품절', badge:'danger',
-     msg:'가격이 아니라 재고가 먼저 빠졌습니다. 이런 아이템은 재입고 알림을 함께 걸어두는 편이 낫습니다.'},
-    {act:'구매', k:'아디다스 삼바 OG', when:'8/16 구매',
-     res:'+3% 정가 인상', badge:'safe',
-     msg:'구매 직후 정가가 올랐습니다. 수명주기 확산 구간에서 산 것이 맞았습니다.'},
-    {act:'미룸', k:'미우미우 발레 플랫', when:'8/12 참기 선택',
-     res:'변동 없음', badge:'warn',
-     msg:'아직 움직임이 없습니다. 정점 구간이라 할인보다 품절이 먼저 올 수 있어 지켜보는 중입니다.'},
-    {act:'찜', k:'디스이즈네버댓 나일론 카고', when:'8/17 찜',
-     res:'수명주기 정점 진입', badge:'danger',
-     msg:'정점에 들어섰습니다. 오래 입을 생각이라면 지금 담기보다 다음 것을 보시는 편이 낫습니다.'}
-  ],
-  /* 찜해둔 것 중 이번 주에 상태가 바뀐 것만 */
-  watch:[
-    ['고프코어','할인률 +9%p (평균 24% → 33%)',1,'지금이 매수 구간'],
-    ['발레코어','트렌드 온도 −7° (89 → 82)',0,'정점 통과 · 신규 구매 보류'],
-    ['스투시','재고 소진 속도 2.1배',0,'재입고 알림 설정'],
-    ['새틴','연관어 12건 신규 진입',1,'확산 초반 · 계속 추적'],
-    ['카고 팬츠','리세일 지수 −0.08',0,'되팔 계획이면 이번 달 안'],
-  ],
-  /* 다음 주 예고 */
-  next:[
-    ['고프코어','D+3','할인률이 최대치에 근접합니다. 다음 주 중반이 이번 사이클의 바닥일 가능성이 높습니다.'],
-    ['포엣코어','D+5','태동 구간에서 확산으로 넘어가는 신호가 잡혔습니다. 선점하려면 지금이 마지막 조용한 구간입니다.'],
-    ['발레 플랫','D+6','재입고 주기상 다음 주 후반에 물량이 풀립니다. 알림을 걸어두세요.']
-  ]
+  newTaste:'고프코어'
+  /* 추천 웹매거진은 목업 목록 대신 /api/v1/magazines(웹 검색)로 기사를 찾는다 — dispatch.js wkMagLoad */
 };
 
 /* ── 내 피드 · 살!말? 취향 매칭 큐레이션 ────────────────────────
-   살!말? 페이지의 VOTES는 salmalBoot() 함수 안에 갇힌 지역 변수라 다른
-   곳에서 참조할 수 없다 — 여기서는 그 "내 취향" 탭(취향 매칭도 순
-   정렬) 기준 상위 4개와 정확히 같은 값을 옮겨 적었다. 이렇게 해야 내
-   피드에서 본 카드를 살!말?에서 다시 검색할 필요 없이 그대로 찾을 수
-   있다. VOTES 쪽 데이터가 바뀌면 이 배열도 같이 맞춰야 한다. */
-export const FEED_SM_PICKS=[
-  {t:'삼바 OG', b:'ADIDAS', p:139000, votes:2210, hours:3, a:88, tone:['#2f2b2b','#726358'],
-   seg:94,itemTag:'블록코어 · 스니커',
-   title:'삼바 OG',
-   tags:['#블록코어','#스니커','#스트릿']},
-  {t:'스웨이드 블루종 (버건디)', b:'ANDERSSON BELL', p:329000, votes:842, hours:6, a:81, tone:['#3a332f','#6b5c52'],
-   seg:90,itemTag:'워크웨어 · 아우터',
-   title:'스웨이드 블루종 (버건디)',
-   tags:['#워크웨어','#아우터','#올드머니']},
-  {t:'스퀘어 토 로퍼', b:'RANDOM IDENTITIES', p:268000, votes:1104, hours:24, a:73, tone:['#2b2b2b','#585858'],
-   seg:89,itemTag:'아메카지 · 로퍼',
-   title:'스퀘어 토 로퍼',
-   tags:['#아메카지','#로퍼','#캐주얼']},
-  {t:'캐시미어 머플러', b:'LE 17 SEPTEMBRE', p:98000, votes:602, hours:5, a:71, tone:['#2e2a2c','#5c5459'],
-   seg:87,itemTag:'워크웨어 · 아메카지',
-   title:'캐시미어 머플러',
-   tags:['#워크웨어','#아메카지','#머플러']}
-];
+ *
+ * ★ 2026-09-18 — 목업 JSON을 끊고 살!말? 본 화면과 같은 API를 읽는다.
+ *
+ *   전에는 `salmal/data/youtube_salmal_cards.json` 을 import 해서 썼다.
+ *   그 파일은 유튜브 댓글에서 뽑은 **고정값**이라, 같은 상품인데도
+ *   살!말? 페이지(실제 투표)는 62%, 내 피드(JSON)는 100% 로 갈렸다.
+ *   이제 둘 다 `/api/salmal/cards` 하나만 본다.
+ *
+ *   ★ 값이 없으면 지어내지 않는다. API가 실패하면 카드를 그리지 않고
+ *     왜 못 그렸는지를 말한다(dispatch.js 의 salmalGridHTML).
+ */
+const SALMAL_API='/api/salmal/cards?tab=latest';
+let FEED_SM_CACHE=null;      /* 성공한 목록 — 탭을 오갈 때 다시 부르지 않는다 */
+/* 계정이 바뀌면 '내 투표'가 섞이지 않게 버린다 (2026-09-19) */
+document.addEventListener('feedit:auth',()=>{ FEED_SM_CACHE=null; });
+
+function smCardFromApi(card,seq){
+  const summary=card.vote_summary||{};
+  const similar=card.similar_user_summary||{};
+  return {
+    t:card.title,
+    b:card.brand||'브랜드 미확인',
+    p:card.price,
+    votes:summary.total||0,
+    hours:card.hours_remaining,
+    a:summary.buy_pct??50,
+    tone:['#302d2b','#6e6660'],
+    st:Array.isArray(card.style_tags)?card.style_tags:[],
+    cat:card.category||'',
+    imgURL:card.image_url,
+    catalogId:card.product_source_id??card.id,
+    /* 나와 비슷한 사용자들 — 표본이 없으면 has_sample:false 다.
+       그때 비율(simPct)은 null 이고, 화면은 숫자 대신 이유를 쓴다. */
+    simHas:Boolean(similar.has_sample),
+    simPct:similar.has_sample?similar.buy_pct:null,
+    simUsers:similar.sample_users||0,
+    simReason:similar.reason||'',
+    tasteHits:Array.isArray(card.taste_match_tags)?card.taste_match_tags:[],
+    seq,
+    closed:Boolean(card.closed)
+  };
+}
+
+/** 살!말? 카드 목록을 한 번만 불러 온다. 실패하면 이유를 담아 던진다. */
+export async function feedSmLoad(){
+  if(FEED_SM_CACHE)return FEED_SM_CACHE;
+  const response=await fetch(SALMAL_API,
+    {credentials:'same-origin',headers:{Accept:'application/json'}});
+  /* 배포본에서 백엔드가 안 붙으면 여기로 HTML(404 페이지)이 온다.
+     그대로 JSON.parse 하면 "Unexpected token '<'" 만 남아 원인을 못 찾는다. */
+  const type=response.headers.get('content-type')||'';
+  if(!type.includes('json'))
+    throw new Error('살말 서버가 JSON을 주지 않았습니다 ('+response.status+').');
+  const payload=await response.json();
+  if(!response.ok||payload.status!=='ok')
+    throw new Error(payload.reason||'살말 데이터를 불러오지 못했습니다.');
+  const items=(payload.data&&payload.data.items)||[];
+  const cards=items.map(smCardFromApi).filter(card=>!card.closed);
+  /* 같은 상품은 한 번만 둔다 */
+  FEED_SM_CACHE=[...new Map(cards.map(card=>[card.catalogId,card])).values()];
+  return FEED_SM_CACHE;
+}
+
+/* 내 취향 태그(STYLES id)와 카드 태그를 맞춘다.
+   카드 태그는 DB 에 한글 이름('클래식')으로 들어갈 수도, id('classic')로
+   들어갈 수도 있어 양쪽을 다 본다. */
+const styleLabel=id=>(STYLES.find(s=>s.id===id)||{}).n||id;
+function cardHits(card,ids){
+  const wanted=new Set();
+  ids.forEach(id=>{ wanted.add(id); wanted.add(styleLabel(id)) });
+  return card.st.filter(tag=>wanted.has(tag));
+}
+
+/* 고른 스타일 순서대로 한 장씩 돌아가며 뽑는다 — 한 스타일이 4장을 독차지하지 않게.
+   각 스타일 안에서는 투표가 많은 카드부터. 맞는 카드가 모자라면 인기순으로 채우되
+   그 카드에는 '일치' 표시를 붙이지 않는다(맞지 않는 것을 맞는다고 쓰지 않는다). */
+export function feedSmPicks(styleIds,pool){
+  const cards=pool||FEED_SM_CACHE||[];
+  if(!cards.length)return [];
+  const ids=STYLES.map(s=>s.id).filter(id=>styleIds.has(id)).slice(0,3);
+  const byVotes=cards.slice().sort((x,y)=>y.votes-x.votes);
+  const used=new Set(), out=[];
+  for(let round=0; out.length<4 && round<cards.length; round++){
+    let added=false;
+    for(const id of ids){
+      if(out.length>=4)break;
+      const want=new Set([id,styleLabel(id)]);
+      const c=byVotes.find(o=>!used.has(o)&&o.st.some(tag=>want.has(tag)));
+      if(c){ used.add(c); out.push(c); added=true }
+    }
+    if(!added)break;
+  }
+  for(const o of byVotes){ if(out.length>=4)break; if(!used.has(o)){ used.add(o); out.push(o) } }
+  return out.map(o=>{
+    const hit=cardHits(o,ids);
+    const main=hit[0]||o.st[0]||o.cat;
+    const tags=[
+      {tx:'#'+styleLabel(main), hit:hit.length>0},
+      {tx:'#'+(o.cat||o.b), hit:false},
+      {tx:'#'+styleLabel(hit[1]||o.st.find(s=>s!==main)||o.b), hit:hit.length>1}
+    ].filter(t=>t.tx!=='#');
+    return Object.assign({},o,{
+      title:o.t,
+      itemTag:hit.map(styleLabel).join(' · ')||styleLabel(main),
+      matched:hit.length>0,
+      tags
+    });
+  });
+}
 
 /* ── 내 피드 추천 풀 ──
    태그는 필터 칩과 같은 말을 쓴다. risk 는 0(무난) ~ 100(실험). */
 const MF_TAGS=['발레코어','아메카지','캐주얼','포멀','고프코어','워크웨어',
-               'Y2K','미니멀','스트릿','프레피','시티보이','올드머니'];
+               '페미닌','미니멀','스트릿','프레피','시티보이','올드머니'];
 const MF_POOL=[
   {b:'ANDERSSON BELL', n:'스웨이드 블루종 자켓', p:329000, img:1,  t:['워크웨어','올드머니'],  r:72, m:96},
   {b:'INSILENCE',      n:'램스울 라운드 니트',   p:118000, img:14, t:['미니멀','프레피'],      r:18, m:93},
@@ -89,7 +141,7 @@ const MF_POOL=[
   {b:'RANDOM IDENT.',  n:'스퀘어 토 페니 로퍼',  p:268000, img:19, t:['포멀','프레피'],        r:44, m:88},
   {b:'MUSINSA STANDARD',n:'옥스퍼드 셔츠',       p:39900,  img:11, t:['미니멀','포멀'],        r:8,  m:86},
   {b:'DE PAUL',        n:'헤비 스웻 후디',       p:89000,  img:8,  t:['스트릿','캐주얼'],      r:26, m:84},
-  {b:'MIU MIU',        n:'리본 크롭 캐미솔',     p:790000, img:2,  t:['발레코어','Y2K'],       r:92, m:83},
+  {b:'MIU MIU',        n:'리본 크롭 캐미솔',     p:790000, img:2,  t:['발레코어','페미닌'],    r:92, m:83},
   {b:'ARC\'TERYX',     n:'감마 SL 셸 자켓',      p:412000, img:23, t:['고프코어'],             r:66, m:81},
   {b:'CARHARTT WIP',   n:'디트로이트 자켓',      p:298000, img:5,  t:['워크웨어','아메카지'],  r:38, m:79},
   {b:'THISISNEVERTHAT',n:'나일론 카고 팬츠',     p:129000, img:27, t:['스트릿','고프코어'],    r:58, m:77},
@@ -98,7 +150,7 @@ const MF_POOL=[
   {b:'ADIDAS',         n:'삼바 OG',              p:139000, img:12, t:['블록코어','스트릿'],    r:30, m:73},
   {b:'UNIQLO',         n:'와이드 치노',          p:49900,  img:16, t:['캐주얼','시티보이'],    r:6,  m:71},
   {b:'LEVI\'S',        n:'501 오리지널',         p:118000, img:21, t:['아메카지','캐주얼'],    r:12, m:70},
-  {b:'ADER ERROR',     n:'디스트로이드 니트',    p:259000, img:25, t:['스트릿','Y2K'],         r:80, m:68}
+  {b:'ADER ERROR',     n:'디스트로이드 니트',    p:259000, img:25, t:['스트릿'],               r:80, m:68}
 ];
 var MF={tags:['발레코어','아메카지','워크웨어'],risk:22};
 

@@ -1,14 +1,26 @@
+"""Preview compatibility; persistence now lives in pipeline.step01_ingestion.ably."""
 from __future__ import annotations
+import re
+import unicodedata
 
-from collection.common.normalization import (
-    TABLE_BRAND_SOURCE,
-    TABLE_CATEGORY_SOURCE,
-    TABLE_PRODUCT_SOURCE,
-    TABLE_PRODUCT_SOURCE_SNAPSHOT,
-    clean_text,
-    gender_scope,
-    source_key_text,
-)
+TABLE_BRAND_SOURCE = "brand_source"
+TABLE_CATEGORY_SOURCE = "category_source"
+TABLE_PRODUCT_SOURCE = "product_source"
+TABLE_PRODUCT_SOURCE_SNAPSHOT = "product_source_snapshot"
+
+
+def clean_text(value):
+    if value is None:
+        return None
+    return re.sub(r"\s+", " ", unicodedata.normalize("NFKC", str(value))).strip() or None
+
+
+def source_key_text(value):
+    return (clean_text(value) or "").casefold() or None
+
+
+def gender_scope(value):
+    return value if isinstance(value, str) and value in {"MALE", "FEMALE", "UNISEX"} else None
 
 
 def _present(values: dict) -> dict:

@@ -1,0 +1,2234 @@
+{
+  "meta": {
+    "purpose": "살!말? 목업용 데이터",
+    "generated_at": "2026-09-17",
+    "source": "현재 PostgreSQL/S3에 적재된 YouTube 영상·댓글과 PostgreSQL 상품 카탈로그",
+    "write_operations": false,
+    "active_count": 16,
+    "closed_count": 4,
+    "female_active_count": 8,
+    "male_active_count": 8,
+    "ratio_rule": "YouTube 댓글의 sal_ratio와 mal_ratio는 중립을 제외한 sal+mal을 분모로 계산한다.",
+    "mock_fields": [
+      "mock_author",
+      "similar_user_ratio",
+      "hours_remaining",
+      "closed_at",
+      "closed_vote_summary",
+      "comment display_name/rank/job/relative time"
+    ],
+    "supported_rank_indexes": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "supported_jobs": [
+      "MD",
+      "Buyer",
+      "Designer",
+      "Stylist",
+      "Creator",
+      "Editor",
+      "Marketer",
+      "Platform",
+      "Student",
+      "Basic"
+    ],
+    "supported_style_ids": [
+      "gorp",
+      "block",
+      "bike",
+      "norm",
+      "ath",
+      "classic",
+      "ameka",
+      "grunge",
+      "feminine",
+      "street"
+    ],
+    "comment_selection": "DB read-only: product-related YouTube comments; 6-12 per card when available",
+    "minimum_displayed_comments": 6,
+    "maximum_displayed_comments": 12,
+    "product_image_rule": "Selected DB ProductSource.thumbnail_url static representative image; all displayed product fields use the same ProductSource",
+    "comment_display_rule": "display_text is a minimal product-specific edit of the original DB YouTube comment in text; original intent and tone are retained"
+  },
+  "cards": [
+    {
+      "gender": "FEMALE",
+      "channel": "알로하 aloha",
+      "video_id": "IzyTAvwmAEo",
+      "video_url": "https://www.youtube.com/watch?v=IzyTAvwmAEo",
+      "video_title": "(역시즌) 겨울옷은 지금 사야 이득🧥🖤 ~46% 할인 | 코트 덕후의 취향 가득 26FW 아우터 6가지, 패션하울, 지그재그, 데일리룩, 출근룩, 가을 코디, 가을 룩북, 겨울준비",
+      "upload_date": "2026-08-26",
+      "product_name": "[오헤시오 컬래버] 캐시미어 블렌드 더블 하프 코트 [블랙]",
+      "brand": "무신사 스탠다드 우먼",
+      "category": "겨울 더블 코트",
+      "timestamp": null,
+      "price": 206910,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260715/6853730/6853730_17883395703107_500.jpg",
+      "product_url": "https://www.musinsa.com/products/6853730",
+      "catalog_product_id": 2286,
+      "style_tags": [
+        "classic",
+        "feminine"
+      ],
+      "mock_author": {
+        "name": "코트고민중",
+        "story": "무신사 스탠다드 우먼 [오헤시오 컬래버] 캐시미어 블렌드 더블 하프 코트 [블랙]을 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 7,
+        "mal": 0,
+        "neutral": 0,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "코트고민중",
+          "rank": 0,
+          "job": "Student",
+          "vote": "살",
+          "text": "❤️2번 헤링본 코트❤️\n방금 6번 블레이저 구매하고 왔습니다\n헤링본하고 엄청 고민했어요..🥹 늘 로하언니 보면서 코디 참고도 많이하고 커플템도 많이 쟁였어요!! ㅎㅎ 작년 눈사람 회색 니트부터 가을 핑크 재킷, 맨투맨 등등 아직도 제 옷장 최애 템들이 많아요! 늘 감사합니다",
+          "display_text": "이 하프 코트랑 블레이저 사이에서 엄청 고민했어요🥹 코디하기 좋아 보여서 이번에는 코트도 구매하고 싶어요!"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 1,
+          "job": "Basic",
+          "vote": "살",
+          "text": "하네는 작년에도 눈여겨 본 브랜드에요😮🤍 알로하님이 소개해주시면 더더욱 눈여겨 보게 되는 걸요🫪 다 예쁘네요 역시... 이번에도 하네 옷을 장만해야 하나요!! 가격대 좋고 깔끔한데 퀄리티 만족스러워요😆 2번 핸드메이드 헤링본 울 트렌치 하프코트🍂🤎🤎 이번 영상 겨울이 벌써 기다려지네요!",
+          "display_text": "가격대도 괜찮고 깔끔한데 퀄리티까지 좋아 보여요😆 이 하프 코트 하나 장만하면 겨울까지 잘 입을 것 같아요."
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 2,
+          "job": "MD",
+          "vote": "살",
+          "text": "🤎 2번 헤링본 울 트렌치 하프코트 🤎\n키작녀라 항상 아우터 고민이 많은데, 이건 제가 딱 원하던 핏에 색감까지 너무 예뻐서 보자마자 반했어요오🥹🤎\n\n매년 알로하님 영상 참고해서 아우터 하나씩 구매해요 ㅎㅎ 작년엔 무스탕&롱코트 구매했는데 너무너무 잘 입고 있슴다🫶🏻\n올해는 이 코트와 예쁘게 보내고 싶어요🥹",
+          "display_text": "키가 작은 편이라 아우터 고르기 어려운데, 이 코트는 제가 원하던 핏과 색감이라 보자마자 반했어요🥹 올해 정말 잘 입을 것 같아요."
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 3,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "2번 헤링본 울 트렌치 하프코트요 ! 키가 알로하님이랑 비슷하게 156이라서 항상 하프를 사도 어중간한 기장이라 구매하지 못했는데 기장감도 핏감도 너무 예쁜 거 같아요 ! 심지어 핸드메이드라니 !!!! 오랫동안 예쁘게 입을 수 있을 거 같아요⭐️",
+          "display_text": "키가 156cm라 하프 코트도 기장이 애매할 때가 많은데, 이건 기장감과 핏이 예뻐 보여요. 오래 입을 수 있을 것 같아요⭐️"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 4,
+          "job": "Designer",
+          "vote": "살",
+          "text": "2번 헤링본 코트가 패턴도 클래식하고\n특히 브라운이 넘 예뻐용\n가을옷 사야하나 싶은 지금 코트 보니까 얼른 겨울이 왔음 좋겠네요!",
+          "display_text": "패턴이 클래식하고 블랙 색상이라 코디하기 좋겠어요. 이 코트 보니까 얼른 겨울이 왔으면 좋겠네요!"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 0,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "2번 헤링본코트가 여러 무드로 입을 수 있어서 너무 맘에 드네요,,, 😊 벨트랑 함께 매치하면 캐쥬얼한 느낌? 좀 발랄하게도 입을수 있는것 같아서 너무 제 스타일이에요! 역시즌으로 저렴하게 구매하는거 좋아하는데 알로하님 덕분에 예쁜 제품들 많이 알아갑니당 😊 센스있는 업로드 주기 감사해요!",
+          "display_text": "여러 분위기로 입을 수 있어서 마음에 들어요😊 벨트와 매치하면 캐주얼하면서도 발랄하게 입을 수 있을 것 같아 제 스타일이에요!"
+        },
+        {
+          "display_name": "데일리옷장",
+          "rank": 1,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "2번코트 너무 마음에 들어요🧡 헤링본!!! 너무 따라사고 싶은 스타일이네여😢",
+          "display_text": "이 코트 너무 마음에 들어요🧡 핏도 제가 따라 입고 싶은 스타일이에요."
+        }
+      ],
+      "hours_remaining": 9,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 2363,
+        "source_product_name": "[오헤시오 컬래버] 캐시미어 블렌드 더블 하프 코트 [블랙]"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260715/6853730/6853730_17883395703107_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "FEMALE",
+      "channel": "알로하 aloha",
+      "video_id": "-RKuItNRFQQ",
+      "video_url": "https://www.youtube.com/watch?v=-RKuItNRFQQ",
+      "video_title": "(갓성비💸) 코디 걱정없는! 가을옷 모음zip🤎 3만원대~ 레더자켓, 셔츠, 맨투맨 | 패션하울, 가을 코디, 가을 룩북, 가을 아우터, 출근룩, 데일리룩, 하객룩, 가죽자켓 추천",
+      "upload_date": "2026-09-06",
+      "product_name": "하이넥 페이크레더 자켓_MIWJLG947C",
+      "brand": "미쏘",
+      "category": "재킷",
+      "timestamp": "04:03",
+      "price": 122550,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260728/6938943/6938943_17878079550836_500.jpg",
+      "product_url": "https://www.musinsa.com/products/6938943",
+      "catalog_product_id": 675,
+      "style_tags": [
+        "bike",
+        "classic",
+        "street"
+      ],
+      "mock_author": {
+        "name": "가을옷장",
+        "story": "미쏘 하이넥 페이크레더 자켓_MIWJLG947C을 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 10,
+        "mal": 0,
+        "neutral": 0,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "가을옷장",
+          "rank": 1,
+          "job": "MD",
+          "vote": "살",
+          "text": "진짜 레더자켓 잔뜩 기다렸는데 완전 예뻐요...❤ 진짜 생감도 마음에 들고 디테일이 확살아 있어서 사야겠어요!!",
+          "display_text": "진짜 레더자켓 잔뜩 기다렸는데 완전 예뻐요...❤ 진짜 생감도 마음에 들고 디테일이 확살아 있어서 사야겠어요!!"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 2,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "체크 셔츠가 가장 마음에 들어서 구매하려고 장바구니 넣어놨는데 이벤트 상품도 체크 셔츠라니... 그럼 일단 다른 색상으로 구매하러 갑니다..♥ 레더 자켓까지 바로 규매 고...",
+          "display_text": "체크 셔츠를 사려고 했는데 이 레더 자켓까지 보니 같이 구매하고 싶어졌어요♥"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 3,
+          "job": "Designer",
+          "vote": "살",
+          "text": "9번 오트밀 맨투맨 넘 예뻐요🥹🫶🏻 가죽자켓이랑 코디하신거 그대로 따라 입고 싶어서 일단 맨투맨부터 구매하러 갑니다",
+          "display_text": "이 레더 자켓에 맨투맨을 코디한 그대로 입고 싶어요. 자켓부터 구매하러 갑니다🥹"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 4,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "가장 좋아하는 아이템! 브라운 레더 목빠디게 기다리다 주문 완료했슴당 원단이 너무 광이 돌지 않고 무엇보다 어깨가 자연스럽게 떨어져서 좋아요! 이번 가을 내내 잘 입도록 하겠슴다😊 멋진 콜라보 감사해용 :)",
+          "display_text": "가장 좋아하는 아이템! 브라운 레더 목빠디게 기다리다 주문 완료했슴당 원단이 너무 광이 돌지 않고 무엇보다 어깨가 자연스럽게 떨어져서 좋아요! 이번 가을 내내 잘 입도록 하겠슴다😊 멋진 콜라보 감사해용 :)"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 0,
+          "job": "Creator",
+          "vote": "살",
+          "text": "레더 자켓이 제일 마음에 들어요 💗💗 보자마자 레더자켓이랑 맨투맨 구매했습니다… 알로하님 제작이면 무조건 사야죠.. 🥹🥹🥰🥰",
+          "display_text": "레더 자켓이 제일 마음에 들어요 💗💗 보자마자 레더자켓이랑 맨투맨 구매했습니다… 알로하님 제작이면 무조건 사야죠.. 🥹🥹🥰🥰"
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 1,
+          "job": "Editor",
+          "vote": "살",
+          "text": "셔츠 색 마지막까지 고민하다가 차콜로 구매 완료😙😙 브라운 레더자켓 너무 기대돼용!!",
+          "display_text": "브라운 레더 자켓 색감이 끝까지 고민될 만큼 예뻐요. 받아볼 생각에 기대돼요!"
+        },
+        {
+          "display_name": "사이즈고민",
+          "rank": 2,
+          "job": "Platform",
+          "vote": "살",
+          "text": "차콜 셔츠 흰바지에 입으니깐 너모 예쁜걸요 ㅠㅠㅠㅠㅠ!!!!!! 레더자켓에 맨투맨에 셔츠까지 하나씩만 쟁이는걸류..",
+          "display_text": "레더 자켓에 맨투맨과 셔츠를 같이 코디한 게 너무 예뻐서 그대로 쟁이고 싶어요ㅠㅠ"
+        },
+        {
+          "display_name": "코트러버",
+          "rank": 3,
+          "job": "MD",
+          "vote": "살",
+          "text": "셔츠 차콜에 맨투맨 오트밀....차콜바지에\n브라운레더자켓...\n이대로 구매하고싶어요ㅠㅠㅠㅠㅠㅠ미쳤다\n꽂혔다아아아ㅡㅡㅡ",
+          "display_text": "차콜 바지에 이 브라운 레더 자켓을 그대로 입고 싶어요ㅠㅠ 완전히 꽂혔어요."
+        },
+        {
+          "display_name": "가을준비",
+          "rank": 4,
+          "job": "Student",
+          "vote": "살",
+          "text": "스포 보고 목 빠져라 기 다 렷 어 요 . . . 🧘🏻‍♀️ 레더 자켓 브라운 컬러까지 만든 게 ㄹㅇ 감다살. . . 대세는 브라운이고 나는 아직 브라운 컬러의 레더 자켓이 없고 콜라보 제품은 기깔나게 뽑혔고 = 사야만 한다 💸",
+          "display_text": "스포 보고 목 빠져라 기 다 렷 어 요... 🧘🏻‍♀️ 레더 자켓 브라운 컬러까지 만든 게 ㄹㅇ 감다살... 대세는 브라운이고 나는 아직 브라운 컬러의 레더 자켓이 없고 콜라보 제품은 기깔나게 뽑혔고 = 사야만 한다 💸"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 0,
+          "job": "Creator",
+          "vote": "살",
+          "text": "스포보고 이미 구매 완료! 하고 영상 봐요! 다시 봐도 맨투맨 너무 예뻐요 완전 제 스타일 ㅠㅠ! 영상을 보니 구매하길 잘했다는 생각밖에 안 들어요 가죽자켓이 하나도 없어서 검은색 샀는데 영상보니 브라운도 너무 예뻐서 고민중이에요.. 옷 예쁘게 만들어주셔서 감사해요!",
+          "display_text": "가죽 자켓이 없어서 블랙으로 구매했는데, 사진을 보니 브라운도 너무 예뻐서 고민 중이에요. 구매하길 잘한 것 같아요!"
+        }
+      ],
+      "hours_remaining": 18,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 675,
+        "source_product_name": "하이넥 페이크레더 자켓_MIWJLG947C"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260728/6938943/6938943_17878079550836_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "FEMALE",
+      "channel": "AliceFunk 앨리스펑크",
+      "video_id": "fpUHhpzI8Jo",
+      "video_url": "https://www.youtube.com/watch?v=fpUHhpzI8Jo",
+      "video_title": "유독‼️가을에 옷 잘입는 여자들이 무.조.건 갖추는 필수 기본템 6가지🍂",
+      "upload_date": "2026-09-03",
+      "product_name": "C로고 오버핏 조그택 롱슬리브 티셔츠 Black",
+      "brand": "챔피온",
+      "category": "티셔츠",
+      "timestamp": "00:34",
+      "price": 62100,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260807/7022626/7022626_17881556835691_500.jpg",
+      "product_url": "https://www.musinsa.com/products/7022626",
+      "catalog_product_id": 1186,
+      "style_tags": [
+        "norm",
+        "classic"
+      ],
+      "mock_author": {
+        "name": "핏체크",
+        "story": "챔피온 C로고 오버핏 조그택 롱슬리브 티셔츠 Black를 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 5,
+        "mal": 0,
+        "neutral": 1,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "핏체크",
+          "rank": 2,
+          "job": "Designer",
+          "vote": "살",
+          "text": "기본템 기본템 헤도 매년 약간씩 바뀌는 트렌드에 뭘 또 사야되나 고민인데 그래도 오늘 영상보면서 장바구니 정리가 어느정도 되는 느낌이 들어요  ❤",
+          "display_text": "기본템 기본템 헤도 매년 약간씩 바뀌는 트렌드에 뭘 또 사야되나 고민인데 그래도 오늘 영상보면서 장바구니 정리가 어느정도 되는 느낌이 들어요 ❤"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 3,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "롱슬리브 야들야들하고 소재 얇고 부드럽고 후줄근하지 않는 걸로 추천해주세요.. 기본템이 찾기가 더 어려운 것 같아요ㅠㅜ",
+          "display_text": "롱슬리브 야들야들하고 소재 얇고 부드럽고 후줄근하지 않는 걸로 추천해주세요.. 기본템이 찾기가 더 어려운 것 같아요ㅠㅜ"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 4,
+          "job": "Creator",
+          "vote": "살",
+          "text": "롱슬리브는 어떤 제품이 조을지 고민이에용",
+          "display_text": "롱슬리브는 어떤 제품이 조을지 고민이에용"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 0,
+          "job": "Editor",
+          "vote": "살",
+          "text": "안그래도 엉니 어제 부츠라이브 한 거보고 지금  롱슬리브 드릉드릉해요 ㅋㅋㅋㅋㅋ",
+          "display_text": "안그래도 엉니 어제 부츠라이브 한 거보고 지금 롱슬리브 드릉드릉해요 ㅋㅋㅋㅋㅋ"
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 1,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "진짜 언니 없음 못 살아요❤\n\n1. 롱슬리브\n2. 레더재킷\n3. V넥 니트\n4. 스트레이트 데님 팬츠\n5. 롱 스커트\n6. 플랫&로퍼\n\n체크완료✔️",
+          "display_text": "기본 롱슬리브를 찾고 있었는데 이 제품은 꼭 체크해두고 싶어요✔️"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 2,
+          "job": "Platform",
+          "vote": "중립",
+          "text": "롱슬리브 입는 체형이나 취향에 따라 다양하게 입을 수 있다고 했는데, 롱슬리브 코디하는 방법도 알려주시면 좋을거같아요!!",
+          "display_text": "롱슬리브 입는 체형이나 취향에 따라 다양하게 입을 수 있다고 했는데, 롱슬리브 코디하는 방법도 알려주시면 좋을거같아요!!"
+        }
+      ],
+      "hours_remaining": 30,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 1197,
+        "source_product_name": "C로고 오버핏 조그택 롱슬리브 티셔츠 Black"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260807/7022626/7022626_17881556835691_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "FEMALE",
+      "channel": "옆집언니 최실장 stylist unnie",
+      "video_id": "21LXCUjkREE",
+      "video_url": "https://www.youtube.com/watch?v=21LXCUjkREE",
+      "video_title": "기본템 코디도 어렵다는 패알못에게 그저 빛✨️ 이대로만 따라 입어면 가을코디 걱정이 없어요",
+      "upload_date": "2026-08-31",
+      "product_name": "PWC 오버사이즈드 딥 브이넥 니트 탑_네이비",
+      "brand": "파르티멘토 우먼",
+      "category": "니트/스웨터",
+      "timestamp": null,
+      "price": 36850,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260818/7096211/7096211_17887605023622_500.jpg",
+      "product_url": "https://www.musinsa.com/products/7096211",
+      "catalog_product_id": 1827,
+      "style_tags": [
+        "classic",
+        "feminine"
+      ],
+      "mock_author": {
+        "name": "소재중요",
+        "story": "파르티멘토 우먼 PWC 오버사이즈드 딥 브이넥 니트 탑_네이비를 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 6,
+        "mal": 0,
+        "neutral": 1,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "소재중요",
+          "rank": 3,
+          "job": "Creator",
+          "vote": "살",
+          "text": "와 옷이 출근하는 회사원한테 딱이에요\n가격도 좋네요 몇가지 담아봤어요\n근데 실장님은 정말 가을톤은 아니시네요.. 컬러가 정말 안받으세요..ㅎㅎ",
+          "display_text": "출근할 때 입기 좋은 브이넥 니트네요. 가격도 괜찮아서 장바구니에 담아봤어요."
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 4,
+          "job": "Editor",
+          "vote": "살",
+          "text": "브이넥 니트랑 유넥 티셔츠 넘 이쁘네요! 아직 낮엔 너무 습하고덥지만 곧 이 옷들을 입을 수 있겠지란 맘으로 구매하러 가요!",
+          "display_text": "브이넥 니트랑 유넥 티셔츠 넘 이쁘네요! 아직 낮엔 너무 습하고덥지만 곧 이 옷들을 입을 수 있겠지란 맘으로 구매하러 가요!"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 0,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "유용하게 구독하고 있어요~~평소 청바지 니트티 입는데. 오십을 넘어 60으로 가는 길 옷입기 애매한 나이~~중년을 위한  가성비 좋구 고급스러운 브랜드 추천해 주세요❤❤❤❤❤❤❤❤❤❤❤❤",
+          "display_text": "평소 청바지에 니트를 자주 입는데, 이 브이넥은 가격도 괜찮고 고급스럽게 보여서 입어보고 싶어요."
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 1,
+          "job": "Platform",
+          "vote": "살",
+          "text": "와 가디건 니트 특히 끌리네요😊가격대도 좋고",
+          "display_text": "와 가디건 니트 특히 끌리네요😊가격대도 좋고"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 2,
+          "job": "Student",
+          "vote": "살",
+          "text": "영상 시작하자마자 보라색 니트 너무 예쁘잖아요😍\n가격도 너무 좋은데요\n부츠들도 다 예뻐서 하나쯤 사볼만한거같아요🤔\n+ 보고왔는데 사이즈 255~60이 없는건 역시나 아쉽네요ㅜㅜ",
+          "display_text": "네이비 브이넥 니트가 눈에 들어오네요😍 가격도 좋아서 하나쯤 사볼 만한 것 같아요."
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 3,
+          "job": "Basic",
+          "vote": "살",
+          "text": "최실장님 오늘 분위기 모에요❤❤❤ 안그래도 가을 옷 장만중인데 이 영상 귀합니다❤ 이 영상보고 니트 두벌 모렌트에서 질렀습니다.. ㅎㅎ😂",
+          "display_text": "안 그래도 가을 니트를 장만하던 중인데, 핏이 마음에 들어서 구매하고 싶어졌어요ㅎㅎ"
+        },
+        {
+          "display_name": "가을준비",
+          "rank": 4,
+          "job": "Designer",
+          "vote": "중립",
+          "text": "니트 부츠 맛집이네요. 키작녀에게는 어떤 부츠가 맞을까요?🥹",
+          "display_text": "니트 핏이 마음에 드는데 키가 작은 체형에도 잘 맞을지 궁금해요🥹"
+        }
+      ],
+      "hours_remaining": 7,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 1875,
+        "source_product_name": "PWC 오버사이즈드 딥 브이넥 니트 탑_네이비"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260818/7096211/7096211_17887605023622_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "FEMALE",
+      "channel": "알로하 aloha",
+      "video_id": "Ghmkq7OAc-Q",
+      "video_url": "https://www.youtube.com/watch?v=Ghmkq7OAc-Q",
+      "video_title": "(가성비 + 퀄리티) 가을옷 잠깐만 사지말고 기다려 주세요🍂 #shorts #데일리룩 #가죽자켓 #출근룩 #가을코디",
+      "upload_date": "2026-09-03",
+      "product_name": "FAUX BOMBER LEATHER JACKET IN BROWN",
+      "brand": "다이닛",
+      "category": "재킷",
+      "timestamp": null,
+      "price": 214200,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260818/7092755/7092755_17878174516298_500.jpg",
+      "product_url": "https://www.musinsa.com/products/7092755",
+      "catalog_product_id": 707,
+      "style_tags": [
+        "bike",
+        "street",
+        "classic"
+      ],
+      "mock_author": {
+        "name": "출근룩찾기",
+        "story": "다이닛 FAUX BOMBER LEATHER JACKET IN BROWN를 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 6,
+        "mal": 0,
+        "neutral": 4,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "출근룩찾기",
+          "rank": 4,
+          "job": "Creator",
+          "vote": "살",
+          "text": "와~ 자켓, 셔츠, 맨투맨 다 이뻐요. ^^\n그 중에서 젤 갖고 싶었던 가죽자켓 빨리 갖고프네요~~",
+          "display_text": "와~ 자켓, 셔츠, 맨투맨 다 이뻐요. ^^ 그 중에서 젤 갖고 싶었던 가죽자켓 빨리 갖고프네요~~"
+        },
+        {
+          "display_name": "장바구니중",
+          "rank": 0,
+          "job": "Basic",
+          "vote": "살",
+          "text": "목이 짧은 편이라 하이넥 아우터는 괜히 더 답답해 보일까 봐 잘 안 입게 되는데 이 레더 자켓은 목 부분이 올라와 있는데도 전혀 답답해 보이지 않고 오히려 핏이 너무 예뻐여 🥹🖤 저처럼 목 짧아서 하이넥 자켓 망설이셨던 분들도 도전해볼 만한 디자인 같아서 더 눈길이 가요! 이번 가을에는 이런 레더 자켓 하나 장만해서 멋스럽게 입어보고 싶어요!!!",
+          "display_text": "목이 짧은 편이라 하이넥 아우터는 괜히 더 답답해 보일까 봐 잘 안 입게 되는데 이 레더 자켓은 목 부분이 올라와 있는데도 전혀 답답해 보이지 않고 오히려 핏이 너무 예뻐여 🥹🖤 저처럼 목 짧아서 하이넥 자켓 망설이셨던 분들도 도전해볼 만한 디자인 같아서 더 눈길이 가요! 이번 가을에는 이런 레더 자켓 하나 장만해서 멋스럽게 입어보고 싶어요!!!"
+        },
+        {
+          "display_name": "데일리옷장",
+          "rank": 1,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "아니 레더 핏 뭐예요 진짜🥹 너무 벙벙하지도 않고 적당하게 핏되는게 넘넘 기대됩니다! 맨투맨도 예뻐보이고 셔츠 핏도 기가 막히고.. 다 기대가 되가지고 하나만 고를 수가 없네요!! 가을 옷 사지 않고 기다려봅니다❤❤",
+          "display_text": "레더 자켓 핏이 너무 벙벙하지 않고 적당히 떨어져서 기대돼요🥹 공개될 때까지 다른 가을 아우터는 안 사고 기다려볼게요❤"
+        },
+        {
+          "display_name": "사이즈고민",
+          "rank": 2,
+          "job": "Designer",
+          "vote": "살",
+          "text": "어두운 색 레더 사려 했는데 기다려야겠네요",
+          "display_text": "어두운 색 레더 사려 했는데 기다려야겠네요"
+        },
+        {
+          "display_name": "코트러버",
+          "rank": 3,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "와 옷 색감 다 무슨일인가요ㅠㅠ 고생한 보람이 있으실 만한 퀄리티네용👍\n당장 주문하러 가고싶어영😭\n특히 래더자켓 너무 기대됩니다!!!!",
+          "display_text": "와 옷 색감 다 무슨일인가요ㅠㅠ 고생한 보람이 있으실 만한 퀄리티네용👍 당장 주문하러 가고싶어영😭 특히 래더자켓 너무 기대됩니다!!!!"
+        },
+        {
+          "display_name": "가을준비",
+          "rank": 4,
+          "job": "Editor",
+          "vote": "중립",
+          "text": "자켓 궁금하네요 추가 가공이라니 엄청난 정성",
+          "display_text": "자켓 궁금하네요 추가 가공이라니 엄청난 정성"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 0,
+          "job": "Marketer",
+          "vote": "중립",
+          "text": "콜라보 준비 과정부터 을매나 정성 들여 만드셨는지 느껴져서 더 기대돼여….🥹🤍 세 가지 다 너무 예쁘지만 저는 레더자켓이 가장 기대돼욧! 가을에 데일리로 툭 걸쳐주기만 해도 분위기이 제대로 날 것 가타요…🍂🖤 핏이랑 디테일까쥐 고민해서 완성한 만큼 실제 착용했을 때 오떤 느낌일지 궁금합니당! 9월6일 영상도 꼭 챙겨보께요…✨ 좋은 선물 이벤트까지 감사합미다..🫶🏻",
+          "display_text": "추가 가공까지 신경 쓴 레더 자켓이라 더 기대돼요🥹 데일리로 툭 걸쳐도 분위기가 날 것 같은데 실제 착용감이 궁금합니다."
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 1,
+          "job": "Platform",
+          "vote": "살",
+          "text": "저는 레더자켓이 제일 기대돼요..!! ㅠㅠㅠㅠ 아우터에 상당히 신중한 편이라 작년에는 예쁜 걸 못 찾아서 결국 레더자켓은 못 샀는데 알로하님 착샷 보자마자 심장이 뛰었습니다 😂 너무 예뻐요 툭 걸치니까 부담스럽지 않을 만큼 제가 딱 좋아하게 멋스러운 느낌 !!! 두근두근 얼른 공개됐으면 좋겠습니다!!",
+          "display_text": "저는 레더자켓이 제일 기대돼요..!! ㅠㅠㅠㅠ 아우터에 상당히 신중한 편이라 작년에는 예쁜 걸 못 찾아서 결국 레더자켓은 못 샀는데 알로하님 착샷 보자마자 심장이 뛰었습니다 😂 너무 예뻐요 툭 걸치니까 부담스럽지 않을 만큼 제가 딱 좋아하게 멋스러운 느낌!!! 두근두근 얼른 공개됐으면 좋겠습니다!!"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 2,
+          "job": "MD",
+          "vote": "중립",
+          "text": "와 레더자켓 계속 고민했는데 맨투맨도 예뻐요 너무 기대되네요",
+          "display_text": "와 레더자켓 계속 고민했는데 맨투맨도 예뻐요 너무 기대되네요"
+        },
+        {
+          "display_name": "장바구니중",
+          "rank": 3,
+          "job": "Student",
+          "vote": "중립",
+          "text": "레더 자켓 늘 예쁜 제품을 찾았는데 가격과 퀄리티 모두 만족할 수 있는 제품을 찾기 어렵더라고요. 근데 이번에 추가 가공까지 하셔서 제작하셨다고 하니까 너무 궁금하고 기대돼요!❤",
+          "display_text": "레더 자켓 늘 예쁜 제품을 찾았는데 가격과 퀄리티 모두 만족할 수 있는 제품을 찾기 어렵더라고요. 근데 이번에 추가 가공까지 하셔서 제작하셨다고 하니까 너무 궁금하고 기대돼요!❤"
+        }
+      ],
+      "hours_remaining": 42,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 707,
+        "source_product_name": "FAUX BOMBER LEATHER JACKET IN BROWN"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260818/7092755/7092755_17878174516298_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "FEMALE",
+      "channel": "Bora Claire (보라끌레르)",
+      "video_id": "E2v6Cy2_a6Q",
+      "video_url": "https://www.youtube.com/watch?v=E2v6Cy2_a6Q",
+      "video_title": "✅가을아우터 1순위‼️호불호 없이 모두가 입을수 밖에 없는 국민템🩵",
+      "upload_date": "2026-08-24",
+      "product_name": "[에어클라우드]사선지퍼 경량 패딩 자켓 (퍼플)",
+      "brand": "세컨드솔트",
+      "category": "패딩",
+      "timestamp": null,
+      "price": 85020,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260825/7159266/7159266_17878936684897_500.png",
+      "product_url": "https://www.musinsa.com/products/7159266",
+      "catalog_product_id": 1976,
+      "style_tags": [
+        "norm",
+        "ath"
+      ],
+      "mock_author": {
+        "name": "오늘도장바구니",
+        "story": "세컨드솔트 [에어클라우드]사선지퍼 경량 패딩 자켓 (퍼플)을 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 8,
+        "mal": 0,
+        "neutral": 0,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 0,
+          "job": "Student",
+          "vote": "살",
+          "text": "전 look2!!! 르꼬끄 유니 노바 라이트 경량 핏이 너무 예쁘게 나온 것 같네요 완전 심플하게 떨어지는 디자인이라 오히려 더 깔끔하고 예뻐 보이는 것 같아서 데일리로 입기 너무 좋을 것 같아요 ㅎㅎ 저는 키가 작은 편인데도 완전 오버핏으로 입는 걸 좋아해서 요거는 저도 한두 사이즈 크게 해서 입어보고 싶네요 ㅋㅋㅋㅋㅋ 안에 입으신 맨투맨은 또 왜 이렇게 귀여운 거죠!!ㅋㅋㅋㅋ 뒤에 프린팅이 너무 귀여워요,,🥺 근데 바지는 진짜 애리얼카럽 바지들은 다 예쁜 것 같아요..!! 저도 애리얼카럽에서 바지 몇 개 사봤는데 핏이 항상 예뻐서 믿고 보게 되는 것 같아요ㅋㅋㅋ 요 슬랙스도 핏 너무 예뻐서 구매해야겠어용 오늘도 영상 넘 잘 봤습니당 빨리 가을아 와줘...🤎",
+          "display_text": "경량 패딩이 심플하게 떨어져서 깔끔하고 데일리로 입기 좋아 보여요. 작은 체형이지만 한두 사이즈 크게 입어보고 싶어요🥺"
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 1,
+          "job": "Basic",
+          "vote": "살",
+          "text": "퇴근길 반가운 보라님 영상알람이~😍🎶\n이제입추지나고 슬슬 휘뚤마뚤입기좋은 경량패딩에관심갔어요!^^\n쭉 보면서 저는 LOOK6 이 젤 머리에맴돌아요~^^\n르꼬끄 더블텐션팬츠 너무편하게잘입고있는데 올데이트레일 운동화 꼭 사고싶었거든요!^^ 발볼도넓고 앞쪽,옆쪽 디테일자세히확대해서봤는데 보라님착화감두 넘 편해보여서 저두사려구요~! 팬츠랑,스커트랑 다잘어울릴디자인이에요❤\n같이입으신 유니경량볼패딩후드자켓이랑 올데이트레일두 찰떡매칭이셨어요😊 물세탁가능하고 뭉침이최소화라 여행갈때 막쑤셔넣어도 디자인변질없이 너무좋을거같아요❤  자칫 경량패딩 잘못입으면 몸이부해보이는데 핏팅감이랑 충전재쉐입이 정말예쁜거같아요👍😍 목쪽 스트링고정된터널디자인두 한층더 입었을때 고급진쉐입을연출해주는거같았어요❤  나이드신분들께도너무잘어울릴거같아서  저희엄마꺼랑제거 커플로입고 여행가두짱일듯❤❤  정장스타일팬츠랑 출근룩으로활용해도, 면팬츠나진팬츠와 케쥬얼룩모두 넘 잘어울릴거같습니다😍👍👍",
+          "display_text": "핏이 부해 보이지 않고 사선 지퍼와 퍼플 색상이 포인트가 돼서 마음에 들어요. 팬츠나 스커트에 모두 잘 어울릴 것 같아요❤"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 2,
+          "job": "MD",
+          "vote": "살",
+          "text": "경량패딩 사야되는데!!!!",
+          "display_text": "마침 경량 패딩을 사야 했는데 이 제품이 눈에 들어오네요!!!!"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 3,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "꺅 드디어 보끌이 말아주는 가을이 왔다>__< 아직 너무 덥지만 가을만을 기다리고 있습니다,,, 어서 빨리 이 코디들을 손민수할 수 있는 날씨가 오길ㅠㅠㅠㅠㅠ\n사실 저는 경량패딩을 그렇게까지 선호하지 않는데, 오늘 영상보고 생각이 많이 바꼈어요! 특히 롱스커트와 매치한 look3을 보고..>_< 제가 평소에 롱스커트를 자주 입는 편인데, 이렇게 경량패딩과의 조합도 좋을거라 생각하지 못했었거든요! 스포티하고 편하면서도 적당한 러블리함을 잘 표현할 수 있는 최고의 룩 같아요ㅎㅅㅎ 이렇게 입고 온 동네방네 쏘다니고(?) 싶습니다ㅋㅎㅎㅎ 😊😊",
+          "display_text": "평소 경량 패딩을 선호하지 않았는데, 롱스커트와 코디한 걸 보니 생각이 바뀌었어요. 편하면서도 사랑스럽게 입을 수 있을 것 같아요😊"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 4,
+          "job": "Designer",
+          "vote": "살",
+          "text": "룩 1번 보자마자 내꺼다 했습니다!\n경량패딩 없어서 매년 구매해야지 고민만하다가 한해가 가요 ㅎ\n1번 색깔 너무 예쁘네요😊",
+          "display_text": "보자마자 제 옷이라는 생각이 들었어요! 매년 경량 패딩을 살지 고민했는데 색깔도 예뻐서 이번에는 사고 싶네요😊"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 0,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "올 겨울에 꼭 경량패딩 살라 했는데! 보끌님 추천 믿고 봅니다. 전 LOOK 2 노바 라이트 블랙!",
+          "display_text": "올겨울에는 꼭 경량 패딩을 사려고 했는데, 이 제품 추천을 믿고 구매해보고 싶어요!"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 1,
+          "job": "Student",
+          "vote": "살",
+          "text": "🌈특히 3번째 룩의 경량 볼패딩 디테일이 너무 세련되어서 자꾸만 시선이 가네요~💖\r\n절개 라인 덕분에 부해 보이지 않고 핏이 정말 예뻐서 올가을에 꼭 입어보고 싶어요!!🍂🍁\n이번 가을 르꼬끄 코디는 정말 스타일리시해서 눈을 뗄 수가 없었어요!✨",
+          "display_text": "절개선 덕분에 부해 보이지 않고 핏이 정말 예뻐요💖 올가을에 꼭 입어보고 싶어요!"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 2,
+          "job": "Creator",
+          "vote": "살",
+          "text": "1번코디!!!!\n코디가 너무 이쁘고\n경량패딩이 제스타일이에요~~~\n지금 당장 르꼬끄 달려 가고 싶네요 ㅎㅎㅎ",
+          "display_text": "코디가 너무 예쁘고 경량 패딩이 딱 제 스타일이에요. 지금 바로 사러 가고 싶네요ㅎㅎ"
+        }
+      ],
+      "hours_remaining": 12,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 2034,
+        "source_product_name": "사선지퍼 경량 패딩 자켓"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260825/7159266/7159266_17878936684897_500.png",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "FEMALE",
+      "channel": "알로하 aloha",
+      "video_id": "Ghmkq7OAc-Q",
+      "video_url": "https://www.youtube.com/watch?v=Ghmkq7OAc-Q",
+      "video_title": "(가성비 + 퀄리티) 가을옷 잠깐만 사지말고 기다려 주세요🍂 #shorts #데일리룩 #가죽자켓 #출근룩 #가을코디",
+      "upload_date": "2026-09-03",
+      "product_name": "소프트 터치 체크 셔츠 네이비 체크",
+      "brand": "미치코런던 코시노",
+      "category": "셔츠",
+      "timestamp": null,
+      "price": 55800,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20250908/5414478/5414478_17575674336454_500.jpg",
+      "product_url": "https://www.musinsa.com/products/5414478",
+      "catalog_product_id": 1830,
+      "style_tags": [
+        "classic",
+        "norm"
+      ],
+      "mock_author": {
+        "name": "코트고민중",
+        "story": "미치코런던 코시노 소프트 터치 체크 셔츠 네이비 체크를 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 82,
+        "mal": 18
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 7,
+        "mal": 0,
+        "neutral": 0,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "코트고민중",
+          "rank": 1,
+          "job": "MD",
+          "vote": "살",
+          "text": "체크셔츠 3종이요!!!!!\n\n아우터로도 입고, 상의로도 입고,\n맨투맨 가디건 안에도 입고,\n초가을부터 한 겨울까지 뽕 뽑을래요~\n\n안그래도 체크셔츠 사고 싶었는데\n마땅한 것 못 찾고 있었어요 \n좋은 제품 만들어주셔서 감사해요❤",
+          "display_text": "체크셔츠 3종이요!!!!! 아우터로도 입고, 상의로도 입고, 맨투맨 가디건 안에도 입고, 초가을부터 한 겨울까지 뽕 뽑을래요~ 안그래도 체크셔츠 사고 싶었는데 마땅한 것 못 찾고 있었어요 좋은 제품 만들어주셔서 감사해요❤"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 2,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "체크셔츠 너무 예뻐서 사려던거 냅두고 이거 기다려야겠어요 재질도 좋아보여요!!",
+          "display_text": "체크셔츠 너무 예뻐서 사려던거 냅두고 이거 기다려야겠어요 재질도 좋아보여요!!"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 3,
+          "job": "Designer",
+          "vote": "살",
+          "text": "체크셔츠요!!! 오픈되면 구매할거에영🎉",
+          "display_text": "체크셔츠요!!! 오픈되면 구매할거에영🎉"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 4,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "아니 레더 핏 뭐예요 진짜🥹 너무 벙벙하지도 않고 적당하게 핏되는게 넘넘 기대됩니다! 맨투맨도 예뻐보이고 셔츠 핏도 기가 막히고.. 다 기대가 되가지고 하나만 고를 수가 없네요!! 가을 옷 사지 않고 기다려봅니다❤❤",
+          "display_text": "셔츠 핏이 너무 벙벙하지 않고 적당히 떨어져서 기대돼요. 다른 가을 셔츠는 사지 않고 기다려볼게요❤"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 0,
+          "job": "Creator",
+          "vote": "살",
+          "text": "가을엔 셔츠죠!! 셔츠 3개 다 사고 싶어요:)\n안그래도 체크 셔츠 하늘하늘한 것 사고 싶어서, 코디 색감 보려고 알로하님 이전 영상들 보고 있었어요 ㅎㅎㅎ\n\n3개 셔츠랑 하늘색 맨투맨이랑\n아니 셔츠 맨투맨 다 기대되어요 ㅎㅎ\n가을 겨울 유용할 것들 만들어주셔서\n넘 좋다요! 기대 되어요!!!!!!!!",
+          "display_text": "가을엔 셔츠죠!! 셔츠 3개 다 사고 싶어요:) 안그래도 체크 셔츠 하늘하늘한 것 사고 싶어서, 코디 색감 보려고 알로하님 이전 영상들 보고 있었어요 ㅎㅎㅎ 3개 셔츠랑 하늘색 맨투맨이랑 아니 셔츠 맨투맨 다 기대되어요 ㅎㅎ 가을 겨울 유용할 것들 만들어주셔서 넘 좋다요! 기대 되어요!!!!!!!!"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 1,
+          "job": "Editor",
+          "vote": "살",
+          "text": "아니...너무 이쁜데요..??? 안그래도 로하님이 전에 만드셨던 셔츠도 잘 입고 있어서 그때 한가지색상만 산 제가 너무너무 후회하고 옷 안 만드시나하고 기다렸는데 가을 옷으로 돌아오다뇨!!! 그 중에서도 뽀용하고 오묘한 웜쿨 가리지 않을 것같은 색상의 맨투맨 너무너무 기대됩니다!",
+          "display_text": "예전에 샀던 셔츠도 잘 입고 있어서 이번 체크 셔츠도 기대돼요. 오묘한 색감이 여러 코디에 잘 어울릴 것 같아요!"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 2,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "회사원이라 늘 가을되면 어떤 셔츠를 사야하나 고민인데 너무 예쁜 체크 셔츠에요ㅎㅎ벌써 기대됩니당🤍",
+          "display_text": "회사원이라 늘 가을되면 어떤 셔츠를 사야하나 고민인데 너무 예쁜 체크 셔츠에요ㅎㅎ벌써 기대됩니당🤍"
+        }
+      ],
+      "hours_remaining": 5,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 1878,
+        "source_product_name": "소프트 터치 체크 셔츠 네이비 체크"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20250908/5414478/5414478_17575674336454_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "FEMALE",
+      "channel": "Bora Claire (보라끌레르)",
+      "video_id": "MkB2s8KAxCk",
+      "video_url": "https://www.youtube.com/watch?v=MkB2s8KAxCk",
+      "video_title": "여름 셔츠, 아무거나 사지 마세요‼️입기만 해도 날씬해 보이는 셔츠 BEST5💞",
+      "upload_date": "2026-07-25",
+      "product_name": "우먼즈 릴렉스드 스몰 플레이드 체크 셔츠 [그레이/네이비]",
+      "brand": "무신사 스탠다드 우먼",
+      "category": "셔츠",
+      "timestamp": null,
+      "price": 44910,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260407/6269701/6269701_17853070685763_500.jpg",
+      "product_url": "https://www.musinsa.com/products/6269701",
+      "catalog_product_id": 1471,
+      "style_tags": [
+        "classic",
+        "norm"
+      ],
+      "mock_author": {
+        "name": "가을옷장",
+        "story": "무신사 스탠다드 우먼 우먼즈 릴렉스드 스몰 플레이드 체크 셔츠 [그레이/네이비]를 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 6,
+        "mal": 2,
+        "neutral": 0,
+        "sal_ratio": 75,
+        "mal_ratio": 25
+      },
+      "representative_comments": [
+        {
+          "display_name": "가을옷장",
+          "rank": 2,
+          "job": "Designer",
+          "vote": "살",
+          "text": "컬러 있는 셔츠가 첨봤을땐 눈에 확 들어오는데 입으니까 역시나 마농이네요 👍\n할인할때 구매하러 가야겠네요!^^",
+          "display_text": "처음에는 컬러가 눈에 들어왔는데 입은 모습을 보니 핏도 좋네요👍 할인할 때 구매하고 싶어요!"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 3,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "마농 셔츠 주문했어요 ❤ 기대됩니당 ㅎ",
+          "display_text": "이 체크 셔츠 주문했어요❤ 받아볼 생각에 기대됩니다ㅎㅎ"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 4,
+          "job": "Creator",
+          "vote": "살",
+          "text": "마농주문했습니다, 보끌무한신뢰!!! 아묻다주문요, 휴가갈때입고갈수있도록 빠른배송부탁드려요!!!!",
+          "display_text": "체크 셔츠 믿고 주문했습니다! 휴가 갈 때 입을 수 있으면 좋겠어요."
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 0,
+          "job": "Editor",
+          "vote": "살",
+          "text": "에리얼카럽 마농 세미오버핏... 영상 올라온지 19분경 바로 링크 들어갔는데, 100명이 벌써 구매했나봐요...ㅠ.ㅠ",
+          "display_text": "영상 올라오자마자 들어갔는데 벌써 구매한 사람이 많네요. 저도 사고 싶어요ㅠㅠ"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 1,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "목이 짧아서 셔츠가 너무 안어울리는데 마농셔츠는 카라가 밑으로 내려와서 딱이었는데 품절이네요ㅠㅠ",
+          "display_text": "목이 짧아 셔츠가 잘 안 어울리는데, 이 제품은 카라가 자연스럽게 내려와서 마음에 들었어요. 품절이라 아쉽네요ㅠㅠ"
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 2,
+          "job": "Platform",
+          "vote": "살",
+          "text": "상체가 좀 있는 편이여서 셔츠 아우터로 입고 싶어도 부해보여서 실패했는데 참고 해서 구매해볼 수 있을 것 같아요~😊",
+          "display_text": "상체가 좀 있는 편이여서 셔츠 아우터로 입고 싶어도 부해보여서 실패했는데 참고 해서 구매해볼 수 있을 것 같아요~😊"
+        },
+        {
+          "display_name": "장바구니중",
+          "rank": 3,
+          "job": "Editor",
+          "vote": "말",
+          "text": "뚱뚱한 웨이브 체형도 세미오버핏셔츠 입는순간 그냥 한 덩어리로 보입니다ㅋㅋㅋ저런 셔츠 편하고 예쁘게 입으려면 하의는 슬림하게 입어야해서 눈으로만 봐야겠네요😂",
+          "display_text": "뚱뚱한 웨이브 체형도 세미오버핏셔츠 입는순간 그냥 한 덩어리로 보입니다ㅋㅋㅋ저런 셔츠 편하고 예쁘게 입으려면 하의는 슬림하게 입어야해서 눈으로만 봐야겠네요😂"
+        },
+        {
+          "display_name": "데일리옷장",
+          "rank": 4,
+          "job": "Marketer",
+          "vote": "말",
+          "text": "마농셔츠 키작녀에겐 넘 길어 보냅니다",
+          "display_text": "키가 작은 편이라 이 체크 셔츠는 기장이 너무 길어 보이네요."
+        }
+      ],
+      "hours_remaining": 24,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 1495,
+        "source_product_name": "우먼즈 릴렉스드 스몰 플레이드 체크 셔츠 [그레이/네이비]"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260407/6269701/6269701_17853070685763_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "MALE",
+      "channel": "패션튜브삭형",
+      "video_id": "-KtMazAxsik",
+      "video_url": "https://www.youtube.com/watch?v=-KtMazAxsik",
+      "video_title": "핏, 기장, 체형보완, 보온성, 가격, 활용도 완벽! 6각형 가을 셔츠 뽑았습니다🔥",
+      "upload_date": "2026-09-07",
+      "product_name": "[COCLX삭형] 세미 크롭 플란넬 체크 셔츠 5 COLOR COOSSH207",
+      "brand": "커스텀어클락",
+      "category": "셔츠",
+      "timestamp": "02:56",
+      "price": 55200,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260729/6948030/6948030_17884107227079_500.jpg",
+      "product_url": "https://www.musinsa.com/products/6948030",
+      "catalog_product_id": 1689,
+      "style_tags": [
+        "ameka",
+        "classic"
+      ],
+      "mock_author": {
+        "name": "핏체크",
+        "story": "커스텀어클락 [COCLX삭형] 세미 크롭 플란넬 체크 셔츠 5 COLOR COOSSH207를 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 81,
+        "mal": 19
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 4,
+        "mal": 1,
+        "neutral": 2,
+        "sal_ratio": 80,
+        "mal_ratio": 20
+      },
+      "representative_comments": [
+        {
+          "display_name": "핏체크",
+          "rank": 3,
+          "job": "Creator",
+          "vote": "살",
+          "text": "체크 블랙 L 바로 주문 완료, 좋습니다!",
+          "display_text": "체크 블랙 L 바로 주문 완료, 좋습니다!"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 4,
+          "job": "Editor",
+          "vote": "살",
+          "text": "플란넬 블랙, 코듀로이 브라운 구매완료!!~ 콜라보 바지처럼 만족스러웠으면 좋겠당~",
+          "display_text": "플란넬 블랙, 코듀로이 브라운 구매완료!!~ 콜라보 바지처럼 만족스러웠으면 좋겠당~"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 0,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "브라운은 계절에 찰떡이고\r\n오트밀은 깔끔하고\r\n차콜은 여러 색상 바지들에 범용성이 좋아보여서\r\n브라운, 오트밀, 차콜 중 먼저 구매해서 입어보고 두 색상 추가로 구매하려고해서\r\n\r\n세가지 색상 중 우선 순위 하나 추천해 주실 수 있나요?\r\n삭형 솔리드 셔츠는 긴팔, 반팔 그레이랑 스카이 색감이 마음에 들어서 한번에 다 샀었는데\r\n코듀로이 재질은 안 입어봐서 고민이에요\r\n\r\n추가로 콜라보 배럴팬츠 베이지하고 코듀로이 오트밀은 색이 너무 겹칠까요?",
+          "display_text": "브라운은 계절에 찰떡이고 오트밀은 깔끔하고 차콜은 여러 색상 바지들에 범용성이 좋아보여서 브라운, 오트밀, 차콜 중 먼저 구매해서 입어보고 두 색상 추가로 구매하려고해서 세가지 색상 중 우선 순위 하나 추천해 주실 수 있나요? 삭형 솔리드 셔츠는 긴팔, 반팔 그레이랑 스카이 색감이 마음에 들어서 한번에 다 샀었는데 코듀로이 재질은 안 입어봐서 고민이에요 추가로 콜라보 배럴팬츠 베이지하고 코듀로이 오트밀은 색이 너무 겹칠까요?"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 1,
+          "job": "Platform",
+          "vote": "살",
+          "text": "형님 172 59 멸치 체형 입니다 s가 맞는거 같긴한데 너무 오버핏 말고 너무 세미오버핏도 아닌 딱 중간으로 입고 싶으면 m 가도 될까요? s도 충분할까요? 블랙 팬츠에 어울리는 색상 체크 셔츠 중 네이비 블랙 중에 추천도 부탁드려요",
+          "display_text": "형님 172 59 멸치 체형 입니다 s가 맞는거 같긴한데 너무 오버핏 말고 너무 세미오버핏도 아닌 딱 중간으로 입고 싶으면 m 가도 될까요? s도 충분할까요? 블랙 팬츠에 어울리는 색상 체크 셔츠 중 네이비 블랙 중에 추천도 부탁드려요"
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 2,
+          "job": "Student",
+          "vote": "말",
+          "text": "개인적으로 크롭티나 셔츠 몇개 입어봤는데 일반기장이 더 좋아서 이번엔 패스...\n게다가 면 90 이상의 셔츠를 좋아해서요. 플란넬 코듀로이 둘다 브라운 디자인 예뻐요",
+          "display_text": "개인적으로 크롭티나 셔츠 몇개 입어봤는데 일반기장이 더 좋아서 이번엔 패스... 게다가 면 90 이상의 셔츠를 좋아해서요. 플란넬 코듀로이 둘다 브라운 디자인 예뻐요"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 3,
+          "job": "Basic",
+          "vote": "중립",
+          "text": "171cm에 62정도 나가고 운동한 체형입니다. S로 가도 괜찮을까요?\n티셔츠는 어깨 50에 가슴 55면 오버핏으로 딱 맞는데..",
+          "display_text": "171cm에 62정도 나가고 운동한 체형입니다. S로 가도 괜찮을까요? 티셔츠는 어깨 50에 가슴 55면 오버핏으로 딱 맞는데.."
+        },
+        {
+          "display_name": "데일리옷장",
+          "rank": 4,
+          "job": "MD",
+          "vote": "중립",
+          "text": "삭형님 저번 커스텀어클락 세미 크롭 롱 슬리브 셔츠 m 작아서 반품했는데 이번에 L로 가면 될까요? 176에 70kg입니다 ㅠㅠ",
+          "display_text": "삭형님 저번 커스텀어클락 세미 크롭 롱 슬리브 셔츠 m 작아서 반품했는데 이번에 L로 가면 될까요? 176에 70kg입니다 ㅠㅠ"
+        }
+      ],
+      "hours_remaining": 4,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 1733,
+        "source_product_name": "[COCLX삭형] 세미 크롭 플란넬 체크 셔츠 5 COLOR COOSSH207"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260729/6948030/6948030_17884107227079_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "MALE",
+      "channel": "너드킹 Nerd King",
+      "video_id": "1QnpiafyZek",
+      "video_url": "https://www.youtube.com/watch?v=1QnpiafyZek",
+      "video_title": "확실히 다르다🔥 올 가을 1등 '치트키' 아우터는 이겁니다. [너드킹 공동개발]",
+      "upload_date": "2026-09-06",
+      "product_name": "[너드킹X드로우핏] 몰스킨 코튼 블루종 자켓 [3color]",
+      "brand": "드로우핏",
+      "category": "블루종/봄버",
+      "timestamp": "02:56",
+      "price": 139200,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260824/7140447/7140447_17883950783764_500.jpg",
+      "product_url": "https://www.musinsa.com/products/7140447",
+      "catalog_product_id": 1708,
+      "style_tags": [
+        "classic",
+        "norm"
+      ],
+      "mock_author": {
+        "name": "소재중요",
+        "story": "드로우핏 [너드킹X드로우핏] 몰스킨 코튼 블루종 자켓 [3color]을 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 5,
+        "mal": 0,
+        "neutral": 1,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "소재중요",
+          "rank": 4,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "카키색 블루종 너무 기다렸습니다. 빨리 구매하러 가야겠네요 ㅋㅋ",
+          "display_text": "카키색 블루종 너무 기다렸습니다. 빨리 구매하러 가야겠네요 ㅋㅋ"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 0,
+          "job": "Platform",
+          "vote": "살",
+          "text": "가을 아우터 고민하고 있었는데 이걸로 사면 되겠네요! 영상 만들어주셔서 감사합니다!!",
+          "display_text": "가을 아우터 고민하고 있었는데 이걸로 사면 되겠네요! 영상 만들어주셔서 감사합니다!!"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 1,
+          "job": "Student",
+          "vote": "살",
+          "text": "6시 영상 딱 대기하고 있었습니다!!\n알리스 치노팬츠 여름에 블랙 구매하고 맘에 들어서 이번에 사계절 용으로 차콜 컬러 하나 더 영입했습니다\n이번 아우터도 전체적으로 색감 너무 이쁘고 맘에 들어요 항상 좋은 옷들 소개해주셔서 감사합니다",
+          "display_text": "가을 아우터 색감이 전체적으로 예쁘고 마음에 들어요. 이 블루종도 편하게 잘 입을 것 같아 구매하고 싶습니다."
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 2,
+          "job": "Basic",
+          "vote": "살",
+          "text": "가을 아우터 고민중인데 이 제품도 참고해보겠습니다ㅎㅎ",
+          "display_text": "가을 아우터 고민중인데 이 제품도 참고해보겠습니다ㅎㅎ"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 3,
+          "job": "MD",
+          "vote": "살",
+          "text": "1빠 ㅎㅎ 이쁜 바지에 이어 이쁜 아우터 만들어주셔서 감사합니다!! 바로 사러가겠금슴다🎉🎉",
+          "display_text": "1빠 ㅎㅎ 이쁜 바지에 이어 이쁜 아우터 만들어주셔서 감사합니다!! 바로 사러가겠금슴다🎉🎉"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 4,
+          "job": "Buyer",
+          "vote": "중립",
+          "text": "이번에도 신경써서 만드신거같네요 이쁘네요! 특히 전 블루종이 이쁘네요",
+          "display_text": "이번에도 신경써서 만드신거같네요 이쁘네요! 특히 전 블루종이 이쁘네요"
+        }
+      ],
+      "hours_remaining": 16,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 1752,
+        "source_product_name": "몰스킨 코튼 블루종 자켓"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260824/7140447/7140447_17883950783764_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "MALE",
+      "channel": "깡스타일리스트",
+      "video_id": "UHgLtJDQoQY",
+      "video_url": "https://www.youtube.com/watch?v=UHgLtJDQoQY",
+      "video_title": "100만원 vs 1만원대, 롱슬리브에 비싼 돈 쓰지 마세요!",
+      "upload_date": "2026-09-06",
+      "product_name": "미스틱 캡슐 레이어드 그래픽 크루넥 롱슬리브 – 더스티화이트",
+      "brand": "배드블러드",
+      "category": "긴소매 티셔츠",
+      "timestamp": "01:24",
+      "price": 122550,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260807/7022626/7022626_17881556835691_500.jpg",
+      "product_url": "https://www.musinsa.com/products/7186556",
+      "catalog_product_id": "source:9233",
+      "style_tags": [
+        "norm",
+        "classic"
+      ],
+      "mock_author": {
+        "name": "출근룩찾기",
+        "story": "배드블러드 미스틱 캡슐 레이어드 그래픽 크루넥 롱슬리브 – 더스티화이트를 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 5,
+        "mal": 0,
+        "neutral": 1,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "출근룩찾기",
+          "rank": 0,
+          "job": "Student",
+          "vote": "살",
+          "text": "크루넥 롱슬리브 티셔츠 M은 벌써 품절인건가요..!? ㅜ 사려고 하니 없네요",
+          "display_text": "이 크루넥 롱슬리브 M 사이즈는 벌써 품절인가요? 사려고 보니 없어서 아쉬워요ㅜ"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 1,
+          "job": "Basic",
+          "vote": "살",
+          "text": "메르고 긴팔도 쟁여놓고 입는데 핏 너무 좋습니다. 이것도 이ㅃ 네요",
+          "display_text": "긴팔 티셔츠를 쟁여놓고 입는 편인데 이 제품도 핏이 정말 예뻐 보여요."
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 2,
+          "job": "MD",
+          "vote": "중립",
+          "text": "소렌 울 블렌드 루즈 롱슬리브 차콜,브라운 색상 중 어떤걸 우선으로 가져가면 좋을까요??",
+          "display_text": "더스티화이트와 다른 색상 중 어떤 걸 먼저 사면 좋을지 고민돼요."
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 3,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "롱슬리브는 메르고가 최고지!!!!",
+          "display_text": "롱슬리브는 핏이 중요한데 이 제품은 정말 잘 나온 것 같아요!"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 4,
+          "job": "Designer",
+          "vote": "살",
+          "text": "롱슬리브맛집인정입니다.👍",
+          "display_text": "롱슬리브 맛집이라는 말이 나올 만큼 핏이 좋아 보여요👍"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 0,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "안녕하세여 형님 아까 플리마켓 갔는데 옷들이 좋아서 샀습니다",
+          "display_text": "비슷한 긴팔을 직접 보고 구매했는데 마음에 들었어요. 이 제품도 사고 싶습니다."
+        }
+      ],
+      "hours_remaining": 22,
+      "catalog_match": {
+        "type": "similar_image",
+        "product_source_id": 1197,
+        "source_product_name": "C로고 오버핏 조그택 롱슬리브 티셔츠 Black"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260807/7022626/7022626_17881556835691_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "MALE",
+      "channel": "스토커즈 STalkers",
+      "video_id": "dErb5BKS_34",
+      "video_url": "https://www.youtube.com/watch?v=dErb5BKS_34",
+      "video_title": "가성비 미친 코디 무적 니트!! 오늘 6시 출시합니다!🔥",
+      "upload_date": "2026-08-31",
+      "product_name": "데일리 브이넥 니트 - 6 COLOR",
+      "brand": "수아레",
+      "category": "니트/스웨터",
+      "timestamp": null,
+      "price": 33000,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260804/6987937/6987937_17866909077012_500.jpg",
+      "product_url": "https://www.musinsa.com/products/6987937",
+      "catalog_product_id": 1083,
+      "style_tags": [
+        "classic",
+        "norm"
+      ],
+      "mock_author": {
+        "name": "오늘도장바구니",
+        "story": "수아레 데일리 브이넥 니트 - 6 COLOR를 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 8,
+        "mal": 0,
+        "neutral": 0,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 1,
+          "job": "MD",
+          "vote": "살",
+          "text": "제가 좀 체격이 많이 큰편이라 이뻐도 고민했는데 가격이 저렴해서 브라운  v넥으로 하나만 시켜봤습니다. 입어보고 괜찮으면 챠콜 크루넥도 하나 더 사려구요. 항상 좋은 제품 감사드립니다",
+          "display_text": "제가 좀 체격이 많이 큰편이라 이뻐도 고민했는데 가격이 저렴해서 브라운 v넥으로 하나만 시켜봤습니다. 입어보고 괜찮으면 챠콜 크루넥도 하나 더 사려구요. 항상 좋은 제품 감사드립니다"
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 2,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "크루넥 멜란지한 그린으로 구매했어요 !! 받아볼 생각에 설레네요 ☺️",
+          "display_text": "색상이 다양해서 고민했는데 이 브이넥 니트도 받아보고 싶어요☺️"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 3,
+          "job": "Designer",
+          "vote": "살",
+          "text": "무배당발로 오늘 배송 받았습니다.\n브이넥 고민이신분들은 크루넥에 새끼한마디정도? 파인수준이라 접근하기 좋습니다.\n\n175/80 기준 xl 추천\n수아레 에어리 워셔블 크롭니트반팔 xl 입습니당. 가을부터 잘 입어보겠습니당",
+          "display_text": "무배당발로 오늘 배송 받았습니다. 브이넥 고민이신분들은 크루넥에 새끼한마디정도? 파인수준이라 접근하기 좋습니다. 175/80 기준 xl 추천 수아레 에어리 워셔블 크롭니트반팔 xl 입습니당. 가을부터 잘 입어보겠습니당"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 4,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "누님 믿고 크루넥 니트 퍼플색 구매했어요!! 너무 이쁘네용 울코스로 세탁하다 줄거나 물 빠짐이 생길까요??",
+          "display_text": "니트 색감이 너무 예뻐서 믿고 구매하고 싶어요! 세탁 후 줄어들거나 물 빠짐이 있을지도 궁금합니다."
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 0,
+          "job": "Creator",
+          "vote": "살",
+          "text": "와 콜라보! 감사합니다. 부드럽고 얇은 에센셜 니트 너무 좋아요. 거기다 가격도 괜찮아서 이 가격 다시 안올 것 같은 느낌입니다.\n색상이 다양해서 너무 고민되는데 포인트 되는 컬러로 옷장 좀 채워보겠습니다. 감사합니다!",
+          "display_text": "와 콜라보! 감사합니다. 부드럽고 얇은 에센셜 니트 너무 좋아요. 거기다 가격도 괜찮아서 이 가격 다시 안올 것 같은 느낌입니다. 색상이 다양해서 너무 고민되는데 포인트 되는 컬러로 옷장 좀 채워보겠습니다. 감사합니다!"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 1,
+          "job": "Editor",
+          "vote": "살",
+          "text": "모크넥 가디건 다크브라운 깔맞춤 해보겠어요!!ㅎㅎ183 80 XL 꼬우~ 니트 랑 가디건이 막 무거운 느낌이아니라서 아우터 에 입기 최고네요",
+          "display_text": "니트가 무겁지 않아 아우터 안에 입기 좋아 보여요. 다크브라운으로 맞춰 입어보고 싶어요ㅎㅎ"
+        },
+        {
+          "display_name": "가을준비",
+          "rank": 2,
+          "job": "Platform",
+          "vote": "살",
+          "text": "키미세트(블루 크루넥, 네이비 가디건, 퍼플 집업) 질렀습니다",
+          "display_text": "여러 색을 같이 사고 싶을 만큼 기본 핏과 색 구성이 마음에 들어요."
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 3,
+          "job": "MD",
+          "vote": "살",
+          "text": "니트 싼거 사서 버린게 20만원어치라 비싼거 한두벌 사렵니다",
+          "display_text": "니트 싼거 사서 버린게 20만원어치라 비싼거 한두벌 사렵니다"
+        }
+      ],
+      "hours_remaining": 11,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 1083,
+        "source_product_name": "데일리 브이넥 니트 - 6 COLOR"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260804/6987937/6987937_17866909077012_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "MALE",
+      "channel": "패션플래닛",
+      "video_id": "6TL4peFYoPw",
+      "video_url": "https://www.youtube.com/watch?v=6TL4peFYoPw",
+      "video_title": "후드 집업이 남자 필수 아우터인 이유",
+      "upload_date": "2026-08-31",
+      "product_name": "헤비 코튼 세미 크롭 후드 집 업-3Color",
+      "brand": "필루미네이트",
+      "category": "후드 집업",
+      "timestamp": null,
+      "price": 45900,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260803/6982363/6982363_17881563763787_500.jpg",
+      "product_url": "https://www.musinsa.com/products/6982363",
+      "catalog_product_id": 103,
+      "style_tags": [
+        "street",
+        "norm"
+      ],
+      "mock_author": {
+        "name": "코트고민중",
+        "story": "필루미네이트 헤비 코튼 세미 크롭 후드 집 업-3Color을 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 82,
+        "mal": 18
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 9,
+        "mal": 0,
+        "neutral": 0,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "코트고민중",
+          "rank": 2,
+          "job": "Designer",
+          "vote": "살",
+          "text": "마침 후드집업 찾고 있었는데!!!! 감사합니다 바로 구매!",
+          "display_text": "마침 후드집업 찾고 있었는데!!!! 감사합니다 바로 구매!"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 3,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "이번 콜라보 너무 좋습니다.. 요즘 커브드 팬츠도 너무 맛있어서 자주 입는데 핏이 진짜 너무 좋아보이네요.. 후드집업은 주머니 부분이 너무 참 좋네요 둘 다 구매 완료입니다 ㅎㅎ 좋은 영상 감사합니다!!",
+          "display_text": "이번 콜라보 너무 좋습니다.. 요즘 커브드 팬츠도 너무 맛있어서 자주 입는데 핏이 진짜 너무 좋아보이네요.. 후드집업은 주머니 부분이 너무 참 좋네요 둘 다 구매 완료입니다 ㅎㅎ 좋은 영상 감사합니다!!"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 4,
+          "job": "Creator",
+          "vote": "살",
+          "text": "진짜 후드 집업 안산이유가 배불뚝이랑 모자 모양 별로여서 여태 안샀는데 딱 두가지 신경써서 나왔네요.....대박입니다 바로 구매갑니다!!!",
+          "display_text": "후드 집업을 안 샀던 이유가 배 부분 핏과 모자 모양 때문인데, 두 부분을 신경 써서 만들었다니 바로 구매하고 싶어요!"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 0,
+          "job": "Editor",
+          "vote": "살",
+          "text": "최근 후드집업을 계속 찾아봤는데 콜라보 제품이 예쁘게 나온 것 같아서 바로 구매했습니다.",
+          "display_text": "최근 후드집업을 계속 찾아봤는데 콜라보 제품이 예쁘게 나온 것 같아서 바로 구매했습니다."
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 1,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "후드 집업 바로 구매했습니다!!",
+          "display_text": "후드 집업 바로 구매했습니다!!"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 2,
+          "job": "Platform",
+          "vote": "살",
+          "text": "후드에 심지 2개로 탄탄하게 만들어주셔서 감사합니다🫶\n항상후드집업 사서 입어보면 모자가 탄탄하지 못해서 아쉬웠는데, 이번에 필루미네이트 믿고 구매해봅니다!!",
+          "display_text": "후드에 심지 2개로 탄탄하게 만들어주셔서 감사합니다🫶 항상후드집업 사서 입어보면 모자가 탄탄하지 못해서 아쉬웠는데, 이번에 필루미네이트 믿고 구매해봅니다!!"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 3,
+          "job": "Creator",
+          "vote": "살",
+          "text": "후드집업 바로 사러갑니다!🎉",
+          "display_text": "후드집업 바로 사러갑니다!🎉"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 4,
+          "job": "Basic",
+          "vote": "살",
+          "text": "후드집업 이번 가을, 겨울 교복템으로 예약!",
+          "display_text": "후드집업 이번 가을, 겨울 교복템으로 예약!"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 0,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "안 그래도 후드집업 찾고 있었는데 딱 니즈 맞춰서 만들어주시다니.. 기대됩니다!",
+          "display_text": "안 그래도 후드집업 찾고 있었는데 딱 니즈 맞춰서 만들어주시다니.. 기대됩니다!"
+        }
+      ],
+      "hours_remaining": 36,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 103,
+        "source_product_name": "헤비 코튼 세미 크롭 후드 집 업-3Color"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260803/6982363/6982363_17881563763787_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "MALE",
+      "channel": "너드킹 Nerd King",
+      "video_id": "GnRIlu6p35A",
+      "video_url": "https://www.youtube.com/watch?v=GnRIlu6p35A",
+      "video_title": "남자 가을 자켓은 이중에서 고르시면 됩니다. 🍂가을 자켓 종류별 추천",
+      "upload_date": "2026-09-03",
+      "product_name": "[너드킹X드로우핏] 몰스킨 코튼 블루종 자켓 [3color]",
+      "brand": "드로우핏",
+      "category": "블루종/봄버",
+      "timestamp": null,
+      "price": 139200,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260824/7140447/7140447_17883950783764_500.jpg",
+      "product_url": "https://www.musinsa.com/products/7140447",
+      "catalog_product_id": 1708,
+      "style_tags": [
+        "classic",
+        "norm"
+      ],
+      "mock_author": {
+        "name": "가을옷장",
+        "story": "드로우핏 [너드킹X드로우핏] 몰스킨 코튼 블루종 자켓 [3color]을 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 6,
+        "mal": 0,
+        "neutral": 0,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "가을옷장",
+          "rank": 3,
+          "job": "Creator",
+          "vote": "살",
+          "text": "바지도 구매해서 만족했는데,\n아우터 진짜 이쁘게나온거같네요 카라자켓 사야겠어요",
+          "display_text": "바지도 구매해서 만족했는데, 아우터 진짜 이쁘게나온거같네요 카라자켓 사야겠어요"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 4,
+          "job": "Editor",
+          "vote": "살",
+          "text": "165/62키로 정도인 30대 초반의 남성입니다. 드로우핏 블루종 사이즈 추천 해주시면 감사하겠습니다.!",
+          "display_text": "165/62키로 정도인 30대 초반의 남성입니다. 드로우핏 블루종 사이즈 추천 해주시면 감사하겠습니다.!"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 0,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "드로우핏 도브 울 크롭 블루종이 있는데 공동 제작 제품 살만할까요...? 해링턴은 뭔가 고민되고 산다면 코튼 블루종으로 가고 싶은데...",
+          "display_text": "드로우핏 도브 울 크롭 블루종이 있는데 공동 제작 제품 살만할까요...? 해링턴은 뭔가 고민되고 산다면 코튼 블루종으로 가고 싶은데..."
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 1,
+          "job": "Platform",
+          "vote": "살",
+          "text": "드킹행님 블루종 색 추천 해주신다면 블랙인가요?",
+          "display_text": "드킹행님 블루종 색 추천 해주신다면 블랙인가요?"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 2,
+          "job": "Student",
+          "vote": "살",
+          "text": "블루종 하나 구매하려고 하는데 색상에 대해서 고민이 많습니다. 상의가 베이지랑 카키가 많다면 차콜을 선택하는게 최선일까요? 아니면 무난한 블랙을 고르는게 나을까요?",
+          "display_text": "블루종 하나 구매하려고 하는데 색상에 대해서 고민이 많습니다. 상의가 베이지랑 카키가 많다면 차콜을 선택하는게 최선일까요? 아니면 무난한 블랙을 고르는게 나을까요?"
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 3,
+          "job": "Basic",
+          "vote": "살",
+          "text": "블루종은 소재별로 2벌정도 있는게 진짜 좋은것 같아요 가을에는 좀 얇은 원단 겨울에는 울 소재 ㅎㅎ 편하게 입기 좋고 깔끔해 보이고 블레이저도 추천 해주세요 😊",
+          "display_text": "블루종은 소재별로 2벌정도 있는게 진짜 좋은것 같아요 가을에는 좀 얇은 원단 겨울에는 울 소재 ㅎㅎ 편하게 입기 좋고 깔끔해 보이고 블레이저도 추천 해주세요 😊"
+        }
+      ],
+      "hours_remaining": 27,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 1752,
+        "source_product_name": "몰스킨 코튼 블루종 자켓"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260824/7140447/7140447_17883950783764_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "MALE",
+      "channel": "패션튜브삭형",
+      "video_id": "59POOwvbnCw",
+      "video_url": "https://www.youtube.com/watch?v=59POOwvbnCw",
+      "video_title": "기장 스트레스 끝! 핏 죽이는 1티어 팬츠 만들었습니다 (롱&숏 2기장 발매)",
+      "upload_date": "2026-09-01",
+      "product_name": "[오리지널/-5cm] 빈티지 워시드 배럴 코튼 팬츠 [베이지]",
+      "brand": "슬로우애시드",
+      "category": "치노 팬츠",
+      "timestamp": null,
+      "price": 68000,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260806/7007740/7007740_17875506769294_500.jpg",
+      "product_url": "https://www.musinsa.com/products/7007740",
+      "catalog_product_id": 208,
+      "style_tags": [
+        "street",
+        "norm"
+      ],
+      "mock_author": {
+        "name": "핏체크",
+        "story": "슬로우애시드 [오리지널/-5cm] 빈티지 워시드 배럴 코튼 팬츠 [베이지]를 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 7,
+        "mal": 0,
+        "neutral": 5,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "핏체크",
+          "rank": 4,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "마침 배럴 팬츠도 사고 싶고 브라운 팬츠도 사고 싶었는데, 삭형 믿고 바로 주문 했슴다😂",
+          "display_text": "마침 배럴 팬츠를 사고 싶었는데, 이 베이지 팬츠를 보고 바로 주문했어요😂"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 0,
+          "job": "Platform",
+          "vote": "살",
+          "text": "하 또 사고 싶게 만드네 이번 달 월급엔 콜라보 벨트랑 바지만 사고 참아야지 ㅠㅠㅠ 나도 결혼해야하는데 야금야금 돈쓰네 ㅠㅠ 사고 싶어져요 자뀨",
+          "display_text": "하 또 사고 싶게 만드네 이번 달 월급엔 콜라보 벨트랑 바지만 사고 참아야지 ㅠㅠㅠ 나도 결혼해야하는데 야금야금 돈쓰네 ㅠㅠ 사고 싶어져요 자뀨"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 1,
+          "job": "Student",
+          "vote": "살",
+          "text": "168에 평소 허리 42정도 입어서 L로 주문했습니다. 타 브랜드 배럴핏 커브드진을 샀는데 세미와이드랑 다르게 발끝에 맞춰 수선을 하니 기장이 애매모호하게 짧아보이더라고요 ㅠ 배럴핏은 발바닥 기준 어디 기장이 이쁜거 같은지 조언 부탁드립니다!",
+          "display_text": "168에 평소 허리 42정도 입어서 L로 주문했습니다. 타 브랜드 배럴핏 커브드진을 샀는데 세미와이드랑 다르게 발끝에 맞춰 수선을 하니 기장이 애매모호하게 짧아보이더라고요 ㅠ 배럴핏은 발바닥 기준 어디 기장이 이쁜거 같은지 조언 부탁드립니다!"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 2,
+          "job": "Basic",
+          "vote": "살",
+          "text": "삭형 S버전 오리지날 착용하셨나요?! 치노랑 배럴 구매하려는데 -5cm를 주문해야하는지 일반S를 구매해야히는지 햇갈려서요. 스펙은 삭형님과 동일합니당",
+          "display_text": "삭형 S버전 오리지날 착용하셨나요?! 치노랑 배럴 구매하려는데 -5cm를 주문해야하는지 일반S를 구매해야히는지 햇갈려서요. 스펙은 삭형님과 동일합니당"
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 3,
+          "job": "MD",
+          "vote": "살",
+          "text": "삭형님 혹시 빈티지 우ㅗ시드 베럴 코튼 팬츠 너무 맘에들어서 비슷한느낌의 검정색 바지 추천좀 해주실수잇을까요!!!? 검은색이 없어서 아쉅네요 ㅠㅠㅠ 코튼팬츠!!",
+          "display_text": "삭형님 혹시 빈티지 우ㅗ시드 베럴 코튼 팬츠 너무 맘에들어서 비슷한느낌의 검정색 바지 추천좀 해주실수잇을까요!!!? 검은색이 없어서 아쉅네요 ㅠㅠㅠ 코튼팬츠!!"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 4,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "베이지 팬츠 바로 구입했습니당 ㅎㅎ 석형님 제품은 믿고 구입합니당 ㅎㅎ 맘에 들었으면 좋겠어용 ㅎㅎ~~",
+          "display_text": "베이지 팬츠 바로 구입했습니당 ㅎㅎ 석형님 제품은 믿고 구입합니당 ㅎㅎ 맘에 들었으면 좋겠어용 ㅎㅎ~~"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 0,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "바지 받자마자 바로 입어봤는데 수선없이 기장도 핏도 너무 이뻐요 베럴말고 다른 핏도 나왔으면 좋겠어요",
+          "display_text": "바지 받자마자 바로 입어봤는데 수선없이 기장도 핏도 너무 이뻐요 베럴말고 다른 핏도 나왔으면 좋겠어요"
+        },
+        {
+          "display_name": "장바구니중",
+          "rank": 1,
+          "job": "Platform",
+          "vote": "중립",
+          "text": "혹시 바지두께는 어느정도 될까요?? 12oz 정도되면 사계절 다 입을 수 있을텐뎅",
+          "display_text": "혹시 바지두께는 어느정도 될까요?? 12oz 정도되면 사계절 다 입을 수 있을텐뎅"
+        },
+        {
+          "display_name": "데일리옷장",
+          "rank": 2,
+          "job": "MD",
+          "vote": "중립",
+          "text": "밑위가 보통 바지들보다 작게 나온거 같은데 엉덩이쪽이나 약간 타이트한 느낌은 없을까요? 엉덩이둘레도 가능하면 실측 궁금합니다",
+          "display_text": "밑위가 보통 바지들보다 작게 나온거 같은데 엉덩이쪽이나 약간 타이트한 느낌은 없을까요? 엉덩이둘레도 가능하면 실측 궁금합니다"
+        },
+        {
+          "display_name": "사이즈고민",
+          "rank": 3,
+          "job": "Student",
+          "vote": "중립",
+          "text": "바지 핏 너무 이쁘네요!! 그 베이지는 치노팬츠 느낌으로 입으면 될까요??!!!!",
+          "display_text": "바지 핏 너무 이쁘네요!! 그 베이지는 치노팬츠 느낌으로 입으면 될까요??!!!!"
+        },
+        {
+          "display_name": "코트러버",
+          "rank": 4,
+          "job": "Creator",
+          "vote": "중립",
+          "text": "안녕하세요! \n혹시 영상에서 삭형님께서 입으신 바지는 모두 숏버전인가요?",
+          "display_text": "안녕하세요! 혹시 영상에서 삭형님께서 입으신 바지는 모두 숏버전인가요?"
+        },
+        {
+          "display_name": "가을준비",
+          "rank": 0,
+          "job": "Basic",
+          "vote": "중립",
+          "text": "코튼팬츠 블랙색상은 없나여? ㅠ",
+          "display_text": "코튼팬츠 블랙색상은 없나여? ㅠ"
+        }
+      ],
+      "hours_remaining": 20,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 208,
+        "source_product_name": "[오리지널/-5cm] 빈티지 워시드 배럴 코튼 팬츠 [베이지]"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260806/7007740/7007740_17875506769294_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "MALE",
+      "channel": "너드킹 Nerd King",
+      "video_id": "M1_z5ijYvFw",
+      "video_url": "https://www.youtube.com/watch?v=M1_z5ijYvFw",
+      "video_title": "'바지 핏'에 미친 사람이 만든 '1등 바지'👖 앞으로 커브드 핏, 세미 와이드 핏의 기준은 이겁니다. [너드킹 공동개발]",
+      "upload_date": "2026-08-30",
+      "product_name": "데님 원턱 와이드 팬츠 11 COLOR COOSPT201",
+      "brand": "커스텀어클락",
+      "category": "청바지",
+      "timestamp": null,
+      "price": 17450,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20230208/3070218/3070218_17847883628803_500.jpg",
+      "product_url": "https://www.musinsa.com/products/3070218",
+      "catalog_product_id": 216,
+      "style_tags": [
+        "street",
+        "norm"
+      ],
+      "mock_author": {
+        "name": "소재중요",
+        "story": "커스텀어클락 데님 원턱 와이드 팬츠 11 COLOR COOSPT201를 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": false,
+      "comment_summary": {
+        "sal": 7,
+        "mal": 1,
+        "neutral": 0,
+        "sal_ratio": 88,
+        "mal_ratio": 12
+      },
+      "representative_comments": [
+        {
+          "display_name": "소재중요",
+          "rank": 0,
+          "job": "Student",
+          "vote": "살",
+          "text": "3:56 브라운 브이넥 니트랑 셔츠 정보 부탁드립니다!\n그리고 중청, 브라운 세미와이드로 샀는데 너무 이뻐요 감사합니다~",
+          "display_text": "중청과 브라운 와이드 팬츠로 구매했는데 핏이 정말 예뻐요. 다른 색도 사고 싶네요!"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 1,
+          "job": "Basic",
+          "vote": "살",
+          "text": "바지 3개 샀습니다. 9월 코디영상 기대해볼게요",
+          "display_text": "바지 3개 샀습니다. 9월 코디영상 기대해볼게요"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 2,
+          "job": "MD",
+          "vote": "살",
+          "text": "배송도 빨라서 오늘 받아서 바로입어봤는데 핏이 미쳤습니다. 세미와이드 데님이랑 치노팬츠 깔별로 다사버렸네요.",
+          "display_text": "배송도 빨라서 오늘 받아서 바로입어봤는데 핏이 미쳤습니다. 세미와이드 데님이랑 치노팬츠 깔별로 다사버렸네요."
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 3,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "세미와이드 1개랑 커브드 사계절 5개 샀어요!! 이쁜바지 만들어 주셔서 감사합니다👍👍",
+          "display_text": "세미와이드 1개랑 커브드 사계절 5개 샀어요!! 이쁜바지 만들어 주셔서 감사합니다👍👍"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 4,
+          "job": "Designer",
+          "vote": "살",
+          "text": "세미와이드 베이지 치노팬츠 구매해봅니당. 치노팬츠는 처음인데 믿고 입어보겠습니다!",
+          "display_text": "와이드 팬츠는 처음인데 베이지 색상으로 구매해보려고요. 믿고 입어보겠습니다!"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 0,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "아 늦었다 ..!!!!!!!\n\n+ 영상보고 세미와이드 브라운, 커브드 블랙치노 구매했습니다! \n전부터 너무 관심있던 제품이라 뜨자마자 바로 영상 정주행하고 구매했어요. 잘 입어보겠습니다 ㅎㅎ",
+          "display_text": "아 늦었다..!!!!!!! + 영상보고 세미와이드 브라운, 커브드 블랙치노 구매했습니다! 전부터 너무 관심있던 제품이라 뜨자마자 바로 영상 정주행하고 구매했어요. 잘 입어보겠습니다 ㅎㅎ"
+        },
+        {
+          "display_name": "장바구니중",
+          "rank": 1,
+          "job": "Student",
+          "vote": "살",
+          "text": "정말 기대하고 있던 제품인데 드디어 나왔네요! 커브드 핏은 말할 것도 없고 스트레이트 핏도 너무 예쁘게 잘 나온 것 같습니다 ㅎㅎ 여름용보다 워싱이 훨씬 잘 들어간 것 같아 마음에 듭니다~ 바로 구매해야 겠어요!!",
+          "display_text": "정말 기대하고 있던 제품인데 드디어 나왔네요! 커브드 핏은 말할 것도 없고 스트레이트 핏도 너무 예쁘게 잘 나온 것 같습니다 ㅎㅎ 여름용보다 워싱이 훨씬 잘 들어간 것 같아 마음에 듭니다~ 바로 구매해야 겠어요!!"
+        },
+        {
+          "display_name": "데일리옷장",
+          "rank": 2,
+          "job": "Creator",
+          "vote": "말",
+          "text": "다음에 기회가 된다면 총장 조금만 더 여유롭게 긴버전도 나오길 바래봅니다 키 큰 사람에겐 가장 큰 사이즈 총장인 109가 맨발일때 땅에 안닿고 복숭아뼈 아슬하게 걸치면서 짧뚱하게 떨어지는데 최소 110 이상 기장으로 나와도 분명 찾는 사람 많을것같아요..!\n\n기장이 길면 수선해서 입을수있는 선택지가 있는데 총장이 짧으면 해결법이 없습니다ㅠㅠ 첫번째 커브드팬츠 나왔을때 구매해보니깐 원단도 찰랑찰랑해서 너무 좋고 색감도 좋은데 총장이 109라 신발 신었을때 신발위로 착 떨어지는게 아니라 살짝 떠있는 그 느낌때문에 정말 그 하나가 너무 아쉽더라구요  1~2cm만 더 길었어도 좋았을텐데 이번에 나온 팬츠도 다 109로 나와서 아쉽네요",
+          "display_text": "원단과 색감은 마음에 들지만 총장이 109cm라 키가 큰 사람에게는 짧을 것 같아요. 1~2cm만 더 긴 버전이 있으면 구매하고 싶습니다ㅠㅠ"
+        }
+      ],
+      "hours_remaining": 33,
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 216,
+        "source_product_name": "데님 원턱 와이드 팬츠 11 COLOR COOSPT201"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20230208/3070218/3070218_17847883628803_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "FEMALE",
+      "channel": "물결 Mulgyul",
+      "video_id": "cy-z37gCH18",
+      "video_url": "https://www.youtube.com/watch?v=cy-z37gCH18",
+      "video_title": "원피스만 100개 있는 통통녀의 여름 찐만족 원피스🌸 이건 후회 안하실걸요? | 66 77 88사이즈 | 빅사이즈 데이트룩",
+      "upload_date": "2026-07-27",
+      "product_name": "두아 나시 원피스",
+      "brand": "비키비키",
+      "category": "미디 원피스",
+      "timestamp": null,
+      "price": 43700,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260401/6234926/6234926_17871037406254_500.png",
+      "product_url": "https://www.musinsa.com/products/6234926",
+      "catalog_product_id": "source:9463",
+      "style_tags": [
+        "feminine",
+        "classic"
+      ],
+      "mock_author": {
+        "name": "출근룩찾기",
+        "story": "비키비키 두아 나시 원피스를 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": true,
+      "comment_summary": {
+        "sal": 5,
+        "mal": 1,
+        "neutral": 0,
+        "sal_ratio": 83,
+        "mal_ratio": 17
+      },
+      "representative_comments": [
+        {
+          "display_name": "출근룩찾기",
+          "rank": 1,
+          "job": "MD",
+          "vote": "살",
+          "text": "이거다.. 나 원피스 진짜 고민중이었는데",
+          "display_text": "이거다.. 나 원피스 진짜 고민중이었는데"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 2,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "헉 원피스 사려고 장바구니에 담아뒀는데...! 물결픽 다 너무 이뻐서 바로 추가해야겠어요!!",
+          "display_text": "헉 원피스 사려고 장바구니에 담아뒀는데...! 물결픽 다 너무 이뻐서 바로 추가해야겠어요!!"
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 3,
+          "job": "Designer",
+          "vote": "살",
+          "text": "7번룩 원피스 구매했어요..☺️☺️ 가디건도 정보 부탁드려요..♡♡",
+          "display_text": "이 원피스 구매했어요☺️ 같이 코디한 가디건 정보도 궁금해요♡"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 4,
+          "job": "Stylist",
+          "vote": "말",
+          "text": "미케네 원피스 너무 제취향이고 진짜 물결님 말대로 흔하지않은 스타일이라 사고싶은데 가격이 후덜덜하네요...학생은 조용히 영상을 끕니다..",
+          "display_text": "흔하지 않은 스타일이라 정말 사고 싶은데 학생에게는 가격이 부담돼서 고민되네요."
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 0,
+          "job": "Creator",
+          "vote": "살",
+          "text": "저 1번  언니보고 샀다가 완전 인생원피스됏어요ㅠㅠㅠ구원템 ㅠㅠㅠㅜ진짜편한데 진짜이뻐요ㅠㅠㅠㅜ",
+          "display_text": "비슷한 원피스를 구매했다가 인생 원피스가 됐어요ㅠㅠ 편하면서 예뻐서 이 제품도 기대됩니다."
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 1,
+          "job": "Editor",
+          "vote": "살",
+          "text": "원피스 고민중이었는데 소개해주신 원피스들 다 이쁘네요~감사합니당 😊\n7번 루비치 원피스에 입은 가디건 정보 부탁드려요 ❤",
+          "display_text": "원피스를 살지 고민 중이었는데 이 제품 핏이 예뻐서 구매 후보에 넣었어요😊"
+        }
+      ],
+      "closed_at": "2026-09-12",
+      "closed_vote_summary": {
+        "sal": 50,
+        "mal": 23,
+        "total": 73,
+        "sal_ratio": 68,
+        "mal_ratio": 32
+      },
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 9463,
+        "source_product_name": "두아 나시 원피스"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260401/6234926/6234926_17871037406254_500.png",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "FEMALE",
+      "channel": "물결 Mulgyul",
+      "video_id": "ftP5PdTRCQg",
+      "video_url": "https://www.youtube.com/watch?v=ftP5PdTRCQg",
+      "video_title": "살은 쪘어도 예뻐보이고 싶어🌹 통통녀 날씬해 보이는 체형 커버 룩북💓 여름 데일리룩 하울 | 66 77 88사이즈 | 빅사이즈 데이트룩, 뚱뚱한 여자 코디",
+      "upload_date": "2026-08-05",
+      "product_name": "티아 레이스 진주 큐빅 브이넥 나시 가디건 세트 2color 캡내장",
+      "brand": "샤로네",
+      "category": "투피스/세트",
+      "timestamp": null,
+      "price": 54800,
+      "product_image_url": "https://cf.product-image.s.zigzag.kr/original/d/2026/9/15/61415_202609151547316426_56753.jpeg?width=400&height=400&quality=80",
+      "product_url": "https://zigzag.kr/catalog/products/171994289",
+      "catalog_product_id": "source:8130",
+      "style_tags": [
+        "feminine",
+        "norm"
+      ],
+      "mock_author": {
+        "name": "오늘도장바구니",
+        "story": "샤로네 티아 레이스 진주 큐빅 브이넥 나시 가디건 세트 2color 캡내장을 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": true,
+      "comment_summary": {
+        "sal": 9,
+        "mal": 0,
+        "neutral": 0,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 2,
+          "job": "Designer",
+          "vote": "살",
+          "text": "4번 나딘 프릴 나시 가디건 세트!!! 와 이거 진짜 너무 예뻐요ㅠㅠ 딱 보자마자 제 원픽이었어요ㅠ 평소에도 늘 물결님 영상 보면서 코디 많이 참고하고, 예쁜 옷도 따라서 구매할 정도로 항상 잘 보고 있는데 또 이런 기회를 주시다니 🥹 매번 센스 있는 코디 보여주셔서 감사한데, 이렇게 이벤트까지 열어주셔서 너무 감동이에요ㅠㅠ 이번에 꼭 당첨돼서 예쁘게 입고 다니고 싶어요! 앞으로도 좋은 코디랑 영상 올려주세용 항상 응원합니다🫰🏻🫰🏻☘️☘️",
+          "display_text": "이 나시 가디건 세트 정말 예뻐요ㅠㅠ 보자마자 제 원픽이었어요. 코디하기도 좋아 보여서 꼭 입어보고 싶어요🥹"
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 3,
+          "job": "Stylist",
+          "vote": "살",
+          "text": "나딘 프릴나시 가디건 세트 보자마자 이건 사야해! 했는데 한발 늦었네요 프리오더로 넘어가다니ㅠㅠ 라이트블루 너무너무 탐나요",
+          "display_text": "보자마자 이건 사야겠다고 생각했는데 벌써 프리오더라니ㅠㅠ 밝은 색상이 정말 탐나요."
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 4,
+          "job": "Creator",
+          "vote": "살",
+          "text": "미쳐따 1분전!!!!! 나딘 프릴 나시 가디건 세트 응모합니다!!! 이미 예전에 영상 보고 담아놨던 옷인데 평소 입던 스타일이 아니라 살까 말까 500번 고민하는중이에요,,, 이번 기회에 입어보고 싶습니다!!!",
+          "display_text": "예전부터 장바구니에 담아둔 스타일인데 평소 입던 옷과 달라 살까 말까 계속 고민 중이에요. 이번에는 입어보고 싶어요!"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 0,
+          "job": "Editor",
+          "vote": "살",
+          "text": "옷 추천 영상만 기다려왔다면 믿어줄래…?\n전체적으로 진짜 다 예쁜데 나딘 프릴 가디건 세트가 넘 탐나네요…😍 너무 꾸민 것 같진 않은데 너무 예뻐요! 모델이 물결님이라 그런가 다 잘어울리고 예뻐서 갖고싶네요🥹💙",
+          "display_text": "너무 꾸민 느낌 없이 여성스러워서 이 나시 가디건 세트가 계속 눈에 들어와요😍 갖고 싶네요🥹💙"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 1,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "룩6번 썸머 후드 가디건 너무 예뻐요!! 상체에 살이 많고 가슴도 있는 편이라 가디건 고를 때 고민이 많은 체형인데 핏도 색도 너무 너무 예뻐서 한번 입어보고 싶어요🥹 색도 예쁜 베이비핑크고 핏감도 넥라인이 시원하게 파져있는게 이번 여름에 문신템으로 입고 싶네요!!",
+          "display_text": "상체에 살이 있고 가슴도 있는 편이라 가디건 핏을 많이 보는데, 넥라인이 시원하고 예뻐서 입어보고 싶어요🥹"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 2,
+          "job": "Platform",
+          "vote": "살",
+          "text": "4번 나딘 프릴 나시 가디건 세트 응모합니다😊 플럽 옷들 너무 예뻐서 다 쟁이고 싶네요💙",
+          "display_text": "이 나시 가디건 세트 너무 예뻐서 바로 쟁이고 싶어요💙"
+        },
+        {
+          "display_name": "사이즈고민",
+          "rank": 3,
+          "job": "Editor",
+          "vote": "살",
+          "text": "Look4 나딘 프릴 나시 가디건 세트🩵\n완젼 어른여자 그잡채..... 성숙하고 여자 향수냄새 날것 같은 스타일이 요즘 끌렸는데 플럽 옷이 다 그런 느낌이라 좋아요..💗\n아무래도 많이 지르게 될듯....",
+          "display_text": "성숙하고 여성스러운 분위기의 옷을 찾고 있었는데 딱 그런 느낌이에요💗 구매하게 될 것 같아요."
+        },
+        {
+          "display_name": "코트러버",
+          "rank": 4,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "나딘 프릴 나시 가디건 응모해요!!\n옷 너무 예뻐서 후드 가디건으로 당장 사러 갑니더!!!",
+          "display_text": "이 나시 가디건 세트가 너무 예뻐서 당장 사러 가고 싶어요!"
+        },
+        {
+          "display_name": "가을준비",
+          "rank": 0,
+          "job": "Platform",
+          "vote": "살",
+          "text": "4번 나딘 프릴 나시가디건세트 2사이즈용!\n플럽 지그재그 입점 해서 넘 기뻐요 \n지그재그에서만 옷사는데 접근성 굿\n요 나시가디건 팔뚝 얇게보이고 제스타일인 글램룩이라 넘 좋아요❤",
+          "display_text": "팔뚝이 얇아 보이고 제가 좋아하는 글램룩이라 마음에 들어요. 2사이즈 핏이 어떨지 궁금합니다❤"
+        }
+      ],
+      "closed_at": "2026-09-10",
+      "closed_vote_summary": {
+        "sal": 41,
+        "mal": 17,
+        "total": 58,
+        "sal_ratio": 71,
+        "mal_ratio": 29
+      },
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 8130,
+        "source_product_name": "티아 레이스 진주 큐빅 브이넥 나시 가디건 세트 2color 캡내장"
+      },
+      "representative_image_url": "https://cf.product-image.s.zigzag.kr/original/d/2026/9/15/61415_202609151547316426_56753.jpeg?width=400&height=400&quality=80",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "MALE",
+      "channel": "너드킹 Nerd King",
+      "video_id": "PxyXOys8-kM",
+      "video_url": "https://www.youtube.com/watch?v=PxyXOys8-kM",
+      "video_title": "'압도적인' 가을 셔츠 1황🔥 종류별로 가져 와 봤습니다.",
+      "upload_date": "2026-09-01",
+      "product_name": "릴렉스 핏 옥스포드 셔츠 [화이트]",
+      "brand": "무신사 스탠다드",
+      "category": "셔츠",
+      "timestamp": null,
+      "price": 37890,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20180910/854337/854337_17829584758706_500.jpg",
+      "product_url": "https://www.musinsa.com/products/854337",
+      "catalog_product_id": 1078,
+      "style_tags": [
+        "classic",
+        "norm"
+      ],
+      "mock_author": {
+        "name": "코트고민중",
+        "story": "무신사 스탠다드 릴렉스 핏 옥스포드 셔츠 [화이트]를 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": true,
+      "comment_summary": {
+        "sal": 7,
+        "mal": 0,
+        "neutral": 0,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "코트고민중",
+          "rank": 3,
+          "job": "Creator",
+          "vote": "살",
+          "text": "귀찮게 쿠폰 왜하나 싶었는데 탭 눌러서 발급 받으니 5.8까지 내려가네요. 덕분에 에스팈코하고 파브레가 고민하다가 파브레가로 잘 샀습니다. 어쩌다 유입됐는데 영상 잘보고있습니다. 😊😊😊😊",
+          "display_text": "쿠폰을 받으니 가격이 더 내려가서 고민 끝에 이 셔츠로 구매했어요😊"
+        },
+        {
+          "display_name": "가을옷장",
+          "rank": 4,
+          "job": "Editor",
+          "vote": "살",
+          "text": "옥스퍼드는 아닌데 흰셔츠가있는데  어떤 셔츠를 사야할까요? 단독으로도입고 가디건이너로도 입을거에요 바지는 블랙,차콜 슬랙스입을거에요 추천부탁드리겠습니다",
+          "display_text": "옥스퍼드는 아닌데 흰셔츠가있는데 어떤 셔츠를 사야할까요? 단독으로도입고 가디건이너로도 입을거에요 바지는 블랙,차콜 슬랙스입을거에요 추천부탁드리겠습니다"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 0,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "저번주에 콜라보 세미와이드 베이지 팬츠 샀는데 셔츠 젤 잘어울리는게 뭘까요?",
+          "display_text": "지난주에 산 베이지 팬츠에 이 화이트 셔츠를 코디하면 잘 어울릴 것 같아요."
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 1,
+          "job": "Platform",
+          "vote": "살",
+          "text": "형님 근육질 몸에 어울리는 룩 추천 가능할까요 ❤ \n175에 73인데 승모가 너무 독보적이라 셔츠 괜찮을까요 ㅠ",
+          "display_text": "형님 근육질 몸에 어울리는 룩 추천 가능할까요 ❤ 175에 73인데 승모가 너무 독보적이라 셔츠 괜찮을까요 ㅠ"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 2,
+          "job": "Student",
+          "vote": "살",
+          "text": "아 파브레가 로렌이랑 안토니중 계속 고민되네요ㅠ",
+          "display_text": "화이트 셔츠를 찾고 있는데 핏과 활용도가 좋아 보여서 계속 고민되네요ㅠ"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 3,
+          "job": "Basic",
+          "vote": "살",
+          "text": "보여주신 알리스 제품이랑 비슷한 디자인의 셔츠를 전에 샀었는데 기장이 너무 길어서 다른거 다시 살까 고민하고 있었는데 보여주신 제품이 좋은 선택지가 될 것 같습니다!",
+          "display_text": "보여주신 알리스 제품이랑 비슷한 디자인의 셔츠를 전에 샀었는데 기장이 너무 길어서 다른거 다시 살까 고민하고 있었는데 보여주신 제품이 좋은 선택지가 될 것 같습니다!"
+        },
+        {
+          "display_name": "코트러버",
+          "rank": 4,
+          "job": "MD",
+          "vote": "살",
+          "text": "스크랩 해뒀다가 옷살때 입어보겠습니다. 아직은 옷걸이가 부족하네요 ㅎㅎ\n그나저나 체크 셔츠는 제가 입으면 그냥 공대아저씨 1인데 왜 여기서는 잘생겨 보이죠....\n옷 살때 정주행하고 다시 골라보겠습니다!",
+          "display_text": "스크랩해뒀다가 셔츠 살 때 다시 보려고요. 단정하면서도 자연스럽게 입을 수 있을 것 같아요ㅎㅎ"
+        }
+      ],
+      "closed_at": "2026-09-09",
+      "closed_vote_summary": {
+        "sal": 64,
+        "mal": 27,
+        "total": 91,
+        "sal_ratio": 70,
+        "mal_ratio": 30
+      },
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 1078,
+        "source_product_name": "릴렉스 핏 옥스포드 셔츠 [화이트]"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20180910/854337/854337_17829584758706_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    },
+    {
+      "gender": "MALE",
+      "channel": "오정규",
+      "video_id": "Lh5Pf1Fnlzg",
+      "video_url": "https://www.youtube.com/watch?v=Lh5Pf1Fnlzg",
+      "video_title": "진심 거를 타선이 없는 가을 옷만 추천",
+      "upload_date": "2026-09-06",
+      "product_name": "데님 레이어드 크롭 니트 풀오버 [워시드블랙]",
+      "brand": "알리스",
+      "category": "니트/스웨터",
+      "timestamp": null,
+      "price": 55500,
+      "product_image_url": "https://image.msscdn.net/images/goods_img/20260901/7220363/7220363_17883495819337_500.jpg",
+      "product_url": "https://www.musinsa.com/products/7220363",
+      "catalog_product_id": 1679,
+      "style_tags": [
+        "street",
+        "norm",
+        "classic"
+      ],
+      "mock_author": {
+        "name": "가을옷장",
+        "story": "알리스 데님 레이어드 크롭 니트 풀오버 [워시드블랙]을 살지 고민 중이에요. 사진과 가격을 보고 실제로 구매할 만한지 의견을 듣고 싶어요."
+      },
+      "similar_user_ratio": {
+        "sal": 88,
+        "mal": 12
+      },
+      "closed": true,
+      "comment_summary": {
+        "sal": 6,
+        "mal": 0,
+        "neutral": 0,
+        "sal_ratio": 100,
+        "mal_ratio": 0
+      },
+      "representative_comments": [
+        {
+          "display_name": "가을옷장",
+          "rank": 4,
+          "job": "Marketer",
+          "vote": "살",
+          "text": "데님 레이어드 크롭 니트 풀오버 / 바로 매진이라니...정규님의 영상을 통해 가을옷 구매 중입니다! 항상 잘보고 있습니다~~",
+          "display_text": "데님 레이어드 크롭 니트 풀오버 / 바로 매진이라니...정규님의 영상을 통해 가을옷 구매 중입니다! 항상 잘보고 있습니다~~"
+        },
+        {
+          "display_name": "핏체크",
+          "rank": 0,
+          "job": "Platform",
+          "vote": "살",
+          "text": "데님 레이어드 크롭 니트 풀오버 바로 구매 완료 ! 정보 감사합니다 !",
+          "display_text": "데님 레이어드 크롭 니트 풀오버 바로 구매 완료! 정보 감사합니다!"
+        },
+        {
+          "display_name": "소재중요",
+          "rank": 1,
+          "job": "Student",
+          "vote": "살",
+          "text": "데님 레이어드 크롭 니트 풀오버 / 이거 품절각인데요?? 진짜 디자인 잘 나온것 같아서 보기만해도 뿌듯하네요😊ㅎㅎ",
+          "display_text": "데님 레이어드 크롭 니트 풀오버 / 이거 품절각인데요?? 진짜 디자인 잘 나온것 같아서 보기만해도 뿌듯하네요😊ㅎㅎ"
+        },
+        {
+          "display_name": "출근룩찾기",
+          "rank": 2,
+          "job": "Basic",
+          "vote": "살",
+          "text": "데님 레이어드 크롭 니트 풀오버 / 진짜 예쁘네요^^ 이번에 구매한 블랙진과의 조합이 아주 👍 좋을듯ㅎ😂",
+          "display_text": "데님 레이어드 크롭 니트 풀오버 / 진짜 예쁘네요^^ 이번에 구매한 블랙진과의 조합이 아주 👍 좋을듯ㅎ😂"
+        },
+        {
+          "display_name": "오늘도장바구니",
+          "rank": 3,
+          "job": "MD",
+          "vote": "살",
+          "text": "데님 레이어드 크롭 니트 풀오버/ 오늘도 좋은 제품 추천 감사합니다!",
+          "display_text": "데님 레이어드 크롭 니트 풀오버/ 오늘도 좋은 제품 추천 감사합니다!"
+        },
+        {
+          "display_name": "코트고민중",
+          "rank": 4,
+          "job": "Buyer",
+          "vote": "살",
+          "text": "데님 레이어드 크롭 니트 풀오버 / 또 지갑을 열때가 왔군요 알리스 넘 맘에 듭니다!!",
+          "display_text": "데님 레이어드 크롭 니트 풀오버 / 또 지갑을 열때가 왔군요 알리스 넘 맘에 듭니다!!"
+        }
+      ],
+      "closed_at": "2026-09-08",
+      "closed_vote_summary": {
+        "sal": 46,
+        "mal": 21,
+        "total": 67,
+        "sal_ratio": 69,
+        "mal_ratio": 31
+      },
+      "catalog_match": {
+        "type": "selected_product",
+        "product_source_id": 1723,
+        "source_product_name": "데님 레이어드 크롭 니트 풀오버 [워시드블랙]"
+      },
+      "representative_image_url": "https://image.msscdn.net/images/goods_img/20260901/7220363/7220363_17883495819337_500.jpg",
+      "image_source_field": "commerce.product_source.thumbnail_url"
+    }
+  ]
+}

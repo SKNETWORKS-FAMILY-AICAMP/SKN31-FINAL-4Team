@@ -19,9 +19,8 @@ from .constants import (
     TAG_API_URL,
 )
 from .exceptions import MusinsaCollectError
-from .images import normalize_image_url
 from .parser import MusinsaParser
-
+from .images import normalize_image_url
 
 class MusinsaCollector:
     """

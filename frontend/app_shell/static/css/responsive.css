@@ -1,0 +1,23 @@
+/* 작은 화면에서도 주요 메뉴를 유지하고 분석 본문을 옆으로 밀지 않는다. */
+@media(max-width:920px){
+  .mHead{height:104px;box-sizing:border-box;flex-wrap:wrap;gap:4px 12px;padding:10px 16px}
+  .mHeadR{margin-left:auto}
+  .mNav{display:flex;order:3;flex:0 0 100%;justify-content:space-between;gap:10px;min-width:0}
+  .mNav button{font-size:12px;padding:7px 0}
+  .side{top:104px;width:56px}
+  .side.open{width:220px;box-shadow:12px 0 24px rgba(0,0,0,.12)}
+  .sItem{padding-left:12px;padding-right:12px}
+  .sFoot{padding-left:12px;padding-right:12px}
+  .trMain,.trWrap.open .trMain{margin-left:56px;padding:24px 16px 90px}
+  .trProfile{gap:16px;flex-wrap:wrap;max-width:100%}
+  .trProfInfo{min-width:0;max-width:100%}
+  .trProfName{flex-wrap:wrap}
+  .trProfDivider{max-width:100%}
+  .tpPulseGrid{grid-template-columns:minmax(0,1fr)}
+  .tpHero,.tpSignal{padding:22px 20px}
+  .tpSecLabel{flex-wrap:wrap;gap:8px}
+  .tpBrief{min-width:0}
+  .tpSalHead{flex-wrap:wrap;gap:12px}
+  .tpSalHead>div{min-width:0;max-width:100%}
+  .tpSalHead p.tpSalDesc{white-space:normal;overflow-wrap:anywhere}
+}

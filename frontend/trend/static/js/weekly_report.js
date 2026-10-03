@@ -61,7 +61,8 @@ export function trDial(){
   const ring=$('#trBody .dial .val'), num=$('#trBody .dial .num b');
   if(!ring||!num)return;
   const card=ring.closest('.verdict');
-  const sc=+ring.dataset.score, C=314.16, r=Math.max(0,Math.min(100,sc));
+  const sc=+ring.dataset.score, C=2*Math.PI*(Number(ring.getAttribute('r'))||50),
+    r=Math.max(0,Math.min(100,sc));
   const ramp=(ring.dataset.ramp||'').split(',').filter(Boolean);
   const paint=c=>{ if(card&&c)card.style.setProperty('--sc',c) };
   const at=t=>{

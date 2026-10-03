@@ -1,0 +1,83 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}살!말? 신고 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
+{% include "dashboard/service/_service_css.html" %}
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_service.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">FEEDIT ADMIN</p>
+        <h2 class="page-title">살!말? 신고</h2>
+        <p class="sub">카드 · 댓글 신고입니다. 같은 대상에 들어온 신고는 한 번에 같은 결론으로 바뀝니다. 댓글은 여기서 숨길 수 있고, 카드 삭제는 앱에서 ADMIN 계정으로 합니다.</p>
+    </div>
+</div>
+
+<div class="nz-chipbar">
+    <span class="nz-chipbar-label">상태</span>
+    {% for value, label in statuses %}
+    <a class="nz-chip {% if status == value %}on{% endif %}" href="?status={{ value }}{% if target %}&target={{ target }}{% endif %}">{{ label }}<b>{% for k, n in counts.items %}{% if k == value %}{{ n|intcomma }}{% endif %}{% endfor %}</b></a>
+    {% endfor %}
+    <a class="nz-chip {% if status == 'ALL' %}on{% endif %}" href="?status=ALL{% if target %}&target={{ target }}{% endif %}">전체</a>
+    <span class="nz-chipbar-label" style="margin-left:14px">대상</span>
+    <a class="nz-chip {% if not target %}on{% endif %}" href="?status={{ status }}">전체</a>
+    {% for value, label in targets %}
+    <a class="nz-chip {% if target == value %}on{% endif %}" href="?status={{ status }}&target={{ value }}">{{ label }}</a>
+    {% endfor %}
+</div>
+
+<p class="nz-count">조회 결과 <b>{{ page_obj.paginator.count|intcomma }}</b>건</p>
+
+<div class="nz-table-card">
+<table class="nz-table sv-table">
+    <colgroup><col style="width:52px"><col style="width:130px"><col style="width:130px"><col><col style="width:300px"></colgroup>
+    <thead><tr><th>ID</th><th>대상 · 상태</th><th>신고자</th><th>신고 내용</th><th>처리</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+    <tr>
+        <td class="mono">{{ r.id }}</td>
+        <td>
+            <span class="nz-badge {% if r.target_type == 'COMMENT' %}warn{% else %}off{% endif %}">{{ r.get_target_type_display }} #{{ r.target_id }}</span>
+            <span class="sv-status sv-{{ r.status|lower }}">{{ r.get_status_display }}</span>
+            {% if r.same_count > 1 %}<span class="sv-meta">같은 대상 신고 {{ r.same_count }}건</span>{% endif %}
+        </td>
+        <td class="sv-who"><b>{{ r.nickname }}</b><span class="sv-meta">{{ r.created_at|date:"Y-m-d H:i" }}</span></td>
+        <td>
+            {% if r.target_title %}<div class="sv-meta">카드: {{ r.target_title }}</div>{% endif %}
+            {% if r.target_text %}<div class="sv-text sv-quote">{{ r.target_text|linebreaksbr }}</div>{% endif %}
+            {% if r.comment_hidden %}<span class="sv-meta sv-hidden">숨긴 댓글</span>{% endif %}
+            {% if r.author_withdrawn %}<span class="sv-meta">글쓴이가 탈퇴해 대상 글을 지웠습니다</span>{% endif %}
+            <div class="sv-reason">사유: {{ r.reason|default:"(사유 없음)" }}</div>
+        </td>
+        <td>
+            <form method="post" action="{% url 'dashboard:report_update' r.id %}" class="sv-form">
+                {% csrf_token %}
+                <input type="hidden" name="qs" value="{{ qs }}">
+                {% if r.target_type == 'COMMENT' and r.comment and not r.comment_hidden %}
+                <label class="sv-check"><input type="checkbox" name="hide_comment" value="1"> 검토 완료와 함께 댓글 숨기기</label>
+                {% endif %}
+                <div class="sv-btns">
+                    {% for value, label in statuses %}
+                    <button type="submit" name="status" value="{{ value }}" class="sv-btn sv-{{ value|lower }}" {% if r.status == value %}disabled{% endif %}>{{ label }}</button>
+                    {% endfor %}
+                </div>
+            </form>
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="nz-empty">이 조건의 신고가 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% include "dashboard/service/_pagination.html" %}
+{% endblock %}

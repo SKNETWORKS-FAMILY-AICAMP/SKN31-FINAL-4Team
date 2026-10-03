@@ -60,6 +60,12 @@
   mask-composite:exclude;
   animation:rkSpin var(--rk-dur) linear infinite;
 }
+/* i 는 흔한 아이콘 태그라, 링이 .pill 안에 들어가는 네비바 프로필에서는
+   ".pill:hover i{transform:translateX(4px)}" 같은 범용 호버 규칙이 이 회전판(<i>)에도
+   걸려 버려 마우스를 올릴 때 하이라이트만 오른쪽으로 밀려 "링이 딸려오는" 것처럼 보였다.
+   이 레이어의 회전은 --rka 각도로만 표현하고 transform 은 절대 쓰지 않으니
+   .pill 호버에서 들어오는 transform 은 항상 무시한다. */
+.mAuth .pill.me:hover .rkRing i{transform:none}
 /* 두 번째 겹 — 한 칸 바깥에서 반대편을 돈다. 주기를 어긋내야 패턴이 생긴다 */
 .rkRing i.o2{inset:calc(var(--rkS,72px) * -.052);opacity:.62;
   animation-delay:calc(var(--rk-dur) * -.5);
@@ -130,13 +136,10 @@
 
 /* 링이 붙는 자리마다 지름만 알려 준다. 나머지(간격·굵기)는 비례로 따라온다. */
 .acct .avatarCircle{--rkS:78px;  --rk-sep:#fff}
-.mAuth .meAv       {--rkS:22px;  --rk-sep:var(--pink-0)}   /* 검은 알약 안에 있다 */
 .trProfAv          {--rkS:100px; --rk-sep:#fff}
 .sFoot .av         {--rkS:31px;  --rk-sep:var(--side)}
 /* 아바타 안의 이니셜이 링 아래로 깔리지 않게 */
 .rkAv > .rkRing,.rkAv > .rkGloss{z-index:1}
-/* 작은 자리에서는 두 번째 겹이 뭉개지므로 접는다 — 테두리 색만으로도 읽힌다 */
-.mAuth .meAv .rkRing i.o2,.mAuth .meAv .rkRing b.aura{display:none}
 /* 사이드바 아바타는 옛 브래스 링을 쓰지 않는다 */
 .sFoot .av{background:var(--coral)}
 

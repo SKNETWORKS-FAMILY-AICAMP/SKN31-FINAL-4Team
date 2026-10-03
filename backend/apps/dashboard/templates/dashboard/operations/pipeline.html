@@ -1,0 +1,64 @@
+{% extends "dashboard/base.html" %}{% load static humanize %}
+{% block title %}파이프라인 현황 | FEEDIT Admin{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/operations.css' %}">
+<style>
+.pipeline-hero { display:grid; grid-template-columns:230px minmax(0,1fr); gap:30px; align-items:center; padding:25px; border:1px solid var(--line); border-radius:16px; background:var(--card); overflow:hidden; }
+.thinking-object { position:relative; min-height:205px; display:grid; place-items:center; overflow:hidden; border-radius:15px; background:#08090b; box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 18px 45px rgba(0,0,0,.12); }
+.thinking-chip { position:absolute; top:13px; left:50%; z-index:3; transform:translateX(-50%); display:flex; align-items:center; gap:7px; padding:6px 10px; border:1px solid rgba(255,255,255,.1); border-radius:999px; background:rgba(255,255,255,.05); color:rgba(255,255,255,.65); font:500 8px/1 var(--num); letter-spacing:.06em; white-space:nowrap; }
+.thinking-chip i { width:12px; height:12px; border-radius:50%; background:radial-gradient(circle,#fff 0 1px,transparent 1.4px); background-size:4px 4px; animation:orbSpin 5s linear infinite; }
+.thinking-svg { width:182px; height:182px; margin-top:17px; overflow:visible; filter:drop-shadow(0 0 10px rgba(255,255,255,.18)); }
+.thinking-svg .orbit { fill:none; stroke:rgba(255,255,255,.22); stroke-width:.65; transform-origin:100px 100px; animation:orbSpin 13s linear infinite; }
+.thinking-svg .orbit.reverse { animation-direction:reverse; animation-duration:17s; }
+.thinking-svg .wire { fill:none; stroke:rgba(255,255,255,.14); stroke-width:.55; }
+.thinking-svg .dot { fill:#fff; animation:dotPulse 2.8s ease-in-out infinite; transform-box:fill-box; transform-origin:center; }
+.thinking-svg .dot.dim { opacity:.35; animation-delay:-1.4s; }
+.thinking-svg .dot.mid { opacity:.65; animation-delay:-.7s; }
+.thinking-label { position:absolute; left:14px; bottom:13px; color:rgba(255,255,255,.36); font:600 7px/1 var(--num); letter-spacing:.18em; }
+.thinking-status { position:absolute; right:14px; bottom:11px; color:rgba(255,255,255,.7); font:500 9px/1 var(--num); }
+.pipeline-flow { display:grid; grid-template-columns:repeat(5,minmax(135px,1fr)); gap:22px; margin-top:18px; overflow-x:auto; padding-bottom:6px; }
+.pipeline-stage { position:relative; min-width:135px; }
+.pipeline-stage:not(:last-child)::after { content:"→"; position:absolute; right:-17px; top:50%; color:var(--tx3); }
+@keyframes orbSpin { to{transform:rotate(360deg)} }
+@keyframes dotPulse { 0%,100%{opacity:.32;transform:scale(.75)} 50%{opacity:1;transform:scale(1.25)} }
+@media (prefers-reduced-motion:reduce){.thinking-chip i,.thinking-svg .orbit,.thinking-svg .dot{animation:none}}
+@media(max-width:720px){.pipeline-hero{grid-template-columns:1fr}.thinking-object{min-height:190px}}
+</style>
+{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_normalized.html" %}{% endblock %}
+{% block content %}
+<section class="pipeline-hero">
+  <div class="thinking-object" role="img" aria-label="데이터 파이프라인 상태를 분석하는 파티클 오브">
+    <div class="thinking-chip"><i></i> Analyzing pipeline...</div>
+    <svg class="thinking-svg" viewBox="0 0 200 200" aria-hidden="true">
+      <defs><radialGradient id="orbGlow"><stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+      <circle cx="100" cy="100" r="72" fill="url(#orbGlow)"/><ellipse class="orbit" cx="100" cy="100" rx="72" ry="39"/><ellipse class="orbit reverse" cx="100" cy="100" rx="39" ry="72" transform="rotate(32 100 100)"/><ellipse class="wire" cx="100" cy="100" rx="69" ry="69"/><path class="wire" d="M38 86 Q100 126 163 78 M44 124 Q98 72 158 119 M63 42 Q113 101 142 158"/>
+      <g>{% for x in "123456789012345678901234567890123456789012345678" %}<circle class="dot {% cycle '' 'dim' 'mid' %}" cx="{% cycle '51' '63' '75' '87' '99' '111' '123' '135' '147' '58' '72' '86' '100' '114' '128' '142' %}" cy="{% cycle '80' '61' '48' '42' '47' '57' '73' '92' '113' '128' '143' '153' '157' '150' '137' '119' %}" r="{% cycle '1.5' '2.2' '1.2' '1.8' %}"/>{% endfor %}</g>
+      <circle class="dot" cx="100" cy="100" r="3.2"/><circle class="dot mid" cx="128" cy="83" r="2.5"/><circle class="dot" cx="74" cy="117" r="2.2"/><circle class="dot dim" cx="151" cy="101" r="1.8"/><circle class="dot" cx="49" cy="96" r="1.6"/>
+    </svg>
+    <span class="thinking-label">FEEDIT · REASONING OBJECT</span><span class="thinking-status">{{ health|title }}</span>
+  </div>
+  <div>
+    <p class="op-eyebrow">DATA INTELLIGENCE PIPELINE</p>
+    <h2 class="op-title">데이터가 흐르는 상태를 한눈에</h2>
+    <p class="op-sub">수집부터 정규화, 텍스트 분석, 검증 키워드, 트렌드 지표까지 연결된 운영 현황입니다. 집계는 60초 캐시되어 큰 테이블을 매 화면마다 다시 세지 않습니다.</p>
+    <div class="op-grid" style="margin-top:16px">
+      <div class="op-card"><span class="op-card-label">실행 중 수집</span><strong class="op-card-value">{{ running_runs|intcomma }}</strong></div>
+      <div class="op-card"><span class="op-card-label">실패 수집</span><strong class="op-card-value">{{ failed_runs|intcomma }}</strong></div>
+      <div class="op-card"><span class="op-card-label">분석 완료율</span><strong class="op-card-value">{% widthratio text_done text_total 100 %}%</strong></div>
+    </div>
+  </div>
+</section>
+<div class="pipeline-flow">
+{% for stage in stages %}
+  <a class="op-link pipeline-stage" href="{% url stage.url %}"><div class="op-card">
+    <span class="op-card-label">0{{ forloop.counter }} · {{ stage.label }}</span>
+    <strong class="op-card-value">{{ stage.value|intcomma }}</strong>
+    <span class="op-card-caption">{{ stage.caption }}</span>
+  </div></a>
+{% endfor %}
+</div>
+<div class="op-section"><div class="op-section-head"><h3>지표 해석</h3><span class="op-muted">SOURCE → EVIDENCE → METRIC</span></div>
+  <p class="op-sub">전처리 후보는 JSONB 분석 메타데이터에, 검증을 통과한 키워드는 TextTermMention에 남습니다. 두 값을 분리해 보여주므로 “후보는 있으나 사전 매칭 전”인 문서를 누락으로 오해하지 않습니다.</p>
+</div>
+{% endblock %}

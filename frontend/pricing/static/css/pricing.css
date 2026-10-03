@@ -1,37 +1,47 @@
 /* ══════════════ 요금제 ══════════════ */
-.prGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.prCard{background:#fff;border:1px solid var(--pink-3);border-radius:12px;
-  padding:clamp(24px,2.8vw,34px);display:flex;flex-direction:column;
+.prGrid{display:flex;justify-content:center;align-items:center;gap:clamp(40px,8vw,110px)}
+.prCards{display:flex;flex-direction:column;gap:14px;flex:0 1 440px;min-width:0}
+.prTblWrap{overflow-x:auto;flex:0 1 540px;min-width:0}
+.prTbl{width:100%;table-layout:fixed;border-collapse:collapse;text-align:center;font-size:13px;letter-spacing:-.015em}
+.prTbl th,.prTbl td{padding:16px 8px;border-bottom:1px solid var(--pink-3);border-right:1px solid var(--pink-3);
+  line-height:1.7;color:var(--pink-1);font-weight:400}
+.prTbl tr>*:last-child{border-right:0}
+.prTbl tbody tr:last-child>*{border-bottom:0}
+.prTbl thead th{font-weight:600;color:#0a0a0a;font-size:14px}
+.prTbl tbody th{font-weight:600;color:#0a0a0a;white-space:nowrap}
+.prTbl .corner{position:relative;width:25%;height:84px;
+  background:linear-gradient(to top right,transparent calc(50% - .5px),var(--pink-3) 50%,transparent calc(50% + .5px))}
+.prTbl .corner i,.prTbl .corner em{position:absolute;font-style:normal;font-size:15px;font-weight:600;color:#0a0a0a}
+.prTbl .corner i{top:14px;right:24px}
+.prTbl .corner em{bottom:14px;left:24px}
+.prCard{cursor:pointer;background:#fff;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--pink-3);border-radius:12px;
+  padding:clamp(24px,2.8vw,34px);display:flex;
   transition:transform .45s var(--ease),box-shadow .45s var(--ease)}
 .prCard:hover{transform:translateY(-4px);box-shadow:0 40px 80px -60px rgba(10,10,10,.5)}
 .prCard.best{border-color:var(--pink-0);box-shadow:inset 0 0 0 1px var(--pink-0)}
 .prCard .bd1{display:flex;align-items:center;gap:9px;margin-bottom:14px}
 .prCard .bd1 b{font-size:15px;font-weight:500;letter-spacing:-.02em}
-.prCard .bd1 u{background:var(--coral);color:#fff;border-radius:99px;padding:4px 10px;
+.prCard .bd1 u{background:var(--coral);color:var(--pink-0);border-radius:99px;padding:4px 10px;   /* 흰 글자 → 잉크 (대비 2.8 → 7:1) */
   font-family:var(--num);font-size:8.5px;letter-spacing:.16em;text-decoration:none}
-.prCard .ds{color:var(--pink-2);font-size:12.5px;line-height:1.7;margin-bottom:20px}
-.prCard .pz{display:flex;align-items:baseline;gap:7px;margin-bottom:22px;
-  padding-bottom:22px;border-bottom:1px solid var(--pink-3)}
+.prCard .ds{color:var(--pink-2);font-size:12.5px;line-height:1.7}
+.prCard .pz{display:flex;align-items:baseline;gap:7px;flex:0 0 auto}
 .prCard .pz b{font-family:var(--num);font-weight:500;font-size:clamp(28px,3.2vw,44px);
   letter-spacing:-.035em;font-feature-settings:'tnum' 1,'zero' 0}
 .prCard .pz span{font-size:12.5px;color:var(--pink-2)}
-.prCard ul{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:26px;flex:1}
-.prCard li{display:flex;gap:10px;font-size:13px;color:var(--pink-1);letter-spacing:-.015em}
-.prCard li u{color:var(--coral);text-decoration:none;flex:0 0 auto}
 .faq{margin-top:clamp(46px,7vh,86px);border-top:1px solid var(--pink-3)}
 .faq details{border-bottom:1px solid var(--pink-3)}
-.faq summary{padding:20px 0;font-size:14.5px;letter-spacing:-.025em;cursor:none;
+.faq summary{padding:20px 0;font-size:14.5px;letter-spacing:-.025em;
   display:flex;justify-content:space-between;gap:20px;list-style:none}
 .faq summary::-webkit-details-marker{display:none}
 .faq summary::after{content:"+";color:var(--pink-2);font-size:16px;transition:transform .35s var(--ease)}
 .faq details[open] summary::after{transform:rotate(45deg)}
-.faq p{padding:0 0 22px;color:var(--pink-1);font-size:13.5px;line-height:1.85;max-width:64ch}
+.faq p{padding:0 0 22px;color:var(--pink-1);font-size:13.5px;line-height:1.85}
 
 @media (max-width:1000px){
   .heroR{width:100%;margin-top:clamp(30px,5vh,56px)}
   .trGrid,.stAbout{grid-template-columns:1fr}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .prGrid{grid-template-columns:1fr}
+  .prGrid{flex-direction:column;align-items:stretch;gap:24px}
 }
 @media (max-width:920px){
   .ansBody{grid-template-columns:1fr}
@@ -141,7 +151,7 @@
   background:rgba(12,20,28,.16);overflow:hidden;opacity:0}
 .stBar i{display:block;height:100%;width:0;background:var(--coral);border-radius:99px}
 .stCta{
-  display:inline-flex;align-items:center;gap:10px;cursor:none;white-space:nowrap;opacity:0;
+  display:inline-flex;align-items:center;gap:10px;white-space:nowrap;opacity:0;
   background:#0c1116;color:#f4f6f8;border-radius:999px;padding:16px 32px;font-size:15px;
   letter-spacing:-.015em;box-shadow:0 22px 44px -24px rgba(12,20,28,.6);
   transition:transform .4s var(--ease),background .3s,color .3s;

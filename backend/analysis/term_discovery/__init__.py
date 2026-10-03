@@ -1,36 +1,13 @@
-from .candidate import (
-    CandidateBuilder,
-    CandidateFilter,
-    CandidateNormalizer,
-    CompoundResolver,
-    DictionaryGuard,
-    PhraseExtractor,
-    TermhoodFilter,
+from .pipeline import (
+    PipelineConfig,
+    TermDiscoveryPipeline,
 )
-from .observation import (
-    CandidateEvidenceBuilder,
-    TermDiscovery,
-    TermObservationAggregator,
-    TermObservationStore,
+from .promotion import (
+    TermPromotionService,
 )
-from .review import CandidateDecisionService, TermVectorMatcher
-from .pipeline import TermDiscoveryPipeline
-from .promotion import TermPromotionService
 
 __all__ = [
-    "CandidateBuilder",
-    "CandidateFilter",
-    "CandidateNormalizer",
-    "CompoundResolver",
-    "DictionaryGuard",
-    "PhraseExtractor",
-    "TermhoodFilter",
-    "CandidateEvidenceBuilder",
-    "TermDiscovery",
-    "TermObservationAggregator",
-    "TermObservationStore",
-    "CandidateDecisionService",
-    "TermVectorMatcher",
+    "PipelineConfig",
     "TermDiscoveryPipeline",
     "TermPromotionService",
 ]

@@ -52,8 +52,8 @@
 {% if checked_workers and not workers %}
 <div class="adm-alert">
     <b>응답하는 Celery 워커가 없습니다.</b><br>
-    docker compose에 worker/beat 컨테이너가 없어 비동기 작업과 주기 실행이 동작하지 않습니다.
-    수집은 관리자 화면의 수동 실행이나 management command로만 진행됩니다.
+    Celery worker 연결 상태와 실행 로그를 확인하세요. worker가 없으면 비동기 작업이 처리되지 않습니다.
+    주기 실행 여부는 beat 프로세스 상태를 별도로 확인하세요.
     {% if celery_error %}<br><span class="mono" style="font-size:11.5px;">{{ celery_error }}</span>{% endif %}
 </div>
 {% endif %}

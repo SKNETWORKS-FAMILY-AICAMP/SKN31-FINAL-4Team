@@ -1,21 +1,10 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+
 {% block sub_sidebar %}
 <aside class="sub-sidebar">
     <p>RAW DATA</p>
-
-    <a href="{% url 'dashboard:raw_documents' %}"
-       class="{% if request.resolver_match.url_name == 'raw_documents' %}active{% endif %}">
-        원본 데이터 목록
-    </a>
-
-    <a href="{% url 'dashboard:brand_sources' %}"
-       class="{% if request.resolver_match.url_name == 'brand_sources' %}active{% endif %}">
-        브랜드 매핑
-    </a>
-
-    <a href="{% url 'dashboard:category_mapping' %}"
-       class="{% if request.resolver_match.url_name == 'category_mapping' %}active{% endif %}">
-        카테고리 매핑
-    </a>
+    <a href="{% url 'dashboard:raw_documents' %}" class="active">원본 데이터 목록</a>
 </aside>
 {% endblock %}
 
@@ -108,12 +97,20 @@
             border-radius: 6px;
             text-decoration: none;
         }
+        .raw-filter-count {
+            margin-left: 4px;
+            color: var(--tx3);
+            font-size: 10px;
+        }
+        .filter-pills a.btn.pri .raw-filter-count {
+            color: rgba(255, 255, 255, .7);
+        }
     </style>
     <div class="filter-pills" style="display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap;">
         <a href="?source=" class="btn {% if not selected_source %}pri{% else %}btn-outline{% endif %}" style="border-radius: 999px;">전체</a>
         {% for src in sources %}
         <a href="?source={{ src.id }}" class="btn {% if selected_source|stringformat:'s' == src.id|stringformat:'s' %}pri{% else %}btn-outline{% endif %}" style="border-radius: 999px;">
-            {{ src.label }}
+            {{ src.label }} <span class="raw-filter-count">{{ src.raw_count|intcomma }}</span>
         </a>
         {% endfor %}
     </div>

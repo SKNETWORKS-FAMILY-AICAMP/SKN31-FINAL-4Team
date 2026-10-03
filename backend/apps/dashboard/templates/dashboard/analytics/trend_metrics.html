@@ -20,7 +20,20 @@
         <h2 class="page-title">트렌드 지표</h2>
         <p class="sub">{{ page_description }}</p>
     </div>
+    {# 지표 다시 계산 — 이미 분석된 언급으로 일별 지표만 다시 만든다(LLM 호출 없음, ADMIN-001) #}
+    <form method="post" action="{% url 'dashboard:rebuild_metrics' %}" class="tm-rebuild">
+        {% csrf_token %}
+        <select name="days" aria-label="다시 계산할 기간">
+            {% for d in rebuild_days %}<option value="{{ d }}">최근 {{ d }}일</option>{% endfor %}
+        </select>
+        <button type="submit">지표 다시 계산</button>
+    </form>
 </div>
+<style>
+    .tm-rebuild { display: flex; gap: 8px; align-items: center; }
+    .tm-rebuild select { padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); font-size: 12.5px; }
+    .tm-rebuild button { padding: 9px 16px; border: 0; border-radius: 10px; background: var(--tx); color: #fff; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+</style>
 
 <div class="nz-cards">
     <div class="nz-card">
@@ -65,13 +78,13 @@
 
 <div class="an-grid">
     <div class="an-panel">
-        <h3 class="an-title">트렌드 점수 상위</h3>
+        <h3 class="an-title">트렌드 온도 상위</h3>
         <ul class="an-bars">
             {% for row in top_trend %}
             <li>
                 <span class="an-bar-name" title="{{ row.term.canonical_name }}">{{ row.term.canonical_name }}</span>
                 <span class="an-bar-track"><i style="width: {{ row.pct }}%;"></i></span>
-                <span class="an-bar-val">{{ row.trend_score|floatformat:2 }}</span>
+                <span class="an-bar-val">{{ row.trend_temperature|floatformat:2 }}</span>
             </li>
             {% endfor %}
         </ul>
@@ -106,7 +119,7 @@
 <table class="nz-table">
     <colgroup><col><col><col style="width:110px"><col style="width:100px"><col style="width:100px"></colgroup>
     <thead>
-        <tr><th>기준 용어</th><th>연관 용어</th><th class="ta-r">동시 언급</th><th class="ta-r">연관도</th><th class="ta-r">신뢰도</th></tr>
+        <tr><th>기준 용어</th><th>연관 용어</th><th class="ta-r">동시 언급</th><th class="ta-r">PMI</th><th class="ta-r">Lift</th></tr>
     </thead>
     <tbody>
         {% for row in top_assoc %}
@@ -114,8 +127,8 @@
             <td><strong class="nz-name">{{ row.source_term.canonical_name }}</strong></td>
             <td>{{ row.target_term.canonical_name }}</td>
             <td class="ta-r mono">{{ row.cooccurrence_count|intcomma }}</td>
-            <td class="ta-r mono">{{ row.association_score|floatformat:3 }}</td>
-            <td class="ta-r mono">{{ row.confidence|floatformat:3 }}</td>
+            <td class="ta-r mono">{{ row.pmi|floatformat:3 }}</td>
+            <td class="ta-r mono">{{ row.lift|floatformat:3 }}</td>
         </tr>
         {% endfor %}
     </tbody>

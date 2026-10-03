@@ -1,0 +1,85 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}홈페이지 피드백 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
+{% include "dashboard/service/_service_css.html" %}
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_service.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">FEEDIT ADMIN</p>
+        <h2 class="page-title">홈페이지 피드백</h2>
+        <p class="sub">불편사항 · 추가요청과 버그리포트입니다. <b>반려</b>하면 그 글은 주간 경험치(+25)에서 빠지고, 작성자의 경험치를 바로 다시 계산합니다.</p>
+    </div>
+</div>
+
+<div class="nz-chipbar">
+    <span class="nz-chipbar-label">상태</span>
+    {% for value, label in statuses %}
+    <a class="nz-chip {% if status == value %}on{% endif %}" href="?status={{ value }}{% if kind %}&kind={{ kind }}{% endif %}">{{ label }}<b>{% for k, n in counts.items %}{% if k == value %}{{ n|intcomma }}{% endif %}{% endfor %}</b></a>
+    {% endfor %}
+    <a class="nz-chip {% if status == 'ALL' %}on{% endif %}" href="?status=ALL{% if kind %}&kind={{ kind }}{% endif %}">전체</a>
+</div>
+
+<form method="get" class="nz-filter">
+    <input type="hidden" name="status" value="{{ status }}">
+    <select name="kind">
+        <option value="">전체 유형</option>
+        {% for value, label in kinds %}
+        <option value="{{ value }}" {% if kind == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <input type="text" name="q" value="{{ search_query }}" placeholder="내용 / 화면 / 닉네임 검색">
+    <button type="submit">검색</button>
+    <a href="{% url 'dashboard:feedback_list' %}" class="nz-reset">초기화</a>
+</form>
+
+<p class="nz-count">조회 결과 <b>{{ page_obj.paginator.count|intcomma }}</b>건</p>
+
+<div class="nz-table-card">
+<table class="nz-table sv-table">
+    <colgroup><col style="width:52px"><col style="width:130px"><col style="width:130px"><col><col style="width:300px"></colgroup>
+    <thead><tr><th>ID</th><th>유형 · 상태</th><th>작성</th><th>내용</th><th>처리</th></tr></thead>
+    <tbody>
+    {% for fb in rows %}
+    <tr>
+        <td class="mono">{{ fb.id }}</td>
+        <td>
+            <span class="nz-badge {% if fb.kind == 'BUG' %}warn{% else %}off{% endif %}">{{ fb.get_kind_display }}</span>
+            <span class="sv-status sv-{{ fb.status|lower }}">{{ fb.get_status_display }}</span>
+        </td>
+        <td class="sv-who"><b>{{ fb.nickname }}</b><span class="sv-meta">{{ fb.created_at|date:"Y-m-d H:i" }}</span></td>
+        <td>
+            <div class="sv-text">{{ fb.content|linebreaksbr }}</div>
+            {% if fb.page %}<span class="sv-meta">남긴 화면: {{ fb.page }}</span>{% endif %}
+        </td>
+        <td>
+            <form method="post" action="{% url 'dashboard:feedback_update' fb.id %}" class="sv-form">
+                {% csrf_token %}
+                <input type="hidden" name="qs" value="{{ qs }}">
+                <input type="text" name="admin_note" value="{{ fb.admin_note }}" maxlength="300" placeholder="운영자 메모 (선택)">
+                <div class="sv-btns">
+                    {% for value, label in statuses %}
+                    <button type="submit" name="status" value="{{ value }}" class="sv-btn sv-{{ value|lower }}" {% if fb.status == value %}disabled{% endif %}>{{ label }}</button>
+                    {% endfor %}
+                </div>
+            </form>
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="nz-empty">이 조건의 피드백이 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% include "dashboard/service/_pagination.html" %}
+{% endblock %}

@@ -1,4 +1,11 @@
+from __future__ import annotations
+
+from typing import Any
+
 import requests
+
+
+DEFAULT_TIMEOUT = 20
 
 DEFAULT_HEADERS = {
     "User-Agent": (
@@ -12,27 +19,80 @@ DEFAULT_HEADERS = {
     "Accept-Language": "ko-KR,ko;q=0.9",
 }
 
-DEFAULT_TIMEOUT = 20
 
-def get(
-    url: str,
-    *,
-    params: dict | None = None,
-    headers: dict | None = None,
-    timeout: int = DEFAULT_TIMEOUT,
-):
-    request_headers = DEFAULT_HEADERS.copy()
+class HttpClient:
+    def __init__(
+        self,
+        *,
+        headers: dict | None = None,
+        timeout: int = DEFAULT_TIMEOUT,
+    ):
+        self.timeout = timeout
 
-    if headers:
-        request_headers.update(headers)
+        self.session = requests.Session()
+        self.session.headers.update(DEFAULT_HEADERS)
 
-    response = requests.get(
-        url,
-        params=params,
-        headers=request_headers,
-        timeout=timeout,
-    )
+        if headers:
+            self.session.headers.update(headers)
 
-    response.raise_for_status()
+    def get(
+        self,
+        url: str,
+        *,
+        params: dict | None = None,
+        headers: dict | None = None,
+        timeout: int | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
 
-    return response
+        response = self.session.get(
+            url,
+            params=params,
+            headers=headers,
+            timeout=timeout or self.timeout,
+            **kwargs,
+        )
+
+        response.raise_for_status()
+
+        return response
+
+    def post(
+        self,
+        url: str,
+        *,
+        params: dict | None = None,
+        json: Any = None,
+        data: Any = None,
+        headers: dict | None = None,
+        timeout: int | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+
+        response = self.session.post(
+            url,
+            params=params,
+            json=json,
+            data=data,
+            headers=headers,
+            timeout=timeout or self.timeout,
+            **kwargs,
+        )
+
+        response.raise_for_status()
+
+        return response
+
+    def close(self):
+        self.session.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(
+        self,
+        exc_type,
+        exc_value,
+        traceback,
+    ):
+        self.close()

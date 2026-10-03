@@ -60,6 +60,7 @@ def mark_crawl_run_failed(
     *,
     error: Exception | str,
     error_code: str | None = None,
+    alert: bool = True,
 ) -> None:
     crawl_run.status = CrawlRun.Status.FAILED
     crawl_run.error_code = error_code
@@ -75,11 +76,16 @@ def mark_crawl_run_failed(
         ]
     )
 
+    # 담당자 알림 — 소스마다 하루 한 번 (apps/core/services/ops_alerts.py, 2026-09-27)
+    # 재시도가 남은 실패(alert=False)는 알리지 않는다 — 다음 시도가 성공하면 알릴 일이 없다.
+    if alert:
+        from apps.core.services.ops_alerts import alert_crawl_failed
+        alert_crawl_failed(crawl_run)
+
 
 def create_raw_document(
     *,
     crawl_run: CrawlRun,
-    source=None,
     document_type: str,
     external_id: str | None,
     source_url: str | None,
@@ -91,7 +97,7 @@ def create_raw_document(
     collected_at=None,
 ) -> RawDocument:
     return RawDocument.objects.create(
-        source=source or crawl_run.source,
+        source=crawl_run.source,
         crawl_run=crawl_run,
         document_type=document_type,
         external_id=external_id,

@@ -13,7 +13,7 @@
 
 
   <section class="smHero">
-    <div class="liveNow"><span class="dot"></span>지금 <b id="liveCount">102</b>명이 함께 고민 중</div>
+    <div class="liveNow"><span class="dot"></span>최근 24시간 <b id="liveCount">–</b>명 참여</div>
     <h1 class="smStatement">살까, <em>말까</em>.</h1>
     <div class="smHeroRow">
       <p>리뷰보다 빠르고, 친구보다 솔직합니다.</p>
@@ -21,16 +21,27 @@
 
     <div class="smTabsRow">
       <div class="smTabs" id="smTabs">
-        <button class="on" data-tab="taste">내 취향</button>
-        <button data-tab="popular" class="">인기순</button>
+        <button class="on" data-tab="popular">인기순</button>
         <button data-tab="latest" class="">최신순</button>
+        <button data-tab="taste">내 취향</button>
         <button data-tab="closing">마감임박</button>
+        <button data-tab="mine">내 카드</button>
       </div>
       <button class="addItemBtn" id="addItemBtn">＋ 살까말까 물어보기</button>
     </div>
   </section>
 
   <section class="voteSection">
+    <!-- '내 취향' · '내 카드' 탭은 내가 누구인지 알아야 볼 수 있다.
+         로그인 전에는 카드를 감추고 여기에 안내를 띄운다. -->
+    <div class="smGate" id="smGate" hidden>
+      <b id="smGateTitle">내 취향 추천은 로그인해야 볼 수 있어요.</b>
+      <span id="smGateDesc">즐겨입는 스타일과 체형을 알아야 나와 맞는 고민을 골라 드릴 수 있습니다.</span>
+      <div class="smGateBtns">
+        <button type="button" data-v="login">로그인</button>
+        <button type="button" class="ghost" data-v="signup">회원가입</button>
+      </div>
+    </div>
     <div class="voteGrid" id="voteGrid"></div>
     <div class="pager" id="pager">
     <button class="pagerBtn" id="pagerPrev" disabled="" aria-label="이전 페이지">←</button>
@@ -89,7 +100,7 @@
         </div>
         <div class="modalInfo">
           <h3 id="modalTitle"></h3>
-          <div class="modalMeta"><b id="modalBrand"></b> · <span id="modalPrice"></span></div>
+          <div class="modalMeta"><b id="modalBrand"></b> · <span id="modalPrice"></span><span id="modalStyle" hidden> · <span id="modalStyleName"></span></span></div>
         </div>
         <div class="modalPost">
           <span class="postName" id="modalNoteName"></span>
@@ -116,13 +127,16 @@
           <div class="smBar" id="modalBarSim">
             <i class="buy"></i><i class="no"></i>
           </div>
+          <!-- 비슷한 사용자 표본이 없을 때 — 막대 대신 이유를 쓴다.
+               전체 투표 숫자를 대신 보여 주면 "비슷한 사용자"라는 말이 거짓이 된다. -->
+          <p class="smNote" id="modalSimNote" hidden></p>
         </div>
 
         <div class="commentsHead">댓글 <span id="commentCount"></span></div>
         <div class="commentsList" id="commentsList"></div>
         <div class="commentForm">
           <div class="commentInputRow">
-            <textarea id="commentInput" placeholder="댓글을 남겨보세요"></textarea>
+            <textarea id="commentInput" maxlength="1000" placeholder="댓글을 남겨보세요"></textarea>
             <button class="commentSend" id="commentSend" aria-label="등록">→</button>
           </div>
         </div>
@@ -159,23 +173,36 @@
           </div>
         </div>
 
-        <!-- 우측 : 상품명 / 브랜드 / 가격 / 사연 -->
+        <!-- 우측 : 상품명 / 브랜드 / 가격 · 스타일 / 사연 -->
         <div class="createRight">
           <div class="cField">
             <label class="cLabel">상품명</label>
             <input type="text" class="cInput" id="cTitle" placeholder="예: 스웨이드 블루종 (버건디)">
           </div>
 
-          <div class="cRow2">
-            <div class="cField">
-              <label class="cLabel">브랜드</label>
-              <select class="cInput" id="cBrand">
-                <option value="" disabled="" selected="">브랜드 선택</option>
-              <option value="ADIDAS">ADIDAS</option><option value="AMOMENTO">AMOMENTO</option><option value="ANDERSSON BELL">ANDERSSON BELL</option><option value="CARHARTT WIP">CARHARTT WIP</option><option value="CENTIME">CENTIME</option><option value="COS">COS</option><option value="GENTLE MONSTER">GENTLE MONSTER</option><option value="INSILENCE">INSILENCE</option><option value="KIJUN">KIJUN</option><option value="LE 17 SEPTEMBRE">LE 17 SEPTEMBRE</option><option value="LEMAIRE">LEMAIRE</option><option value="LEVI'S">LEVI'S</option><option value="MATIN KIM">MATIN KIM</option><option value="MSTA">MSTA</option><option value="MUSINSA STANDARD">MUSINSA STANDARD</option><option value="NAUTICA">NAUTICA</option><option value="NEW BALANCE">NEW BALANCE</option><option value="RANDOM IDENTITIES">RANDOM IDENTITIES</option><option value="SOLEW">SOLEW</option><option value="THISISNEVERTHAT">THISISNEVERTHAT</option><option value="UNIFORM BRIDGE">UNIFORM BRIDGE</option><option value="기타">기타 (직접 입력 예정)</option></select>
+          <div class="cField">
+            <label class="cLabel">브랜드</label>
+            <!-- 브랜드는 고르는 것이 아니라 찾는 것이다 —
+                 치는 동안 맞는 브랜드가 아래에 뜨고, 목록에 없으면 그대로 적어도 된다. -->
+            <div class="cCombo" id="cBrandCombo">
+              <input type="text" class="cInput" id="cBrand" placeholder="브랜드를 검색하세요"
+                     autocomplete="off" role="combobox" aria-autocomplete="list"
+                     aria-expanded="false" aria-controls="cBrandList">
+              <ul class="cComboList" id="cBrandList" role="listbox" hidden></ul>
             </div>
+          </div>
+
+          <div class="cRow2">
             <div class="cField">
               <label class="cLabel">가격</label>
               <input type="text" inputmode="numeric" class="cInput" id="cPrice" placeholder="숫자만 입력 (원)">
+            </div>
+            <div class="cField">
+              <label class="cLabel">스타일</label>
+              <!-- 핵심 스타일 10종 — 옵션은 vote_app.js 가 STYLES 배열로 채운다 -->
+              <select class="cInput" id="cStyle">
+                <option value="">스타일 선택</option>
+              </select>
             </div>
           </div>
 

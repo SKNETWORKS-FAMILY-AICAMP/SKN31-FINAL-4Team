@@ -1,0 +1,9 @@
+{% extends "dashboard/base.html" %}{% load static %}
+{% block title %}살!말? 댓글 | FEEDIT Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'dashboard/css/operations.css' %}">{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_service.html" %}{% endblock %}
+{% block content %}
+<div class="op-head"><div><p class="op-eyebrow">COMMUNITY COMMENTS</p><h2 class="op-title">살!말? 댓글</h2><p class="op-sub">댓글 본문과 의견, 숨김·신고 상태를 검토합니다.</p></div></div>
+<form class="op-filter"><select name="visibility"><option value="visible" {% if visibility == 'visible' %}selected{% endif %}>노출 댓글</option><option value="hidden" {% if visibility == 'hidden' %}selected{% endif %}>숨김 댓글</option><option value="all" {% if visibility == 'all' %}selected{% endif %}>전체</option></select><button>적용</button></form>
+<div class="op-table-wrap"><table class="op-table"><thead><tr><th>시각</th><th>작성자</th><th>의견</th><th>게시글</th><th>댓글</th><th>상태</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ row.created_at|date:"Y-m-d H:i" }}</td><td>{{ row.nickname_public }}</td><td><span class="op-badge">{{ row.get_choice_display|default:"중립" }}</span></td><td>{{ row.card.title|truncatechars:38 }}</td><td>{{ row.content|truncatechars:180 }}</td><td>{% if row.is_deleted %}<span class="op-badge warn">숨김</span>{% else %}<span class="op-badge good">노출</span>{% endif %}{% if row.report_count %} 신고 {{ row.report_count }}{% endif %}</td></tr>{% empty %}<tr><td colspan="6">댓글이 없습니다.</td></tr>{% endfor %}</tbody></table></div>{% include "dashboard/operations/_pagination.html" %}
+{% endblock %}

@@ -1,98 +1,54 @@
 from __future__ import annotations
-
 from abc import ABC, abstractmethod
-
-from .s3 import S3Storage
+from .schemas import CollectionResult
 
 
 class BasePlatformPipeline(ABC):
 
-    SOURCE: str
+    SOURCE_CODE: str
 
-    def __init__(
-        self,
-        *,
-        bucket: str,
-        region_name: str | None = None,
-    ):
-        self.storage = S3Storage(
-            bucket=bucket,
-            region_name=region_name,
-        )
-
-    def run_target(
+    def run(
         self,
         *,
         target_type: str,
         target_url: str | None,
-        params: dict | None = None,
-    ) -> dict:
+        params: dict,
+    ) -> CollectionResult:
 
-        collected = self.collect(
+        result = self.collect(
             target_type=target_type,
             target_url=target_url,
-            params=params or {},
+            params=params,
         )
 
-        entity_type = collected["entity_type"]
-        source_entity_id = collected[
-            "source_entity_id"
-        ]
-        collected_at = collected[
-            "collected_at"
-        ]
-        payload = collected["payload"]
+        self.validate_result(result)
 
-        uploaded = self.storage.upload_raw_json(
-            source=self.SOURCE,
-            entity_type=entity_type,
-            source_entity_id=source_entity_id,
-            collected_at=collected_at,
-            data=payload,
-        )
+        return result
 
-        verified = self.storage.exists(
-            uploaded.key
-        )
+    def validate_result(
+        self,
+        result: CollectionResult,
+    ) -> None:
 
-        return {
-            "source": self.SOURCE,
-            "entity_type": entity_type,
-            "source_entity_id": source_entity_id,
-            "source_url": collected.get("source_url"),
-            "collected_at": collected_at,
-            "http_status": collected.get("http_status"),
-            "content_type": "application/json",
+        if not isinstance(
+            result,
+            CollectionResult,
+        ):
+            raise TypeError(
+                f"{self.__class__.__name__}.collect() "
+                "must return CollectionResult"
+            )
 
-            "s3": {
-                "bucket": uploaded.bucket,
-                "key": uploaded.key,
-                "uri": uploaded.uri,
-                "verified": verified,
-            },
+        expected = self.SOURCE_CODE.upper().strip()
+        actual = result.source_code.upper().strip()
 
-            "discovered_count": collected.get(
-                "discovered_count",
-                0,
-            ),
+        if actual != expected:
+            raise ValueError(
+                "source_code mismatch: "
+                f"expected={expected}, "
+                f"actual={actual}"
+            )
 
-            "success_count": collected.get(
-                "success_count",
-                0,
-            ),
-
-            "failure_count": collected.get(
-                "failure_count",
-                0,
-            ),
-
-            # 작은 후처리 데이터만 전달
-            "platform_data": collected.get(
-                "platform_data"
-            ),
-        }
-
-    
     @abstractmethod
     def collect(
         self,
@@ -100,5 +56,7 @@ class BasePlatformPipeline(ABC):
         target_type: str,
         target_url: str | None,
         params: dict,
-    ) -> dict:
+    ) -> CollectionResult:
         raise NotImplementedError
+    
+    

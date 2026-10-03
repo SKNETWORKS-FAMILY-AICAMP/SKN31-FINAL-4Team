@@ -91,9 +91,9 @@
             <th>기준일</th>
             <th class="ta-r">언급 수</th>
             <th class="ta-r">문서 수</th>
-            <th class="ta-r">플랫폼</th>
-            <th class="ta-r">증가율</th>
-            <th class="ta-r">트렌드 점수</th>
+            <th class="ta-r">콘텐츠 수</th>
+            <th class="ta-r">모멘텀</th>
+            <th class="ta-r">트렌드 온도</th>
         </tr>
     </thead>
     <tbody>
@@ -105,9 +105,9 @@
             <td class="nz-date">{% if row.metric_date %}{{ row.metric_date|date:"Y-m-d" }}{% else %}<span class="nz-none">미집계</span>{% endif %}</td>
             <td class="ta-r mono">{% if row.metric_date %}{{ row.mention_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
             <td class="ta-r mono">{% if row.metric_date %}{{ row.document_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
-            <td class="ta-r mono">{% if row.metric_date %}{{ row.source_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
-            <td class="ta-r mono">{% if row.growth_rate is not None %}{{ row.growth_rate|floatformat:2 }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
-            <td class="ta-r mono">{% if row.trend_score is not None %}{{ row.trend_score|floatformat:2 }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.metric_date %}{{ row.content_count|intcomma }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.momentum is not None %}{{ row.momentum|floatformat:2 }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
+            <td class="ta-r mono">{% if row.trend_temperature is not None %}{{ row.trend_temperature|floatformat:2 }}{% else %}<span class="nz-none">-</span>{% endif %}</td>
         </tr>
         {% empty %}
         <tr><td colspan="9" class="nz-empty">조건에 맞는 용어가 없습니다.</td></tr>

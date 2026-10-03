@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}{% load static humanize %}
+{% block title %}데이터베이스 | FEEDIT Admin{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/operations.css' %}">
+<style>
+.db-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.schema-block{margin-top:14px}.schema-name{display:flex;align-items:center;gap:8px;margin-bottom:9px;font:600 11px/1 var(--num);letter-spacing:.12em;text-transform:uppercase}.schema-name::after{content:"";height:1px;flex:1;background:var(--line)}.erd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}.entity{padding:13px;border:1px solid var(--line);border-radius:11px;background:var(--card)}.entity h4{font-size:12px}.entity .table{margin-top:3px;color:var(--tx3);font:10px/1.3 var(--mono)}.entity-fields{margin-top:9px;padding-top:8px;border-top:1px solid var(--line2);color:var(--tx2);font-size:10.5px;line-height:1.65;word-break:break-word}.entity mark{background:#fff1c7}.db-search{width:min(420px,100%)}.db-rel{max-height:300px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:5px}.db-edge{padding:8px 10px;border-radius:8px;background:var(--bg);font:10px/1.4 var(--mono);color:var(--tx2)}
+@media(max-width:650px){.db-summary{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_database.html" %}{% endblock %}
+{% block content %}
+<div class="op-head"><div><p class="op-eyebrow">DATABASE MAP</p><h2 class="op-title">테이블 현황 · ERD</h2><p class="op-sub">Django 모델의 실제 외래키를 기준으로 구조를 그립니다. 행 수는 PostgreSQL 통계 추정치라 운영 DB에 전체 COUNT 부하를 주지 않습니다.</p></div></div>
+<div class="db-summary"><div class="op-card"><span class="op-card-label">관리 테이블</span><strong class="op-card-value">{{ table_count }}</strong></div><div class="op-card"><span class="op-card-label">외래키 관계</span><strong class="op-card-value">{{ relation_count }}</strong></div><div class="op-card"><span class="op-card-label">정규화 구조</span><strong class="op-card-value" style="font-size:17px">SOURCE → FACT → METRIC</strong><span class="op-card-caption">원본·정규화·분석 스키마 분리</span></div></div>
+
+<section class="op-section"><div class="op-section-head"><div><h3>ERD 탐색</h3><span class="op-muted">스키마 / 모델 / 필드 검색</span></div><input id="erdSearch" class="db-search" type="search" placeholder="예: text_document, product, user"></div>
+{% for schema in schemas %}<div class="schema-block" data-schema="{{ schema.name }}"><div class="schema-name">{{ schema.name }} · {{ schema.tables|length }}</div><div class="erd-grid">{% for table in schema.tables %}<article class="entity" data-search="{{ schema.name }} {{ table.table }} {{ table.model }} {{ table.fields|join:' ' }}"><h4>{{ table.name }} <span class="op-muted">{{ table.model }}</span></h4><div class="table">{{ schema.name }}.{{ table.table }}</div><div class="entity-fields">{{ table.fields|join:" · " }}{% if table.field_count > 8 %} · +{{ table.field_count|add:"-8" }}{% endif %}</div></article>{% endfor %}</div></div>{% endfor %}
+</section>
+
+<section class="op-section"><div class="op-section-head"><h3>외래키 관계</h3><span class="op-muted">{{ relation_count }} RELATIONS</span></div><div class="db-rel">{% for edge in edges %}<div class="db-edge">{{ edge.source }}.{{ edge.field }} → {{ edge.target }}</div>{% endfor %}</div></section>
+
+<section class="op-section"><div class="op-section-head"><h3>테이블 용량 · 행 추정치</h3><span class="op-muted">PG STATISTICS</span></div><div class="op-table-wrap"><table class="op-table"><thead><tr><th>스키마</th><th>테이블</th><th>추정 행 수</th><th>전체 크기</th></tr></thead><tbody>{% for item in table_stats %}<tr><td>{{ item.schema }}</td><td class="mono">{{ item.table }}</td><td>{% if item.rows is not None %}{{ item.rows|intcomma }}{% else %}—{% endif %}</td><td>{{ item.size|default:"—" }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}
+{% block extra_js %}<script>const input=document.getElementById('erdSearch');input?.addEventListener('input',()=>{const q=input.value.trim().toLowerCase();document.querySelectorAll('.entity').forEach(el=>{el.hidden=q&&!el.dataset.search.toLowerCase().includes(q)});document.querySelectorAll('.schema-block').forEach(block=>{block.hidden=![...block.querySelectorAll('.entity')].some(el=>!el.hidden)})});</script>{% endblock %}

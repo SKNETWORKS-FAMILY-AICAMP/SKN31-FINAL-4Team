@@ -1,0 +1,10 @@
+{# 필터(상태 · 유형 · 검색)를 그대로 달고 쪽을 넘긴다 — 공용 pagination_nz 는 이 화면의 필터를 모른다 #}
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="nz-pagination">
+    {% if page_obj.has_previous %}<a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.previous_page_number }}">← 이전</a>
+    {% else %}<span class="off">← 이전</span>{% endif %}
+    <span class="nz-page">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.next_page_number }}">다음 →</a>
+    {% else %}<span class="off">다음 →</span>{% endif %}
+</div>
+{% endif %}

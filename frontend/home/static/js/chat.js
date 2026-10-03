@@ -1,22 +1,32 @@
 import { $, $$, HAS_A, aAnimate, aSpring, aStagger, aTimeline, aUtils } from '../../../core/static/js/dom.js';
 import { cpKeyFor, openChatWith } from './chat_popup.js';
+import { MAX_IMAGES, imageFileToDataURL, bindImageDrop } from './chat_api.js';
+import { savedAll, saveLiked } from '../../../account/static/js/account_api.js';
 
 /* ============================================================
    메인 — 홈(챗봇) / 트렌드 분석 / 살!말? / Style / 요금제
    ============================================================ */
 export const IMG=n=>'assets/hi/f'+String(n).padStart(2,'0')+'.jpg';
 
-const M_QUESTIONS=[
-  ['고프코어','언제 꺾였어?'],['발레코어','아직 유효해?'],['스웨이드','이번 겨울도 갈까?'],
-  ['무신사 vs 29CM','지금 온도차가 어때?'],['블록코어','다음은 뭐야?']
+export const M_QUESTIONS=[
+  ['트렌드 TOP 10','알려줘'],['발레코어','아직 유효해?'],['스웨이드','이번 겨울도 갈까?'],
+  ['오늘 날씨에','뭐 입어야 해?'],['블록코어','다음은 뭐야?']
 ];
-const HOT=[
-  ['발레코어',248,'ballet'],['스웨이드 자켓',186,'classic'],['버건디 니트',142,'classic'],
-  ['블록코어',131,'block'],['로퍼',97,'biz'],['바이크코어',88,'bike'],
-  ['아메카지',74,'ameka'],['카고 스커트',63,'street'],['고프코어',-42,'gorp'],['오버핏 후드',-31,'street']
-];
+/* ★ 2026-09-19 — HOT TREND TOP 10 은 하드코딩 목록을 끊고 /api/trend?rank=hot 을 읽는다.
+   [표시명, 변화율(%), 스타일 id(스타일 용어일 때만), 축 이름] — 상승 8 + 하락 2.
+   못 불러오면 숫자를 지어내지 않고 '순위를 불러오지 못했습니다' 로 둔다. */
+let HOT=[];
+let HOT_STATE='loading';   /* loading | ok | empty | error */
+/* 살!말? 모드에서는 같은 자리가 'LIVE 투표 TOP 10' 이 된다 — 진행 중 카드를 투표 수 순으로.
+   [카드 제목, 살 비율(%), 투표 수, 카드 id] */
+let HOT_VOTE=[];
+let HOT_VOTE_STATE='loading';
+const hotCur=()=>SM_ON?HOT_VOTE:HOT;
+const hotCurState=()=>SM_ON?HOT_VOTE_STATE:HOT_STATE;
+let HOT_META=null;         /* {as_of, rule, basis} */
+const HOT_FACET={STYLE:'STYLE',ITEM:'ITEM',COLOR:'COLOR',MATERIAL:'MATERIAL',DETAIL:'DETAIL',TPO:'TPO',BRAND:'BRAND'};
 const M_ANSWERS={
-  rise:{ url:'feedit.ai / trend / 2026-W33', title:'이번 주 급상승 키워드',
+  rise:{ url:'feedit.ai / trend / 2026-08-W2', title:'이번 주 급상승 키워드',
     rank:[['발레코어','키워드',248,1],['스웨이드 자켓','아이템',186,1],['버건디 니트','컬러',142,1],
           ['로퍼','슈즈',97,1],['고프코어','키워드',-42,0],['오버핏 후드','아이템',-31,0]] },
   ballet:{ url:'feedit.ai / trend / 발레코어', title:'발레코어 — 아직 유효한가',
@@ -33,8 +43,6 @@ const M_ANSWERS={
           ['오버핏 트렌치','주의',-22,0],['박스 더블','주의',-35,0],['크롭 코트','비추천',-58,0]] }
 };
 const M_PLATFORMS=[['인스타그램',92],['무신사',78],['틱톡',64],['지그재그',51],['29CM',37],['W컨셉',22]];
-export const M_CHIPS=[['이번 주 급상승','rise'],['고프코어 꺾였어?','gorp'],['발레코어 유효해?','ballet'],
-               ['무신사 vs 29CM','plat'],['체형 맞는 코트','body']];
 
 /* ── 스타일(코어) 데이터 ─────────────────────────────── */
 /* ══════════════════════════════════════════════════════════════
@@ -45,10 +53,9 @@ export const M_CHIPS=[['이번 주 급상승','rise'],['고프코어 꺾였어?'
    ══════════════════════════════════════════════════════════════ */
 export const STYLES=[
   /* ── 코어 ───────────────────────────────────────────── */
-  {id:'ballet', n:'발레코어',    en:'Balletcore',  g:'코어', ph:'assets/look/ballet.jpg', img:4,  st:'2022 · 파리',   pk:'정점 통과', by:'미우미우 22FW 발레 리허설 룩',
-   ab:'발레 연습복의 요소를 일상복으로 옮긴 코어로, 미우미우가 2022년 컬렉션에서 리본과 발레 플랫을 전면에 세우면서 시작됐습니다.',
-   ab2:'리본 디테일과 새틴 소재, 발레 플랫이 핵심 아이템이며 은은한 발레 핑크 톤이 전체 무드를 완성합니다.',
-   kw:['리본','새틴','발레 플랫','튤','발레 핑크']},
+  /* 2026-09-16 · 스타일 페이지 기준 10종으로 축소
+     (고프코어 · 블록코어 · 바이크코어 · 놈코어 · 애슬레저 · 클래식 · 아메카지 · 그런지 · 페미닌 · 스트릿웨어).
+     발레코어 · 긱시크 · 비즈니스코어 · Y2K는 뺐다. */
   {id:'gorp',   n:'고프코어',    en:'Gorpcore',    g:'코어', ph:'assets/look/gorp.jpg', img:6,  st:'2017 · 뉴욕',   pk:'하락', by:'뉴욕 매거진이 붙인 이름',
    ab:'등산·트레일 장비를 도심에서 입는 코어로, 2017년 뉴욕 매거진이 이름을 붙였고 살로몬과 아크테릭스가 패션 채널로 넘어오면서 폭발했습니다.',
    ab2:'방수 셸 자켓과 트레일 러너, 다용도 포켓이 달린 조끼가 핵심이며 기능성과 실용성을 그대로 드러내는 것이 특징입니다.',
@@ -61,18 +68,10 @@ export const STYLES=[
    ab:'오토바이를 타지 않아도 바이커의 옷을 입는 코어로, 뿌리는 말론 브란도의 라이더 재킷까지 거슬러 올라가고 최근 셀럽 스트리트 룩을 타고 다시 올라왔습니다.',
    ab2:'가죽 라이더 재킷과 바이커 부츠가 중심이며 스터드와 워싱 데님 같은 장식 요소가 더해져 거친 무드를 냅니다.',
    kw:['라이더 재킷','바이커 부츠','스터드','워싱 데님']},
-  {id:'geek',   n:'긱시크',      en:'Geek Chic',   g:'코어', ph:'assets/look/geek.jpg', img:15, st:'2013 · 옥스퍼드 등재', pk:'재상승', by:'2015 구찌 런웨이',
-   ab:'괴짜(geek)와 세련됨(chic)의 합성어로, 어설퍼 보이는 조합을 의도적으로 짜 개성으로 뒤집는 코어입니다. ',
-   ab2:'2013년 옥스퍼드 사전에 오르고 2015년 구찌 런웨이가 본격적으로 불러냈으며, 뿔테 안경을 매치하는 것이 핵심으로 로퍼로 마무리해 지적인 인상을 완성합니다.',
-   kw:['뿔테 안경','가디건','체크 셔츠','로퍼']},
   {id:'norm',   n:'놈코어',      en:'Normcore',    g:'코어', ph:'assets/look/norm.jpg', img:23, st:'2013 · 뉴욕',   pk:'잔존', by:'K-HOLE 리포트',
    ab:'의도적으로 평범한 옷으로, 2013년 트렌드 예측 그룹 K-HOLE이 제안한 개념에서 출발했습니다.',
    ab2:'무지 티셔츠와 치노, 뉴발란스 운동화처럼 눈에 띄지 않는 기본 아이템으로 구성되며 절제된 색상 조합이 특징입니다.',
    kw:['무지 티','치노','뉴발란스','플리스 집업']},
-  {id:'biz',    n:'비즈니스코어',en:'Businesscore',g:'코어', ph:'assets/look/biz.jpg', img:20, st:'2023 · 서울',   pk:'확산', by:'오피스 사이렌',
-   ab:'사무실 옷을 일상으로 끌어낸 코어로, 셔츠·펜슬 스커트·로퍼가 축입니다.',
-   ab2:'셔츠와 펜슬 스커트, 로퍼, 토트백으로 이어지는 오피스 무드를 갖추되 정장보다는 힘을 뺀 실루엣이 특징입니다.',
-   kw:['셔츠','펜슬 스커트','로퍼','토트백']},
   {id:'ath',    n:'애슬레저',    en:'Athleisure',  g:'코어', ph:'assets/look/ath.jpg', img:10, st:'2014 · LA',     pk:'재점화', by:'룰루레몬 · 요가 웨어',
    ab:'운동복을 운동 밖으로 끌어낸 코어로, 2014년 요가·필라테스 확산과 함께 자리를 잡았고 레깅스와 조거가 하의의 기본값이 됐습니다.',
    ab2:'레깅스와 조거 팬츠, 크롭 집업이 기본이며 러닝화로 마무리해 활동성과 편안함을 동시에 강조합니다.',
@@ -83,10 +82,6 @@ export const STYLES=[
    ab:'유행을 타지 않는 형태와 소재로, 특정 유행에 기대지 않고 계절과 무관하게 꾸준한 수요를 유지합니다.',
    ab2:'트렌치코트와 캐시미어 니트, 스웨이드 소재, 옥스퍼드 슈즈처럼 고급스러운 소재감이 중심이 되는 조합입니다.',
    kw:['트렌치','캐시미어','스웨이드','옥스퍼드']},
-  {id:'street', n:'스트릿웨어',  en:'Streetwear',  g:'원형', ph:'assets/look/street.jpg', img:16, st:'1990s · 도쿄 · 뉴욕', pk:'재상승', by:'스투시 · 슈프림',
-   ab:'스케이트와 힙합에서 출발해 하이패션과 섞인 원형으로, 로고 티셔츠와 배기 실루엣에서 시작해 지금의 형태로 넓어졌습니다.',
-   ab2:'카고 팬츠와 오버핏 상의, 스케이트 슈즈, 비니로 구성되며 헐렁한 실루엣과 편안한 무드가 핵심입니다.',
-   kw:['카고','오버핏','스케이트 슈즈','비니']},
   {id:'ameka',  n:'아메카지',    en:'Amekaji',     g:'원형', ph:'assets/look/ameka.jpg', img:13, st:'1980s · 일본',  pk:'확산', by:'아메리칸 카주얼',
    ab:'미국 워크웨어를 일본식으로 다시 짠 원형으로, 셀비지 데님과 워크 자켓이 축입니다.',
    ab2:'셀비지 데님과 워크 자켓, 치노 팬츠, 부츠로 구성되며 튼튼한 소재와 클래식한 워크웨어 디테일이 특징입니다.',
@@ -95,27 +90,142 @@ export const STYLES=[
    ab:'90년대 시애틀 록 신에서 나온 원형으로, 플란넬·워싱 데님·컴뱃 부츠가 축입니다.',
    ab2:'플란넬 셔츠와 워싱 데님, 컴뱃 부츠를 겹쳐 입는 레이어드 스타일링이 핵심이며 낡고 헤진 듯한 질감이 특유의 무드를 만듭니다.',
    kw:['플란넬','워싱 데님','컴뱃 부츠','레이어드']},
-  {id:'y2k',    n:'Y2K',         en:'Y2K',         g:'원형', ph:'assets/look/y2k.jpg', img:14, st:'1999–2003',     pk:'정점 통과', by:'세기말 · 2020 재유행',
-   ab:'세기말 전후의 옷차림이 20년 만에 돌아온 원형으로, 로우라이즈·벨벳 트랙수트·베이비 티·작은 어깨 가방이 핵심입니다.',
-   ab2:'로우라이즈 팬츠와 벨벳 트랙수트, 베이비 티, 미니 백처럼 몸에 붙는 실루엣과 반짝이는 소재가 특징입니다.',
-   kw:['로우라이즈','벨벳 트랙수트','베이비 티','미니 백']},
   {id:'feminine',n:'페미닌',     en:'Feminine',    g:'원형', ph:'assets/look/feminine.jpg', img:14, st:'상시',          pk:'확산', by:'로맨틱 무드',
    ab:'곡선과 부드러운 소재를 앞세우는 원형으로, 시즌마다 실루엣과 소재만 바뀌며 꾸준히 다시 나타납니다.',
    ab2:'코르셋 라인과 새틴 소재, 플로럴 패턴이 핵심이며 버건디처럼 짙은 컬러가 로맨틱한 무드를 완성합니다.',
-   kw:['코르셋','새틴','플로럴','버건디']}
+   kw:['코르셋','새틴','플로럴','버건디']},
+  {id:'street', n:'스트릿웨어',  en:'Streetwear',  g:'원형', ph:'assets/look/street.jpg', img:16, st:'1990s · 도쿄 · 뉴욕', pk:'재상승', by:'스투시 · 슈프림',
+   ab:'스케이트와 힙합에서 출발해 하이패션과 섞인 원형으로, 로고 티셔츠와 배기 실루엣에서 시작해 지금의 형태로 넓어졌습니다.',
+   ab2:'카고 팬츠와 오버핏 상의, 스케이트 슈즈, 비니로 구성되며 헐렁한 실루엣과 편안한 무드가 핵심입니다.',
+   kw:['카고','오버핏','스케이트 슈즈','비니']}
 ];
 export const INF_NAMES=['@seoul.layer','@quiet_wardrobe','@rok.archive','@fitcheck.kr','@daily.core',
                  '@wovenmood','@studio.plain','@thread.note'];
 export const ITEM_BRANDS=['NIKE','MUSINSA STANDARD','ETCE','POLO','ADIDAS','LEMAIRE','ANDERSSON BELL','AMOMENTO'];
 
+/* ── 아이템 카드 — '스타일' 상세의 '이 스타일의 아이템'과 마이페이지 '오늘의 추천'
+   두 곳에서 그대로 재사용하는 공용 컴포넌트. match 를 넘긴 경우(마이페이지 추천)에만
+   왼쪽 위에 매칭률 뱃지가 붙고, 하단은 브랜드 · 상품명 · 가격이 항상 세로로 쌓인다. */
+export const LIKED = new Map();      /* 찜 저장소 — id → 카드 데이터. 마이페이지 '찜'이 여기서 나온다 */
+const ITEM_REGISTRY = new Map();     /* 하트를 누를 때 어떤 카드였는지 되찾기 위한 등록부 */
+const cardEsc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c]));
+const cardImage=v=>/^(https?:\/\/|\/|assets\/)/i.test(String(v||''))?String(v):'';
+const cardLink=v=>/^https?:\/\//i.test(String(v||''))?String(v):'';
+/* ★ 2026-09-19 — 찜의 원본은 서버(/api/auth/saved?view=all)다.
+   localStorage 는 화면을 빨리 그리기 위한 사본이고, 누구의 사본인지(owner)를 같이 적는다.
+   · 로그인하면 likedSync(uid) 가 서버 목록으로 갈아 끼운다.
+   · 예전 형식(owner 없는 배열)은 서버 도입 전 이 브라우저에 쌓인 찜이다 —
+     처음 로그인한 계정으로 한 번만 옮긴다(likedSync). 다른 계정의 사본은 옮기지 않는다.
+   · 로그아웃하면 비운다(likedClear) — 다음 사람이 앞 사람의 찜을 보지 않게. */
+const LIKED_KEY='feedit.liked.v1';
+let LIKED_OWNER=null;     /* 사본의 주인 (app_user id). null 이면 예전 형식 */
+let LIKED_LEGACY=false;   /* 예전 형식에서 읽었나 — 서버로 한 번 옮길 대상 */
+function likedSave(){
+  try{ localStorage.setItem(LIKED_KEY, JSON.stringify({v:2, owner:LIKED_OWNER, entries:[...LIKED.entries()]})); }
+  catch(e){ /* 저장소를 못 쓰는 환경(시크릿 창 등)은 이번 세션 메모리로만 유지한다 */ }
+}
+function likedLoad(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(LIKED_KEY)||'null');
+    const arr=Array.isArray(raw)?raw:(raw&&Array.isArray(raw.entries)?raw.entries:null);
+    if(!arr) return false;
+    LIKED_LEGACY=Array.isArray(raw);
+    LIKED_OWNER=Array.isArray(raw)?null:(raw.owner??null);
+    arr.forEach(e=>{ if(Array.isArray(e)&&e[0]&&e[1]) LIKED.set(e[0], e[1]); });
+    return true;
+  }catch(e){ return false; }
+}
+function savedToCard(it){
+  const st=STYLES.find(s=>s.n===it.style);
+  const price=Number.isFinite(it.sale_price)?it.sale_price:(Number.isFinite(it.list_price)?it.list_price:null);
+  return { img:it.image||'', br:it.brand||'', nm:it.name||'', pr:price!=null?price.toLocaleString('ko-KR')+'원':'',
+           style:st?st.id:'', styleName:it.style||'', cat:it.category||'', price, listPrice:it.list_price??null,
+           url:it.url||'', likedAt:Date.parse(it.liked_at)||Date.now(),
+           same:Number.isFinite(it.same_count)?it.same_count:null };
+}
+/* 로그인한 사용자의 찜을 서버에서 받아 LIKED 를 갈아 끼운다. 실패하면 사본을 그대로 둔다. */
+export async function likedSync(uid){
+  let data;
+  try{ data=await savedAll(); }catch(e){ return false; }
+  const server=new Map((data.items||[]).map(it=>[it.item_id, savedToCard(it)]));
+  /* 예전 형식 사본은 이 브라우저에서 처음 로그인한 계정으로 한 번만 옮긴다 */
+  if(LIKED_LEGACY||(LIKED_OWNER==null&&LIKED.size)){
+    const local=[...LIKED.entries()].filter(([id])=>!server.has(id));
+    await Promise.all(local.map(([id,d])=>saveLiked({itemId:id,liked:true,name:d.nm||'',brand:d.br||'',style:d.styleName||''})));
+    local.forEach(([id,d])=>server.set(id,{...d,same:null}));
+  }
+  LIKED.clear(); server.forEach((v,k)=>LIKED.set(k,v));
+  LIKED_OWNER=uid??null; LIKED_LEGACY=false; likedSave();
+  document.dispatchEvent(new CustomEvent('feedit:liked-sync'));
+  return true;
+}
+export function likedClear(){
+  LIKED.clear(); LIKED_OWNER=null; LIKED_LEGACY=false; likedSave();
+  document.dispatchEvent(new CustomEvent('feedit:liked-sync'));
+}
+likedLoad();
+export function toggleLike(id){
+  if(LIKED.has(id)){ LIKED.delete(id); likedSave(); return false; }
+  const d = ITEM_REGISTRY.get(id); if(!d) return false;
+  LIKED.set(id, { ...d, likedAt: Date.now() });   /* 찜한 시각 — 'n일 전 찜' 계산에 쓴다 */
+  likedSave();
+  return true;
+}
+export function itemCard(o){
+  if(o.id) ITEM_REGISTRY.set(o.id, { img: o.img, br: o.br, nm: o.nm, pr: o.pr, tag: o.tag, style: o.style, url: o.url,
+    /* 찜한 키워드 화면용 부가 정보 — 실데이터 상품 카드에서만 채워진다 */
+    styleName: o.styleName, cat: o.cat, price: o.price, listPrice: o.listPrice });
+  const liked = !!(o.id && LIKED.has(o.id));
+  const img=cardImage(o.img), url=cardLink(o.url);
+  return '<div class="itemCard"' + (o.style ? ' data-style="' + cardEsc(o.style) + '"' : '') +
+    /* 스타일 상세의 카테고리 필터가 읽는 값 (2026-09-23) */
+    (o.catKey ? ' data-cat-key="' + cardEsc(o.catKey) + '"' : '') +
+    (url ? ' data-product-url="' + cardEsc(url) + '" role="link" tabindex="0"' : '') + '>' +
+    '<div class="itemFig">' +
+      /* ★ 쇼핑몰 CDN 일부(무신사 등)는 Referer 가 붙으면 핫링크를 막아 사진이 깨진다 —
+         referrerpolicy 로 주소를 떼고 부르고, 그래도 실패하면 '이미지 없음' 판으로 바꾼다. */
+      (img?'<img src="'+cardEsc(img)+'" alt="'+cardEsc(o.nm||'')+'" loading="lazy" '+
+        'referrerpolicy="no-referrer" '+
+        'onerror="this.onerror=null;this.insertAdjacentHTML(\'afterend\',\'&lt;div class=&quot;itemNoImage&quot;&gt;이미지 없음&lt;/div&gt;\');this.remove()">'
+        :'<div class="itemNoImage">이미지 없음</div>') +
+      (o.tag ? '<span class="matchTag">' + cardEsc(o.tag) + '</span>' : '') +
+      (o.pick ? '<span class="pickTag">FEEDiT Pick!</span>' : '') +
+      (o.id ? '<button type="button" class="likeBtn' + (liked ? ' on' : '') + '" data-like-id="' + cardEsc(o.id) + '" aria-label="찜하기">' +
+        '<svg viewBox="0 0 24 24"><path d="M12 21s-7.6-4.6-10.3-9.1C.2 9 1 5.5 4 4.1c2.4-1.1 5-.2 6.5 1.8L12 8l1.5-2.1c1.5-2 4.1-2.9 6.5-1.8 3 1.4 3.8 4.9 2.3 7.8C19.6 16.4 12 21 12 21z"/></svg></button>' : '') +
+    '</div>' +
+    '<div class="itemBody"><div class="br">' + cardEsc(o.br) + '</div>' +
+      '<div class="nm">' + cardEsc(o.nm) + '</div>' +
+      '<div class="pr">' + cardEsc(o.pr) + '</div></div></div>';
+}
+
 /* ── Hot Trend Top 10 ───────────────────────────────── */
 var hotI=0, hotOpen=false;
 function hotStep(){
   const roll=$('#hotRoll'); if(!roll)return;
+  const L=hotCur();
+  if(!L.length){
+    roll.innerHTML='<i>'+(hotCurState()==='loading'?'순위를 불러오는 중…'
+      :hotCurState()==='empty'?(SM_ON?'진행 중인 투표가 없습니다':'순위를 낼 지표가 없습니다')
+      :'순위를 불러오지 못했습니다')+'</i>';
+    return;
+  }
+  if(SM_ON){
+    const t=L[hotI%L.length];
+    const el=document.createElement('i');
+    el.innerHTML='<b>'+String((hotI%L.length)+1).padStart(2,'0')+'</b>'+cardEsc(t[0])+'<em>살 '+t[1]+'%</em>';
+    roll.innerHTML=''; roll.appendChild(el);
+    if(HAS_A)aAnimate(el,{opacity:[0,1],translateY:['110%','0%'],duration:620,
+      ease:aSpring({stiffness:88,damping:16})});
+    hotI++;
+    return;
+  }
   const t=HOT[hotI%HOT.length];
   const el=document.createElement('i');
+  /* ★ 펼친 목록(.d.up)과 같은 규칙 — 상승은 코랄, 하락은 회색 */
   el.innerHTML='<b>'+String((hotI%HOT.length)+1).padStart(2,'0')+'</b>'+t[0]+
-    '<em>'+(t[1]>0?'▲':'▼')+Math.abs(t[1])+'%</em>';
+    '<em class="'+(t[1]>0?'up':'dn')+'">'+(t[1]>0?'▲':'▼')+Math.abs(t[1])+'%</em>';
   roll.innerHTML=''; roll.appendChild(el);
   if(HAS_A)aAnimate(el,{opacity:[0,1],translateY:['110%','0%'],duration:620,
     ease:aSpring({stiffness:88,damping:16})});
@@ -139,15 +249,108 @@ function hotToggle(){
   aAnimate(rows,{opacity:hotOpen?[0,1]:[1,0],translateX:hotOpen?[-10,0]:[0,-6],
     duration:hotOpen?520:280,delay:aStagger(hotOpen?34:12,{from:'last'}),ease:'out(3)'});
 }
+function hotPaint(){
+  const list=$('#hotList'); if(!list)return;
+  if(SM_ON){
+    list.innerHTML=HOT_VOTE.length
+      ? HOT_VOTE.map((t,i)=>
+          '<button data-v="salmal" data-sm="popular"><span class="n">'+String(i+1).padStart(2,'0')+'</span>'+
+          '<span class="k">'+cardEsc(t[0])+'</span>'+
+          '<span class="d '+(t[1]>=50?'up':'dn')+'">살 '+t[1]+'% · '+t[2]+'표</span></button>').join('')+
+        '<div class="hotNote">진행 중인 투표 · 참여 많은 순</div>'
+      : '<div class="hotNote">'+(HOT_VOTE_STATE==='loading'?'투표 순위를 불러오는 중입니다.'
+          :HOT_VOTE_STATE==='empty'?'진행 중인 투표가 없습니다.':'지금은 투표 순위를 불러오지 못했습니다.')+'</div>';
+    return;
+  }
+  if(!HOT.length){
+    list.innerHTML='<div class="hotNote">'+(HOT_STATE==='loading'?'순위를 불러오는 중입니다.'
+      :'지금은 순위를 불러오지 못했습니다. 잠시 뒤 다시 확인해 주세요.')+'</div>';
+    return;
+  }
+  list.innerHTML=HOT.map((t,i)=>
+    '<button '+(t[2]?'data-style="'+cardEsc(t[2])+'"':'data-hot-q="'+cardEsc(t[0])+'"')+'>'+
+    '<span class="n">'+String(i+1).padStart(2,'0')+'</span>'+
+    '<span class="k">'+cardEsc(t[0])+'</span><span class="ph">'+cardEsc(HOT_FACET[t[3]]||t[3]||'')+'</span>'+
+    '<span class="d '+(t[1]>0?'up':'dn')+'">'+(t[1]>0?'▲':'▼')+Math.abs(t[1])+'%</span></button>').join('')+
+    (HOT_META?'<div class="hotNote">'+cardEsc(HOT_META.as_of)+' 기준 · '+
+      (HOT_META.basis&&HOT_META.basis.source==='ALL'?'전 플랫폼 합산':'YouTube 댓글')+
+      ' · 최근 7일 평균 vs 28일 평균'+
+      (HOT_META.basis&&HOT_META.basis.refresh==='daily'?' · 매일 갱신':'')+'</div>':'');
+}
+async function hotLoad(){
+  try{
+    const r=await fetch('/api/trend?rank=hot&limit=8',{headers:{Accept:'application/json'}});
+    const j=await r.json();
+    if(!r.ok||j.status!=='ok'){ HOT_STATE=j&&j.status==='empty'?'empty':'error'; return; }
+    const d=j.data||{};
+    const styleId=n=>(STYLES.find(s=>s.n===n)||{}).id||'';
+    const pick=[...(d.rising||[]).slice(0,8),...(d.falling||[]).slice(0,2)];
+    HOT=pick.map(x=>[x.term,x.change_pct,x.facet==='STYLE'?styleId(x.term):'',x.facet]);
+    HOT_META={as_of:d.as_of,rule:d.rule,basis:d.basis};
+    HOT_STATE=HOT.length?'ok':'empty';
+  }catch(e){ HOT_STATE='error'; }
+}
+async function hotVoteLoad(){
+  try{
+    /* 투표 수는 그때그때 바뀐다 — 브라우저 캐시를 쓰지 않는다(살!말? 화면 vote_app 과 같다) */
+    const r=await fetch('/api/salmal/cards?tab=popular',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}});
+    const j=await r.json();
+    if(!r.ok||j.status!=='ok'){ HOT_VOTE_STATE='error'; return; }
+    const items=(j.data&&j.data.items)||[];
+    HOT_VOTE=items.filter(c=>!c.closed&&(c.vote_summary||{}).total>0).slice(0,10)
+      .map(c=>[c.title,c.vote_summary.buy_pct,c.vote_summary.total,c.id]);
+    HOT_VOTE_STATE=HOT_VOTE.length?'ok':'empty';
+  }catch(e){ HOT_VOTE_STATE='error'; }
+}
+/* ── 자동 갱신 (2026-10-01) ─────────────────────────────
+   ★ 예전엔 페이지를 열 때 한 번만 읽었다. 투표 순위는 모드를 처음 켤 때 한 번 읽고 끝이었다.
+   · 트렌드 TOP 10 — 지표가 하루 한 번(매일 새벽) 다시 계산된다. 30분마다 확인해서
+     기준일이나 순위가 바뀌었을 때만 다시 그린다. 탭을 오래 열어 둬도 다음 날 순위로 바뀐다.
+   · 투표 TOP 10 — 투표는 그때그때 바뀐다. 홈에서 살!말? 모드를 보는 동안 20초마다 읽고,
+     내가 투표하면(feedit:vote) 바로 다시 읽는다.
+   · 안 보이는 탭 · 다른 화면에서는 읽지 않는다. 돌아오면 그때 확인한다. */
+const HOT_REFRESH_MS=30*60*1000;
+const VOTE_REFRESH_MS=20*1000;
+let hotLoadedAt=0, voteLoadedAt=0;
+const hotOnHome=()=>!document.hidden&&(!document.body.dataset.view||document.body.dataset.view==='home');
+const hotSig=()=>JSON.stringify([HOT,HOT_META&&HOT_META.as_of]);
+const voteSig=()=>JSON.stringify(HOT_VOTE);
+async function hotReload(){
+  const before=hotSig();
+  await hotLoad(); hotLoadedAt=Date.now();
+  if(!SM_ON&&hotSig()!==before){ hotI=0; hotPaint(); hotStep(); }
+}
+async function hotVoteReload(){
+  const before=voteSig();
+  await hotVoteLoad(); voteLoadedAt=Date.now();
+  if(SM_ON&&voteSig()!==before){ hotI=0; hotPaint(); hotStep(); }
+}
+function hotTick(){
+  if(!hotOnHome())return;
+  if(Date.now()-hotLoadedAt>=HOT_REFRESH_MS)hotReload();
+  if(SM_ON&&Date.now()-voteLoadedAt>=VOTE_REFRESH_MS)hotVoteReload();
+}
+/* 모드가 바뀌면 같은 자리를 다시 그린다 (smSwitch 에서 부른다) */
+export function hotRefresh(){
+  hotI=0; hotPaint(); hotStep();
+  /* 살!말? 모드로 들어올 때마다 다시 읽는다 — 예전엔 처음 한 번만 읽어 옛 순위가 남았다 */
+  if(SM_ON)hotVoteReload();
+}
 export function hotBuild(){
   const list=$('#hotList'); if(!list)return;
-  list.innerHTML=HOT.map((t,i)=>
-    '<button data-style="'+t[2]+'"><span class="n">'+String(i+1).padStart(2,'0')+'</span>'+
-    '<span class="k">'+t[0]+'</span><span class="ph">STYLE</span>'+
-    '<span class="d '+(t[1]>0?'up':'dn')+'">'+(t[1]>0?'▲':'▼')+Math.abs(t[1])+'%</span></button>').join('');
-  hotStep();
+  hotPaint(); hotStep();
+  hotLoad().then(()=>{ hotLoadedAt=Date.now(); if(!SM_ON){ hotI=0; hotPaint(); hotStep(); } });
   setInterval(()=>{ if(!hotOpen)hotStep() },2400);
+  setInterval(hotTick,VOTE_REFRESH_MS);
+  document.addEventListener('visibilitychange',hotTick);
+  document.addEventListener('feedit:vote',()=>{ voteLoadedAt=0; if(SM_ON)hotVoteReload(); });
   $('#hotBar').addEventListener('click',hotToggle);
+  /* 스타일이 아닌 용어(아이템·소재·색 …)는 챗봇에 바로 물어본다 */
+  list.addEventListener('click',e=>{
+    const b=e.target.closest('[data-hot-q]'); if(!b)return;
+    const q=b.dataset.hotQ+' 요즘 어때?';
+    openChatWith(q, cpKeyFor(q), {forceNew:true});
+  });
 }
 
 /* ── 챗바 안에서 굴러가는 예시 질문 ─────────────────────
@@ -192,11 +395,13 @@ export const SAY={
   plat :'같은 주에도 <b>무신사</b>는 워크 자켓, <b>29CM</b>는 미니멀 셋업이 앞섭니다. 이 온도차가 기회 구간입니다.',
   body :'저장하신 어깨 라인과 기장을 기준으로 보면 <b>숄더 발마칸</b>이 가장 잘 맞습니다. 오버핏 트렌치는 피하세요.'
 };
-const SAY_STYLE={rise:'ballet',gorp:'gorp',ballet:'ballet',plat:'street',body:'classic'};
+/* 스타일 페이지에 없는 스타일(발레코어)은 버튼을 달지 않는다 */
+const SAY_STYLE={rise:'block',gorp:'gorp',ballet:'',plat:'street',body:'classic'};
 export function ansCardHTML(key){
   const a=M_ANSWERS[key]||M_ANSWERS.rise;
-  return '<div class="ansCard">'+
-    '<div class="ansBar"><u></u><u></u><u></u><span>'+a.url+'</span></div>'+
+  return '<div class="skillReport skillReport--legacy">'+
+    '<div class="skillReportHead"><span>FEEDiT / LIVE REPORT</span><em>02 SIGNALS</em></div>'+
+    '<div class="skillLegacyCanvas">'+
     '<div class="ansBody">'+
       '<div><div class="ansH"><h3>'+a.title+'</h3><em>통합 · 8/7–8/13</em></div><div class="rank">'+
       a.rank.map((r,i)=>'<div class="row"><span class="n">'+String(i+1).padStart(2,'0')+'</span>'+
@@ -207,7 +412,7 @@ export function ansCardHTML(key){
       M_PLATFORMS.map(pl=>'<div class="b"><span>'+pl[0]+'</span><u><i data-w="'+pl[1]+'"></i></u>'+
         '<em>'+pl[1]+'</em></div>').join('')+
       '</div></div>'+
-    '</div></div>';
+    '</div></div></div>';
 }
 function ask(text,key){
   const th=$('#thread'), home=$('#v-home'); if(!th)return;
@@ -220,8 +425,8 @@ function ask(text,key){
   ai.className='msg ai';
   ai.innerHTML='<div class="who"><i>✧</i>'+(SM_ON?'FEEDiT 살!말?':'FEEDiT')+'</div>'+
     '<div class="say">'+(SM_SAY[key]||SAY[key]||SAY.rise)+'</div>'+ansCardHTML(key)+
-    '<div class="act"><button class="pill ghost" data-style="'+(SAY_STYLE[key]||'ballet')+'">'+
-    'Style 탭에서 자세히 <i>→</i></button>'+
+    '<div class="act">'+(SAY_STYLE[key]?'<button class="pill ghost" data-style="'+SAY_STYLE[key]+'">'+
+    'Style 탭에서 자세히 <i>→</i></button>':'')+
     '<button class="pill ghost" data-v="trend">지표로 보기 <i>→</i></button></div>';
   th.appendChild(ai);
   const fills=$$('i[data-w]',ai);
@@ -257,14 +462,11 @@ export var SM_ON=false, smBusy=false, smSwT=0;
 const SM_STATEMENT=[['살까 말까,'],['혼자 ','고민','하지 마세요.']];
 /* 이 모드는 사람에게 묻는 게 아니라, 지표로 점수를 매겨 판단을 내려 준다 */
 const SM_LEAD='온도 · 가격 · 수명주기를 계산해 사도 되는지 답합니다.';
-const SM_QUESTIONS=[
+export const SM_QUESTIONS=[
   ['이 코트','지금 사도 될까?'],['발레 플랫','품절 전에 사야 하나?'],
   ['스투시 후디','정가 주고 살 값어치 있어?'],['카고 팬츠','내년에도 입을까?'],
   ['이 가격','기다리면 더 내려가?']
 ];
-const SM_CHIPS=[['이거 사도 될까?','smBuy'],['지금이 최저가야?','smPrice'],
-                ['내년에도 입어?','smLife'],['비슷한 거 더 싼 거','smAlt'],
-                ['다들 뭐라고 해?','smVote']];
 /* 살!말? 전용 응답 — 판단을 대신 내려주는 어조 */
 export const SM_SAY={
   smBuy :'지금 <b>사도 됩니다</b>. 취향이 겹치는 사람 <b>1,284명</b> 중 <b>73%</b>가 "산다"에 투표했고, 수명주기도 확산 구간입니다.',
@@ -340,90 +542,101 @@ function smStatement(on){
   }else paint();
 }
 
-/* ── 예시 질문 · 칩 교체 ── */
-function smChips(on){
-  const ch=$('#mChips'); if(!ch)return;
-  const list=on?SM_CHIPS:M_CHIPS;
-  const build=()=>{
-    ch.innerHTML=list.map((c,i)=>
-      '<button class="chip'+(i?'':' on')+'" data-ans="'+c[1]+'">'+c[0]+'</button>').join('');
-    if(HAS_A)aAnimate($$('#mChips .chip'),{opacity:[0,1],translateY:[10,0],scale:[.94,1],
-      duration:560,delay:aStagger(48),ease:aSpring({stiffness:96,damping:15})});
-  };
-  const cur=$$('#mChips .chip');
-  if(HAS_A&&cur.length){
-    aAnimate(cur,{opacity:[1,0],translateY:[0,-10],scale:[1,.94],
-      duration:280,delay:aStagger(34),ease:'in(2)'});
-    setTimeout(build,280+cur.length*34);
-  }else build();
-}
-
-/* ── 모드 전환 본체 ── */
-export function smSwitch(on,ev){
-  if(smBusy||on===SM_ON)return; smBusy=true;
+/* ── 모드 전환 본체 ──
+   smBusy 는 **연출용 잠금**이다(스윕이 겹쳐 돌지 않게 0.9초). 사용자가 직접 누른
+   전환까지 이 잠금에 막히면 "한 번 눌러선 안 바뀐다" 가 된다 — 팝업의 Tab·마크
+   전환은 force=true 로 부른다. 잠금 해제도 finally 로 옮겼다: 아래 연출 중 하나가
+   던지면 예전에는 smBusy 가 true 로 굳어 그 뒤 전환이 통째로 죽었다. (2026-09-13) */
+export function smSwitch(on,ev,force){
+  if(on===SM_ON)return;
+  if(smBusy&&!force)return;
+  smBusy=true;
   const btn=$('#smToggle'), home=$('#v-home');
-  /* 눌린 자리에서 링 하나가 먼저 튀고, 버튼이 제자리에서 한 바퀴 휘리릭 돈다 */
-  if(btn&&HAS_A){
-    const r=document.createElement('span'); r.className='rip'; btn.appendChild(r);
-    aAnimate(r,{scale:[1,26],opacity:[.9,0],duration:760,ease:'out(3)',
-      onComplete:()=>r.remove()});
-    aAnimate(btn,{
-      rotateY:[0,360],
-      scale:[{to:.93,duration:130,ease:'out(2)'},
-             {to:1,duration:690,ease:aSpring({stiffness:150,damping:11})}],
-      duration:820,ease:'out(3)'
-    });
-  }
-  const b=btn?btn.getBoundingClientRect():{left:innerWidth/2,top:innerHeight/2,width:0,height:0};
-  const cx=b.left+b.width/2, cy=b.top+b.height/2;
 
   const commit=()=>{
     SM_ON=on;
-    home.classList.toggle('smMode',on);
+    if(home)home.classList.toggle('smMode',on);
     document.body.classList.toggle('smOn',on);
     if(btn){
+      /* 켜고 끄는 동작은 이 한 줄이 전부다 — 썸 슬라이드·트랙 색·문구 자리·
+         문구 색까지 전부 [aria-pressed] 기준으로 CSS가 한다(chat.css).
+         회전·링 같은 곁다리 모션은 두지 않는다(2026-09-10). */
       btn.setAttribute('aria-pressed',String(on));
-      const tx=btn.querySelector('.tx'), ic=btn.querySelector('.ic'), lb=btn.querySelector('.lbl');
-      const swapLabel=()=>{ if(tx)tx.textContent=on?'일반 모드':'살!말?';
-                            if(ic)ic.textContent=on?'←':'◑' };
-      /* 버튼이 옆면을 보이는 구간(≈75~300ms)에 맞춰 문구를 숨겼다가 바꿔 단다.
-         그래야 뒤집힌 글자가 보이지 않는다. */
-      if(HAS_A&&lb){
-        aAnimate(lb,{opacity:[1,0],duration:110,ease:'in(2)',
-          onComplete:()=>{ swapLabel();
-            aAnimate(lb,{opacity:[0,1],duration:380,delay:190,ease:'out(3)'}) }});
-      }else swapLabel();
+      /* 문구는 상태 이름 그대로 — ON(주황)이면 살!말?, OFF(회색)면 일반 */
+      const tx=btn.querySelector('.tx');
+      if(tx)tx.textContent=on?'살!말?':'일반';
     }
     /* 챗바·버튼 테두리를 빛이 세 바퀴 돌며 감속해 상주 회전으로 이어진다.
        연속으로 눌렸을 때 클래스가 이미 붙어 있으면 애니메이션이 다시 시작되지 않아
        빛이 중간에 멈춰 보였다 — 한 번 떼고 리플로우를 강제해 처음부터 돌린다. */
     if(smSwT)clearTimeout(smSwT);
-    home.classList.remove('smSweep','smOut');
-    if(on){
-      void home.offsetWidth;                 /* 리플로우 — 연타해도 스윕이 처음부터 돈다 */
-      home.classList.add('smSweep');
-      smSwT=setTimeout(()=>{ home.classList.remove('smSweep'); smSwT=0 },2520);
-    }else{
-      /* 돌던 빛을 그 자리에서 멈추지 않고, 계속 돌린 채로 잦아들게 한다 */
-      home.classList.add('smOut');
-      smSwT=setTimeout(()=>{ home.classList.remove('smOut'); smSwT=0 },900);
+    if(home){
+      home.classList.remove('smSweep','smOut');
+      if(on){
+        void home.offsetWidth;               /* 리플로우 — 연타해도 스윕이 처음부터 돈다 */
+        home.classList.add('smSweep');
+        smSwT=setTimeout(()=>{ home.classList.remove('smSweep'); smSwT=0 },2520);
+      }else{
+        /* 돌던 빛을 그 자리에서 멈추지 않고, 계속 돌린 채로 잦아들게 한다 */
+        home.classList.add('smOut');
+        smSwT=setTimeout(()=>{ home.classList.remove('smOut'); smSwT=0 },900);
+      }
     }
-    smStatement(on); smChips(on);
+    smStatement(on);
     /* 예시 질문 세트 교체 — 별이 한 박자 빠르게 돌며 넘어간다 */
     qI=0; qStep();
     const lbl=$('.hotTop .lbl');
     if(lbl)lbl.innerHTML=on?'<u>LIVE</u> 투표 TOP 10':'<u>HOT</u> TREND TOP 10';
+    hotRefresh();
     const inp=$('#mInput');
     if(inp)inp.placeholder='';
   };
   /* 가리는 것 없이 바로 바꾼다. 색은 CSS 전이가 0.62초에 걸쳐 따라온다. */
-  commit(); smBarBeat(); smRoomBeat();
-  setTimeout(()=>{smBusy=false},900);
+  try{ commit(); smBarBeat(); smRoomBeat(); }
+  finally{ setTimeout(()=>{smBusy=false},900); }
+}
+
+/* ── 홈 챗바 이미지 첨부 ──────────────────────────────
+   + 버튼 → 숨긴 file input을 대신 눌러 준다. 고른 사진은 곧장 서버로
+   가지 않고 여기서 들고 있다가, sendChat()이 질문과 함께 팝업으로 넘긴다. */
+export let mImages=[];
+function mImgPaint(){
+  const box=$('#mImgAttach'); if(!box)return;
+  box.hidden = mImages.length===0;
+  box.innerHTML = mImages.map((im,i)=>
+    '<span class="imgChip"><img src="'+im.url+'" alt=""><button type="button" data-rm="'+i+'" aria-label="사진 삭제">×</button></span>').join('');
+}
+export function mImgClear(){ mImages=[]; mImgPaint(); }
+async function mImgPick(files){
+  for(const f of files){
+    if(mImages.length>=MAX_IMAGES)break;
+    try{ const url=await imageFileToDataURL(f); mImages.push({url}); }catch(e){ /* 이미지가 아니면 조용히 건너뛴다 */ }
+  }
+  mImgPaint();
+}
+export function mImgInit(){
+  const add=$('#mImgAdd'), input=$('#mImgFile'), box=$('#mImgAttach');
+  if(add&&input){
+    add.addEventListener('click', ()=>input.click());
+    input.addEventListener('change', ()=>{
+      if(input.files&&input.files.length)mImgPick([...input.files]);
+      input.value='';
+    });
+  }
+  if(box)box.addEventListener('click', e=>{
+    const rm=e.target.closest('[data-rm]'); if(!rm)return;
+    mImages.splice(+rm.dataset.rm,1); mImgPaint();
+  });
+  /* 챗바 위에 사진을 그대로 끌어다 놓아도 + 버튼과 같은 경로로 들어간다 */
+  bindImageDrop($('.chatbar'), files=>mImgPick(files));
 }
 
 export function sendChat(){
   const inp=$('#mInput'); const v=(inp&&inp.value.trim())||'';
-  if(!v)return;
-  openChatWith(v, cpKeyFor(v));
+  if(!v && !mImages.length)return;
+  const images=mImages.map(im=>im.url);
+  /* 홈 챗바에서 치는 질문은 이전에 닫아 둔 세션과 이어지면 안 된다 — 매번 새 대화로 연다 */
+  openChatWith(v, cpKeyFor(v), {forceNew:true, images});
   if(inp){ inp.value=''; $('#ghostQ').classList.remove('hide') }
+  mImgClear();
 }

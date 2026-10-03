@@ -1,0 +1,64 @@
+/* ══════════════════════════════════════════════════════════════
+   직업 인증 · 배지 — account/static/js/job.js 와 짝
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 배지 ──
+   모서리가 둥근 사각형. 닉네임 글자(12.5px)보다 살짝만 크게 선다.
+   패션 직종 = 대표색 주황, Basic(일반 사용자) = 검정. */
+.jobBadge{
+  display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+  height:16px;padding:0 5px;border-radius:4px;
+  background:var(--coral,#ff6b4a);color:#fff;
+  font-family:var(--num);font-size:9.5px;font-weight:600;line-height:1;
+  letter-spacing:.01em;white-space:nowrap;vertical-align:middle;
+}
+.jobBadge.basic{background:#1c1a17}
+
+/* ── 가입 · 회원정보 수정 — [서류 첨부] [직업 선택] 한 줄 ── */
+.jobRow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:stretch}
+.jobFileBtn{
+  display:inline-flex;align-items:center;gap:6px;max-width:150px;
+  padding:0 13px;border-radius:10px;background:#fff;cursor:pointer;
+  box-shadow:inset 0 0 0 1px var(--pink-3);
+  font-size:12.5px;font-weight:500;color:var(--pink-1);
+  transition:box-shadow .25s var(--ease),color .25s var(--ease);
+}
+.jobFileBtn svg{width:15px;height:15px;flex:0 0 auto}
+.jobFileBtn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jobFileBtn:not(:disabled):hover{box-shadow:inset 0 0 0 1px var(--pink-0);color:var(--pink-0)}
+.jobFileBtn.has{box-shadow:inset 0 0 0 1.5px var(--coral,#ff6b4a);color:var(--pink-0)}
+.jobFileBtn:disabled{background:#f3f1ec;color:var(--pink-2);cursor:not-allowed;opacity:.75}
+.jobMajor{margin-top:8px}
+.jobField .fieldMsg{line-height:1.55}
+
+/* ── 관리자 심사 모달 ── */
+.jrLead{font-size:12.5px;color:var(--pink-1);line-height:1.7;margin:-8px 0 16px}
+.jrList{display:flex;flex-direction:column;gap:10px;max-height:min(60vh,520px);overflow:auto}
+.jrEmpty{font-size:12.5px;color:var(--pink-2);line-height:1.8;text-align:center;padding:28px 0}
+.jrItem{
+  display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:14px;align-items:center;
+  padding:12px 14px;border:1px solid var(--pink-3);border-radius:12px;background:#fff;
+}
+.jrItem.approved,.jrItem.rejected{opacity:.6}
+.jrThumb{width:56px;height:56px;border-radius:8px;overflow:hidden;background:#f3f1ec;
+  display:grid;place-items:center}
+.jrThumb img{width:100%;height:100%;object-fit:cover}
+.jrThumb span{font-family:var(--num);font-size:10px;color:var(--pink-2);letter-spacing:.1em}
+.jrHead{display:flex;align-items:center;gap:7px}
+.jrHead b{font-size:13px;font-weight:600}
+.jrSt{margin-left:auto;font-style:normal;font-size:11px;color:var(--pink-2)}
+.jrItem.approved .jrSt{color:#1f9d64}
+.jrItem.rejected .jrSt{color:#c73a24}
+.jrMeta{font-size:11.5px;color:var(--pink-2);line-height:1.6;margin-top:4px;word-break:break-all}
+.jrMeta a{color:var(--pink-1);text-decoration:underline;text-underline-offset:2px}
+.jrActs{display:flex;gap:6px}
+@media (max-width:520px){
+  .jrItem{grid-template-columns:48px minmax(0,1fr)}
+  .jrActs{grid-column:1/-1;justify-content:flex-end}
+}
+
+/* 심사 목록 — 대기 중 / 전체 (2026-09-19, 서버 연동) */
+.jrTabs{display:flex;gap:6px;margin-bottom:12px}
+.jrTabs button{padding:6px 12px;border-radius:999px;border:1px solid var(--pink-3);background:#fff;font-size:12px;color:var(--pink-1)}
+.jrTabs button.on{background:var(--pink-0);border-color:var(--pink-0);color:#fff}
+.jrHead small{font-size:11px;color:var(--pink-2)}

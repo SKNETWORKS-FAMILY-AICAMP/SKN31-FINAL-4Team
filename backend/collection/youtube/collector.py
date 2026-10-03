@@ -324,6 +324,7 @@ class YoutubeCollector:
         video_id: str,
         *,
         limit: int = DEFAULT_COMMENT_LIMIT,
+        order: str = COMMENT_ORDER,
     ) -> dict:
         """
         영상 1건의 댓글을 수집한다.
@@ -339,6 +340,7 @@ class YoutubeCollector:
             1,
             int(limit or DEFAULT_COMMENT_LIMIT),
         )
+        order = order if order in {"time", "relevance"} else COMMENT_ORDER
 
         comments: list[dict] = []
         page_token = None
@@ -350,7 +352,7 @@ class YoutubeCollector:
             params = {
                 "part": COMMENT_PARTS,
                 "videoId": video_id,
-                "order": COMMENT_ORDER,
+                "order": order,
                 "maxResults": min(
                     COMMENT_PAGE_SIZE,
                     limit - len(comments),

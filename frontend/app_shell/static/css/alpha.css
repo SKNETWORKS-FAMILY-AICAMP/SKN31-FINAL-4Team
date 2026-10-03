@@ -1,0 +1,143 @@
+/* 알파 테스트 모드 — 해커톤 시연 15일 한정 (app_shell/static/js/alpha.js 와 한 쌍).
+   기간이 끝나면 이 파일과 main.css 의 @import 한 줄을 지우면 된다.
+   클래스 접두어는 전부 alpha* 로 두어 기존 전역 CSS 와 겹치지 않게 했다. */
+
+.alphaBar{
+  position:fixed; left:0; right:0; bottom:0; z-index:9000;
+  display:flex; align-items:center; gap:12px;
+  padding:11px 18px;
+  background:#101318; color:#fff;
+  box-shadow:0 -8px 30px rgba(10,12,16,.22);
+  font-size:13px; line-height:1.45;
+}
+.alphaDot{
+  flex:none; width:7px; height:7px; border-radius:50%;
+  background:var(--coral,#ff6b4a);
+  box-shadow:0 0 0 5px rgba(255,107,74,.16);
+}
+.alphaMsg{ margin:0; flex:1 1 auto; color:#e7e9ee; }
+.alphaMsg b{ color:#fff; font-weight:650; }
+.alphaMsg .alphaLeft{ color:var(--coral,#ff6b4a); }
+.alphaBar button{
+  flex:none; border:0; cursor:pointer; font:inherit;
+}
+.alphaGuide{
+  padding:7px 13px; border-radius:999px;
+  background:rgba(255,255,255,.1); color:#fff; font-size:12px;
+}
+.alphaGuide:hover{ background:rgba(255,255,255,.18); }
+.alphaX{
+  width:26px; height:26px; border-radius:50%;
+  background:transparent; color:#8c93a0; font-size:13px;
+}
+.alphaX:hover{ background:rgba(255,255,255,.1); color:#fff; }
+
+/* 배너가 떠 있는 동안 페이지 맨 아래가 가리지 않도록 */
+body.hasAlphaBar{ padding-bottom:50px; }
+
+@media(max-width:700px){
+  .alphaBar{ padding:9px 12px; gap:8px; font-size:11.5px; }
+  .alphaGuide{ display:none; }
+  body.hasAlphaBar{ padding-bottom:44px; }
+}
+
+/* ── 가이드 투어 ─────────────────────────────────── */
+.alphaTour{ position:fixed; inset:0; z-index:9500; }
+.alphaScrim{ position:absolute; inset:0; background:rgba(10,12,16,.58); }
+
+.alphaRing{
+  position:fixed; border-radius:12px;
+  border:2px solid var(--coral,#ff6b4a);
+  box-shadow:0 0 0 9999px rgba(10,12,16,.58), 0 0 24px rgba(255,107,74,.5);
+  transition:left .32s cubic-bezier(.4,0,.2,1), top .32s cubic-bezier(.4,0,.2,1),
+             width .32s cubic-bezier(.4,0,.2,1), height .32s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+/* 링이 자체 그림자로 화면 전체를 덮으므로 스크림은 클릭 판정용으로만 남긴다 */
+.alphaTour .alphaScrim{ background:transparent; }
+
+.alphaTip{
+  position:fixed; z-index:2; width:min(320px, calc(100vw - 32px));
+  padding:18px 20px 16px;
+  border-radius:14px; background:#fff; color:#12151b;
+  box-shadow:0 22px 60px rgba(10,12,16,.36);
+}
+.alphaStep{
+  display:block; font-size:10px; font-weight:650; letter-spacing:.14em;
+  color:#9298a5;
+}
+.alphaTip h4{ margin:9px 0 7px; font-size:18px; font-weight:680; letter-spacing:-.02em; }
+.alphaTip p{ margin:0; font-size:13px; line-height:1.62; color:#4b525e; }
+.alphaActs{ display:flex; align-items:center; justify-content:space-between; margin-top:16px; }
+.alphaActs button{ border:0; cursor:pointer; font:inherit; }
+.alphaSkip{ padding:8px 4px; background:transparent; color:#868d99; font-size:12px; }
+.alphaSkip:hover{ color:#4b525e; }
+.alphaNext{
+  padding:9px 18px; border-radius:999px;
+  background:var(--coral,#ff6b4a); color:#fff; font-size:12px; font-weight:650;
+}
+.alphaNext:hover{ filter:brightness(1.06); }
+
+@media(prefers-reduced-motion:reduce){
+  .alphaRing{ transition:none; }
+}
+
+/* ── 빠른 계정 만들기 창 ──────────────────────────── */
+.alphaInvite{ position:fixed; inset:0; z-index:9600; display:grid; place-items:center; padding:20px; }
+.alphaInviteScrim{ position:absolute; inset:0; background:rgba(10,12,16,.56); }
+
+.alphaCard{
+  position:relative; z-index:1;
+  width:min(420px, 100%); max-height:calc(100vh - 40px); overflow:auto;
+  padding:26px 26px 22px;
+  border-radius:18px; background:#fff; color:#12151b;
+  box-shadow:0 30px 80px rgba(10,12,16,.4);
+}
+.alphaBadge{
+  display:inline-block; padding:5px 10px; border-radius:999px;
+  background:rgba(255,107,74,.12); color:var(--coral,#ff6b4a);
+  font-size:9.5px; font-weight:700; letter-spacing:.16em;
+}
+.alphaCard h3{ margin:13px 0 9px; font-size:21px; font-weight:680; letter-spacing:-.03em; }
+.alphaCard p{ margin:0; font-size:13px; line-height:1.68; color:#4b525e; }
+.alphaCard p b{ color:#12151b; font-weight:650; }
+
+.alphaLabel{
+  display:block; margin:20px 0 8px;
+  font-size:12px; font-weight:650; color:#2b313b;
+}
+.alphaLabel span{ margin-left:6px; font-weight:500; color:#8a909b; }
+.alphaInput{
+  width:100%; height:44px; padding:0 14px;
+  border:1px solid #d7d9de; border-radius:10px;
+  background:#fff; color:#12151b; font:inherit; font-size:14px;
+}
+.alphaInput:focus{ outline:none; border-color:var(--coral,#ff6b4a); box-shadow:0 0 0 3px rgba(255,107,74,.13); }
+
+/* 스타일 선택 그리드는 정식 가입 뒤 뜨는 팝업과 같은 것을 쓴다 —
+   .styleSelectGrid / .styleSelCard 는 account/static/css/profile.css 에 이미 있고
+   main.css 가 한 문서로 @import 하므로 여기서 다시 정의하지 않는다.
+   사진 4칸이 들어가야 해서 그 단계에서만 창을 넓힌다. */
+.alphaCard.wide{ width:min(720px, 100%); }
+.alphaCard .styleSelectGrid{ max-height:48vh; }
+.alphaCard .styleSelCard{ border:0; background:transparent; cursor:pointer; font:inherit; }
+.alphaErr{ margin:12px 0 0; font-size:12px; color:#d93b2b; }
+
+.alphaPick{ display:flex; gap:9px; margin-top:22px; }
+.alphaPick button{ flex:1; height:46px; border:0; border-radius:999px; font:inherit; font-size:13px; font-weight:650; cursor:pointer; }
+.alphaPrimary{ background:var(--coral,#ff6b4a); color:#fff; }
+.alphaPrimary:hover{ filter:brightness(1.06); }
+.alphaPrimary:disabled{ opacity:.6; cursor:default; filter:none; }
+.alphaGhost{ background:#f1f2f5; color:#3b424d; }
+.alphaGhost:hover{ background:#e7e9ee; }
+.alphaLater{
+  display:block; width:100%; margin:12px 0 0; padding:6px;
+  border:0; background:transparent; color:#8a909b; font:inherit; font-size:12px; cursor:pointer;
+}
+.alphaLater:hover{ color:#4b525e; }
+
+@media(max-width:700px){
+  .alphaCard{ padding:22px 18px 18px; }
+  .alphaCard h3{ font-size:19px; }
+  .alphaPick{ flex-direction:column; }
+}

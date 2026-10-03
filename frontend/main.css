@@ -5,7 +5,10 @@
 @import './intro/static/css/logo_mark.css';
 @import './intro/static/css/visuals.css';
 @import './app_shell/static/css/layout.css';
+@import './app_shell/static/css/footer.css';
+@import './app_shell/static/css/alpha.css';   /* 알파 테스트 모드 — 시연 15일 한정 */
 @import './home/static/css/chat.css';
+@import './home/static/css/chat_report.css';
 @import './trend/static/css/dispatch.css';
 @import './account/static/css/rank.css';
 @import './trend/static/css/my_feed.css';
@@ -17,4 +20,11 @@
 @import './salmal/static/css/vote_app.css';
 @import './trend/static/css/saved_keywords.css';
 @import './account/static/css/profile.css';
+@import './account/static/css/xp.css';   /* 경험치 창 · 홈페이지 피드백 */
+@import './account/static/css/notify.css';
+@import './app_shell/static/css/ticker.css';
 @import './home/static/css/chat_popup.css';
+@import './account/static/css/job.css';
+@import './account/static/css/plan.css';   /* 요금제 신청 · 심사 · 잠금 — 베타 이후에만 쓰인다 */
+@import './app_shell/static/css/responsive.css';
+@import './app_shell/static/css/assistant_hub.css'; /* 전 페이지 도움말 허브 — 기존 반응형 뒤에서 최종 배치 */

@@ -1,0 +1,14 @@
+{% extends "dashboard/base.html" %}{% load static %}
+{% block title %}읽기 전용 SQL | FEEDIT Admin{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/operations.css' %}">
+<style>.sql-editor{width:100%;min-height:150px;padding:15px;border:1px solid var(--line);border-radius:12px;background:#1e1f22;color:#f1f3f4;font:12px/1.65 var(--mono);resize:vertical}.sql-actions{display:flex;align-items:center;gap:10px;margin-top:9px}.sql-note{padding:12px 14px;border-left:3px solid var(--info);border-radius:9px;background:var(--card);color:var(--tx2);font-size:11.5px;line-height:1.7}.sql-error{border-left-color:var(--bad);color:var(--bad)}.sql-value{max-width:420px;white-space:pre-wrap;overflow-wrap:anywhere}</style>
+{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_database.html" %}{% endblock %}
+{% block content %}
+<div class="op-head"><div><p class="op-eyebrow">READ-ONLY QUERY</p><h2 class="op-title">안전한 SQL 조회</h2><p class="op-sub">단일 SELECT/WITH SELECT/EXPLAIN만 실행합니다. 3초·200행 제한이며 개인정보, 인증, 알림, 챗봇 원문 테이블은 차단됩니다.</p></div></div>
+{% if not enabled %}<div class="sql-note">운영 환경에서는 기본 비활성입니다. 전용 읽기 계정 설정 뒤 <code>DASHBOARD_SQL_ENABLED=1</code>로 명시적으로 켜세요.</div>{% endif %}
+<form method="post" class="op-section">{% csrf_token %}<textarea class="sql-editor" name="sql" spellcheck="false" placeholder="SELECT source_id, COUNT(*) FROM analysis.text_document GROUP BY source_id LIMIT 50;">{{ sql }}</textarea><div class="sql-actions"><button class="op-button" {% if not enabled %}disabled{% endif %}>조회 실행</button><span class="op-muted">쓰기·다중문·민감 데이터 조회 불가</span></div></form>
+{% if error %}<div class="sql-note sql-error"><b>실행하지 못했습니다.</b><br>{{ error }}</div>{% endif %}
+{% if columns %}<section class="op-section"><div class="op-section-head"><h3>결과</h3><span class="op-muted">{{ rows|length }}행 · {{ elapsed_ms|floatformat:0 }}ms{% if truncated %} · 200행에서 잘림{% endif %}</span></div><div class="op-table-wrap"><table class="op-table"><thead><tr>{% for column in columns %}<th>{{ column }}</th>{% endfor %}</tr></thead><tbody>{% for row in rows %}<tr>{% for value in row %}<td class="sql-value">{{ value|default_if_none:"NULL" }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div></section>{% endif %}
+{% endblock %}

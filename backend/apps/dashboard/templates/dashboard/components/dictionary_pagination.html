@@ -1,0 +1,11 @@
+{% if page_obj.paginator.num_pages > 1 %}<nav class="dict-pagination" aria-label="페이지 이동">
+  {% if page_obj.has_previous %}<a class="direction" href="?{% if query_without_page %}{{ query_without_page }}&{% endif %}page={{ page_obj.previous_page_number }}">← 이전</a>{% else %}<span class="direction disabled">← 이전</span>{% endif %}
+  <span class="dict-page-numbers">
+  {% for page_number in elided_page_range %}
+    {% if page_number == page_obj.paginator.ELLIPSIS %}<span class="ellipsis">{{ page_number }}</span>
+    {% elif page_number == page_obj.number %}<span class="active" aria-current="page">{{ page_number }}</span>
+    {% else %}<a href="?{% if query_without_page %}{{ query_without_page }}&{% endif %}page={{ page_number }}">{{ page_number }}</a>{% endif %}
+  {% endfor %}
+  </span>
+  {% if page_obj.has_next %}<a class="direction" href="?{% if query_without_page %}{{ query_without_page }}&{% endif %}page={{ page_obj.next_page_number }}">다음 →</a>{% else %}<span class="direction disabled">다음 →</span>{% endif %}
+</nav>{% endif %}

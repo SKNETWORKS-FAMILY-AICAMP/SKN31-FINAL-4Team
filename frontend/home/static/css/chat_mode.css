@@ -40,37 +40,16 @@
 #v-home.smSweep .chatbar::before{animation:rkSweep 2.45s var(--rkOut) 1;animation-play-state:running}
 /* 챗바 밖으로 아무것도 새어 나가지 않게 — 광택 잔상이 좌하단에 남던 원인 */
 .chatbar{overflow:hidden}
-/* 토글 버튼이 제자리에서 한 바퀴 돌 수 있게 홈 챗바에만 깊이를 준다 */
-#v-home .chatbar{perspective:760px}
 
 /* ── 모드 토글 버튼 ── */
-.salmalBtn{position:relative;overflow:hidden;min-width:104px;justify-content:center}
-.salmalBtn .lbl{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
-.salmalBtn .ic{display:inline-block;font-style:normal;transition:transform .7s var(--ease)}
-/* 버튼은 테두리 빛을 두지 않는다. 모드가 바뀐 신호는
-   [제자리 한 바퀴 회전 + 코랄로 물드는 것] 으로 충분하다. */
+/* 크기·배경·썸(원)·문구 자리는 전부 chat.css의 .salmalBtn[aria-pressed] 규칙이
+   맡는다 — smMode 클래스가 아니라 버튼 자신의 aria-pressed로 켜진다
+   (chat.js smSwitch). 켜고 끄는 동작은 썸 슬라이드 하나뿐이라(2026-09-10,
+   회전·링 연출은 뺐다) 여기 남기는 건 챗바 테두리 빛(smMode/smSweep/smOut)뿐이다. */
 /* 들어올 땐 곧바로 켜진다 */
 #v-home.smSweep .chatbar::before{opacity:1;transition:opacity .12s linear}
 /* 나갈 땐 끄지 않는다 — 계속 돌면서 0.7초에 걸쳐 잦아든다 */
 #v-home.smOut .chatbar::before{animation-play-state:running}
-#v-home.smMode .salmalBtn{
-  background:var(--coral);color:#fff;box-shadow:inset 0 0 0 1px var(--coral);
-}
-#v-home.smMode .salmalBtn:hover{background:#ff8464;box-shadow:inset 0 0 0 1px #ff8464}
-#v-home.smMode .salmalBtn .ic{transform:rotate(180deg)}
-/* 눌린 순간 버튼에서 링이 한 번 퍼진다 */
-.salmalBtn .rip{
-  position:absolute;left:50%;top:50%;width:8px;height:8px;border-radius:50%;
-  transform:translate(-50%,-50%) scale(1);pointer-events:none;
-  box-shadow:0 0 0 1.5px rgba(255,107,74,.55);opacity:0;
-}
-
-/* 지면도 챗바도 건드리지 않는다. 색이 바뀌는 건 버튼 하나뿐이고,
-   문구·칩은 모션으로 교체된다. */
-#v-home .salmalBtn{
-  transition:background-color .62s var(--ease),color .62s var(--ease),
-             box-shadow .62s var(--ease),border-color .62s var(--ease);
-}
 
 @media(prefers-reduced-motion:reduce){
   .chatbar::before{animation:none!important}

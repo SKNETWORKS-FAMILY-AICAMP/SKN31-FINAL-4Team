@@ -20,8 +20,22 @@ class Migration(migrations.Migration):
         #    → Django migration state에서만 제거
         # ========================================================
 
+        # ★ 2026-09-23 — 운영 RDS 에서는 이 인덱스·컬럼이 이미 손으로 지워진 상태라
+        #   state 만 고쳤었다(database_operations=[]). 그런데 **빈 DB 에서 처음부터**
+        #   migrate 하면(테스트 DB · 새 개발 DB) 0030 이 만든 것이 그대로 남아,
+        #   아래 source_brand FK(컬럼 source_brand_id)를 더할 때 DuplicateColumn 으로 멈췄다.
+        #   IF EXISTS 로 지우므로 운영처럼 이미 없는 DB 에서는 아무 일도 하지 않는다.
+        #   (운영 RDS 에는 이 마이그레이션이 이미 적용돼 있어 다시 돌지도 않는다.)
         migrations.SeparateDatabaseAndState(
-            database_operations=[],
+            database_operations=[
+                migrations.RunSQL(
+                    sql=[
+                        'DROP INDEX IF EXISTS "commerce"."idx_prod_src_brand"',
+                        'DROP INDEX IF EXISTS "commerce"."idx_prod_src_cat"',
+                    ],
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+            ],
             state_operations=[
                 migrations.RemoveIndex(
                     model_name="productsource",
@@ -35,7 +49,20 @@ class Migration(migrations.Migration):
         ),
 
         migrations.SeparateDatabaseAndState(
-            database_operations=[],
+            database_operations=[
+                migrations.RunSQL(
+                    sql=[
+                        'ALTER TABLE "commerce"."product_source" '
+                        'DROP COLUMN IF EXISTS "brand_id", '
+                        'DROP COLUMN IF EXISTS "category_id", '
+                        'DROP COLUMN IF EXISTS "source_brand_id", '
+                        'DROP COLUMN IF EXISTS "source_category_id", '
+                        'DROP COLUMN IF EXISTS "source_category_name", '
+                        'DROP COLUMN IF EXISTS "source_category_path"',
+                    ],
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+            ],
             state_operations=[
                 migrations.RemoveField(
                     model_name="productsource",

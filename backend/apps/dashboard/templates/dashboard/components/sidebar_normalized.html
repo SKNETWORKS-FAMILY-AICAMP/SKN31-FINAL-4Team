@@ -1,8 +1,10 @@
 {% with u=request.resolver_match.url_name %}
 <aside class="sub-sidebar">
     <p>NORMALIZED</p>
+    <a href="{% url 'dashboard:pipeline_overview' %}"      {% if u == 'pipeline_overview' %}class="active"{% endif %}>파이프라인 현황</a>
     <a href="{% url 'dashboard:normalized_products' %}"     {% if u == 'normalized_products' %}class="active"{% endif %}>정규화 성공</a>
     <a href="{% url 'dashboard:normalization_failures' %}"  {% if u == 'normalization_failures' %}class="active"{% endif %}>정규화 실패</a>
+    <a href="{% url 'dashboard:data_quality' %}"            {% if u == 'data_quality' %}class="active"{% endif %}>데이터 품질</a>
 
     <p style="margin-top:22px;">BY PLATFORM</p>
     <a href="{% url 'dashboard:normalized_musinsa' %}"      {% if u == 'normalized_musinsa' %}class="active"{% endif %}>무신사</a>
@@ -12,5 +14,12 @@
     <a href="{% url 'dashboard:normalized_kream' %}"        {% if u == 'normalized_kream' %}class="active"{% endif %}>크림</a>
     <a href="{% url 'dashboard:normalized_youtube' %}"      {% if u == 'normalized_youtube' %}class="active"{% endif %}>유튜브</a>
     <a href="{% url 'dashboard:normalized_naver' %}"        {% if u == 'normalized_naver' %}class="active"{% endif %}>네이버</a>
+
+    <p style="margin-top:22px;">TEXT</p>
+    <a href="{% url 'dashboard:text_youtube' %}" {% if u == 'text_youtube' %}class="active"{% endif %}>유튜브 댓글·자막</a>
+    <a href="{% url 'dashboard:text_musinsa' %}" {% if u == 'text_musinsa' %}class="active"{% endif %}>무신사 상품 리뷰</a>
+    <a href="{% url 'dashboard:text_zigzag' %}"  {% if u == 'text_zigzag' %}class="active"{% endif %}>지그재그 상품 리뷰</a>
+    <a href="{% url 'dashboard:text_ably' %}"    {% if u == 'text_ably' %}class="active"{% endif %}>에이블리 상품 리뷰</a>
+    <a href="{% url 'dashboard:text_naver' %}"   {% if u == 'text_naver' %}class="active"{% endif %}>네이버 본문</a>
 </aside>
 {% endwith %}

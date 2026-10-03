@@ -1,0 +1,45 @@
+/* 실시간 공지 — 헤더 바로 아래 가운데에 뜨는 먹색 알약 (2026-10-02, ticker.js)
+   헤더(.mHead, sticky) 안에 붙어 함께 따라 내려온다. 본문 위에 살짝 떠 있는 층이다. */
+.mTicker{
+  position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);
+  width:min(600px,calc(100vw - 32px));height:38px;box-sizing:border-box;
+  display:flex;align-items:center;gap:10px;padding:0 6px 0 14px;
+  background:var(--pink-0,#0a0a0a);color:#fff;border-radius:999px;
+  box-shadow:0 12px 30px -14px rgba(10,10,10,.55);
+  animation:mTickIn .45s cubic-bezier(.19,1,.22,1);
+}
+.mTicker[hidden]{display:none}
+@keyframes mTickIn{from{opacity:0;transform:translate(-50%,-8px)}}
+.mTickTag{flex:0 0 auto;display:flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:700;letter-spacing:.18em;color:var(--coral,#ff6b4a)}
+.mTickDot{width:6px;height:6px;border-radius:50%;background:var(--coral,#ff6b4a);animation:mTickPulse 1.6s ease-in-out infinite}
+@keyframes mTickPulse{50%{opacity:.25}}
+/* 흐르는 창 — 양 끝을 흐리게 지워 글자가 칼로 잘린 듯 보이지 않게 */
+.mTickWin{flex:1 1 auto;min-width:0;overflow:hidden;height:100%;display:flex;align-items:center;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent);
+          mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 18px),transparent)}
+.mTickTrack{display:flex;width:max-content;animation:mTickRoll var(--tick-dur,18s) linear infinite}
+.mTicker:hover .mTickTrack,.mTicker:focus-within .mTickTrack{animation-play-state:paused}
+@keyframes mTickRoll{to{transform:translateX(-50%)}}
+.mTickRun{display:flex;align-items:center;flex:0 0 auto;padding-right:44px}
+.mTickItem{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  font-size:13px;letter-spacing:-.01em;color:#fff;background:none;padding:0}
+.mTickItem[data-tick-go]{cursor:pointer}
+.mTickItem[data-tick-go]:hover{color:var(--coral,#ff6b4a)}
+.mTickItem i{font-style:normal;font-size:12px;opacity:.6}
+.mTickSep{flex:0 0 auto;margin:0 18px;font-style:normal;font-size:10px;color:var(--coral,#ff6b4a)}
+.mTickX{flex:0 0 auto;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  font-size:16px;line-height:1;color:rgba(255,255,255,.6)}
+.mTickX:hover{background:rgba(255,255,255,.12);color:#fff}
+/* 한 줄에 다 들어가면 흐르지 않고 가운데 선다 */
+.mTicker.still .mTickTrack{animation:none;width:100%;justify-content:center}
+.mTicker.still .mTickRun{padding-right:0}
+.mTicker.still .mTickRun+.mTickRun{display:none}
+.mTicker.still .mTickWin{-webkit-mask-image:none;mask-image:none}
+@media(max-width:920px){.mTicker{top:calc(100% + 8px);height:34px}.mTickItem{font-size:12.5px}}
+@media(prefers-reduced-motion:reduce){
+  .mTickTrack{animation:none}
+  .mTickRun+.mTickRun{display:none}
+  .mTickRun{overflow:hidden;text-overflow:ellipsis}
+  .mTickDot{animation:none}
+}

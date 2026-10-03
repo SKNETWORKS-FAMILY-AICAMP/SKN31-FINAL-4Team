@@ -1,0 +1,11 @@
+# feedit-chat 전용 — 저장소 루트 requirements.txt(Django·크롤러용)와 별개다.
+#
+# ★ 챗봇은 표준 라이브러리로 짰다. 직접 선언한 패키지는 아래 네 개다.
+#   설치할 게 적을수록 팀원이 켜는 데 실패할 자리가 적다.
+
+requests==2.34.2     # llm.py — OpenAI Responses API 호출
+PyYAML==6.0.3        # 크롤러 lexicon.yaml 읽기 (lexicon_gate 가 간접 사용)
+psycopg[binary]==3.3.4  # 운영 AWS RDS(PostgreSQL) 읽기
+Pillow==12.2.0       # vton.isolate — 착용 컷에서 옷 영역만 자르고 얼굴을 가린다(없으면 원본을 보낸다)
+
+# .env 는 app/env.py 가 표준 라이브러리로 읽는다. python-dotenv 는 필요 없다.

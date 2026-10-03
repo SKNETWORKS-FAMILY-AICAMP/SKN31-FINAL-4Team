@@ -66,15 +66,3 @@ body.lightHero .idSym{--mkbg:#f6f8fa}
   margin-top:26px;max-width:44ch;font-size:clamp(14px,1.25vw,17px);
   line-height:1.75;color:rgba(255,255,255,.72);
 }
-.panel .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:34px}
-.panel .tags span{
-  font-family:var(--mono);font-size:10px;letter-spacing:.12em;
-  padding:8px 13px;border-radius:99px;
-  color:rgba(255,255,255,.9);
-  /* liquid glass */
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.18);
-  backdrop-filter:blur(16px) saturate(180%);
-  -webkit-backdrop-filter:blur(16px) saturate(180%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.25);
-}

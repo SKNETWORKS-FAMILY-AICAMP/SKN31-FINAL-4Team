@@ -359,10 +359,31 @@ class Migration(migrations.Migration):
 
         # ============================================================
         # 이미 DB에 존재하는 컬럼 -> state only
+        #   ★ 2026-09-23 — 운영 RDS 에는 이미 있지만 빈 DB(테스트 DB 등)에는 없다.
+        #     IF NOT EXISTS 로 만들어 두 경우 모두 맞춘다.
         # ============================================================
 
         migrations.SeparateDatabaseAndState(
-            database_operations=[],
+            database_operations=[
+                migrations.RunSQL(
+                    sql=[
+                        """
+                        ALTER TABLE analysis.term_metric_daily
+                            ADD COLUMN IF NOT EXISTS level numeric(7,4) NULL,
+                            ADD COLUMN IF NOT EXISTS ma28 numeric(10,4) NULL,
+                            ADD COLUMN IF NOT EXISTS ma7 numeric(10,4) NULL,
+                            ADD COLUMN IF NOT EXISTS metric_version varchar(50) NOT NULL DEFAULT 'feedit-l2-v1',
+                            ADD COLUMN IF NOT EXISTS momentum numeric(7,4) NULL,
+                            ADD COLUMN IF NOT EXISTS source_id bigint NULL
+                                REFERENCES collection.source(id) ON DELETE CASCADE
+                                DEFERRABLE INITIALLY DEFERRED
+                        """,
+                        "CREATE INDEX IF NOT EXISTS term_metric_daily_source_id_idx "
+                        "ON analysis.term_metric_daily (source_id)",
+                    ],
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+            ],
             state_operations=[
                 migrations.AddField(
                     model_name="termmetricdaily",
@@ -457,6 +478,16 @@ class Migration(migrations.Migration):
                         ) THEN
                             ALTER TABLE analysis.term_metric_daily
                             RENAME COLUMN pct_rank TO percentile;
+                        ELSIF NOT EXISTS (
+                            SELECT 1
+                            FROM information_schema.columns
+                            WHERE table_schema = 'analysis'
+                              AND table_name = 'term_metric_daily'
+                              AND column_name = 'percentile'
+                        ) THEN
+                            -- 2026-09-23: 빈 DB(테스트 DB 등)에는 옛 컬럼도 없다 → 새로 만든다
+                            ALTER TABLE analysis.term_metric_daily
+                            ADD COLUMN percentile numeric(7,4) NULL;
                         END IF;
                     END
                     $$;
@@ -504,6 +535,16 @@ class Migration(migrations.Migration):
                         ) THEN
                             ALTER TABLE analysis.term_metric_daily
                             RENAME COLUMN temp TO trend_temperature;
+                        ELSIF NOT EXISTS (
+                            SELECT 1
+                            FROM information_schema.columns
+                            WHERE table_schema = 'analysis'
+                              AND table_name = 'term_metric_daily'
+                              AND column_name = 'trend_temperature'
+                        ) THEN
+                            -- 2026-09-23: 빈 DB(테스트 DB 등)에는 옛 컬럼도 없다 → 새로 만든다
+                            ALTER TABLE analysis.term_metric_daily
+                            ADD COLUMN trend_temperature numeric(7,4) NULL;
                         END IF;
                     END
                     $$;

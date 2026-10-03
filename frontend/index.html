@@ -7,8 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <!-- Roboto Flex = 영문 · 로고(Semibold 600) · Space Grotesk = 연대 숫자 -->
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;700&amp;family=Noto+Serif+KR:wght@700&amp;display=swap" rel="stylesheet">
+<!-- 동적 서브셋(dynamic-subset) 버전 대신 정적 가변 폰트 하나를 통째로 받는다 —
+     동적 서브셋은 화면에 어떤 글자가 있는지 JS로 스캔해 그 글자 범위만 뒤늦게 받아오는 방식이라,
+     이 앱처럼 페이지 전환마다 새 텍스트가 나중에 꽂히면(예: "살!말?"의 "말")
+     그 글자만 몇 초 뒤에 추가로 로드되며 나타나고, 그 사이 폰트 지표 차이로
+     내용 크기에 맞춰진 카드 폭도 같이 흔들리는 문제가 있었다. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <script src="https://cdn.jsdelivr.net/npm/animejs@4.5.0/dist/bundles/anime.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
 <link rel="stylesheet" href="/main.css">
@@ -81,7 +86,7 @@
           
         <div class="copy"><span class="no">01 — WHAT IT IS</span><h2>스크롤 속 패션을,<br>하나의 <em>트렌드</em>로.</h2><p>매거진보다 빠르고, 피드보다 선명하게.<br>
              무신사·지그재그·유튜브·틱톡에 흩어진 신호를 모아<br>
-             지금 무엇이 오고 무엇이 가는지 한 줄로 정리합니다.</p><div class="tags"><span>TREND INTELLIGENCE</span><span>K-FASHION</span><span>SINCE 2026</span></div></div></section>
+             지금 무엇이 오고 무엇이 가는지 한 줄로 정리합니다.</p></div></section>
 
         <section class="panel">
           <div class="pbg collbg">
@@ -93,7 +98,7 @@
           
           
         <div class="copy"><span class="no">02 — COLLECT</span><h2>여섯 앱 대신,<br>하나면 <em>충분합니다</em>.</h2><p>옮겨 다닐 필요 없이,<br>
-             한 화면에서 끝납니다.</p><div class="tags"><span>9 SOURCES</span><span>6H REFRESH</span><span>124K / DAY</span></div></div></section>
+             한 화면에서 끝납니다.</p></div></section>
 
         <section class="panel a3">
           <div class="pbg anzbg"><div class="anzStage" id="anzStage"></div></div>
@@ -102,7 +107,7 @@
           
           
         <div class="copy"><span class="no">03 — ANALYZE</span><h2>무엇이 뜨는지,<br>언제 <em>꺼지는지</em>.</h2><p>언급이 늘어도 반응이 나쁜 키워드는 걸러내고,<br>
-             정점을 지난 시점과 남은 기간을 같이 봅니다.</p><div class="tags"><span>RISING / FALLING</span><span>LIFECYCLE</span><span>INFLECTION</span></div></div></section>
+             정점을 지난 시점과 남은 기간을 같이 봅니다.</p></div></section>
 
         <section class="panel hasvis">
           <div class="pbg decbg"></div>
@@ -112,7 +117,7 @@
           
           <div class="pvis" id="itm"></div>
         <div class="copy"><span class="no">04 — DECIDE</span><h2>고민은 그만.<br><em>투표</em>로 정하세요.</h2><p>취향이 겹치는 사람들이 24시간 안에,<br>
-             트렌드 지표까지 얹어서 답합니다.</p><div class="tags"><span>살!말?</span><span>TASTE MATCH</span><span>24H</span></div></div></section>
+             트렌드 지표까지 얹어서 답합니다.</p></div></section>
 
         <section class="panel">
           <div class="pbg"><div class="ph" data-shots="b"></div>
@@ -124,7 +129,7 @@
         <div class="copy"><span class="no">05 — FOR WHOM</span><h2>브랜드 MD부터<br>옷 좋아하는 <em>사람</em>까지.</h2><p>다음 시즌 발주를 앞둔 MD,<br>
              무드보드에 근거가 필요한 디자이너,<br>
              재고를 잡기 전인 셀렉트샵,<br>
-             그리고 오늘 뭘 살지 고민인 사람.</p><div class="tags"><span>MD</span><span>DESIGNER</span><span>BUYER</span><span>EVERYONE</span></div></div></section>
+             그리고 오늘 뭘 살지 고민인 사람.</p></div></section>
 
         <section class="panel" id="panelStart">
           <div class="pbg startbg">
@@ -168,14 +173,43 @@
       <button data-v="price" data-t="요금제"><span>요금제</span></button>
     </nav>
     <div class="mHeadR mAuth" id="mHeadR">
-      <button class="pill ghost" id="mBackBtn">← 소개로</button>
       <!-- 로그인 전에는 [로그인], 후에는 이름 버튼 + 메뉴 (authPaint) -->
       <span class="mAuthWrap">
-        <button class="pill" id="mAuthBtn" data-v="login">로그인</button>
+        <!-- 로그인 복구가 끝나기 전에는 빈 자리표시 — [로그인] 이 잠깐 보였다 사라지지 않게 (authPaint) -->
+        <button class="pill authPending" id="mAuthBtn" aria-busy="true" aria-label="로그인 상태 확인 중"></button>
         <div class="acctMenu" id="acctMenu">
           <button type="button" id="menuMypage"><i>◧</i>내 정보</button>
+          <!-- 홈페이지 피드백 — 불편사항·추가요청 / 수정사항·버그리포트 (xp_panel.js) -->
+          <button type="button" id="menuFeedback"><i>✎</i>피드백 보내기</button>
+          <button type="button" id="menuJobReview" hidden><i>✓</i>직업 인증 심사</button>
+          <!-- 요금제 신청 심사 — 운영 계정만 (account/static/js/plan.js · 2026-10-03) -->
+          <button type="button" id="menuPlanReview" hidden><i>₩</i>요금제 신청 심사</button>
+          <!-- 데이터 API 키 — 비즈니스 요금제 · 베타 이후에만 (account/static/js/data_api.js · 2026-10-03) -->
+          <button type="button" id="menuDataApi" hidden><i>{}</i>데이터 API</button>
           <hr>
           <button type="button" class="out" id="menuLogout"><i>→</i>로그아웃</button>
+        </div>
+      </span>
+      <!-- 알림 — 닉네임 오른쪽. 로그인 전에는 숨긴다 (account/static/js/notify.js) -->
+      <span class="notiWrap" id="notiWrap" hidden>
+        <button type="button" class="notiBtn" id="notiBtn" aria-label="알림" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8.6a6 6 0 10-12 0c0 4.8-2 6.4-2 6.4h16s-2-1.6-2-6.4"/>
+            <path d="M10.2 18.6a2.1 2.1 0 003.6 0"/>
+          </svg>
+          <em class="notiDot" id="notiDot" hidden></em>
+        </button>
+        <div class="notiPanel" id="notiPanel">
+          <div class="notiHead">
+            <b>알림<span class="notiCount" id="notiCount" hidden></span></b>
+            <span class="notiHeadBtns">
+              <button type="button" class="notiTxtBtn" id="notiReadAll">모두 읽음</button>
+              <button type="button" class="notiTxtBtn" id="notiDelAll">모두 삭제</button>
+            </span>
+          </div>
+          <div class="notiList" id="notiList"></div>
+          <button type="button" class="notiSetLink" id="notiSetLink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>알림 설정</button>
         </div>
       </span>
     </div>
@@ -209,19 +243,24 @@
           </div>
 
           <div class="chatWrap">
+            <div class="imgAttach" id="mImgAttach" hidden></div>
             <div class="chatbar">
-              <button class="salmalBtn" id="smToggle" type="button" aria-pressed="false"><span class="lbl"><i class="ic">◑</i><span class="tx">살!말?</span></span></button>
+              <button class="salmalBtn" id="smToggle" type="button" aria-pressed="false">
+                <i class="thumb"></i><span class="tx">일반</span>
+              </button>
+              <i class="barSep"></i>
+              <button class="imgAddBtn" id="mImgAdd" type="button" aria-label="이미지 첨부"><i>+</i></button>
+              <input type="file" id="mImgFile" accept="image/*" multiple hidden>
               <div class="cfield">
                 <div class="ghostQ" id="ghostQ">
                   <span class="spark">✧</span>
                   <span class="qline" id="qline"></span>
                 </div>
-                <input type="text" id="mInput" autocomplete="off">
+                <input type="text" id="mInput" autocomplete="off" aria-label="FEEDiT 에게 물어보기">
               </div>
               <button class="sendBtn" id="mSend" aria-label="보내기">→</button>
             </div>
           </div>
-          <div class="chips" id="mChips"></div>
         </div>
       </div>
     </div>
@@ -233,6 +272,7 @@
         <button class="pill ghost" id="newChat" style="margin:26px auto 0;display:flex">↺ 새 대화</button>
       </div>
     </div>
+
   </section>
 
   <!-- ══════════════ 트렌드 분석 ══════════════ -->
@@ -249,9 +289,9 @@
           <div id="sEdit"></div>
         </div>
         <div class="sFoot onDark" id="sFoot">
-          <span class="av">혁</span>
+          <span class="av"></span>
           <!-- 이름 아래에 직위, 뱃지는 오른쪽 끝에 -->
-          <span class="who"><b>혁진</b><em id="sFootPlan">ADMIN · 서울</em></span>
+          <span class="who"><b></b><em id="sFootPlan"></em></span>
           <span class="sFootRk" id="sFootRk"></span>
         </div>
       </aside>
@@ -265,9 +305,9 @@
           </div>
           <!-- 내 피드에서는 제목 대신 프로필이 선다 -->
           <div class="trProfile" id="trProfile" hidden>
-            <div class="trProfAv" id="trProfAv">혁</div>
+            <div class="trProfAv" id="trProfAv"></div>
             <div class="trProfInfo">
-              <div class="trProfName"><b id="trProfNm">혁진</b><span id="trProfRk"></span></div>
+              <div class="trProfName"><b id="trProfNm"></b><span id="trProfRk"></span></div>
               <div class="trProfDivider"></div>
               <!-- 소개글. 비어 있으면 예시가 흐리게 서 있고, 연필을 누르면 그 자리에서 고친다 -->
               <div class="trBioRow">
@@ -284,7 +324,31 @@
               </div>
             </div>
           </div>
-          <span style="font-family:var(--num);font-size:10px;letter-spacing:.24em;color:var(--pink-2)">2026 · W33</span>
+          <!-- 오른쪽 위 — 공유 · 다운로드 아이콘이 맨 위, 그 아래 주차.
+               금주의 리포트와 EDIT 6탭(지표가 뜬 뒤)에서 선다 (trend/static/js/report_export.js · metric_export.js) -->
+          <div class="trHeadR">
+          <div class="trHeadActs" id="trHeadActs" hidden>
+            <button type="button" class="trAct" id="trShareBtn" title="이미지 공유" aria-label="이미지 공유">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="18" cy="5.5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="18.5" r="2.6"/>
+                <path d="M8.3 10.7l7.4-3.9M8.3 13.3l7.4 3.9"/>
+              </svg>
+            </button>
+            <div class="trMenuWrap">
+              <button type="button" class="trAct" id="trDownloadBtn" title="다운로드" aria-label="다운로드" aria-haspopup="menu" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 3v12"/><path d="M7.5 11l4.5 4.5 4.5-4.5"/><path d="M4.5 20h15"/>
+                </svg>
+              </button>
+              <div class="trMenu" id="trDlMenu" role="menu" hidden>
+                <button type="button" role="menuitem" data-dl-fmt="xlsx">엑셀 <em>.xlsx</em></button>
+                <button type="button" role="menuitem" data-dl-fmt="pdf">PDF <em>.pdf</em></button>
+                <button type="button" role="menuitem" data-dl-fmt="png">이미지 <em>.png</em></button>
+              </div>
+            </div>
+          </div>
+          <span class="trWeek" id="trWeek" style="font-family:var(--num);font-size:10px;letter-spacing:.24em;color:var(--pink-2)">2026.08 · W2</span>
+          </div>
         </div>
         <div class="trTabs" id="trTabs"></div>
 
@@ -295,10 +359,13 @@
             <div class="fsBar" id="fsBar">
               <span class="fsIc">◎</span>
               <input type="text" id="fsInput" autocomplete="off" spellcheck="false" placeholder="소재 · 아이템 · 스타일 · 브랜드로 검색">
-              <span class="fsGhost" id="fsGhost"><span class="fsQ" id="fsQ"><i>“<b>살로몬 XT-6</b>&nbsp;리세일 시세 아직 버텨?”</i></span></span>
+              <span class="fsGhost" id="fsGhost"><span class="fsQ" id="fsQ"></span></span>
               <button class="fsClear" id="fsClear" type="button" hidden="">×</button>
             </div>
-            <button class="fsMore" id="fsMore" type="button">세부 검색 <u>▾</u></button>
+            <div class="fsSide">
+              <button class="fsMore" id="fsMore" type="button">세부 검색 <u>▾</u></button>
+              <button class="fsMore fsDictBtn" type="button" data-dict-open>사전</button>
+            </div>
           </div>
           <div class="fsSug" id="fsSug" hidden=""></div>
           <div class="fsChips" id="fsChips" hidden=""></div>
@@ -315,7 +382,7 @@
 
 
   <section class="smHero">
-    <div class="liveNow"><span class="dot"></span>지금 <b id="liveCount">102</b>명이 함께 고민 중</div>
+    <div class="liveNow"><span class="dot"></span>최근 24시간 <b id="liveCount">–</b>명 참여</div>
     <h1 class="smStatement">살까, <em>말까</em>.</h1>
     <div class="smHeroRow">
       <p>리뷰보다 빠르고, 친구보다 솔직합니다.</p>
@@ -323,16 +390,27 @@
 
     <div class="smTabsRow">
       <div class="smTabs" id="smTabs">
-        <button class="on" data-tab="taste">내 취향</button>
-        <button data-tab="popular" class="">인기순</button>
+        <button class="on" data-tab="popular">인기순</button>
         <button data-tab="latest" class="">최신순</button>
+        <button data-tab="taste">내 취향</button>
         <button data-tab="closing">마감임박</button>
+        <button data-tab="mine">내 카드</button>
       </div>
       <button class="addItemBtn" id="addItemBtn">＋ 살까말까 물어보기</button>
     </div>
   </section>
 
   <section class="voteSection">
+    <!-- '내 취향' · '내 카드' 탭은 내가 누구인지 알아야 볼 수 있다.
+         로그인 전에는 카드를 감추고 여기에 안내를 띄운다. -->
+    <div class="smGate" id="smGate" hidden>
+      <b id="smGateTitle">내 취향 추천은 로그인해야 볼 수 있어요.</b>
+      <span id="smGateDesc">즐겨입는 스타일과 체형을 알아야 나와 맞는 고민을 골라 드릴 수 있습니다.</span>
+      <div class="smGateBtns">
+        <button type="button" data-v="login">로그인</button>
+        <button type="button" class="ghost" data-v="signup">회원가입</button>
+      </div>
+    </div>
     <div class="voteGrid" id="voteGrid"></div>
     <div class="pager" id="pager">
     <button class="pagerBtn" id="pagerPrev" disabled="" aria-label="이전 페이지">←</button>
@@ -363,8 +441,6 @@
           <span>Style</span>
         </div>
         <div class="stCats" id="stCats"></div>
-        <div class="stShow" id="stShow"></div>
-        <div class="stGrid" id="stGrid"></div>
       </div></section>
       <div style="height:clamp(60px,9vh,110px)"></div>
     </div>
@@ -377,15 +453,20 @@
       </div></section>
       <section><div class="mwrap"><div class="stAbout" id="stAbout"></div></div></section>
       <section class="mSec" style="padding-bottom:clamp(40px,6vh,70px)"><div class="mwrap">
-        <div class="mSecHead"><div><h2 style="font-size:clamp(20px,2.2vw,30px)">인플루언서 피드</h2></div>
-          <span>Who wears it</span></div>
+        <div class="mSecHead"><div><h2 style="font-size:clamp(20px,2.2vw,30px)">Virtual Fitting</h2></div></div>
         <div class="infFeed" id="stInf"></div>
       </div></section>
       <section style="padding-bottom:clamp(60px,9vh,110px)"><div class="mwrap">
-        <div class="mSecHead"><div><h2 style="font-size:clamp(20px,2.2vw,30px)">이 스타일의 아이템</h2></div>
-          <span id="stItemCount">Items</span></div>
+        <div class="mSecHead"><div><h2 style="font-size:clamp(20px,2.2vw,30px)">이 스타일의 아이템 <span class="stItemCount" id="stItemCount">Items</span></h2></div>
+          <div class="stSortWrap" id="stSort" data-sort="recommend">
+            <button type="button" class="stSortBtn" id="stSortBtn" aria-haspopup="listbox" aria-expanded="false">
+              <span id="stSortLabel">FEEDiT 추천순</span><i class="stSortCaret" aria-hidden="true"></i></button>
+            <div class="stSortMenu" id="stSortMenu" role="listbox" aria-label="아이템 정렬"></div>
+          </div></div>
+        <!-- 아이템 카테고리 (2026-09-23) — 전체/아우터/상의/하의/원피스/신발 -->
+        <div class="itCats" id="stItemCats"></div>
         <div class="itGrid" id="stItems"></div>
-        <div class="itMore" id="stMore">스크롤하면 더 불러옵니다</div>
+        <div class="itMoreWrap"><button type="button" class="itMore" id="stMore">더 보기</button></div>
       </div></section>
     </div>
   </section>
@@ -406,6 +487,35 @@
   <!-- 팝업은 뷰 밖에 둔다. 뷰에 남는 transform 이 position:fixed 기준을 바꾸기 때문. -->
 <div class="toast" id="toast"></div>
 
+<!-- ===== 전역 도움말 허브 — 모든 메인 화면에서 챗봇·분석·스타일·가이드로 연결 ===== -->
+<div class="assistHub" id="assistHub">
+  <div class="assistHint" id="assistHint" role="status">
+    <b>가이드가 필요하신가요?</b>
+    <span>여기를 눌러보세요!</span>
+    <i aria-hidden="true"></i>
+  </div>
+  <div class="assistMenu" id="assistMenu" aria-hidden="true">
+    <button type="button" class="assistAction" data-assist="chat">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v10H9l-4 3v-13Z"/></svg><span>챗봇</span>
+    </button>
+    <button type="button" class="assistAction" data-assist="trend">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 16 4-4 3 2 6-7"/><path d="M14 7h4v4"/></svg><span>트렌드 분석</span>
+    </button>
+    <button type="button" class="assistAction" data-assist="style">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.5a3 3 0 1 1 4 2.83V11l6 4v2H5v-2l7-4"/></svg><span>스타일</span>
+    </button>
+    <button type="button" class="assistAction" data-assist="guide">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.5 6 5-2 5 2 5-2v14l-5 2-5-2-5 2V6Z"/><path d="M9.5 4v14M14.5 6v14"/></svg><span>가이드라인</span>
+    </button>
+  </div>
+  <button class="chatFab assistToggle" id="chatFab" type="button"
+          aria-label="FEEDiT 도움말 메뉴 열기" aria-controls="assistMenu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 5.5C4 4.67157 4.67157 4 5.5 4H18.5C19.3284 4 20 4.67157 20 5.5V15.5C20 16.3284 19.3284 17 18.5 17H9L5 20.5V17H5.5C4.67157 17 4 16.3284 4 15.5V5.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+    </svg>
+  </button>
+</div>
+
 <!-- ===== 연관어 근거 팝오버 (트렌드 · 연관어 페이지) ===== -->
 <div class="assocPop" id="assocPop">
   <div class="apHead">
@@ -419,24 +529,48 @@
   <div class="apSrc" id="apSrc"></div>
 </div>
 
-<!-- ===== 세부 검색 — Style › 종류 › 브랜드 › 아이템명 ===== -->
-<div class="fsPopBg" id="fsPopBg">
+<!-- ===== 세부 검색 — STYLE · 종류 · 브랜드 · 아이템명 (서로 독립된 필터) =====
+     네 칸은 단계가 아니다. 아무 칸이나 골라도 되고, 겹쳐 고르면 교집합이다.
+     고른 것은 아래 칩으로 쌓이고, 칩의 ×를 누르면 **그 조건만** 빠진다.
+     후보와 개수는 /api/facets 가 준다 (commerce.product · product_term 기준).
+
+     ★ 칸 안의 버튼은 data-fv 다. data-v 를 쓰면 안 된다 —
+       app_shell/static/js/router.js 의 전역 클릭 위임이 [data-v] 를
+       화면 전환으로 읽어, 필터를 누르는 순간 화면이 통째로 비어 버린다. -->
+<div class="fsPopBg" id="fsPopBg" inert>
   <div class="fsPop" role="dialog" aria-label="세부 검색">
     <div class="fsPopHead">
       <div>
         <h3>세부 검색</h3>
-        <p>왼쪽부터 좁혀 갑니다. 고른 항목은 아래 칩으로 쌓이고, 지우면 그 아래 단계가 풀립니다.</p>
+        <p id="fsPopLead" hidden></p>
       </div>
       <button class="fsX" id="fsPopX" type="button">×</button>
     </div>
+    <div class="fsState" id="fsState"></div>
     <div class="fsCols">
-      <div class="fsCol" data-lv="0"><div class="fsColH">STYLE</div><div class="fsList" id="fsC0"><button type="button" data-lv="0" data-v="스트릿">스트릿<i>4</i></button><button type="button" data-lv="0" data-v="아메카지">아메카지<i>4</i></button><button type="button" data-lv="0" data-v="그런지">그런지<i>4</i></button><button type="button" data-lv="0" data-v="포멀">포멀<i>4</i></button><button type="button" data-lv="0" data-v="발레코어">발레코어<i>4</i></button><button type="button" data-lv="0" data-v="고프코어">고프코어<i>4</i></button><button type="button" data-lv="0" data-v="블록코어">블록코어<i>3</i></button><button type="button" data-lv="0" data-v="놈코어">놈코어<i>4</i></button></div></div>
-      <div class="fsCol" data-lv="1"><div class="fsColH">종류</div><div class="fsList" id="fsC1"><div class="hint">STYLE 을 먼저 고르세요.</div></div></div>
-      <div class="fsCol" data-lv="2"><div class="fsColH">브랜드</div><div class="fsList" id="fsC2"><div class="hint">종류를 먼저 고르세요.</div></div></div>
-      <div class="fsCol" data-lv="3"><div class="fsColH">아이템명</div><div class="fsList" id="fsC3"><div class="hint">브랜드를 먼저 고르세요.</div></div></div>
+      <div class="fsCol" data-lv="0">
+        <div class="fsColH">STYLE</div>
+        <div class="fsColFind"><input type="text" data-ax="스타일" autocomplete="off" spellcheck="false" placeholder="스타일 찾기" aria-label="스타일 찾기"></div>
+        <div class="fsList" id="fsC0"></div>
+      </div>
+      <div class="fsCol" data-lv="1">
+        <div class="fsColH">종류</div>
+        <div class="fsColFind"><input type="text" data-ax="종류" autocomplete="off" spellcheck="false" placeholder="종류 찾기" aria-label="종류 찾기"></div>
+        <div class="fsList" id="fsC1"></div>
+      </div>
+      <div class="fsCol" data-lv="2">
+        <div class="fsColH">브랜드</div>
+        <div class="fsColFind"><input type="text" data-ax="브랜드" autocomplete="off" spellcheck="false" placeholder="브랜드 찾기" aria-label="브랜드 찾기"></div>
+        <div class="fsList" id="fsC2"></div>
+      </div>
+      <div class="fsCol" data-lv="3">
+        <div class="fsColH">상품명</div>
+        <div class="fsColFind"><input type="text" data-ax="아이템명" autocomplete="off" spellcheck="false" placeholder="상품명 찾기" aria-label="상품명 찾기"></div>
+        <div class="fsList" id="fsC3"></div>
+      </div>
     </div>
     <div class="fsPopFoot">
-      <div class="fsPicked" id="fsPicked"><span class="ph2">아직 고른 조건이 없습니다.</span></div>
+      <div class="fsPicked" id="fsPicked"><span class="ph2">아직 고른 조건이 없습니다. 아무 칸이나 눌러 보세요.</span></div>
       <div class="fsActs">
         <button class="fsReset" id="fsReset" type="button">초기화</button>
         <button class="fsApply" id="fsApply" type="button">이 조건으로 분석 <u>→</u></button>
@@ -481,7 +615,7 @@
         </div>
         <div class="modalInfo">
           <h3 id="modalTitle"></h3>
-          <div class="modalMeta"><b id="modalBrand"></b> · <span id="modalPrice"></span></div>
+          <div class="modalMeta"><b id="modalBrand"></b> · <span id="modalPrice"></span><span id="modalStyle" hidden> · <span id="modalStyleName"></span></span></div>
         </div>
         <div class="modalPost">
           <span class="postName" id="modalNoteName"></span>
@@ -514,7 +648,7 @@
         <div class="commentsList" id="commentsList"></div>
         <div class="commentForm">
           <div class="commentInputRow">
-            <textarea id="commentInput" placeholder="댓글을 남겨보세요"></textarea>
+            <textarea id="commentInput" maxlength="1000" placeholder="댓글을 남겨보세요"></textarea>
             <button class="commentSend" id="commentSend" aria-label="등록">→</button>
           </div>
         </div>
@@ -549,23 +683,36 @@
           </div>
         </div>
 
-        <!-- 우측 : 상품명 / 브랜드 / 가격 / 사연 -->
+        <!-- 우측 : 상품명 / 브랜드 / 가격 · 스타일 / 사연 -->
         <div class="createRight">
           <div class="cField">
             <label class="cLabel">상품명</label>
             <input type="text" class="cInput" id="cTitle" placeholder="예: 스웨이드 블루종 (버건디)">
           </div>
 
-          <div class="cRow2">
-            <div class="cField">
-              <label class="cLabel">브랜드</label>
-              <select class="cInput" id="cBrand">
-                <option value="" disabled="" selected="">브랜드 선택</option>
-              <option value="ADIDAS">ADIDAS</option><option value="AMOMENTO">AMOMENTO</option><option value="ANDERSSON BELL">ANDERSSON BELL</option><option value="CARHARTT WIP">CARHARTT WIP</option><option value="CENTIME">CENTIME</option><option value="COS">COS</option><option value="GENTLE MONSTER">GENTLE MONSTER</option><option value="INSILENCE">INSILENCE</option><option value="KIJUN">KIJUN</option><option value="LE 17 SEPTEMBRE">LE 17 SEPTEMBRE</option><option value="LEMAIRE">LEMAIRE</option><option value="LEVI'S">LEVI'S</option><option value="MATIN KIM">MATIN KIM</option><option value="MSTA">MSTA</option><option value="MUSINSA STANDARD">MUSINSA STANDARD</option><option value="NAUTICA">NAUTICA</option><option value="NEW BALANCE">NEW BALANCE</option><option value="RANDOM IDENTITIES">RANDOM IDENTITIES</option><option value="SOLEW">SOLEW</option><option value="THISISNEVERTHAT">THISISNEVERTHAT</option><option value="UNIFORM BRIDGE">UNIFORM BRIDGE</option><option value="기타">기타 (직접 입력 예정)</option></select>
+          <div class="cField">
+            <label class="cLabel">브랜드</label>
+            <!-- 브랜드는 고르는 것이 아니라 찾는 것이다 —
+                 치는 동안 맞는 브랜드가 아래에 뜨고, 목록에 없으면 그대로 적어도 된다. -->
+            <div class="cCombo" id="cBrandCombo">
+              <input type="text" class="cInput" id="cBrand" placeholder="브랜드를 검색하세요"
+                     autocomplete="off" role="combobox" aria-autocomplete="list"
+                     aria-expanded="false" aria-controls="cBrandList">
+              <ul class="cComboList" id="cBrandList" role="listbox" hidden></ul>
             </div>
+          </div>
+
+          <div class="cRow2">
             <div class="cField">
               <label class="cLabel">가격</label>
               <input type="text" inputmode="numeric" class="cInput" id="cPrice" placeholder="숫자만 입력 (원)">
+            </div>
+            <div class="cField">
+              <label class="cLabel">스타일</label>
+              <!-- 핵심 스타일 10종 — 옵션은 vote_app.js 가 STYLES 배열로 채운다 -->
+              <select class="cInput" id="cStyle">
+                <option value="">스타일 선택</option>
+              </select>
             </div>
           </div>
 
@@ -586,10 +733,13 @@
 <!-- ===== 챗봇 팝업 (일반 모드 / 살말 모드 공용 — 프로필·대화 목록만 갈아입는다) ===== -->
 <div class="modalOverlay cpOverlay" id="cpOverlay">
   <div class="modalShell cpShell">
+    <!-- 입혀보기를 어디서 열지 — 이 대화 / 새 대화 (chat_popup.js cpChooseWhere). 팝업 전체 위에 뜬다.
+         cpBox 안에 두면 좁은 화면에서 상자가 옆으로 밀려 있을 때 함께 밀린다 — 바깥 껍데기에 단다 -->
+    <div class="cpWhere" id="cpWhere" hidden></div>
     <div class="cpBox" id="cpBox">
       <aside class="cpSide">
         <div class="cpProfile">
-          <div class="cpAv" id="cpAv"></div>
+          <div class="cpAv" id="cpAv" role="button" tabindex="0" title="일반 / 살말 모드 전환 (Tab)" aria-label="일반 / 살말 모드 전환" aria-keyshortcuts="Tab"></div>
           <div class="cpProfileText">
             <b id="cpName">일반 모드</b>
             <p id="cpDesc"></p>
@@ -598,15 +748,33 @@
         <button type="button" class="cpNewBtn" id="cpNewBtn"><i>＋</i>새로운 대화</button>
         <div class="cpListLabel">대화 목록</div>
         <div class="cpList" id="cpList"></div>
+        <button class="vtonQuick cpVtonQuick" id="cpVtonQuick" type="button"
+                aria-label="Virtual Try On 열기">
+          <span class="vtonQuickIcon" aria-hidden="true">✦</span>
+          <span class="vtonQuickCopy">
+            <b>Virtual Try On</b>
+            <small>지금 입혀보세요</small>
+          </span>
+          <span class="vtonQuickArrow" aria-hidden="true">→</span>
+        </button>
       </aside>
       <div class="cpMain">
         <div class="cpThreadWrap" id="cpThreadWrap">
-          <div class="cpEmpty"><p id="cpEmptyText">궁금한 걸 물어보세요.</p></div>
+          <div class="cpEmpty" id="cpEmpty"><p id="cpEmptyText">궁금한 걸 물어보세요.</p></div>
           <div class="thread cpThread" id="cpThread"></div>
         </div>
-        <div class="cpInputRow">
-          <textarea id="cpInput" rows="1" placeholder="궁금한 점을 질문해 주세요." autocomplete="off"></textarea>
-          <button class="cpSend" id="cpSend" aria-label="보내기">→</button>
+        <!-- 살말 모드에서 즐겨입는 스타일이 비어 있을 때만 뜬다(취향 = 판단의 35%) -->
+        <div class="cpTaste" id="cpTaste" hidden></div>
+        <div class="cpInputWrap">
+          <!-- 답하는 중에 들어온 다음 질문 (chat_popup.js cpQueue) -->
+          <div class="cpQueue" id="cpQueue" aria-live="polite" hidden></div>
+          <div class="imgAttach cpImgAttach" id="cpImgAttach" hidden></div>
+          <div class="cpInputRow">
+            <button type="button" class="imgAddBtn cpImgAddBtn" id="cpImgAdd" aria-label="이미지 첨부"><i>+</i></button>
+            <input type="file" id="cpImgFile" accept="image/*" multiple hidden>
+            <textarea id="cpInput" rows="1" placeholder="궁금한 점을 질문해 주세요." autocomplete="off"></textarea>
+            <button class="cpSend" id="cpSend" aria-label="보내기">→</button>
+          </div>
         </div>
       </div>
     </div>
@@ -622,7 +790,10 @@
       <div class="authEyebrow">Welcome back</div>
       <h1 class="authTitle">로그인</h1>
       <p class="authSub">취향이 맞는 사람들의 투표와 트렌드 리포트를 계속 이어보세요.</p>
-      <button class="googleBtn" id="googleLoginBtn" type="button"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10.1-2 13.7-5.3l-6.3-5.3C29.4 35.4 26.8 36 24 36c-5.2 0-9.6-3.1-11.3-7.6l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.3 5.3C40.9 36 44 30.6 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>Google로 계속하기</button>
+      <div class="socialRow">
+        <button class="googleBtn" id="googleLoginBtn" type="button"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10.1-2 13.7-5.3l-6.3-5.3C29.4 35.4 26.8 36 24 36c-5.2 0-9.6-3.1-11.3-7.6l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.3 5.3C40.9 36 44 30.6 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>Google로 계속하기</button>
+        <button class="googleBtn kakaoBtn" id="kakaoLoginBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#000" d="M12 3.2C6.6 3.2 2.2 6.6 2.2 10.8c0 2.7 1.8 5.1 4.5 6.4l-.9 3.4c-.1.3.3.6.5.4l4-2.7c.6.1 1.1.1 1.7.1 5.4 0 9.8-3.4 9.8-7.6S17.4 3.2 12 3.2z"/></svg>카카오로 계속하기</button>
+      </div>
       <div class="divider">또는 아이디로 로그인</div>
       <form class="authForm" id="loginForm" novalidate>
         <div class="cField">
@@ -646,19 +817,37 @@
     <div class="authWrap"><div class="authCard wide">
       <div class="authEyebrow">Join FEEDiT</div>
       <h1 class="authTitle">회원가입</h1>
-      <p class="authSub">30초면 가입 완료. 취향 태그를 등록하면 추천과 살!말? 세그먼트가 바로 맞춰집니다.</p>
-      <button class="googleBtn" id="googleSignupBtn" type="button"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10.1-2 13.7-5.3l-6.3-5.3C29.4 35.4 26.8 36 24 36c-5.2 0-9.6-3.1-11.3-7.6l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.3 5.3C40.9 36 44 30.6 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>Google로 계속하기</button>
-      <div class="divider">또는 아이디로 가입</div>
+      <p class="authSub">30초면 가입 완료. 가입 후 즐겨입는 스타일을 고르면 추천과 살!말? 세그먼트가 바로 맞춰집니다.</p>
+      <div class="socialRow">
+        <button class="googleBtn" id="googleSignupBtn" type="button"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10.1-2 13.7-5.3l-6.3-5.3C29.4 35.4 26.8 36 24 36c-5.2 0-9.6-3.1-11.3-7.6l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.3 5.3C40.9 36 44 30.6 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>Google로 계속하기</button>
+        <button class="googleBtn kakaoBtn" id="kakaoSignupBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#000" d="M12 3.2C6.6 3.2 2.2 6.6 2.2 10.8c0 2.7 1.8 5.1 4.5 6.4l-.9 3.4c-.1.3.3.6.5.4l4-2.7c.6.1 1.1.1 1.7.1 5.4 0 9.8-3.4 9.8-7.6S17.4 3.2 12 3.2z"/></svg>카카오로 계속하기</button>
+      </div>
+      <div class="divider" id="signupGoogleDivider">또는 아이디로 가입</div>
       <form class="authForm" id="signupForm" novalidate>
-        <div class="cField">
+        <p class="fieldMsg ok" id="signupGoogleNote" hidden>Google 계정으로 가입을 진행합니다. 아래 정보를 마저 입력해 주세요.</p>
+        <div class="cField" id="suIdField">
           <label class="cLabel" for="suId">아이디</label>
           <input class="cInput" id="suId" type="text" placeholder="영문/숫자 4~16자" autocomplete="username">
           <p class="fieldMsg" id="suIdMsg"></p>
+        </div>
+        <!-- 이메일 인증 — 아이디로 가입할 때만. 소셜 가입에서는 숨긴다 (account/static/js/profile.js) -->
+        <div class="cField" id="suEmailField">
+          <label class="cLabel" for="suEmail">이메일 <span>가입 확인용 인증번호를 보내드려요</span></label>
+          <div class="cInline">
+            <input class="cInput" id="suEmail" type="email" placeholder="you@example.com" autocomplete="email">
+            <button type="button" class="cSideBtn" id="suEmailSend">인증번호 받기</button>
+          </div>
+          <div class="cInline" id="suCodeRow" hidden>
+            <input class="cInput" id="suCode" type="text" inputmode="numeric" maxlength="6" placeholder="인증번호 6자리" autocomplete="one-time-code">
+            <button type="button" class="cSideBtn" id="suCodeCheck">확인</button>
+          </div>
+          <p class="fieldMsg" id="suEmailMsg"></p>
         </div>
         <div class="cField">
           <label class="cLabel" for="suNickname">닉네임</label>
           <input class="cInput" id="suNickname" type="text" placeholder="다른 사람에게 보여질 이름 (2~12자)" autocomplete="nickname">
         </div>
+        <div id="suPwBlock">
         <div class="cRow2">
           <div class="cField">
             <label class="cLabel" for="suPw">비밀번호</label>
@@ -670,27 +859,49 @@
           </div>
         </div>
         <p class="fieldMsg" id="suPwMsg"></p>
+        </div>
         <div class="cField">
           <label class="cLabel" for="suBirth">생년월일</label>
           <input class="cInput" id="suBirth" type="date">
         </div>
-        <!-- 체형 — 살!말? 세그먼트를 나눌 때 쓰인다 -->
-        <div class="cField">
-          <label class="cLabel">체형 <span>추천·살!말? 세그먼트에 쓰여요</span></label>
-          <div class="cPair">
-            <span class="cUnit"><input class="cInput" id="suHeight" type="number" inputmode="numeric"
-              min="120" max="220" placeholder="키"><em>cm</em></span>
-            <span class="cUnit"><input class="cInput" id="suWeight" type="number" inputmode="numeric"
-              min="30" max="200" placeholder="몸무게"><em>kg</em></span>
+        <div class="cBodyGenderRow">
+          <div class="cField">
+            <label class="cLabel">체형 <span>추천에 쓰여요</span></label>
+            <div class="cPair">
+              <span class="cUnit"><input class="cInput" id="suHeight" type="number" inputmode="numeric"
+                min="120" max="220" placeholder="키"><em>cm</em></span>
+              <span class="cUnit"><input class="cInput" id="suWeight" type="number" inputmode="numeric"
+                min="30" max="200" placeholder="몸무게"><em>kg</em></span>
+            </div>
+            <p class="fieldMsg" id="suBodyMsg"></p>
           </div>
-          <p class="fieldMsg" id="suBodyMsg"></p>
+          <fieldset class="cGenderField">
+            <legend class="cLabel">성별 <span>코디 추천에 쓰여요</span></legend>
+            <div class="cGenderChoices">
+              <label class="cGenderChoice"><input type="radio" name="suGender" value="FEMALE"><span aria-hidden="true">♀</span>Female</label>
+              <label class="cGenderChoice"><input type="radio" name="suGender" value="MALE"><span aria-hidden="true">♂</span>Male</label>
+            </div>
+          </fieldset>
         </div>
-        <div class="cField">
-          <label class="cLabel">즐겨입는 스타일 <span>복수 선택 가능</span></label>
-          <div class="chipRow" id="styleChips"></div>
-          <p class="styleHint">선택한 스타일은 추천과 살!말? 노출 세그먼트에 반영돼요.</p>
+        <!-- 직업 — 선택 입력. 서류를 올리면 관리자 승인 후 배지가 달린다 (account/static/js/job.js) -->
+        <div class="cField jobField">
+          <label class="cLabel" for="suJob">직업 <span>선택 · 승인 후 배지로 표시돼요</span></label>
+          <div class="jobRow">
+            <input type="file" id="suJobFile" accept="image/*,.pdf" hidden>
+            <button type="button" class="jobFileBtn" id="suJobFileBtn" disabled><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 6.5l-5.8 5.8a1.6 1.6 0 002.3 2.3l6-6a3.2 3.2 0 00-4.5-4.5l-6 6a4.8 4.8 0 006.8 6.8l5.2-5.2"/></svg><span>서류 첨부</span></button>
+            <select class="cInput" id="suJob"><option value="">직업 선택</option></select>
+          </div>
+          <div class="jobMajor" id="suMajorWrap" hidden>
+            <input class="cInput" id="suMajor" type="text" maxlength="20" placeholder="전공 (예: 패션디자인)">
+          </div>
+          <p class="fieldMsg" id="suJobMsg"></p>
         </div>
         <p class="fieldMsg err" id="signupErr" style="display:none;margin-top:14px"></p>
+        <div class="signupConsent">
+          <label><input type="checkbox" id="suAgeAgree"> <span><b>[필수]</b> 만 14세 이상입니다.</span></label>
+          <label><input type="checkbox" id="suTermsAgree"> <span><b>[필수]</b> <a href="/terms.html" target="_blank" rel="noopener">이용약관</a>에 동의합니다.</span></label>
+          <label><input type="checkbox" id="suPrivacyAgree"> <span><b>[필수]</b> <a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인했습니다.</span></label>
+        </div>
         <button type="submit" class="pill authSubmit">가입하기</button>
       </form>
       <p class="authFoot">이미 계정이 있으신가요? <a href="#" data-v="login">로그인</a></p>
@@ -709,7 +920,7 @@
           <div class="panel profilePanel">
             <!-- 아바타 자체를 눌러 바꾼다. 연필은 오른쪽 아래 모서리에 붙는다 -->
             <div class="avatarWrap">
-              <div class="avatarCircle" id="avatarInitial">혁</div>
+              <div class="avatarCircle" id="avatarInitial"></div>
               <button type="button" class="avatarEdit" id="avatarEditBtn" title="아이콘 변경" aria-label="아이콘 변경">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M4.5 16.5h3.2L18.9 5.3a1.9 1.9 0 0 0-2.7-2.7L5 13.8v2.7z"/>
@@ -726,47 +937,64 @@
               </div>
               <div class="xpBar"><i id="xpFill"></i></div>
               <div class="xpNext" id="xpNext"></div>
+              <!-- 오늘 · 이번 주 요약 — 누르면 경험치 창 (account/static/js/xp_panel.js) -->
+              <button type="button" class="xpMore" id="xpMore" hidden><span id="xpMoreText"></span><i aria-hidden="true">›</i></button>
             </div>
-            <div class="profileName" id="profileName">혁진</div>
+            <div class="profileName" id="profileName"></div>
             <div class="profileEmail" id="profileEmail">hyeokjin@feedit.co.kr</div>
             <button type="button" class="editProfileBtn" id="editProfileBtn">회원 정보 수정</button>
             <div class="statRow">
-              <button type="button" class="statCell" id="statSavedBtn"><div class="n" id="statSavedN">0</div><div class="l">저장</div></button>
+              <button type="button" class="statCell" id="statSavedBtn"><div class="n" id="statSavedN">0</div><div class="l">찜</div></button>
               <button type="button" class="statCell" id="statVotedBtn"><div class="n" id="statVotedN">0</div><div class="l">투표</div></button>
               <button type="button" class="statCell" id="statBadgeBtn"><div class="n" id="statBadgeN">0</div><div class="l">뱃지</div></button>
             </div>
             <button type="button" class="leaveBtn" id="leaveBtn">회원 탈퇴</button>
           </div>
           <div class="panel">
-            <div class="panelHead"><h3>필터</h3></div>
+            <div class="panelHead"><h3>즐겨입는 스타일</h3></div>
             <div class="formRow">
               <label>이런 스타일이 좋아요 <span>복수 선택</span></label>
               <div class="chipRow" id="styleWrap"></div>
             </div>
             <div class="formRow">
-              <label>추천 성향 <span>안정 ↔ 실험</span></label>
-              <input type="range" class="rangeSlider" id="myRange" min="0" max="100" value="38">
-              <div class="rangeLab"><span>무난템 · 국밥템</span><span>하이엔드 · 실험적</span></div>
+              <button type="button" class="pill styleSaveBtn" id="styleSaveBtn">저장</button>
             </div>
           </div>
         </div>
-        <div class="myCol">
-          <div class="panel">
-            <div class="panelHead"><h3>오늘의 추천</h3><span class="sub" id="recSub">매칭도 순</span></div>
-            <div class="recGrid" id="recGrid"></div>
-          </div>
-          <div class="panel">
-            <div class="panelHead"><h3>무난템 · 국밥템</h3><span class="sub">실패 확률이 낮은 기본 아이템</span></div>
-            <div class="recGrid" id="basicGrid"></div>
+        <div class="myCol myColMid">
+          <div class="panel" id="todayRecPanel">
+            <div class="panelHead"><h3>오늘의 추천</h3></div>
+            <!-- 스크롤은 이 안쪽 칸이 한다. 패널이 직접 스크롤하면 막대가
+                 패널의 둥근 모서리 위에 얹혀 모서리가 각져 보인다. -->
+            <div class="recScroll" id="recScroll">
+              <div class="recBlock">
+                <div class="recBlockHead" id="recMineTitle">내 취향 0개 기준</div>
+                <div class="recGrid" id="recMine"></div>
+              </div>
+              <div class="recBlock">
+                <div class="recBlockHead">지금 뜨는 코어 기준</div>
+                <div class="recGrid" id="recHot"></div>
+              </div>
+            </div>
           </div>
         </div>
+        <!-- 살!말? 피드백 자리 — 패널은 profile.js 의 fbPanelMount() 가 넣는다 -->
+        <div class="myCol myColFb" id="myColFb"></div>
       </div>
     </div>
   </section>
 
   <footer class="mFoot"><div class="mwrap footRow">
-    <span>FEEDiT — Fashion Trend Intelligence</span>
-    <span>2026 · Seoul</span>
+    <div class="footBrand">
+      <strong>FEEDıT</strong>
+      <span>Fashion Trend Intelligence<br>FEEDiT 프로젝트 팀 · 2026 Seoul</span>
+    </div>
+    <nav class="footNav" aria-label="서비스 안내">
+      <a href="/about.html">회사소개</a>
+      <a href="/terms.html">이용약관</a>
+      <a class="em" href="/privacy.html">개인정보처리방침</a>
+      <a href="/support.html">고객센터</a>
+    </nav>
   </div></footer>
 </main>
 
@@ -791,18 +1019,43 @@
           <input class="cInput" id="editPw2" type="password" placeholder="다시 입력" autocomplete="new-password">
         </div>
       </div>
+      <!-- 비밀번호 안내는 그 칸 바로 아래에 둔다 — 맨 아래 공용 자리에 뜨면
+           어느 칸 이야기인지 한눈에 이어지지 않는다 -->
+      <p class="fieldMsg err" id="editPwMsg" style="display:none;margin-top:8px"></p>
       <div class="cField" style="margin:16px 0 0">
         <label class="cLabel" for="editBirth">생년월일</label>
         <input class="cInput" id="editBirth" type="date">
       </div>
-      <div class="cField" style="margin:16px 0 0">
-        <label class="cLabel">체형</label>
-        <div class="cPair">
-          <span class="cUnit"><input class="cInput" id="editHeight" type="number" inputmode="numeric"
-            min="120" max="220" placeholder="키"><em>cm</em></span>
-          <span class="cUnit"><input class="cInput" id="editWeight" type="number" inputmode="numeric"
-            min="30" max="200" placeholder="몸무게"><em>kg</em></span>
+      <div class="cBodyGenderRow" style="margin:16px 0 0">
+        <div class="cField">
+          <label class="cLabel">체형</label>
+          <div class="cPair">
+            <span class="cUnit"><input class="cInput" id="editHeight" type="number" inputmode="numeric"
+              min="120" max="220" placeholder="키"><em>cm</em></span>
+            <span class="cUnit"><input class="cInput" id="editWeight" type="number" inputmode="numeric"
+              min="30" max="200" placeholder="몸무게"><em>kg</em></span>
+          </div>
         </div>
+        <fieldset class="cGenderField">
+          <legend class="cLabel">성별</legend>
+          <div class="cGenderChoices">
+            <label class="cGenderChoice"><input type="radio" name="editGender" value="FEMALE"><span aria-hidden="true">♀</span>Female</label>
+            <label class="cGenderChoice"><input type="radio" name="editGender" value="MALE"><span aria-hidden="true">♂</span>Male</label>
+          </div>
+        </fieldset>
+      </div>
+        <!-- 직업 — 선택 입력. 서류를 올리면 관리자 승인 후 배지가 달린다 (account/static/js/job.js) -->
+      <div class="cField jobField" style="margin:16px 0 0">
+        <label class="cLabel" for="editJob">직업 <span>선택 · 승인 후 배지로 표시돼요</span></label>
+        <div class="jobRow">
+          <input type="file" id="editJobFile" accept="image/*,.pdf" hidden>
+          <button type="button" class="jobFileBtn" id="editJobFileBtn" disabled><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 6.5l-5.8 5.8a1.6 1.6 0 002.3 2.3l6-6a3.2 3.2 0 00-4.5-4.5l-6 6a4.8 4.8 0 006.8 6.8l5.2-5.2"/></svg><span>서류 첨부</span></button>
+          <select class="cInput" id="editJob"><option value="">직업 선택</option></select>
+        </div>
+        <div class="jobMajor" id="editMajorWrap" hidden>
+          <input class="cInput" id="editMajor" type="text" maxlength="20" placeholder="전공 (예: 패션디자인)">
+        </div>
+        <p class="fieldMsg" id="editJobMsg"></p>
       </div>
       <p class="fieldMsg err" id="editModalErr" style="display:none;margin-top:12px"></p>
       <div class="modalBtns">
@@ -812,9 +1065,50 @@
     </form>
   </div>
 </div>
+<!-- 직업 인증 심사 — 관리자용 (목업) -->
+<div class="acctModal" id="jobReviewModal">
+  <div class="modalCard wide">
+    <div class="modalHead"><h3>직업 인증 심사</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p class="jrLead">올라온 서류를 확인하고 승인하면<br>그때 배지와 사이드바 직위가 바뀝니다.</p>
+    <div class="jrList" id="jobReviewList"></div>
+  </div>
+</div>
+<!-- 요금제 신청 심사 — 관리자용 (account/static/js/plan.js · 2026-10-03)
+     결제가 붙어 있지 않아 신청을 운영자가 확인해 승인한다. 승인하면 그 자리에서 요금제가 바뀐다. -->
+<div class="acctModal" id="planReviewModal">
+  <div class="modalCard wide">
+    <div class="modalHead"><h3>요금제 신청 심사</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p class="jrLead">결제는 아직 붙어 있지 않습니다.<br>신청 내용을 확인하고 승인하면 그때 요금제가 바뀌고, 신청자에게 알림이 갑니다.</p>
+    <div class="jrList" id="planReviewList"></div>
+  </div>
+</div>
+<!-- 데이터 API 키 관리 — 비즈니스 요금제 (account/static/js/data_api.js · 2026-10-03)
+     베타 동안에는 메뉴가 서지 않아 열 수 없다. 키 원문은 만든 직후 한 번만 보인다. -->
+<div class="acctModal" id="dataApiModal">
+  <div class="modalCard wide">
+    <div class="modalHead"><h3>데이터 API</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div id="dataApiBody"></div>
+  </div>
+</div>
+<!-- 요금제 신청 · 해지 — 사용자용 (pricing/static/js/pricing.js · 2026-10-03)
+     베타 동안에는 열리지 않는다. 요금제 카드를 누르면 지금처럼 '베타 기간' 안내만 뜬다. -->
+<div class="acctModal" id="planModal">
+  <div class="modalCard">
+    <div class="modalHead"><h3 id="planModalTitle">요금제 신청</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <form id="planForm" class="planForm" novalidate>
+      <div id="planFormBody"></div>
+      <p class="fieldMsg err" id="planFormErr" hidden></p>
+      <div class="modalBtns" id="planFormBtns"></div>
+    </form>
+  </div>
+</div>
 <div class="acctModal" id="savedModal">
   <div class="modalCard wide">
-    <div class="modalHead"><h3>저장한 아이템</h3>
+    <div class="modalHead"><h3>찜한 아이템</h3>
       <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="itemGrid" id="savedGrid"></div>
   </div>
@@ -839,6 +1133,40 @@
     <div class="bgGrid" id="badgeGrid"></div>
   </div>
 </div>
+<!-- 경험치 — 오늘 · 이번 주 내역과 레벨 구간 (account/static/js/xp_panel.js 가 채운다) -->
+<div class="acctModal" id="xpModal">
+  <div class="modalCard xpCard">
+    <div class="modalHead"><h3>경험치</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div id="xpDetail"></div>
+  </div>
+</div>
+<!-- 홈페이지 피드백 — 이번 주 첫 피드백에 경험치 +25 (account/static/js/xp_panel.js) -->
+<div class="acctModal" id="siteFbModal">
+  <div class="modalCard sfCard">
+    <div class="modalHead"><h3>홈페이지 피드백</h3>
+      <button type="button" class="modalClose" data-close-modal aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p class="sfLead">불편한 점이나 고쳐야 할 곳을 알려 주세요.<br>
+      이번 주 첫 피드백에는 25 XP 를 드려요.</p>
+    <div class="sfKinds" id="sfKinds" role="radiogroup" aria-label="피드백 유형">
+      <button type="button" class="sfKind on" role="radio" aria-checked="true" data-kind="REQUEST">
+        <b>불편사항 · 추가요청</b><span>이런 게 있으면 좋겠어요</span></button>
+      <button type="button" class="sfKind" role="radio" aria-checked="false" data-kind="BUG">
+        <b>수정사항 · 버그리포트</b><span>화면이 이상하거나 동작하지 않아요</span></button>
+    </div>
+    <textarea class="cInput sfText" id="sfText" maxlength="1000" aria-label="피드백 내용"></textarea>
+    <div class="sfMeta"><span id="sfPage"></span><span><b id="sfCount">0</b> / 1000</span></div>
+    <p class="fieldMsg" id="sfMsg"></p>
+    <div class="modalBtns">
+      <button type="button" class="pill ghost" data-close-modal>닫기</button>
+      <button type="button" class="pill" id="sfSend">보내기</button>
+    </div>
+    <div class="sfHist">
+      <div class="sfHistHead">내가 남긴 피드백</div>
+      <div id="sfList"></div>
+    </div>
+  </div>
+</div>
 <div class="acctModal" id="avatarModal">
   <div class="modalCard">
     <div class="modalHead"><h3>아이콘 변경</h3>
@@ -856,6 +1184,77 @@
       <button type="button" class="pill ghost" data-close-modal>남아 있을게요</button>
       <button type="button" class="pill danger" id="leaveConfirm">탈퇴하겠습니다</button>
     </div>
+  </div>
+</div>
+
+<!-- ── 트렌드 분석 — 로그인 전 진입 시, 내 피드 화면은 뒤에 그대로 두고
+     흐릿하게 가린 뒤 이 위에 로그인 안내를 띄운다 (곧장 로그인 화면으로
+     넘겨버리면 탭을 눌렀는데 다른 화면으로 튕기는 느낌이라 이질감이 있었다) ── -->
+<div class="acctModal" id="trendGateModal" data-lock="1" role="dialog" aria-modal="true">
+  <div class="modalCard" style="width:min(360px,92vw);text-align:center">
+    <p style="font-size:14.5px;line-height:1.7;color:var(--pink-1);margin:2px 0 22px">
+      트렌드 분석에는 로그인이 필요합니다.<br>로그인 후 사용하세요.</p>
+    <div class="modalBtns">
+      <button type="button" class="pill ghost" id="trendGateCancel">취소</button>
+      <button type="button" class="pill" id="trendGateLogin">로그인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── '이 스타일 더 보기' — 스타일 상세로 이동하지 않고 Virtual Fitting 카드만 보여준다 ── -->
+<div class="acctModal" id="styleFitModal">
+  <div class="modalCard wide">
+    <div class="modalHead"><h3 id="stFitTitle">Virtual Fitting</h3>
+      <button type="button" class="modalClose" id="stFitClose" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="infFeed" id="stFitGrid"></div>
+  </div>
+</div>
+
+<!-- ── 성별 고르기 (알림 '성별을 알려 주세요' 에서 연다 · notify.js openGenderAsk) ── -->
+<div class="acctModal genderAsk" id="genderAskModal" role="dialog" aria-modal="true" aria-labelledby="genderAskTitle">
+  <div class="modalCard">
+    <div class="modalHead"><h3 id="genderAskTitle">성별을 알려 주세요</h3>
+      <button type="button" class="modalClose" data-gender-close aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p class="genderAskLead">코디 입혀보기 모델과 추천 코디를 성별에 맞춰 드려요.<br>마이페이지 &gt; 프로필 수정에서 언제든 바꿀 수 있어요.</p>
+    <div class="genderAskChoices">
+      <button type="button" class="genderAskBtn g-woman" data-gender="FEMALE"><span aria-hidden="true">♀</span><b>Female</b><em>여성</em></button>
+      <button type="button" class="genderAskBtn g-man" data-gender="MALE"><span aria-hidden="true">♂</span><b>Male</b><em>남성</em></button>
+    </div>
+    <p class="fieldMsg" id="genderAskMsg" role="alert"></p>
+  </div>
+</div>
+
+<!-- ── 알림 설정 (헤더 닉네임 메뉴 · 알림 패널에서 연다) ── -->
+<div class="acctModal" id="notiSetModal">
+  <div class="modalCard">
+    <div class="modalHead"><h3>알림 설정</h3>
+      <button type="button" class="modalClose" id="notiSetClose" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+
+    <label class="notiSetRow notiSetAll">
+      <span class="notiSetName"><b>전체 알림</b>
+        <em>끄면 아래 알림이 하나도 오지 않아요.</em></span>
+      <input type="checkbox" class="notiSw" id="notiSetAll">
+      <i class="notiSwUi" aria-hidden="true"></i>
+    </label>
+
+    <div class="notiSetKinds" id="notiSetKinds"></div>
+
+    <p class="fieldMsg" id="notiSetMsg"></p>
+    <div class="modalBtns">
+      <button type="button" class="pill ghost" id="notiSetCancel">닫기</button>
+      <button type="button" class="pill" id="notiSetSave">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 가입 완료 후 — 즐겨입는 스타일 선택 팝업 (홈 화면을 배경으로 뜬다) ── -->
+<div class="acctModal" id="styleSelectModal">
+  <div class="modalCard wide">
+    <div class="modalHead"><h3>즐겨입는 스타일을 골라주세요</h3>
+      <button type="button" class="modalClose" id="styleSelectClose" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="styleSelectGrid" id="styleSelectGrid"></div>
+    <p class="styleHint">선택한 스타일은 추천과 살!말? 노출 세그먼트에 반영돼요.</p>
+    <button type="button" class="pill styleSelectSave" id="styleSelectSave">저장</button>
   </div>
 </div>
 

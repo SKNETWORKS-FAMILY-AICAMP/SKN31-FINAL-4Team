@@ -1,0 +1,575 @@
+[
+  {
+    "model": "C:\\SKN31-FINAL-4Team\\backend\\analysis\\semantic_tokenizer\\data\\sentencepiece\\feedit_spm_8k_v2.model",
+    "avg_piece_count": 3.5,
+    "max_piece_count": 11,
+    "min_piece_count": 1,
+    "rows": [
+      {
+        "text": "다운타운 그래픽 티 - 블랙",
+        "piece_count": 7,
+        "pieces": [
+          "▁다운",
+          "타",
+          "운",
+          "▁그래픽",
+          "▁티",
+          "▁-",
+          "▁블랙"
+        ]
+      },
+      {
+        "text": "파리 스탠다드 코튼 셔츠",
+        "piece_count": 1,
+        "pieces": [
+          "▁파리▁스탠다드▁코튼▁셔츠"
+        ]
+      },
+      {
+        "text": "시티 레저 벨티드 유틸리티 쇼츠",
+        "piece_count": 6,
+        "pieces": [
+          "▁시티",
+          "▁레저",
+          "▁벨티",
+          "드",
+          "▁유틸리티",
+          "▁쇼츠"
+        ]
+      },
+      {
+        "text": "플랫폼 도트 스니커즈 블랙",
+        "piece_count": 4,
+        "pieces": [
+          "▁플랫폼",
+          "▁도트",
+          "▁스니커즈",
+          "▁블랙"
+        ]
+      },
+      {
+        "text": "플랩 코튼 자켓",
+        "piece_count": 3,
+        "pieces": [
+          "▁플랩",
+          "▁코튼",
+          "▁자켓"
+        ]
+      },
+      {
+        "text": "우먼즈 에센셜 부츠 컷 데님 팬츠",
+        "piece_count": 2,
+        "pieces": [
+          "▁우먼",
+          "즈▁에센셜▁부츠▁컷▁데님▁팬츠"
+        ]
+      },
+      {
+        "text": "로프 와이드 데님팬츠",
+        "piece_count": 3,
+        "pieces": [
+          "▁로",
+          "프",
+          "▁와이드▁데님팬츠"
+        ]
+      },
+      {
+        "text": "반소매 셔츠",
+        "piece_count": 1,
+        "pieces": [
+          "▁반소매▁셔츠"
+        ]
+      },
+      {
+        "text": "MUSE STRIPE POLO KNIT MELANGE GRAY",
+        "piece_count": 6,
+        "pieces": [
+          "▁MUSE▁S",
+          "TRIPE▁PO",
+          "LO",
+          "▁KNIT",
+          "▁",
+          "MELANGE▁GRAY"
+        ]
+      },
+      {
+        "text": "DOODLE HEART HALF T WHITE GREYISH BLUE",
+        "piece_count": 11,
+        "pieces": [
+          "▁D",
+          "OOD",
+          "LE",
+          "▁H",
+          "EART",
+          "▁HALF",
+          "▁T",
+          "▁WHITE",
+          "▁GREY",
+          "ISH",
+          "▁BLUE"
+        ]
+      },
+      {
+        "text": "CUT OFF SLUB LONG SLEEVE CHARCOAL",
+        "piece_count": 6,
+        "pieces": [
+          "▁CUT",
+          "▁",
+          "OFF",
+          "▁S",
+          "LUB▁LONG▁SLEEVE",
+          "▁CHARCOAL"
+        ]
+      },
+      {
+        "text": "V거셋 포켓 데님 맨투맨",
+        "piece_count": 5,
+        "pieces": [
+          "▁V",
+          "거셋",
+          "▁포켓",
+          "▁데님",
+          "▁맨투맨"
+        ]
+      },
+      {
+        "text": "COOLMAX 반팔 티셔츠",
+        "piece_count": 2,
+        "pieces": [
+          "▁COOLMAX",
+          "▁반팔▁티셔츠"
+        ]
+      },
+      {
+        "text": "빈티지플라워새틴롱SK",
+        "piece_count": 5,
+        "pieces": [
+          "▁빈티지플라워",
+          "새",
+          "틴",
+          "롱",
+          "SK"
+        ]
+      },
+      {
+        "text": "히든 밴딩 슬랙스",
+        "piece_count": 2,
+        "pieces": [
+          "▁히든▁밴딩",
+          "▁슬랙스"
+        ]
+      },
+      {
+        "text": "레더 라이더스 재킷",
+        "piece_count": 1,
+        "pieces": [
+          "▁레더▁라이더스▁재킷"
+        ]
+      },
+      {
+        "text": "크로셰 니트",
+        "piece_count": 2,
+        "pieces": [
+          "▁크로셰",
+          "▁니트"
+        ]
+      },
+      {
+        "text": "맥시 원피스",
+        "piece_count": 1,
+        "pieces": [
+          "▁맥시▁원피스"
+        ]
+      },
+      {
+        "text": "미니 원피스",
+        "piece_count": 1,
+        "pieces": [
+          "▁미니▁원피스"
+        ]
+      },
+      {
+        "text": "조거 팬츠",
+        "piece_count": 1,
+        "pieces": [
+          "▁조거▁팬츠"
+        ]
+      }
+    ]
+  },
+  {
+    "model": "C:\\SKN31-FINAL-4Team\\backend\\analysis\\semantic_tokenizer\\data\\sentencepiece\\feedit_spm_16k_v2.model",
+    "avg_piece_count": 3,
+    "max_piece_count": 10,
+    "min_piece_count": 1,
+    "rows": [
+      {
+        "text": "다운타운 그래픽 티 - 블랙",
+        "piece_count": 7,
+        "pieces": [
+          "▁다운",
+          "타",
+          "운",
+          "▁그래픽",
+          "▁티",
+          "▁-",
+          "▁블랙"
+        ]
+      },
+      {
+        "text": "파리 스탠다드 코튼 셔츠",
+        "piece_count": 1,
+        "pieces": [
+          "▁파리▁스탠다드▁코튼▁셔츠"
+        ]
+      },
+      {
+        "text": "시티 레저 벨티드 유틸리티 쇼츠",
+        "piece_count": 6,
+        "pieces": [
+          "▁시티",
+          "▁레저",
+          "▁벨티",
+          "드",
+          "▁유틸리티",
+          "▁쇼츠"
+        ]
+      },
+      {
+        "text": "플랫폼 도트 스니커즈 블랙",
+        "piece_count": 3,
+        "pieces": [
+          "▁플랫폼",
+          "▁도트",
+          "▁스니커즈▁블랙"
+        ]
+      },
+      {
+        "text": "플랩 코튼 자켓",
+        "piece_count": 2,
+        "pieces": [
+          "▁플랩",
+          "▁코튼▁자켓"
+        ]
+      },
+      {
+        "text": "우먼즈 에센셜 부츠 컷 데님 팬츠",
+        "piece_count": 2,
+        "pieces": [
+          "▁우먼",
+          "즈▁에센셜▁부츠▁컷▁데님▁팬츠"
+        ]
+      },
+      {
+        "text": "로프 와이드 데님팬츠",
+        "piece_count": 3,
+        "pieces": [
+          "▁로",
+          "프",
+          "▁와이드▁데님팬츠"
+        ]
+      },
+      {
+        "text": "반소매 셔츠",
+        "piece_count": 1,
+        "pieces": [
+          "▁반소매▁셔츠"
+        ]
+      },
+      {
+        "text": "MUSE STRIPE POLO KNIT MELANGE GRAY",
+        "piece_count": 5,
+        "pieces": [
+          "▁MUSE▁S",
+          "TRIPE▁PO",
+          "LO",
+          "▁KNIT",
+          "▁MELANGE▁GRAY"
+        ]
+      },
+      {
+        "text": "DOODLE HEART HALF T WHITE GREYISH BLUE",
+        "piece_count": 10,
+        "pieces": [
+          "▁D",
+          "OOD",
+          "LE",
+          "▁H",
+          "EART",
+          "▁HALF▁T",
+          "▁WHITE",
+          "▁GREY",
+          "ISH",
+          "▁BLUE"
+        ]
+      },
+      {
+        "text": "CUT OFF SLUB LONG SLEEVE CHARCOAL",
+        "piece_count": 4,
+        "pieces": [
+          "▁CUT",
+          "▁OFF▁S",
+          "LUB▁LONG▁SLEEVE",
+          "▁CHARCOAL"
+        ]
+      },
+      {
+        "text": "V거셋 포켓 데님 맨투맨",
+        "piece_count": 4,
+        "pieces": [
+          "▁V",
+          "거셋",
+          "▁포켓▁데님",
+          "▁맨투맨"
+        ]
+      },
+      {
+        "text": "COOLMAX 반팔 티셔츠",
+        "piece_count": 2,
+        "pieces": [
+          "▁COOLMAX",
+          "▁반팔▁티셔츠"
+        ]
+      },
+      {
+        "text": "빈티지플라워새틴롱SK",
+        "piece_count": 3,
+        "pieces": [
+          "▁빈티지플라워",
+          "새틴롱",
+          "SK"
+        ]
+      },
+      {
+        "text": "히든 밴딩 슬랙스",
+        "piece_count": 1,
+        "pieces": [
+          "▁히든▁밴딩▁슬랙스"
+        ]
+      },
+      {
+        "text": "레더 라이더스 재킷",
+        "piece_count": 1,
+        "pieces": [
+          "▁레더▁라이더스▁재킷"
+        ]
+      },
+      {
+        "text": "크로셰 니트",
+        "piece_count": 2,
+        "pieces": [
+          "▁크로셰",
+          "▁니트"
+        ]
+      },
+      {
+        "text": "맥시 원피스",
+        "piece_count": 1,
+        "pieces": [
+          "▁맥시▁원피스"
+        ]
+      },
+      {
+        "text": "미니 원피스",
+        "piece_count": 1,
+        "pieces": [
+          "▁미니▁원피스"
+        ]
+      },
+      {
+        "text": "조거 팬츠",
+        "piece_count": 1,
+        "pieces": [
+          "▁조거▁팬츠"
+        ]
+      }
+    ]
+  },
+  {
+    "model": "C:\\SKN31-FINAL-4Team\\backend\\analysis\\semantic_tokenizer\\data\\sentencepiece\\feedit_spm_24k_v2.model",
+    "avg_piece_count": 2.95,
+    "max_piece_count": 9,
+    "min_piece_count": 1,
+    "rows": [
+      {
+        "text": "다운타운 그래픽 티 - 블랙",
+        "piece_count": 7,
+        "pieces": [
+          "▁다운",
+          "타",
+          "운",
+          "▁그래픽",
+          "▁티",
+          "▁-",
+          "▁블랙"
+        ]
+      },
+      {
+        "text": "파리 스탠다드 코튼 셔츠",
+        "piece_count": 1,
+        "pieces": [
+          "▁파리▁스탠다드▁코튼▁셔츠"
+        ]
+      },
+      {
+        "text": "시티 레저 벨티드 유틸리티 쇼츠",
+        "piece_count": 6,
+        "pieces": [
+          "▁시티",
+          "▁레저",
+          "▁벨티",
+          "드",
+          "▁유틸리티",
+          "▁쇼츠"
+        ]
+      },
+      {
+        "text": "플랫폼 도트 스니커즈 블랙",
+        "piece_count": 3,
+        "pieces": [
+          "▁플랫폼",
+          "▁도트",
+          "▁스니커즈▁블랙"
+        ]
+      },
+      {
+        "text": "플랩 코튼 자켓",
+        "piece_count": 2,
+        "pieces": [
+          "▁플랩",
+          "▁코튼▁자켓"
+        ]
+      },
+      {
+        "text": "우먼즈 에센셜 부츠 컷 데님 팬츠",
+        "piece_count": 2,
+        "pieces": [
+          "▁우먼",
+          "즈▁에센셜▁부츠▁컷▁데님▁팬츠"
+        ]
+      },
+      {
+        "text": "로프 와이드 데님팬츠",
+        "piece_count": 3,
+        "pieces": [
+          "▁로",
+          "프",
+          "▁와이드▁데님팬츠"
+        ]
+      },
+      {
+        "text": "반소매 셔츠",
+        "piece_count": 1,
+        "pieces": [
+          "▁반소매▁셔츠"
+        ]
+      },
+      {
+        "text": "MUSE STRIPE POLO KNIT MELANGE GRAY",
+        "piece_count": 5,
+        "pieces": [
+          "▁MUSE▁S",
+          "TRIPE▁PO",
+          "LO",
+          "▁KNIT",
+          "▁MELANGE▁GRAY"
+        ]
+      },
+      {
+        "text": "DOODLE HEART HALF T WHITE GREYISH BLUE",
+        "piece_count": 9,
+        "pieces": [
+          "▁D",
+          "OOD",
+          "LE▁HE",
+          "ART",
+          "▁HALF▁T",
+          "▁WHITE",
+          "▁GREY",
+          "ISH",
+          "▁BLUE"
+        ]
+      },
+      {
+        "text": "CUT OFF SLUB LONG SLEEVE CHARCOAL",
+        "piece_count": 4,
+        "pieces": [
+          "▁CUT",
+          "▁OFF▁S",
+          "LUB▁LONG▁SLEEVE",
+          "▁CHARCOAL"
+        ]
+      },
+      {
+        "text": "V거셋 포켓 데님 맨투맨",
+        "piece_count": 4,
+        "pieces": [
+          "▁V",
+          "거셋",
+          "▁포켓▁데님",
+          "▁맨투맨"
+        ]
+      },
+      {
+        "text": "COOLMAX 반팔 티셔츠",
+        "piece_count": 2,
+        "pieces": [
+          "▁COOLMAX",
+          "▁반팔▁티셔츠"
+        ]
+      },
+      {
+        "text": "빈티지플라워새틴롱SK",
+        "piece_count": 3,
+        "pieces": [
+          "▁빈티지플라워",
+          "새틴롱",
+          "SK"
+        ]
+      },
+      {
+        "text": "히든 밴딩 슬랙스",
+        "piece_count": 1,
+        "pieces": [
+          "▁히든▁밴딩▁슬랙스"
+        ]
+      },
+      {
+        "text": "레더 라이더스 재킷",
+        "piece_count": 1,
+        "pieces": [
+          "▁레더▁라이더스▁재킷"
+        ]
+      },
+      {
+        "text": "크로셰 니트",
+        "piece_count": 2,
+        "pieces": [
+          "▁크로셰",
+          "▁니트"
+        ]
+      },
+      {
+        "text": "맥시 원피스",
+        "piece_count": 1,
+        "pieces": [
+          "▁맥시▁원피스"
+        ]
+      },
+      {
+        "text": "미니 원피스",
+        "piece_count": 1,
+        "pieces": [
+          "▁미니▁원피스"
+        ]
+      },
+      {
+        "text": "조거 팬츠",
+        "piece_count": 1,
+        "pieces": [
+          "▁조거▁팬츠"
+        ]
+      }
+    ]
+  }
+]

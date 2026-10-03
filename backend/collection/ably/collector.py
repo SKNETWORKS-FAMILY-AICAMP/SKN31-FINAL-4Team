@@ -66,7 +66,10 @@ class AblyCollector:
         request_params = self._build_request_params(params)
         # Ranking collection includes reviews by default.  Explicit False is
         # still supported for maintenance/backfill jobs that only need products.
-        collect_reviews = bool(params.get("collect_reviews", True))
+        collect_reviews = params.get("collect_reviews", True)
+        if isinstance(collect_reviews, str):
+            collect_reviews = collect_reviews.strip().lower() not in {"false", "0", "no", "off", ""}
+        collect_reviews = bool(collect_reviews)
         review_limit = self._review_limit(
             params.get("review_limit", DEFAULT_REVIEW_LIMIT)
         )

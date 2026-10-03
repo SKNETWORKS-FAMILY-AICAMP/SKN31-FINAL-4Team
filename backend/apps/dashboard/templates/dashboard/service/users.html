@@ -1,0 +1,11 @@
+{% extends "dashboard/base.html" %}{% load static humanize %}
+{% block title %}사용자 현황 | FEEDIT Admin{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'dashboard/css/operations.css' %}">{% endblock %}
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_service.html" %}{% endblock %}
+{% block content %}
+<div class="op-head"><div><p class="op-eyebrow">PRIVACY-SAFE USERS</p><h2 class="op-title">사용자 현황</h2><p class="op-sub">닉네임과 내부 운영 지표만 표시합니다. 이메일·성별·생년·체형·프로필 메타데이터는 조회하지 않습니다.</p></div></div>
+<form class="op-filter"><input name="q" value="{{ search_query }}" placeholder="닉네임 또는 내부 번호"><button>검색</button></form>
+<div class="op-table-wrap"><table class="op-table"><thead><tr><th>내부 번호</th><th>닉네임</th><th>가입</th><th>최근 활동</th><th>이벤트</th><th>투표</th><th>게시글</th><th>찜</th></tr></thead><tbody>
+{% for row in rows %}<tr><td class="mono">USER-{{ row.id }}</td><td><b>{{ row.nickname|default:"닉네임 없음" }}</b></td><td>{{ row.created_at|date:"Y-m-d" }}</td><td>{{ row.last_activity|date:"Y-m-d H:i"|default:"—" }}</td><td>{{ row.event_count|intcomma }}</td><td>{{ row.vote_count|intcomma }}</td><td>{{ row.card_count|intcomma }}</td><td>{{ row.saved_count|intcomma }}</td></tr>{% empty %}<tr><td colspan="8">사용자가 없습니다.</td></tr>{% endfor %}
+</tbody></table></div>{% include "dashboard/operations/_pagination.html" %}
+{% endblock %}

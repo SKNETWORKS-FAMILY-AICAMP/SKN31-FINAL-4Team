@@ -1,0 +1,197 @@
+/* 알림 — 헤더 종 아이콘 · 패널 · 설정 모달의 스위치.
+   색은 전부 tokens.css 의 변수를 쓴다 (새 색을 만들지 않는다). */
+
+.notiWrap{position:relative;display:inline-flex;align-items:center;margin-left:2px}
+/* 점이 종 밖으로 나가도 잘리지 않게 */
+.notiBtn{overflow:visible}
+
+.notiBtn{
+  position:relative;width:32px;height:32px;border:0;background:none;padding:0;
+  display:grid;place-items:center;border-radius:9px;color:var(--pink-1);
+  transition:color .24s var(--ease),background .24s var(--ease);
+}
+.notiBtn svg{width:19px;height:19px}
+.notiBtn:hover{color:var(--pink-0);background:rgba(10,10,10,.05)}
+
+/* 안 읽은 알림이 있을 때만 뜨는 점 — 숫자를 적지 않는다.
+   몇 건인지는 패널을 열면 보인다. 헤더에 숫자가 붙으면 읽어야 할 빚처럼 보인다. */
+.notiDot{
+  position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;
+  background:var(--coral);border:1.5px solid var(--paper);
+}
+
+.notiPanel{
+  --nt-ink:#1c1a17;--nt-sub:#8a8781;--nt-line:#efebe6;--nt-soft:#f7f5f2;--nt-acc:var(--coral,#ff6b4a);
+  position:absolute;right:-6px;top:calc(100% + 12px);z-index:30;width:min(380px,92vw);
+  background:#fff;border:1px solid rgba(28,26,23,.06);border-radius:18px;padding:0;overflow:hidden;
+  box-shadow:0 2px 6px rgba(28,26,23,.04),0 28px 64px -24px rgba(28,26,23,.32);
+  opacity:0;visibility:hidden;transform:translateY(-6px) scale(.985);transform-origin:top right;
+  transition:opacity .22s var(--ease),transform .26s var(--ease),visibility .22s;
+}
+.notiPanel.on{opacity:1;visibility:visible;transform:none}
+
+/* 머리 — 제목 · 안 읽음 수 · 모두 읽음/삭제 */
+.notiHead{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 14px;
+  border-bottom:1px solid var(--nt-line)}
+.notiHead b{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:700;letter-spacing:-.03em;color:var(--nt-ink)}
+.notiCount{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--nt-acc);color:#fff;
+  font-size:11px;font-weight:600;line-height:20px;text-align:center;font-variant-numeric:tabular-nums}
+.notiCount[hidden]{display:none}
+.notiHeadBtns{display:inline-flex;align-items:center;gap:2px}
+.notiTxtBtn{border:0;background:none;padding:5px 8px;border-radius:8px;font-size:12px;color:var(--nt-sub);
+  transition:color .2s var(--ease),background .2s var(--ease)}
+.notiTxtBtn:hover{color:var(--nt-ink);background:var(--nt-soft)}
+
+/* 높이는 notify.js 의 fitList() 가 여섯 번째 알림 위치를 재서 인라인으로 박는다 */
+.notiList{overflow:auto;padding:8px;scrollbar-width:thin}
+.notiList.scrolls{max-height:min(440px,58vh)}
+
+/* 비었을 때 */
+.notiEmpty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:34px 24px 38px;text-align:center}
+.notiEmpty i{width:44px;height:44px;border-radius:50%;background:var(--nt-soft);color:var(--nt-sub);
+  display:grid;place-items:center;margin-bottom:6px}
+.notiEmpty i svg{width:20px;height:20px}
+.notiEmpty b{font-size:13.5px;font-weight:600;color:var(--nt-ink)}
+.notiEmpty p{margin:0;font-size:12px;line-height:1.65;color:var(--nt-sub)}
+
+/* 알림 한 줄 = [아이콘 · 본문] 버튼 + 휴지통 */
+.notiItem{position:relative;display:flex;align-items:flex-start;width:100%;border-radius:12px;
+  transition:background .18s var(--ease)}
+.notiItem+.notiItem{margin-top:2px}
+.notiItem:hover{background:var(--nt-soft)}
+.notiOpen{flex:1;display:flex;align-items:flex-start;gap:12px;text-align:left;border:0;background:none;
+  padding:12px 34px 12px 10px;min-width:0;cursor:pointer}
+.notiIc{flex:0 0 auto;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  background:var(--nt-soft);color:var(--nt-ink);transition:background .18s var(--ease)}
+.notiItem:hover .notiIc{background:#fff}
+.notiIc svg{display:block;flex:none;width:17px;height:17px;margin:0}
+.notiItem.unread .notiIc{background:rgba(255,107,74,.1);color:var(--nt-acc)}
+.notiTx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.notiMeta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--nt-sub)}
+.notiMeta .notiAgo::before{content:'';display:inline-block;width:2px;height:2px;border-radius:50%;
+  background:currentColor;vertical-align:middle;margin:0 6px 2px 0;opacity:.7}
+.notiKind{font-size:11px;letter-spacing:-.01em;color:var(--nt-sub)}
+.notiAgo{font-size:11px;color:var(--nt-sub);font-variant-numeric:tabular-nums}
+.notiTitle{font-size:13.5px;line-height:1.45;font-weight:500;letter-spacing:-.025em;color:var(--nt-ink)}
+.notiBody{font-size:12.5px;line-height:1.55;color:#6f6a64;letter-spacing:-.015em;
+  display:flex;flex-direction:column;gap:1px;margin-top:2px}
+.notiItem:not(.unread) .notiTitle{color:#57524c}
+
+/* 안 읽음 — 오른쪽 위 작은 점 (예전의 왼쪽 굵은 선 대신) */
+.notiItem.unread::after{content:'';position:absolute;top:18px;right:14px;width:7px;height:7px;border-radius:50%;
+  background:var(--nt-acc);transition:opacity .15s}
+.notiItem.unread .notiTitle{font-weight:600}
+.notiItem.unread:hover::after{opacity:0}
+
+/* 휴지통 — 평소엔 숨겼다가 올리면 점 자리에 나타난다 */
+.notiDel{position:absolute;top:9px;right:6px;width:28px;height:28px;border:0;background:none;
+  display:grid;place-items:center;border-radius:8px;color:var(--nt-sub);opacity:0;
+  transition:opacity .18s var(--ease),color .18s var(--ease),background .18s var(--ease)}
+.notiDel svg{width:14px;height:14px}
+.notiItem:hover .notiDel,.notiDel:focus-visible{opacity:1}
+.notiDel:hover{color:#c73a24;background:#fff}
+@media (hover:none){ .notiDel{opacity:1} .notiItem.unread::after{right:40px} }
+
+/* 발 — 알림 설정 */
+.notiSetLink{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;border:0;
+  background:var(--nt-soft);padding:13px;margin:0;border-top:1px solid var(--nt-line);
+  font-size:12.5px;font-weight:500;color:#57524c;transition:color .2s var(--ease),background .2s var(--ease)}
+.notiSetLink svg{width:15px;height:15px}
+.notiSetLink:hover{color:var(--nt-ink);background:#f1eee9}
+
+/* ── 알림 설정 모달 ─────────────────────────────────── */
+.notiSetRow{
+  display:flex;align-items:center;gap:14px;padding:13px 2px;cursor:pointer;
+  border-bottom:1px solid var(--pink-3);
+}
+.notiSetKinds .notiSetRow{border-bottom:0;padding:11px 2px}   /* 세부 알림끼리는 선 없이 (2026-09-19) */
+.notiSetAll{border-bottom:1px solid var(--pink-3);margin-bottom:8px;padding-bottom:16px}
+.notiSetName{flex:1;display:grid;gap:3px}
+.notiSetName b{font-size:13.5px;font-weight:600;letter-spacing:-.02em;color:var(--pink-0)}
+.notiSetName em{font-style:normal;font-size:12px;line-height:1.6;color:var(--pink-2)}
+
+/* 전체 알림을 끄면 종류별 칸은 흐려진다 — 눌러도 되지만 지금은 아무것도 오지 않는다 */
+.notiSetKinds.off{opacity:.45}
+
+/* 스위치 — 진짜 체크박스를 화면 밖에 두고 그 옆의 <i> 를 그린다.
+   키보드(Tab·Space)로도 그대로 켜고 끌 수 있다. */
+.notiSw{position:absolute;opacity:0;width:0;height:0}
+.notiSwUi{
+  flex:0 0 auto;width:40px;height:23px;border-radius:999px;position:relative;
+  background:var(--pink-3);transition:background .26s var(--ease);
+}
+.notiSwUi::after{
+  content:'';position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(10,10,10,.28);
+  transition:transform .26s var(--ease);
+}
+.notiSw:checked + .notiSwUi{background:var(--coral)}
+.notiSw:checked + .notiSwUi::after{transform:translateX(17px)}
+.notiSw:focus-visible + .notiSwUi{outline:2px solid var(--pink-0);outline-offset:2px}
+
+/* ── 검색창의 '사전 등재 요청' 버튼 ─────────────────── */
+.termReqBtn{
+  display:inline-block;margin-top:10px;padding:7px 12px;border-radius:999px;
+  border:1px solid var(--pink-3);background:#fff;font-size:12px;color:var(--pink-1);
+  transition:border-color .24s var(--ease),color .24s var(--ease);
+}
+.termReqBtn:hover:not(:disabled){border-color:var(--coral);color:var(--coral)}
+.termReqBtn:disabled{opacity:.7}
+
+/* ── 토스트 — 맥 알림처럼 오른쪽 위에 떴다 사라진다 (2026-09-19) ── */
+.notiToasts{position:fixed;top:78px;right:20px;z-index:300;display:flex;flex-direction:column;gap:10px;
+  width:min(360px,calc(100vw - 32px));pointer-events:none}
+.notiToast{--nt-ink:#1c1a17;--nt-sub:#8a8781;--nt-soft:#f7f5f2;--nt-acc:var(--coral,#ff6b4a);
+  position:relative;display:flex;align-items:flex-start;gap:12px;padding:14px 38px 14px 14px;border-radius:16px;
+  background:rgba(255,255,255,.86);backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);
+  border:1px solid rgba(28,26,23,.07);
+  box-shadow:0 1px 2px rgba(28,26,23,.05),0 18px 44px -16px rgba(28,26,23,.34);
+  cursor:pointer;pointer-events:auto;
+  opacity:0;transform:translateX(24px) scale(.98);
+  transition:opacity .28s ease,transform .42s cubic-bezier(.2,.9,.25,1.15)}
+.notiToast.in{opacity:1;transform:none}
+.notiToast.out{opacity:0;transform:translateX(24px) scale(.98);transition:opacity .22s ease,transform .3s ease}
+.notiToast:hover{background:rgba(255,255,255,.96)}
+.ntIc{flex:0 0 36px;width:36px;height:36px;border-radius:10px;margin:0;padding:0;
+  display:flex;align-items:center;justify-content:center;line-height:0;
+  background:rgba(255,107,74,.12);color:var(--nt-acc)}
+.ntIc svg{display:block;flex:none;width:18px;height:18px;margin:0}
+.ntTx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ntMeta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--nt-sub)}
+.ntMeta b{font-weight:700;letter-spacing:.01em;color:var(--nt-ink)}
+.ntMeta span+span::before{content:'';display:inline-block;width:2px;height:2px;border-radius:50%;
+  background:currentColor;vertical-align:middle;margin:0 6px 2px 0;opacity:.7}
+.ntAgo{margin-left:auto;font-variant-numeric:tabular-nums}
+.ntAgo::before{display:none!important}
+.ntTitle{font-size:13.5px;font-weight:600;line-height:1.45;letter-spacing:-.025em;color:var(--nt-ink)}
+.ntMore{margin-top:6px;font-size:11.5px;font-weight:600;color:var(--nt-acc)}
+.ntMore:hover{text-decoration:underline}
+.ntBody{font-size:12.5px;line-height:1.5;color:#6f6a64;letter-spacing:-.015em;
+  display:flex;flex-direction:column;gap:1px;margin-top:1px}
+/* 본문 한 줄 = 한 문장. 길면 단어 단위로 접히고, 세 문장까지만 보인다 (2026-09-20) */
+.nbLine{display:block;min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+.nbLine:nth-child(n+4){display:none}
+.ntX{position:absolute;top:10px;right:10px;width:22px;height:22px;border:0;border-radius:50%;padding:0;
+  display:grid;place-items:center;background:rgba(28,26,23,.06);color:var(--nt-sub);opacity:0;
+  transition:opacity .18s ease,background .18s ease}
+.ntX svg{width:11px;height:11px}
+.notiToast:hover .ntX,.ntX:focus-visible{opacity:1}
+.ntX:hover{background:rgba(28,26,23,.12);color:var(--nt-ink)}
+@media (hover:none){ .ntX{opacity:1} }
+@media (max-width:560px){ .notiToasts{top:auto;bottom:16px;right:16px} }
+@media (prefers-reduced-motion:reduce){ .notiToast,.notiToast.out{transition:opacity .2s ease;transform:none} }
+
+/* ── 성별 고르기 (2026-10-02) — 알림에서 여는 작은 창 ─────────────
+   VTON 모델 칸과 같은 색 — 여성 핑크 · 남성 하늘 (chat_popup.css .cpFitGender) */
+.genderAsk .genderAskLead{margin:-8px 0 18px;font-size:13px;line-height:1.6;color:var(--pink-1)}
+.genderAskChoices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.genderAskBtn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:20px 12px 16px;border-radius:16px;
+  background:var(--paper,#f1efea);box-shadow:inset 0 0 0 1px var(--pink-3);transition:box-shadow .2s,transform .2s,background .2s}
+.genderAskBtn span{font-size:24px;line-height:1}
+.genderAskBtn b{font-size:15px;color:var(--pink-0);letter-spacing:.02em}
+.genderAskBtn em{font-style:normal;font-size:11.5px;color:var(--pink-1)}
+.genderAskBtn.g-woman span{color:#b0245c}
+.genderAskBtn.g-man span{color:#1b6aa0}
+.genderAskBtn.g-woman:hover,.genderAskBtn.g-woman:focus-visible,.genderAskBtn.g-woman.on{background:#ffe1ec;box-shadow:inset 0 0 0 1.5px #ff7aa8;transform:translateY(-1px)}
+.genderAskBtn.g-man:hover,.genderAskBtn.g-man:focus-visible,.genderAskBtn.g-man.on{background:#dcf0fc;box-shadow:inset 0 0 0 1.5px #48aee9;transform:translateY(-1px)}
+.genderAsk .fieldMsg:empty{display:none}

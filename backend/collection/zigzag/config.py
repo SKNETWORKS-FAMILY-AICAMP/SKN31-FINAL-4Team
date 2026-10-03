@@ -33,8 +33,8 @@ TREND_TAGS = [
     "발레코어",
     "그런지",
     "긱시크",
-    "해적코어",
-    "카우보이",
+    # "해적코어",
+    # "카우보이",
     "Y2K",
     "코티지코어",
     "올드머니",
@@ -58,26 +58,26 @@ STYLE_TAGS = [
 ]
 
 
-TPO_TAGS = [
-    "데일리",
-    "출근룩",
-    "홈웨어",
-    "운동",
-    "파티",
-    "여행",
-    "휴양지",
-    "클럽룩",
-    "워터 페스티벌",
-    "하객룩",
-    "페스티벌",
-    "아웃도어",
-    "바디프로필",
-    "크리스마스",
-    "면접",
-    "웨딩",
-    "프로필",
-    "할로윈",
-]
+# TPO_TAGS = [
+#     "데일리",
+#     "출근룩",
+#     "홈웨어",
+#     "운동",
+#     "파티",
+#     "여행",
+#     "휴양지",
+#     "클럽룩",
+#     "워터 페스티벌",
+#     "하객룩",
+#     "페스티벌",
+#     "아웃도어",
+#     "바디프로필",
+#     "크리스마스",
+#     "면접",
+#     "웨딩",
+#     "프로필",
+#     "할로윈",
+# ]
 
 
 GROUP_CONFIG = {
@@ -91,18 +91,20 @@ GROUP_CONFIG = {
         "label": "스타일",
         "attribute": "styles",
         "tags": STYLE_TAGS,
-        "default_limit": 30,
+        "default_limit": 100,
     },
-    "tpo": {
-        "label": "상황",
-        "attribute": "tpo",
-        "tags": TPO_TAGS,
-        "default_limit": 30,
-    },
+    # "tpo": {
+    #     "label": "상황",
+    #     "attribute": "tpo",
+    #     "tags": TPO_TAGS,
+    #     "default_limit": 30,
+
+
+    # },
 }
 
 
-DEFAULT_GROUPS = ["trend", "style", "tpo"]
+DEFAULT_GROUPS = ["trend", "style",]
 
 DEFAULT_LIMITS = {
     group: config["default_limit"]

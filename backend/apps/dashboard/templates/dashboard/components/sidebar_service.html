@@ -1,0 +1,12 @@
+{% with u=request.resolver_match.url_name %}
+<aside class="sub-sidebar">
+    <p>SERVICE</p>
+    <a href="{% url 'dashboard:service_users' %}" {% if u == 'service_users' %}class="active"{% endif %}>사용자 현황</a>
+    <a href="{% url 'dashboard:service_events' %}" {% if u == 'service_events' %}class="active"{% endif %}>활동 로그</a>
+    <a href="{% url 'dashboard:service_votes' %}" {% if u == 'service_votes' %}class="active"{% endif %}>살!말? 게시글</a>
+    <a href="{% url 'dashboard:service_comments' %}" {% if u == 'service_comments' %}class="active"{% endif %}>살!말? 댓글</a>
+    <a href="{% url 'dashboard:feedback_list' %}" {% if u == 'feedback_list' %}class="active"{% endif %}>홈페이지 피드백</a>
+    <a href="{% url 'dashboard:report_list' %}"   {% if u == 'report_list' %}class="active"{% endif %}>살!말? 신고</a>
+    <a href="{% url 'dashboard:service_notices' %}" {% if u == 'service_notices' %}class="active"{% endif %}>알림 · 실시간 공지</a>
+</aside>
+{% endwith %}

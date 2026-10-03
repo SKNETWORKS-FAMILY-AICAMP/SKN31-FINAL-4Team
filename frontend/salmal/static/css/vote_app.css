@@ -38,7 +38,8 @@
 .smTabs button.on{background:var(--pink-0);color:var(--paper)}
 .addItemBtn{
   height:46px;display:inline-flex;align-items:center;gap:6px;padding:0 20px;
-  border-radius:999px;background:var(--coral);color:#fff;font-size:13px;white-space:nowrap;
+  /* 흰 글자는 코랄 위에서 2.8:1 — 잉크로 바꿔 대비 7:1 (USABILITY-002, 2026-09-28) */
+  border-radius:999px;background:var(--coral);color:var(--pink-0);font-size:13px;white-space:nowrap;
   transition:transform .3s var(--ease);
 }
 .addItemBtn:hover{transform:translateY(-2px)}
@@ -46,6 +47,23 @@
 .voteGrid{
   display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;
 }
+/* ★ 2026-09-20 — 불러오는 중 · 빈 목록 · 오류 안내. 예전엔 스타일이 없어 기본 글꼴 크기로
+   카드 한 칸 폭에 줄바꿈돼 어색했다. 사이트 본문 글꼴(Pretendard)로 한 줄 가운데 정렬. */
+.smDataState{
+  grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:10px;
+  min-height:220px;padding:34px 16px;border:1px dashed var(--pink-3);border-radius:14px;
+  font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  font-size:13.5px;font-weight:500;letter-spacing:-.02em;line-height:1.6;color:var(--pink-2);
+  text-align:center;word-break:keep-all;
+  animation:smStateIn .4s ease both;
+}
+.smDataState.loading::before{
+  content:"";width:15px;height:15px;flex:none;border-radius:50%;
+  border:2px solid var(--pink-3);border-top-color:var(--coral,#ff6b4a);
+  animation:smSpin .8s linear infinite;
+}
+@keyframes smSpin{to{transform:rotate(360deg)}}
+@keyframes smStateIn{from{opacity:0}to{opacity:1}}
 .voteCard{
   background:#fff;border:1px solid var(--pink-3);border-radius:10px;overflow:hidden;
   box-shadow:0 1px 0 rgba(10,10,10,.02);cursor:pointer;
@@ -53,7 +71,7 @@
   opacity:0;transform:translateY(28px);
 }
 .voteCard.in{opacity:1;transform:none}
-.voteCard:hover{transform:translateY(-5px);box-shadow:0 34px 64px -44px rgba(10,10,10,.5);border-color:var(--pink-2)}
+.voteCard:hover{transform:translateY(-5px);box-shadow:0 34px 64px -44px rgba(10,10,10,.5);border-color:var(--pink-2-line)}
 /* 마감이 임박한 카드만 시간 표시가 조용히 뛴다 — 6시간 안쪽 */
 .voteCard.urgent .cap{color:var(--coral)}
 .voteCard.urgent .cap::before{
@@ -92,26 +110,53 @@
 .cardMenuBtn:hover{transform:scale(1.08);color:var(--pink-0);background:#fff}
 .modalFig .modalMenuBtn{position:absolute;right:14px;top:14px;z-index:4}
 .voteCard .body{padding:19px 20px 21px}
-.voteCard h4{font-size:15px;font-weight:600;letter-spacing:-.03em;margin-bottom:5px}
+.voteCard h4{
+  font-size:15px;font-weight:600;letter-spacing:-.03em;margin-bottom:5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 .voteCard .cap{
   font-family:var(--num);font-size:10.5px;letter-spacing:.14em;color:var(--pink-2);
   text-transform:uppercase;margin-bottom:16px;font-feature-settings:'tnum' 1,'zero' 0;
 }
 .voteCard .cap em{font-style:normal;color:var(--coral)}
-.smBar{height:38px;border-radius:999px;overflow:hidden;display:flex;background:var(--pink-3);margin-bottom:11px}
+.smBar{
+  height:38px;border-radius:999px;overflow:hidden;display:flex;position:relative;
+  background:var(--pink-3);margin-bottom:11px;isolation:isolate;
+  /* Chrome가 스크롤 중 자식 막대를 별도 레이어로 합성할 때 overflow의 둥근
+     모서리를 한 프레임 놓치는 경우가 있어, 같은 곡률로 실제 클립을 고정한다. */
+  clip-path:inset(0 round 999px);
+}
 .smBar i{
-  display:flex;align-items:center;height:100%;
+  display:flex;align-items:center;height:100%;min-width:0;box-sizing:border-box;padding:0;
   /* width 트랜지션은 두지 않는다. anime 가 매 프레임 인라인 width 를 쓰는데
      CSS 트랜지션이 같은 속성을 붙잡고 있으면 값이 쓰일 때마다 0.8s 짜리 보간이
      새로 시작돼, 막대가 멈춘 듯 끌리다가 애니가 끝나는 순간 뚝 하고 튄다. */
   font-family:var(--num);font-size:11px;letter-spacing:.02em;font-style:normal;
   font-feature-settings:'tnum' 1,'zero' 0;white-space:nowrap;
+  /* 글씨는 항상 막대 색 위에 뜬다 — 자기 칸이 좁아져도 잘리지 않고 상대 막대
+     위로 넘쳐 보이게 늘 overflow:visible + z-index 를 켜 둔다. 예전엔 이걸 폭이
+     28% 밑으로 "확정"된 뒤에만(.tight) 켰는데, 그 판정이 애니메이션 완료 신호에
+     달려 있어 신호가 늦게 오면(스프링 정착 지연, 2026-09 실측) 그 사이 글씨가
+     칸 안에 파묻혀 있다가 뒤늦게 튀어나오는 것처럼 보였다. 타이밍에 기대지 않고
+     항상 켜 두면 어떤 순간에 봐도 절대 안 묻힌다. */
+  /* 막대 조각 자체는 stacking context를 만들지 않는다. 그래야 양쪽 라벨의
+     z-index가 전체 게이지를 기준으로 적용돼 반대편 색상 위에서도 보인다. */
+  overflow:visible;position:relative;z-index:auto;
 }
-.smBar .buy{background:var(--coral);color:#fff;justify-content:flex-start;padding-left:13px}
-.smBar .no{background:var(--pink-0);color:var(--paper);justify-content:flex-end;padding-right:13px}
-/* 한쪽이 크게 이겨 칸이 좁아지면 글씨를 지우지 않고 상대 막대 위로 넘겨 읽힌다.
-   .buy 는 코랄 위에 흰 글씨, .no 는 먹 위에 종이색 글씨라 어느 쪽이든 대비가 산다. */
-.smBar i.tight{overflow:visible;position:relative;z-index:2}
+.smBar i > span{position:absolute;top:50%;transform:translateY(-50%);z-index:3}
+.smBar .buy{
+  background:var(--coral);color:#fff;justify-content:flex-start;flex:0 0 auto;
+}
+.smBar .buy > span{left:13px}
+/* .no 는 애니메이션으로 폭을 직접 받지 않는다 — flex:1 로 .buy 가 차지하고 남은
+   자리를 통째로 먹는다. 그래야 두 조각의 폭 합이 프레임마다 항상 정확히 100%다. */
+.smBar .no{
+  background:var(--pink-0);color:var(--paper);justify-content:flex-end;flex:1 1 0%;
+  /* `말` 라벨은 변하는 .no 조각이 아니라 전체 게이지를 기준으로 고정한다.
+     살 100%처럼 .no 폭이 0이거나 스프링이 경계를 넘는 순간에도 오른쪽 끝을 유지한다. */
+  position:static;
+}
+.smBar .no > span{right:13px}
 /* 이 세 군데 막대만 anime 없이 style.width 를 직접 쓴다. 여기만 CSS 로 부드럽게. */
 #modalBarAll i, #modalBarSim i, #smBuy, #smNo{transition:width .82s var(--ease)}
 .smBtns{display:flex;gap:8px}
@@ -126,7 +171,7 @@
   box-shadow:inset 0 0 0 1.5px var(--pink-0);
 }
 .smBtns button.picked.buy{
-  background:rgba(255,107,74,.14);color:var(--coral);
+  background:rgba(255,107,74,.14);color:var(--coral-ink,#c2401f);   /* 작은 글자는 짙은 코랄 (대비) */
   box-shadow:inset 0 0 0 1.5px var(--coral);
 }
 .closedNote{
@@ -164,11 +209,36 @@
   transition:background .3s var(--ease),transform .3s var(--ease);
 }
 .carouselDots .dot.on{background:var(--pink-0);transform:scale(1.25)}
+/* ★ 화면 위쪽에, 무엇보다 앞에 띄운다.
+     예전엔 bottom:36px · z-index:50 이었다. 그런데 등록 모달(.createOverlay)이
+     z-index:75, 상세 모달(.modalOverlay)이 60 이라 **토스트가 그 뒤에 깔렸다.**
+     "상품명을 입력해주세요" 같은 경고가 모달에 가려 보이지 않았다.
+     경고는 지금 보고 있는 것 위에 떠야 한다 — 모든 오버레이보다 큰 값을 준다. */
+/* 로그인이 필요한 탭에서 카드 대신 띄우는 안내 */
+/* ★ 2026-09-19 — display:flex 가 hidden 속성을 이겨, 로그인이 필요 없는 탭에서도
+   안내가 계속 떠 있었다. hidden 이면 확실히 감춘다. */
+.smGate[hidden]{display:none}
+.smGate{display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center;
+  padding:52px 20px;margin-bottom:8px;border:1px dashed var(--pink-3);border-radius:14px;
+  background:rgba(10,10,10,.02)}
+.smGate b{font-size:15px;font-weight:600;color:var(--pink-0)}
+.smGate span{font-size:12px;line-height:1.7;color:var(--pink-2)}
+.smGate button{margin-top:8px;padding:11px 20px;border-radius:999px;border:0;cursor:pointer;
+  background:var(--pink-0);color:var(--paper);font-size:12.5px;font-family:inherit}
+.smGate button:hover{opacity:.88}
+/* ★ 2026-09-19 — 로그인 · 회원가입 두 갈래를 나란히 둔다 */
+.smGateBtns{display:flex;align-items:center;gap:8px;margin-top:8px}
+.smGateBtns button{margin-top:0}
+.smGate button.ghost{background:transparent;color:var(--pink-1);
+  border:1px solid var(--pink-3)}
+.smGate button.ghost:hover{background:rgba(10,10,10,.04);opacity:1}
+
 .toast{
-  position:fixed;left:50%;bottom:36px;transform:translateX(-50%) translateY(16px);
+  position:fixed;left:50%;top:26px;transform:translateX(-50%) translateY(-16px);
   background:var(--pink-0);color:var(--paper);padding:13px 22px;border-radius:999px;
   font-size:13px;letter-spacing:-.01em;opacity:0;pointer-events:none;
-  transition:opacity .35s var(--ease),transform .35s var(--ease);z-index:50;
+  box-shadow:0 18px 40px -18px rgba(0,0,0,.5);
+  transition:opacity .35s var(--ease),transform .35s var(--ease);z-index:200;
 }
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .ctxMenu{
@@ -186,6 +256,10 @@
 .ctxMenu button:hover{background:var(--paper)}
 .ctxMenu button.danger{color:#c73a24}
 .ctxMenu button.danger:hover{background:rgba(199,58,36,.07)}
+/* ★ 2026-09-19 — 위 display:flex 가 hidden 속성을 덮어써서 '삭제하기'가 모든 사람에게 보였다.
+   권한 없는 사람에게는 버튼 자체를 숨긴다 (서버도 403 으로 막는다). */
+.ctxMenu button[hidden]{display:none}
+.ctxMenu button[hidden]+button{border-top:0}
 .cMenuBtn{
   margin-left:auto;color:var(--pink-2);padding:2px 7px;border-radius:6px;
   font-size:15px;line-height:1;transition:background .2s,color .2s;
@@ -249,6 +323,9 @@
 .voteBlock .smBar{height:30px;margin-bottom:0}
 .voteBlock .smBar i{font-size:10.5px}
 .voteBlock.similar{background:#fff}
+/* 표본이 없을 때 막대를 대신하는 한 줄 */
+.smNote{margin:0;padding:9px 12px;border:1px dashed var(--pink-3);border-radius:8px;
+  font-size:11px;line-height:1.6;color:var(--pink-2)}
 .voteBlock:first-child{border-top:0}
 .aiChatBubble{
   position:fixed;top:0;left:0;
@@ -298,7 +375,8 @@
   font-family:var(--num);font-size:11px;color:var(--pink-2);font-weight:400;
   font-feature-settings:'tnum' 1,'zero' 0;
 }
-.commentsList{flex:1;overflow-y:auto;padding:0 22px;display:flex;flex-direction:column;gap:14px;min-height:120px}
+/* 위아래 패딩을 0으로 두면, 등급 링(.rkRing)이 아바타 밖으로 삐져나오는 만큼(--rkGap, 34px 아바타 기준 약 4px) 스크롤 영역 맨 위/아래 끄트머리에서 잘린다 — 중간 댓글들은 앞뒤 gap(14px) 안에 여유가 있어 안 보였지만 첫/마지막 댓글은 바로 컨테이너 경계에 붙어 있어 잘렸다(2026-09 실측: 맨 위 댓글 프로필 링이 위쪽만 잘려 보임). 링이 넉넉히 들어갈 만큼 위아래에 여백을 둔다. */
+.commentsList{flex:1;overflow-y:auto;padding:8px 22px;display:flex;flex-direction:column;gap:14px;min-height:120px}
 .cItem{display:flex;gap:11px}
 .cAvatar{
   width:34px;height:34px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;
@@ -314,7 +392,8 @@
   flex-shrink:0;padding:16px 24px 22px;border-top:1px solid var(--pink-3);
   display:flex;flex-direction:column;gap:10px;background:var(--paper);
 }
-.commentInputRow{display:flex;gap:8px;align-items:flex-end}
+/* 등록 버튼은 입력창 높이의 한가운데에 선다 (예전엔 아래에 붙어 있었다) */
+.commentInputRow{display:flex;gap:8px;align-items:center}
 .commentInputRow textarea{
   flex:1;resize:none;min-height:44px;max-height:100px;border-radius:14px;
   padding:11px 14px;font-family:inherit;font-size:13px;background:#fff;
@@ -336,7 +415,7 @@
 .createTitle{font-size:20px;font-weight:600;letter-spacing:-.03em;margin-bottom:4px}
 .createSub{font-size:12.5px;color:var(--pink-1);line-height:1.6;margin-bottom:18px}
 .cField{display:flex;flex-direction:column;gap:7px}
-.cField.grow{flex:1}
+.cField.grow{flex:0 0 auto}
 .cRow2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .cLabel{font-size:11.5px;font-weight:600;color:var(--pink-1)}
 .cInput{
@@ -350,7 +429,7 @@ select.cInput{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23999' stroke-width='1.6'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 11px center;background-size:16px;
 }
-.cTextarea{min-height:150px;resize:vertical;line-height:1.6;flex:1}
+.cTextarea{min-height:96px;resize:vertical;line-height:1.6}
 .imgDrop{
   position:relative;aspect-ratio:4/5;border-radius:12px;border:1.5px dashed var(--pink-3);
   background:#fff;cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;
@@ -384,3 +463,134 @@ select.cInput{
 /* 사진은 틀에 맞춰 잘라 넣는다 — 비율이 달라도 늘어나지 않는다 */
 .voteCard .fig .plate,.modalFig .plate{
   background-size:cover;background-position:center;background-repeat:no-repeat}
+
+/* ── 브랜드 검색 드롭다운 ─────────────────────────────
+   입력칸 바로 아래에 붙는다. 모달 안이라 위로 겹칠 수 있게 z-index 를 준다. */
+.cCombo{position:relative}
+.cComboList{
+  position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;
+  max-height:198px;overflow:auto;margin:0;padding:5px;list-style:none;
+  background:#fff;border:1px solid var(--pink-3);border-radius:12px;
+  box-shadow:0 18px 38px -22px rgba(20,18,17,.45);
+}
+.cComboItem{
+  padding:8px 10px;border-radius:8px;font-size:13px;color:var(--pink-0);
+  cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.cComboItem:hover,.cComboItem.on{background:var(--paper)}
+
+/* ══ 살!말? 사후 피드백 (2026-09-19 · 디자인 개편) ═════════════
+   단계형 — 구매 여부를 고르면 만족도, 그다음 도움 여부·후기가 차례로 열린다.
+   맨 태그(h3·b) 대신 클래스만 쓴다: 전역 등장 모션에 먹혀 글자가 사라졌었다. */
+.fbModal{--fb-ink:#1c1a17;--fb-sub:#8a8781;--fb-line:#ece8e3;--fb-soft:#f7f5f2;--fb-acc:var(--coral,#ff6b4a);
+  position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:rgba(22,20,18,.46);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  opacity:0;visibility:hidden;transition:opacity .22s ease,visibility .22s}
+.fbModal.on{opacity:1;visibility:visible}
+.fbCard{position:relative;width:min(420px,100%);max-height:calc(100vh - 32px);overflow:auto;
+  background:#fff;border-radius:22px;padding:26px 24px 22px;color:var(--fb-ink);
+  box-shadow:0 1px 0 rgba(0,0,0,.04),0 32px 80px -28px rgba(0,0,0,.45);
+  transform:translateY(10px) scale(.985);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.fbModal.in .fbCard{transform:none}
+.fbCard,.fbCard *{box-sizing:border-box}
+.fbCard *{opacity:1}
+.fbX{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+  background:transparent;color:var(--fb-sub);transition:background .18s,color .18s}
+.fbX:hover{background:var(--fb-soft);color:var(--fb-ink)}
+.fbX svg{width:16px;height:16px}
+/* 머리 — 썸네일 · 제목 · 투표 결과 막대 */
+/* ★ 2026-09-19 — 누르면 그 카드로 간다. 버튼이지만 머리처럼 보이게 기본 모양을 지운다 */
+.fbTop{display:flex;gap:14px;align-items:center;box-sizing:border-box;width:calc(100% - 28px);
+  margin:-8px 0 -8px -8px;padding:8px;border:0;border-radius:16px;background:transparent;
+  font:inherit;color:inherit;text-align:left;cursor:pointer;transition:background .18s}
+.fbTop:hover{background:var(--fb-soft)}
+.fbNote{margin-top:18px;font-size:11.5px;line-height:1.5;color:var(--fb-sub);letter-spacing:-.01em}
+.fbNote+.fbActs{margin-top:10px}
+.fbTop:focus-visible{outline:2px solid var(--fb-acc);outline-offset:2px}
+.fbGo{float:right;font-style:normal;font-weight:500;color:var(--fb-sub);opacity:0;transition:opacity .18s}
+.fbTop:hover .fbGo,.fbTop:focus-visible .fbGo{opacity:1}
+.fbThumb{width:64px;height:64px;flex:none;border-radius:14px;overflow:hidden;background:var(--fb-soft)}
+.fbThumb img{width:100%;height:100%;object-fit:cover;display:block}
+.fbTopTx{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.fbTopTx>span{display:block}
+.fbTopTx>.fbBarTx{display:flex}
+.fbEyebrow{font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--fb-acc)}
+.fbTitle{display:block;font-size:16px;font-weight:700;letter-spacing:-.03em;line-height:1.35;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbBar{height:6px;border-radius:99px;background:var(--fb-ink);overflow:hidden;margin-top:4px}
+.fbBar i{display:block;height:100%;background:var(--fb-acc);border-radius:99px}
+.fbBarTx{display:flex;gap:10px;font-size:11.5px;color:var(--fb-sub)}
+.fbBarTx em{font-style:normal}
+.fbBarTx em:first-child{color:var(--fb-acc);font-weight:600}
+.fbBarTx .n{margin-left:auto}
+/* 단계 */
+.fbStep{margin-top:22px;animation:fbIn .26s ease both}
+@keyframes fbIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.fbTop+.fbStep{margin-top:30px;padding-top:20px;border-top:1px solid var(--fb-line)}
+.fbLabel{display:block;font-size:13.5px;font-weight:600;letter-spacing:-.02em;margin-bottom:10px;color:var(--fb-ink)}
+.fbLabel small{font-size:11.5px;font-weight:400;color:var(--fb-sub);margin-left:4px}
+/* 선택 버튼 — 같은 폭으로 나눈 한 줄 */
+.fbSeg{display:grid;gap:8px}
+.fbSeg.c3{grid-template-columns:repeat(3,1fr)}
+.fbSeg.c2{grid-template-columns:repeat(2,1fr)}
+.fbSeg button{height:44px;border-radius:12px;border:1px solid var(--fb-line);background:#fff;
+  font-size:13px;font-weight:500;color:var(--fb-ink);transition:border-color .18s,background .18s,color .18s}
+.fbSeg button:hover{border-color:#d9d3cc}
+.fbSeg button.on{border-color:var(--fb-ink);background:var(--fb-ink);color:#fff}
+/* 만족도 1~5 */
+.fbScale{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.fbScale button{height:44px;border-radius:12px;border:1px solid var(--fb-line);background:#fff;
+  font-size:14px;font-weight:600;color:var(--fb-sub);font-variant-numeric:tabular-nums;transition:.18s}
+.fbScale button:hover{border-color:#d9d3cc;color:var(--fb-ink)}
+.fbScale button.on{border-color:var(--fb-acc);background:var(--fb-acc);color:#fff}
+.fbEnds{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--fb-sub)}
+/* 후기 */
+.fbInput{position:relative}
+.fbInput input{width:100%;height:46px;padding:0 58px 0 14px;border:1px solid var(--fb-line);border-radius:12px;
+  background:var(--fb-soft);font-size:13px;color:var(--fb-ink);outline:none;transition:border-color .18s,background .18s}
+.fbInput input:focus{border-color:var(--fb-ink);background:#fff}
+.fbCount{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--fb-sub);font-variant-numeric:tabular-nums}
+.fbErr{margin-top:14px;font-size:12px;color:#c73a24}
+.fbErr[hidden]{display:none}
+/* 아래 버튼 */
+.fbActs{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:24px}
+.fbLater{background:none;font-size:12.5px;color:var(--fb-sub);padding:8px 2px}
+.fbLater:hover{color:var(--fb-ink)}
+.fbSave{height:46px;padding:0 26px;border-radius:999px;background:var(--fb-ink);color:#fff;font-size:13.5px;font-weight:600;
+  transition:opacity .18s,transform .18s}
+.fbSave:hover{transform:translateY(-1px)}
+.fbSave:disabled{opacity:.3;transform:none;cursor:default}
+@media (max-width:420px){ .fbCard{padding:22px 18px 18px} .fbSeg.c3 button{font-size:12px} }
+
+/* 카드 상세 안 — 글쓴이의 결과 */
+.modalFeedback{margin-top:14px;padding:14px 16px;border-radius:14px;background:#f7f5f2;font-size:12.5px;
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.modalFeedback[hidden]{display:none}
+.modalFeedback b{font-weight:600;color:#1c1a17}
+.modalFeedback span{color:#6f6a64}
+.modalFeedback q{flex-basis:100%;color:#1c1a17}
+.modalFeedback .pill{margin-left:auto}
+
+/* 마이페이지 패널 */
+.fbSum{display:flex;gap:8px;margin-bottom:6px}
+.fbSum span{padding:6px 11px;border-radius:999px;background:#f7f5f2;font-size:11.5px;color:#8a8781}
+.fbSum b{color:#1c1a17;font-weight:700;margin-left:4px}
+.fbRow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #ece8e3}
+.fbSum+.fbRow{border-top:0}
+.fbRow img,.fbRow>i{width:48px;height:48px;border-radius:12px;object-fit:cover;flex:none;background:#f7f5f2}
+.fbRowT{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.fbRowT b{font-size:13px;font-weight:600;color:#1c1a17;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbRowT span{font-size:11.5px;color:#8a8781}
+.fbRow.pending .fbRowT span{color:var(--coral,#ff6b4a);font-weight:600}
+.fbRowT q{font-size:11.5px;color:#6f6a64;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbEmpty{font-size:12.5px;color:#8a8781;line-height:1.7;padding:6px 0}
+
+/* 알림에서 넘어온 댓글 — 잠깐 강조 (2026-09-19) */
+/* 알림으로 들어온 댓글 강조 — 색을 직접 바꾸면 스크롤 중에 끊겨 보여서,
+   뒤에 깐 레이어의 opacity 만 움직인다(합성 레이어라 부드럽다). */
+.cItem{position:relative;isolation:isolate;border-radius:12px}
+.cItem::before{content:"";position:absolute;inset:-6px;border-radius:14px;
+  background:rgba(255,107,74,.1);opacity:0;pointer-events:none;z-index:-1;will-change:opacity}
+.cItem.flash::before{animation:cFlash 2.2s cubic-bezier(.4,0,.2,1) .35s both}
+@keyframes cFlash{0%{opacity:0}18%{opacity:1}62%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.cItem.flash::before{animation-duration:1.6s}}

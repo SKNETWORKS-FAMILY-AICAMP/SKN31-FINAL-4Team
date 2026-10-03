@@ -1,0 +1,3 @@
+openai>=2.0,<3
+pydantic>=2.7,<3
+# Django is already required by the existing project.

@@ -1,6 +1,6 @@
 import { $, $$, HAS_A, aAnimate, aSpring, aStagger, aTimeline, aUtils, clamp } from '../../../core/static/js/dom.js';
 import { buildVisuals } from './visuals.js';
-import { exitMain, mainMode } from '../../../app_shell/static/js/router.js';
+import { mainMode } from '../../../app_shell/static/js/router.js';
 import { markDive, markRise } from './loader.js';
 
 /* ============================================================
@@ -184,7 +184,11 @@ function bindDeck(){
   },{passive:false});
 
   addEventListener('keydown',e=>{
-    if(mainMode){ if(e.key==='Escape')exitMain(); return; }
+    /* 메인 모드에서는 ESC 로 설명 페이지로 돌아가지 않는다 — 홈/트렌드 분석/
+       살!말?/스타일/요금제 어디서든, 팝업 하나 닫으려고 누른 ESC 에 페이지
+       전체가 설명 덱으로 튕겨 나가던 문제였다(2026-09). 덱 자체의 방향키
+       네비게이션도 메인 모드에서는 안 써야 하니 return 은 그대로 둔다. */
+    if(mainMode)return;
     if(deckLock)return;
     const d=(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown')?1:
             (e.key==='ArrowLeft' ||e.key==='ArrowUp'  ||e.key==='PageUp')?-1:0;

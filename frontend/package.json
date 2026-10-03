@@ -6,9 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --experimental-loader=./tests/fake_pg/loader.mjs tests/api.test.mjs && node tests/discount_facets_api.test.mjs && node tests/resale_products_api.test.mjs && node tests/discount_product_ui.test.mjs && node tests/resale_product_ui.test.mjs && node tests/account_api.test.mjs && node tests/account_ui.test.mjs && node tests/google_login_ui.test.mjs && node tests/legal_pages.test.mjs && node tests/chart_live.test.mjs && node tests/trend_wiring.test.mjs && node tests/trend_empty.test.mjs && node tests/trend_sentiment.test.mjs && node tests/trend_feed_report.test.mjs && node tests/search_bar.test.mjs && node tests/search_chips.test.mjs && node tests/search_live.test.mjs && node tests/search_sequence.test.mjs && node tests/search_dictionary.test.mjs && node tests/style_products.test.mjs && node tests/style_products_ui.test.mjs && node tests/error_messages.test.mjs && node tests/auth_restore_gate.test.mjs && node tests/auth_header_pending.test.mjs && node tests/router_signup.test.mjs && node tests/router_analysis_switch.test.mjs && node tests/assistant_hub.test.mjs && node tests/chat_popup_ui.test.mjs && node tests/chat_history_db.test.mjs && node tests/notify_ui.test.mjs && node tests/term_request_ui.test.mjs && node tests/mypage_layout.test.mjs && node tests/xp_ui.test.mjs && node tests/lifecycle_order.test.mjs && node tests/home_hot_refresh.test.mjs && node tests/chat_relay_image.test.mjs && node tests/notice_ticker_ui.test.mjs && node tests/plan_ui.test.mjs && node tests/data_api.test.mjs"
   },
   "devDependencies": {
+    "jsdom": "^25.0.0",
     "vite": "^7.1.3"
+  },
+  "dependencies": {
+    "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
+    "pg": "^8.13.1"
   }
 }

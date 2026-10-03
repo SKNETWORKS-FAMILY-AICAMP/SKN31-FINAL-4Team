@@ -1,0 +1,214 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize dashboard_extras %}
+
+{% block title %}{{ page_title }} | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
+<style>
+.tx-value.ok { color: #137333; }
+.tx-value.warn { color: #b06000; }
+.tx-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tx-toolbar select, .tx-toolbar input {
+    height: 38px; padding: 0 11px; border: 1px solid var(--line);
+    border-radius: 9px; background: var(--card); font: inherit; font-size: 12px;
+}
+.tx-toolbar input { min-width: min(360px, 100%); flex: 1; }
+.tx-row {
+    display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px;
+    margin-bottom: 9px; padding: 14px; border: 1px solid var(--line);
+    border-left: 4px solid #d0d3d7; border-radius: 10px; background: var(--card);
+}
+.tx-row.done { border-left-color: #137333; }
+.tx-thumb {
+    width: 96px; height: 72px; object-fit: cover; border-radius: 8px;
+    background: var(--bg); border: 1px solid var(--line2);
+}
+.tx-thumb-empty {
+    display: grid; place-items: center; width: 96px; height: 72px;
+    border-radius: 8px; background: var(--bg); color: var(--tx3); font-size: 10px;
+}
+.tx-thumb-empty[hidden] { display: none !important; }
+.tx-main { min-width: 0; }
+.tx-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; color: var(--tx3); font-size: 11px; }
+.tx-badge { padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+.tx-badge.COMMENT { background: #e8f0fe; color: #1967d2; }
+.tx-badge.REVIEW { background: #fce8e6; color: #c5221f; }
+.tx-badge.ARTICLE { background: #e6f4ea; color: #137333; }
+.tx-badge.TRANSCRIPT { background: #f3e8fd; color: #8430ce; }
+.tx-source { margin-bottom: 6px; overflow: hidden; color: var(--tx2); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.tx-source a { color: inherit; text-decoration: none; }
+.tx-source a:hover { color: var(--tx); text-decoration: underline; }
+.tx-body { color: var(--tx); font-size: 13px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+.tx-mentions { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.tx-mention-label { min-width: 74px; color: var(--tx3); font-size: 10px; letter-spacing: .04em; }
+.tx-chip { padding: 3px 8px; border-radius: 999px; background: #eef1f4; color: #3c4043; font-size: 11px; }
+.tx-chip.positive { background: #e6f4ea; color: #137333; }
+.tx-chip.neutral { background: #eef1f4; color: #5f6368; }
+.tx-chip.negative { background: #fce8e6; color: #c5221f; }
+.tx-chip.unknown { border: 1px solid var(--line2); background: transparent; color: var(--tx3); }
+.tx-chip.candidate { border: 1px dashed #d6a24a; background: #fff8e8; color: #7a5312; }
+.tx-chip small { margin-left: 3px; color: #858b92; }
+.tx-chip.positive small, .tx-chip.negative small { color: inherit; opacity: .72; }
+.tx-dim { color: var(--tx3); font-size: 11px; }
+.tx-sentiment-summary { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.tx-sentiment-summary b { padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 600; }
+.tx-sentiment-summary .positive { background: #e6f4ea; color: #137333; }
+.tx-sentiment-summary .neutral { background: #eef1f4; color: #5f6368; }
+.tx-sentiment-summary .negative { background: #fce8e6; color: #c5221f; }
+.tx-analysis-summary { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.tx-analysis-summary span { padding:3px 7px; border:1px solid var(--line2); border-radius:6px; color:var(--tx3); font-size:10px; }
+.tx-json { max-height: 260px; overflow: auto; margin: 7px 0 0; padding: 11px; border-radius: 8px; background: #1e1f22; color: #e6e6e6; font: 11px/1.55 var(--mono); white-space: pre-wrap; word-break: break-word; }
+.tx-detail summary { margin-top: 8px; color: var(--tx3); font-size: 11px; cursor: pointer; }
+@media (max-width: 720px) {
+    .tx-row { grid-template-columns: 1fr; }
+    .tx-thumb, .tx-thumb-empty { width: 100%; height: 160px; }
+}
+</style>
+{% endblock %}
+
+{% block sub_sidebar %}{% include "dashboard/components/sidebar_normalized.html" %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">TEXT DOCUMENTS</p>
+        <h2 class="page-title">{{ page_title }}</h2>
+        <p class="sub">{{ page_description }}</p>
+    </div>
+</div>
+
+{% if mode == 'none' %}
+<div class="nz-blank">
+    <strong>Source가 등록되지 않았습니다.</strong>
+    <p>{{ blank_reason }}</p>
+</div>
+{% else %}
+<div class="nz-cards">
+    {% for card in cards %}
+    <div class="nz-card">
+        <span class="nz-label">{{ card.label }}</span>
+        <strong class="nz-value tx-value {{ card.tone }}">{{ card.value|intcomma }}</strong>
+        <span class="nz-caption">{{ card.caption }}</span>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not total_rows %}
+<div class="nz-blank">
+    <strong>아직 적재된 텍스트가 없습니다.</strong>
+    <p>{{ blank_reason }}</p>
+    {% if raw_pending %}<p>원본 <b>{{ raw_pending|intcomma }}</b>건이 적재를 기다리고 있습니다.</p>{% endif %}
+</div>
+{% else %}
+<form method="get" class="nz-filter tx-toolbar">
+    <select name="doc_type" aria-label="문서 유형">
+        <option value="">전체 유형</option>
+        {% for value, label in doc_types %}<option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="status" aria-label="분석 상태">
+        <option value="">전체 분석 상태</option>
+        {% for value, label in status_choices %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="order" aria-label="정렬">
+        <option value="recent" {% if selected_order == 'recent' %}selected{% endif %}>최근 적재순</option>
+        <option value="id_desc" {% if selected_order == 'id_desc' %}selected{% endif %}>ID 내림차순</option>
+        <option value="id_asc" {% if selected_order == 'id_asc' %}selected{% endif %}>ID 오름차순</option>
+    </select>
+    <input type="search" name="q" value="{{ search_query }}" placeholder="본문 / 문서 ID / 영상·상품명">
+    <button type="submit">검색</button>
+    <a href="{{ reset_url }}" class="nz-reset">초기화</a>
+</form>
+
+<p class="nz-count">조회 결과 <b>{{ filtered_count|intcomma }}</b>건</p>
+
+{% for row in rows %}
+<article class="tx-row {% if row.analysis_status == 'DONE' %}done{% endif %}">
+    <div>
+        {% if row.content_item.thumbnail_url %}
+        <img class="tx-thumb" src="{{ row.content_item.thumbnail_url|small_thumb }}" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">
+        <div class="tx-thumb-empty" hidden>이미지 없음</div>
+        {% elif row.product_source.thumbnail_url %}
+        <img class="tx-thumb" src="{{ row.product_source.thumbnail_url|small_thumb }}" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">
+        <div class="tx-thumb-empty" hidden>이미지 없음</div>
+        {% else %}
+        <div class="tx-thumb-empty">이미지 없음</div>
+        {% endif %}
+    </div>
+    <div class="tx-main">
+        <div class="tx-head">
+            <span class="tx-badge {{ row.document_type }}">{{ row.get_document_type_display }}</span>
+            <span>{{ row.get_analysis_status_display }}</span>
+            <span>#{{ row.id }}</span>
+            {% if row.external_id %}<span>{{ row.external_id|truncatechars:32 }}</span>{% endif %}
+            <span>{{ row.body|length|intcomma }}자</span>
+            <span>{{ row.source_published_at|default:row.created_at|date:"Y-m-d H:i" }}</span>
+        </div>
+
+        {% if row.content_item %}
+        <div class="tx-source">
+            {% if row.content_item.content_url %}<a href="{{ row.content_item.content_url }}" target="_blank" rel="noopener">{{ row.content_item.title|default:"제목 없음" }}</a>{% else %}{{ row.content_item.title|default:"제목 없음" }}{% endif %}
+            {% if row.content_item.profile %} · {{ row.content_item.profile.name }}{% endif %}
+        </div>
+        {% elif row.product_source %}
+        <div class="tx-source">
+            {% if row.product_source.product_url %}<a href="{{ row.product_source.product_url }}" target="_blank" rel="noopener">{% firstof row.product_source.source_name row.product_source.product.canonical_name "상품명 없음" %}</a>{% else %}{% firstof row.product_source.source_name row.product_source.product.canonical_name "상품명 없음" %}{% endif %}
+            · {{ row.product_source.source_product_id }}
+        </div>
+        {% endif %}
+
+        <div class="tx-body">{{ row.body|truncatechars:700 }}</div>
+        <div class="tx-mentions">
+            <span class="tx-mention-label">검증 키워드</span>
+            {% for mention in row.mentions %}
+            <span class="tx-chip {{ mention.sentiment_tone }}" title="{{ mention.get_mention_role_display }} · 신뢰도 {{ mention.confidence|default:'-' }}">
+                {{ mention.term.canonical_name }}
+                {% if mention.intent_code %}<small>{{ mention.intent_code }}</small>{% endif %}
+                <small>{{ mention.sentiment_label }}{% if mention.sentiment_score is not None %} {{ mention.sentiment_score|floatformat:2 }}{% endif %}</small>
+            </span>
+            {% empty %}<span class="tx-dim">검증 완료 키워드 없음</span>{% endfor %}
+        </div>
+
+        {% if row.sentiment_total %}
+        <div class="tx-sentiment-summary" aria-label="감성 요약">
+            <span class="tx-mention-label">긍·부정 요약</span>
+            {% if row.sentiment_counts.positive %}<b class="positive">긍정 {{ row.sentiment_counts.positive }}</b>{% endif %}
+            {% if row.sentiment_counts.neutral %}<b class="neutral">중립 {{ row.sentiment_counts.neutral }}</b>{% endif %}
+            {% if row.sentiment_counts.negative %}<b class="negative">부정 {{ row.sentiment_counts.negative }}</b>{% endif %}
+        </div>
+        {% endif %}
+
+        {% if row.candidate_keywords %}
+        <div class="tx-mentions">
+            <span class="tx-mention-label">전처리 후보</span>
+            {% for candidate in row.candidate_keywords %}
+            <span class="tx-chip candidate">{{ candidate.keyword }}{% if candidate.kind %}<small>{{ candidate.kind }}</small>{% endif %}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if row.analysis_summary.intent or row.analysis_summary.target or row.analysis_summary.model or row.analysis_summary.version %}
+        <div class="tx-analysis-summary" aria-label="분석 요약">
+            {% if row.analysis_summary.intent %}<span>의도 {{ row.analysis_summary.intent }}</span>{% endif %}
+            {% if row.analysis_summary.target %}<span>대상 {{ row.analysis_summary.target }}</span>{% endif %}
+            {% if row.analysis_summary.model %}<span>모델 {{ row.analysis_summary.model }}</span>{% endif %}
+            {% if row.analysis_summary.version %}<span>{{ row.analysis_summary.version }}</span>{% endif %}
+        </div>
+        {% endif %}
+
+        {% if row.analysis_metadata %}
+        <details class="tx-detail">
+            <summary>분석 메타데이터</summary>
+            <pre class="tx-json">{{ row.analysis_metadata|pretty_json }}</pre>
+        </details>
+        {% endif %}
+    </div>
+</article>
+{% empty %}
+<div class="nz-blank"><strong>조건에 맞는 문서가 없습니다.</strong></div>
+{% endfor %}
+
+{% include "dashboard/components/pagination_qs.html" %}
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -260,12 +260,36 @@ function collBuild(){ phoneBuild('collStage','collCap') }
 const ANZ_SIDE=[
   {ic:'◧',t:'내 피드'},{ic:'◔',t:'금주의 리포트'},{ic:'♡',t:'찜한 키워드'},
   {ic:'◉',t:'언급량 · 온도'},{ic:'✳',t:'연관어'},{ic:'⇅',t:'긍부정'},
-  {ic:'▤',t:'할인률 변화'},{ic:'◇',t:'리세일 시세 지수'},{ic:'◠',t:'수명주기'}
+  {ic:'▤',t:'할인률 변화'},{ic:'◇',t:'리세일 지수'},{ic:'◠',t:'수명주기'}
 ];
 const K=(l,v,u,d,up)=>'<div class="zk"><span>'+l+'</span><b>'+v+(u?'<u>'+u+'</u>':'')+
   '</b><em class="'+(up?'up':'dn')+'">'+d+'</em></div>';
 const BAR=(n,w,c,r)=>'<div class="zb"><span>'+n+'</span><u><i style="width:'+w+
   '%"'+(c?' class="c"':'')+'></i></u><em>'+r+'</em></div>';
+/* 03 시연 화면에 쓰는 실상품 — RDS(commerce.product_source + 최신 snapshot)에서
+   2026-09-21 에 조회한 값이다. 이미지는 수집원(무신사) CDN 을 그대로 가리키고,
+   상품이 내려가 이미지가 깨지면 onerror 로 로컬 사진(assets/hi/p-*.jpg)으로 떨어진다.
+   name 은 RDS 상품명에서 끝의 색상/품번 꼬리만 떼고 쓴다. pos 는 세로 상품컷을
+   가로 카드에 담을 때 옷이 가운데 오도록 잡은 object-position. */
+const FEED_TOP4=[
+ {name:'리치 오버 MA-1 자켓', brand:'제멋', price:'69,800', pos:'center 20%',
+  img:'https://image.msscdn.net/images/goods_img/20200205/1291017/1291017_1_500.jpg',
+  fallback:'assets/hi/p-suede.jpg'},
+ {name:'데미지 워시드 데님 팬츠', brand:'필루미네이트', price:'30,900', pos:'center 45%',
+  img:'https://image.msscdn.net/images/goods_img/20240112/3791988/3791988_17894491801613_500.jpg',
+  fallback:'assets/hi/p-selvedge.jpg'},
+ {name:'오버핏 비건레더 싱글 자켓', brand:'도프제이슨', price:'70,400', pos:'center 38%',
+  img:'https://image.msscdn.net/images/goods_img/20200901/1576700/1576700_17591199589640_500.jpg',
+  fallback:'assets/hi/p-tailored.jpg'},
+ {name:'데일리 라운드 니트', brand:'수아레', price:'23,150', pos:'center 30%',
+  img:'https://image.msscdn.net/images/goods_img/20220818/2723767/2723767_17292130151891_500.jpg',
+  fallback:'assets/hi/p-knit.jpg'}
+];
+/* 찜한 키워드 히어로 — 본문이 "셋업 재킷" 이야기라 블레이저로 맞췄다. */
+const FEED_PICK={name:'릴렉스드 베이식 블레이저', brand:'무신사 스탠다드', price:'62,990', pos:'center 38%',
+  img:'https://image.msscdn.net/images/goods_img/20200820/1558197/1558197_17791521338764_500.jpg',
+  fallback:'assets/hi/p-tailored.jpg'};
+
 /* 시연 화면 4장 — 실제 앱에서 지금 보이는 그대로를 축소해 옮겼다.
    FEED 두 장(내 피드 · 찜한 키워드)과 EDIT 두 장(언급량·온도 · 수명주기). */
 const ANZ=[
@@ -291,11 +315,11 @@ const ANZ=[
       '</div>'+
     '</div>'+
     '<div class="zp" style="margin-top:6px"><div class="zh"><b>내 취향 맞춤 살!말?</b>'+
-      '<em>TOP 4</em></div><div class="zf zf4">'+
-      [[11,'스웨이드 봄버','매치 96'],[7,'와이드 셀비지','매치 92'],
-       [20,'모노 테일러드','매치 89'],[25,'케이블 니트','매치 87']]
-      .map(c=>'<div class="zc"><img src="'+IMGF(c[0])+'" alt="">'+
-        '<b>'+c[1]+'</b><span>'+c[2]+'</span></div>').join('')+
+      '<em>매치순 TOP 4</em></div><div class="zf zf4">'+
+      FEED_TOP4.map(c=>'<div class="zc"><img src="'+c.img+'" alt="'+c.name+'" loading="lazy"'+
+        ' style="object-position:'+c.pos+'"'+
+        ' onerror="this.onerror=null;this.src=\''+c.fallback+'\'">'+
+        '<b>'+c.name+'</b><span>'+c.brand+' · '+c.price+'원</span></div>').join('')+
     '</div></div>'},
 
  /* ── 찜한 키워드 : 오늘의 이슈 히어로 ── */
@@ -303,8 +327,10 @@ const ANZ=[
   k:K('찜해둔 것','9','개','이번 주 +2',1)+K('오늘 움직인 것','7','건','어제 3건',1)+
     K('최저가 도달','1','건','알림 받음',1)+K('조용한 것','2','건','정리 후보',0),
   b:'<div class="zp zhero">'+
-      '<div class="zshot"><img src="'+IMGF(20)+'" alt="">'+
-        '<span>ETCE 모노 테일러드 자켓</span></div>'+
+      '<div class="zshot"><img src="'+FEED_PICK.img+'" alt="'+FEED_PICK.name+'" loading="lazy"'+
+        ' style="object-position:'+FEED_PICK.pos+'"'+
+        ' onerror="this.onerror=null;this.src=\''+FEED_PICK.fallback+'\'">'+
+        '<span>'+FEED_PICK.brand+' '+FEED_PICK.name+'</span></div>'+
       '<div class="zhx">'+
         '<span class="zlbl">찜한 것 중에서 · 오늘</span>'+
         '<b>트렌드 지수 폭등</b>'+
@@ -372,7 +398,7 @@ function anzBuild(){
             '<i>'+s.ic+'</i><b>'+s.t+'</b></button>').join('')+
         '</aside>'+
         '<div class="zmain"><div class="ztitle"><b id="anzT"></b><span id="anzD"></span></div>'+
-          '<div class="ztabs"><u class="on">통합</u><u>무신사</u><u>지그재그</u><u>29CM</u></div>'+
+          '<div class="ztabs"><u class="on">통합</u><u>무신사</u><u>지그재그</u><u>에이블리</u></div>'+
           '<div class="zks" id="anzK"></div><div class="zbd" id="anzB"></div></div>'+
       '</div>'+
     '</div>'+

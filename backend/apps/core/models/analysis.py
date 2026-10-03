@@ -67,6 +67,16 @@ class TextDocument(models.Model):
         verbose_name="언어",
     )
 
+    # 0062 migration added this column for actual comment/review dates.
+    # Keep the ORM model in sync: /api/sentiment reads this field for reviews.
+    source_published_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="원문 작성일시",
+        help_text="수집일이 아니라 댓글·리뷰가 실제 작성된 시각",
+    )
+
     analysis_metadata = models.JSONField(
         default=dict,
         blank=True,
@@ -602,6 +612,9 @@ class TermAssocDaily(models.Model):
     최근 문서 단위 co-occurrence를 기반으로
     Lift / PMI를 계산한다.
     """
+    class Basis(models.TextChoices):
+        TEXT = "TEXT", "Text"
+        SEARCH = "SEARCH", "Search"
 
     source_term = models.ForeignKey(
         "core.DictionaryTerm",
@@ -666,6 +679,14 @@ class TermAssocDaily(models.Model):
         default="feedit-l2-v1",
         verbose_name="지표 버전",
     )
+    
+    basis = models.CharField(
+        max_length=20,
+        choices=Basis.choices,
+        default=Basis.TEXT,
+        db_index=True,
+        verbose_name="연관 분석 기준",
+    )
 
     metrics = models.JSONField(
         default=dict,
@@ -693,8 +714,9 @@ class TermAssocDaily(models.Model):
                     "target_term",
                     "metric_date",
                     "metric_version",
+                    "basis",
                 ],
-                name="uq_term_assoc_day_ver",
+                name="uq_term_assoc_day_ver_basis",
             ),
 
             models.CheckConstraint(
@@ -814,3 +836,296 @@ class TermSearchMetricMonthly(models.Model):
                 name="idx_search_term_month",
             ),
         ]
+
+
+# ============================================================
+# Legacy service models preserved during backend merge
+# ============================================================
+
+class AnalysisPipelineRun(models.Model):
+    """수집 이후 텍스트 분석·적재·지표 계산 실행 이력."""
+
+    class Status(models.TextChoices):
+        RUNNING = "RUNNING", "실행 중"
+        SUCCESS = "SUCCESS", "성공"
+        PARTIAL = "PARTIAL", "일부 성공"
+        FAILED = "FAILED", "실패"
+
+    source = models.ForeignKey(
+        "core.Source",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="analysis_pipeline_runs",
+        verbose_name="플랫폼",
+    )
+    run_date = models.DateField(db_index=True, verbose_name="기준일")
+    pipeline_version = models.CharField(max_length=64, db_index=True)
+    prompt_version = models.CharField(max_length=64, blank=True, default="")
+    model_name = models.CharField(max_length=100, blank=True, default="")
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.RUNNING,
+        db_index=True,
+    )
+    started_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    input_count = models.BigIntegerField(default=0)
+    analyzed_count = models.BigIntegerField(default=0)
+    skipped_count = models.BigIntegerField(default=0)
+    failure_count = models.BigIntegerField(default=0)
+    prompt_tokens = models.BigIntegerField(default=0)
+    cached_tokens = models.BigIntegerField(default=0)
+    output_tokens = models.BigIntegerField(default=0)
+    estimated_cost_usd = models.DecimalField(
+        max_digits=12,
+        decimal_places=6,
+        default=0,
+    )
+    metrics = models.JSONField(default=dict, blank=True)
+    error_message = models.TextField(blank=True, default="")
+
+    class Meta:
+        db_table = '"analysis"."pipeline_run"'
+        indexes = [
+            models.Index(
+                fields=["-run_date", "status"],
+                name="idx_pipeline_run_day_status",
+            ),
+        ]
+
+
+class PlatformMetricDaily(models.Model):
+    """플랫폼별 분석 커버리지와 신호 품질을 감시하는 일별 운영 지표."""
+
+    source = models.ForeignKey(
+        "core.Source",
+        on_delete=models.CASCADE,
+        related_name="platform_daily_metrics",
+    )
+    metric_date = models.DateField()
+    document_count = models.BigIntegerField(default=0)
+    analyzed_document_count = models.BigIntegerField(default=0)
+    kept_document_count = models.BigIntegerField(default=0)
+    mention_count = models.BigIntegerField(default=0)
+    candidate_count = models.BigIntegerField(default=0)
+    analysis_coverage_rate = models.DecimalField(
+        max_digits=7,
+        decimal_places=4,
+        null=True,
+        blank=True,
+    )
+    evidence_valid_rate = models.DecimalField(
+        max_digits=7,
+        decimal_places=4,
+        null=True,
+        blank=True,
+    )
+    positive_rate = models.DecimalField(
+        max_digits=7,
+        decimal_places=4,
+        null=True,
+        blank=True,
+    )
+    negative_rate = models.DecimalField(
+        max_digits=7,
+        decimal_places=4,
+        null=True,
+        blank=True,
+    )
+    purchase_intent_rate = models.DecimalField(
+        max_digits=7,
+        decimal_places=4,
+        null=True,
+        blank=True,
+    )
+    metric_version = models.CharField(max_length=64, default="feedit-platform-v1")
+    metrics = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = '"analysis"."platform_metric_daily"'
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source", "metric_date", "metric_version"],
+                name="uq_platform_metric_day_ver",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["metric_date", "source"],
+                name="idx_platform_metric_day_src",
+            ),
+        ]
+
+
+class TermSearchTrend(models.Model):
+    """검색 관심도 시계열 — 네이버 데이터랩(D1·D2·D3) · 구글 트렌즈(G1).
+
+    ★ 2026-09-21 신설.
+      term_metric_daily 는 '사람이 뭐라고 말했나'(댓글·리뷰 언급)를 센다.
+      이 표는 '사람이 뭘 찾아봤나'(검색)를 센다.
+      둘은 다른 현상이다 — 한 표에 섞으면 같은 이름의 '온도'가 두 가지 뜻을
+      갖게 되고, 화면에서 "무신사 70도 / 구글 56도"처럼 비교 불가능한 숫자가
+      나란히 서게 된다. 그래서 표를 나눈다.
+
+      ratio             플랫폼이 주는 상대 지수(0~100). 절대값이 아니다.
+      estimated_volume  월간 절대 검색량(TermSearchMetricMonthly)을 앵커로
+                        환산한 추정치. 환산식은 processors/normalizer.py.
+      segment           all | gender:m | gender:f | age:10s … (데이터랩 컷)
+                        세그먼트는 일간 변동값이 아니라 '캐릭터 규정'이라
+                        주 1회만 받는다. 자세한 셈은 collectors/naver_datalab.py.
+    """
+
+    class TimeUnit(models.TextChoices):
+        DAY = "DAY", "일간"
+        WEEK = "WEEK", "주간"
+        MONTH = "MONTH", "월간"
+
+    term = models.ForeignKey(
+        "core.DictionaryTerm",
+        on_delete=models.CASCADE,
+        related_name="search_trend",
+        verbose_name="용어",
+    )
+
+    source = models.ForeignKey(
+        "core.Source",
+        on_delete=models.CASCADE,
+        related_name="term_search_trend",
+        verbose_name="검색 플랫폼",
+    )
+
+    metric_date = models.DateField(
+        verbose_name="구간 시작일",
+        help_text="주간이면 그 주의 시작일, 월간이면 1일.",
+    )
+
+    time_unit = models.CharField(
+        max_length=10,
+        choices=TimeUnit.choices,
+        default=TimeUnit.WEEK,
+    )
+
+    segment = models.CharField(
+        max_length=20,
+        default="all",
+        verbose_name="세그먼트",
+    )
+
+    ratio = models.DecimalField(
+        max_digits=7,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        verbose_name="상대 지수 (0~100)",
+    )
+
+    estimated_volume = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="추정 절대 검색량",
+    )
+
+    metric_version = models.CharField(
+        max_length=50,
+        default="feedit-search-v1",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = '"analysis"."term_search_trend"'
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["term", "source", "metric_date", "time_unit",
+                        "segment", "metric_version"],
+                name="uq_term_search_trend",
+            ),
+        ]
+
+        indexes = [
+            models.Index(fields=["term", "-metric_date"], name="idx_strend_term_date"),
+            models.Index(fields=["source", "-metric_date"], name="idx_strend_src_date"),
+            models.Index(fields=["segment"], name="idx_strend_segment"),
+        ]
+
+    def __str__(self):
+        return f"{self.term_id} {self.metric_date} {self.segment}"
+
+
+class TermSearchRegion(models.Model):
+    """시·도별 검색 관심도 (G5 · 구글 트렌즈).
+
+    ★ 2026-09-21 신설. 적재 전에 반드시 알아야 할 것이 하나 있다 —
+      **값은 용어 하나짜리 요청으로 받은 것이어야 한다.**
+      여러 용어를 한 페이로드에 넣고 지역을 받으면 구글은 '그 지역 안에서
+      비교 용어들끼리의 점유율'을 준다(지역마다 합 100). 실제로 2026-09-21
+      테스트에서 고프코어가 강원도 100, 경상남도 100 으로 동시에 나왔다 —
+      용어별 정규화라면 불가능한 값이다.
+      그 값을 term × region 으로 넣으면 같은 배치에 누가 묶였느냐에 따라
+      숫자가 통째로 바뀌는 가짜 지표가 된다.
+      수집은 collectors/google_trends.py 의 collect_region() 만 쓸 것.
+
+      value 는 '그 시·도 전체 검색량 대비 비율'로 정규화된 0~100 이다.
+      인구 보정이 이미 들어가 있어 서울이 자동으로 1등이 되지 않는다.
+      KR 은 16개 시·도가 온다(세종 없음). 검색량이 적은 용어는 대부분 0 이다.
+    """
+
+    term = models.ForeignKey(
+        "core.DictionaryTerm",
+        on_delete=models.CASCADE,
+        related_name="search_region",
+        verbose_name="용어",
+    )
+
+    source = models.ForeignKey(
+        "core.Source",
+        on_delete=models.CASCADE,
+        related_name="term_search_region",
+        verbose_name="검색 플랫폼",
+    )
+
+    metric_date = models.DateField(
+        verbose_name="수집 기준일",
+    )
+
+    region = models.CharField(
+        max_length=40,
+        verbose_name="시·도",
+    )
+
+    value = models.IntegerField(
+        default=0,
+        verbose_name="지역 관심도 (0~100)",
+    )
+
+    metric_version = models.CharField(
+        max_length=50,
+        default="feedit-search-v1",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = '"analysis"."term_search_region"'
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["term", "source", "metric_date", "region", "metric_version"],
+                name="uq_term_search_region",
+            ),
+        ]
+
+        indexes = [
+            models.Index(fields=["term", "-metric_date"], name="idx_sregion_term_date"),
+            models.Index(fields=["region", "-value"], name="idx_sregion_value"),
+        ]
+
+    def __str__(self):
+        return f"{self.term_id} {self.region} {self.value}"

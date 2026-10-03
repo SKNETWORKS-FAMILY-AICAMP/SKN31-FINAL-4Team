@@ -4,7 +4,8 @@
 .tpSecLabel{display:flex;align-items:baseline;justify-content:space-between;gap:20px;margin-bottom:14px}
 .tpSecLabel h3{font-size:clamp(22px,2.8vw,32px);font-weight:600;letter-spacing:-.04em}
 .tpSecLabel span{font-family:var(--num);font-size:9px;letter-spacing:.18em;color:var(--pink-2)}
-.tpPulseGrid{display:grid;grid-template-columns:1.18fr .82fr;gap:14px}
+/* fr 트랙만 쓰면 트랙의 최소 크기가 내용(숫자)의 min-content 폭을 따라가 카운트업 도중 오른쪽 카드 폭이 흔들렸다(2026-09 실측). minmax(0,...)로 최소 크기를 0으로 못박아 내용과 무관하게 비율이 고정되게 한다. */
+.tpPulseGrid{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(0,.82fr);gap:14px}
 .tpCard{background:#fff;border:1px solid var(--pink-3);border-radius:12px}
 .tpHero{padding:28px 30px;min-height:260px;display:flex;flex-direction:column;justify-content:space-between;
   position:relative;overflow:hidden}
@@ -24,6 +25,12 @@
 .tpTasteTags span{padding:7px 11px;border-radius:999px;border:1px solid var(--pink-3);font-size:11px;
   color:var(--pink-1)}
 .tpTasteTags span.on{background:var(--pink-0);color:var(--paper);border-color:var(--pink-0)}
+/* 내 관심 코어 — 즐겨입는 스타일 버튼. 누른 하나만 검정으로 선다 */
+.tpTasteTags button{padding:7px 11px;border-radius:999px;border:1px solid var(--pink-3);font-size:11px;
+  color:var(--pink-1);background:#fff;cursor:pointer;transition:all .25s var(--ease)}
+.tpTasteTags button:hover{border-color:var(--pink-0);color:var(--pink-0)}
+.tpTasteTags button.on{background:var(--pink-0);color:var(--paper);border-color:var(--pink-0)}
+.tpPulseCopy p b{font-weight:600;color:var(--pink-0)}
 .tpSignal{padding:28px 28px 26px;display:flex;flex-direction:column;justify-content:space-between;
   min-height:260px;background:var(--pink-0);color:var(--paper);border-color:var(--pink-0)}
 .tpSignalHead{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -43,7 +50,7 @@
 .tpSignalList b{color:var(--coral);font-weight:500;margin-left:4px}
 .tpBrief{margin-top:14px;padding:20px 24px;display:grid;grid-template-columns:auto 1fr auto;gap:18px;
   align-items:center}
-.tpBriefNo{font-family:var(--num);font-size:10px;letter-spacing:.16em;color:var(--coral)}
+.tpBriefNo{font-family:var(--num);font-size:10px;letter-spacing:.16em;color:var(--coral-ink)}   /* 작은 코랄 글자 — 대비(USABILITY-002) */
 .tpBriefText b{display:block;font-size:14px;font-weight:600}
 .tpBriefText p{margin-top:5px;font-size:12.5px;line-height:1.65;color:var(--pink-1)}
 .tpBriefScore{font-family:var(--num);font-size:12px;color:var(--pink-2);white-space:nowrap}
@@ -53,10 +60,11 @@
 .tpSalHead h3{font-size:clamp(22px,2.8vw,32px);font-weight:600;letter-spacing:-.04em}
 .tpSalHead h3 em{font-style:normal;color:var(--coral)}
 .tpSalHead p{margin-top:10px;font-size:13px;line-height:1.7;color:var(--pink-1);max-width:58ch}
+/* ★ 2026-09-19 — 선별 기준 한 줄 설명은 줄을 넘기지 않는다 */
+.tpSalHead p.tpSalDesc{max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tpSalHead p strong{font-weight:600;color:var(--pink-0)}
 .tpFilterLogic{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.tpLogicChip{font-size:11px;padding:8px 12px;border-radius:999px;background:#fff;
-  border:1px solid var(--pink-3);color:var(--pink-1)}
+.tpLogicChip{font-size:11px;padding:8px 0;color:var(--pink-1)}
 .tpLogicChip.on{background:var(--pink-0);color:var(--paper);border-color:var(--pink-0)}
 .tpSalGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;margin-top:18px}
 /* 카드(.voteCard)는 실제 살!말? 카드 그대로 두고, 매칭 이유 · 태그는
@@ -72,6 +80,9 @@
 .tpTags span{font-size:10px;padding:5px 8px;border-radius:999px;border:1px solid var(--pink-3);
   color:var(--pink-2)}
 .tpTags span.hit{color:var(--coral);border-color:rgba(255,107,74,.35);background:rgba(255,107,74,.06)}
+/* 카드를 못 그릴 때 그 자리에 쓰는 한 줄 — 빈 화면도, 가짜 카드도 아니다. */
+.tpSalState{grid-column:1/-1;padding:34px 16px;text-align:center;line-height:1.7;
+  font-size:11.5px;color:var(--pink-2);border:1px dashed var(--pink-3);border-radius:10px}
 .tpEmptyMore{text-align:center;padding:22px 0 6px;font-family:var(--num);font-size:9px;letter-spacing:.14em;
   color:var(--pink-2)}
 @media(max-width:1080px){.tpPulseGrid{grid-template-columns:1fr}}
@@ -90,7 +101,7 @@
 .mfProf h4{font-size:16px;font-weight:600;letter-spacing:-.03em}
 .mfProf .em{margin-top:6px;font-size:11.5px;color:var(--pink-2)}
 .mfProf .rkRow{margin-top:13px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
-.mfEdit{display:block;width:100%;margin-top:18px;padding:11px;border-radius:8px;cursor:none;
+.mfEdit{display:block;width:100%;margin-top:18px;padding:11px;border-radius:8px;
   border:1px solid var(--pink-3);font-size:12.5px;color:var(--pink-1);
   transition:border-color .3s,color .3s}
 .mfEdit:hover{border-color:var(--pink-0);color:var(--pink-0)}
@@ -115,16 +126,16 @@
   font-size:12px;color:var(--pink-1)}
 .mfFil .sub em{font-style:normal;font-size:10.5px;color:var(--pink-2)}
 .mfChips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
-.mfChips button{padding:7px 13px;border-radius:999px;cursor:none;font-size:11.5px;
+.mfChips button{padding:7px 13px;border-radius:999px;font-size:11.5px;
   border:1px solid var(--pink-3);color:var(--pink-1);
   transition:background .28s,color .28s,border-color .28s}
 .mfChips button:hover{border-color:var(--pink-1)}
 .mfChips button.on{background:var(--pink-0);border-color:var(--pink-0);color:var(--paper)}
 .mfRange{margin-top:20px}
 .mfRange input{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:99px;
-  background:rgba(10,10,10,.09);outline:none;margin-top:12px;cursor:none}
+  background:rgba(10,10,10,.09);outline:none;margin-top:12px}
 .mfRange input::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;
-  border-radius:50%;background:var(--coral);cursor:none;
+  border-radius:50%;background:var(--coral);
   box-shadow:0 3px 9px -3px rgba(240,78,40,.9)}
 .mfRange input::-moz-range-thumb{width:17px;height:17px;border:0;border-radius:50%;
   background:var(--coral)}
@@ -137,7 +148,7 @@
 .mfSec .ph h3{font-size:15px;font-weight:600;letter-spacing:-.03em}
 .mfSec .ph em{font-style:normal;font-size:11px;color:var(--pink-2)}
 .mfGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
-.pItem{position:relative;border-radius:9px;overflow:hidden;background:#efece7;cursor:none;
+.pItem{position:relative;border-radius:9px;overflow:hidden;background:#efece7;
   border:1px solid var(--pink-3);
   transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
 .pItem:hover{transform:translateY(-4px);box-shadow:0 26px 44px -30px rgba(10,10,10,.5)}
@@ -167,9 +178,26 @@
 /* ── 공용 패션 검색 (할인률 · 리세일 · 수명주기) ──────────
    자유롭게 치되 결과는 반드시 어휘로 해석된다. 해석되면 칩이 되고,
    안 되면 세부 검색으로 넘겨 사용자가 직접 짚게 한다. */
-.fsWrap{position:relative;z-index:20;margin:0 0 18px}
+/* z-index:20 이 상단 고정 헤더(.mHead, z-index:20)와 같아서 천천히 스크롤하면
+   동률 시 DOM 순서상 나중인 이 검색바가 헤더 위로 올라와 걸쳐 보였다.
+   헤더보다 항상 아래에 깔리도록 낮춘다. */
+.fsWrap{position:relative;z-index:5;margin:0 0 18px}
 .fsRow{display:flex;gap:10px;align-items:stretch;
   width:min(720px,100%);margin:0 auto}
+/* ★ 2026-09-19 — 할인률 · 리세일 · 수명주기의 검색바는 세부 검색 버튼 때문에
+   언급량 · 온도 쪽 검색바보다 왼쪽으로 밀려 있었다. 바는 같은 자리(720px 가운데)에
+   두고, 세부 검색 버튼만 오른쪽 바깥에 띄운다. */
+#trSearch .fsRow{position:relative;height:50px;align-items:center}
+#trSearch .fsRow .fsBar{width:100%;height:50px;flex:1 1 auto;align-self:center;box-sizing:border-box}
+/* 오른쪽 버튼 묶음(세부 검색 · 사전) — 검색바와 같은 50px. 늘어나지 않게 값으로 못박는다.
+   언급량·온도 / 연관어 / 긍부정(.kwWrap)도 같은 자리에 사전 버튼을 둔다. */
+.fsRow{position:relative}
+.kwWrap .fsRow{height:50px;align-items:center}
+.fsSide{position:absolute;left:calc(100% + 10px);top:0;bottom:0;display:flex;gap:8px;align-items:center}
+.fsSide .fsMore{height:50px;min-height:50px;max-height:50px;box-sizing:border-box}
+@media(max-width:1180px){
+  .fsSide{position:static}
+}
 .fsBar{
   flex:1;min-width:0;position:relative;display:flex;align-items:center;gap:10px;
   height:50px;padding:0 14px 0 16px;border-radius:999px;background:#fff;
@@ -192,19 +220,23 @@
 }
 .fsGhost i{font-style:normal}
 .fsGhost b{font-weight:500;color:var(--pink-1)}
+/* EDIT 검색바의 예시 용어는 질문보다 한 톤 더 연하게 */
+#kwQ,#kwQ b,#fsQ,#fsQ b{color:rgba(10,10,10,.42)}
+#kwQ b,#fsQ b{display:inline-block}   /* 용어만 깜빡이도록 transform 이 먹게 */
 .fsBar.typing .fsGhost{opacity:0}
 .fsClear{width:22px;height:22px;padding:0;border-radius:50%;flex:0 0 22px;
   background:rgba(10,10,10,.06);color:var(--pink-1);font-size:13px;line-height:1;
-  display:grid;place-items:center;cursor:none;box-shadow:none}
+  display:grid;place-items:center;box-shadow:none}
 /* display:grid 가 [hidden] 의 display:none 을 이겨 버린다 — 명시적으로 되돌린다 */
 .fsClear[hidden]{display:none}
 .fsClear:hover{background:var(--coral);color:#fff}
 .fsMore{
   flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;padding:0 18px;
   border-radius:999px;background:var(--pink-0);color:var(--paper);
-  font-size:13px;letter-spacing:-.02em;white-space:nowrap;cursor:none;
+  font-size:13px;letter-spacing:-.02em;white-space:nowrap;
   transition:background .3s,transform .3s var(--ease);
 }
+.fsMore[hidden]{display:none}
 .fsMore u{text-decoration:none;font-size:10px;opacity:.7;
   transition:transform .3s var(--ease)}
 .fsMore:hover{background:var(--coral)}
@@ -220,7 +252,7 @@
 }
 .fsSug .sg{
   display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;
-  border-radius:9px;text-align:left;cursor:none;transition:background .16s;
+  border-radius:9px;text-align:left;transition:background .16s;
 }
 .fsSug .sg.on{background:rgba(255,107,74,.09)}
 .fsSug .sg .fc{
@@ -228,13 +260,27 @@
   padding:4px 7px;border-radius:5px;background:rgba(10,10,10,.06);color:var(--pink-2);
 }
 .fsSug .sg.on .fc{background:var(--coral);color:#fff}
-.fsSug .sg .lb{flex:1;min-width:0;font-size:13.5px;letter-spacing:-.02em;
+/* chat_report.css 의 전역 .lb{display:flex;flex-direction:column} 이 새어 들어와 강조 글자(em)가 줄바꿈되던 것을 막는다 */
+.fsSug .sg .lb{display:block;flex:1;min-width:0;font-size:13.5px;letter-spacing:-.02em;
   color:var(--pink-0);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fsSug .sg .lb em{font-style:normal;color:var(--coral);font-weight:600}
 .fsSug .sg .pt{flex:0 0 auto;font-size:11px;color:var(--pink-2);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:44%}
 .fsSug .none{padding:16px 12px;font-size:13px;color:var(--pink-2);line-height:1.7}
 .fsSug .none b{color:var(--pink-0);font-weight:500}
+.fsSug .sg.resaleProduct{align-items:stretch;padding:9px;gap:12px}
+.resaleThumb{position:relative;width:52px;height:52px;flex:0 0 52px;border-radius:9px;overflow:hidden;
+  background:var(--paper);display:grid;place-items:center;color:var(--coral);font-weight:700}
+.resaleThumb img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:contain;background:#fff}
+.resaleThumb.imageError img{display:none}
+.resaleSugTx{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.resaleSugTop{display:flex;align-items:center;gap:8px;min-width:0}
+.resaleSugTop b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:13px;font-weight:600;color:var(--pink-0)}
+.resaleSugTop em{flex:0 0 auto;font-style:normal;font-family:var(--num);font-size:8px;
+  letter-spacing:.08em;padding:3px 6px;border-radius:999px;background:rgba(10,10,10,.06);color:var(--pink-2)}
+.resaleSugTx small{font-size:10.5px;color:var(--pink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.resaleSugTx small.platforms{color:var(--coral)}
 
 /* 적용된 조건 칩 */
 .fsChips{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;
@@ -243,10 +289,24 @@
   border-radius:999px;background:var(--pink-0);color:var(--paper);
   font-size:12px;letter-spacing:-.02em;white-space:nowrap}
 .fsChip small{font-family:var(--num);font-size:8.5px;letter-spacing:.08em;opacity:.55}
-.fsChip button{width:16px;height:16px;border-radius:50%;cursor:none;
+.fsChip button{width:16px;height:16px;border-radius:50%;
   background:rgba(241,239,234,.18);color:var(--paper);font-size:11px;line-height:1;
   display:grid;place-items:center}
 .fsChip button:hover{background:var(--coral)}
+
+/* ★ 2026-09-22 — 할인률 변화는 조건 칩을 쓰지 않는다.
+   세부 검색으로 좁히되, 화면에는 고른 상품 이름만 한 줄 남긴다. */
+.fsChips.isName{gap:0}
+.fsPickName{display:inline-flex;align-items:center;gap:9px;
+  padding:7px 9px 7px 14px;max-width:100%;
+  border-radius:999px;border:1px solid var(--line);background:transparent;
+  color:var(--pink-0);font-size:12.5px;letter-spacing:-.02em}
+.fsPickName small{flex:0 0 auto;font-family:var(--num);font-size:8.5px;
+  letter-spacing:.08em;opacity:.55}
+.fsPickName button{flex:0 0 auto;width:16px;height:16px;border-radius:50%;
+  background:rgba(10,10,10,.08);color:var(--pink-2);font-size:11px;line-height:1;
+  display:grid;place-items:center}
+.fsPickName button:hover{background:var(--coral);color:var(--paper)}
 
 /* ── 세부 검색 팝업 ── */
 .fsPopBg{
@@ -256,7 +316,7 @@
 }
 .fsPopBg.on{opacity:1;pointer-events:auto}
 .fsPop{
-  width:min(980px,100%);max-height:min(660px,88vh);display:flex;flex-direction:column;
+  width:min(980px,100%);height:min(660px,88vh);display:flex;flex-direction:column;
   background:var(--paper);border-radius:16px;overflow:hidden;
   box-shadow:0 60px 120px -50px rgba(10,10,10,.7);
   transform:translateY(14px) scale(.985);transition:transform .38s var(--ease);
@@ -266,19 +326,43 @@
   padding:22px 24px 18px;border-bottom:1px solid var(--pink-3)}
 .fsPopHead h3{font-size:16px;font-weight:600;letter-spacing:-.03em}
 .fsPopHead p{margin-top:6px;font-size:12px;color:var(--pink-2);line-height:1.65;max-width:56ch}
-.fsX{width:30px;height:30px;border-radius:50%;flex:0 0 auto;cursor:none;
+.fsX{width:30px;height:30px;border-radius:50%;flex:0 0 auto;
   background:rgba(10,10,10,.06);color:var(--pink-1);font-size:16px;line-height:1;
   display:grid;place-items:center}
 .fsX:hover{background:var(--coral);color:#fff}
-.fsCols{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,1fr)}
+.fsCols{flex:1;min-height:0;display:grid;grid-template-columns:repeat(var(--fsN,4),1fr)}
+.fsPop.is-discount .fsCols{grid-template-columns:minmax(150px, 190px) minmax(150px, 190px) minmax(150px, 190px) 1fr}
+/* 리세일은 브랜드·카테고리 시장 조건과 이미지가 있는 개별상품 검색을 함께 쓴다. */
+.fsPop[data-fs="resale"] .fsCols{grid-template-columns:minmax(145px,180px) minmax(145px,180px) minmax(145px,180px) minmax(320px,1fr)}
+.fsPop[data-fs="resale"] .fsColH{font-family:inherit;font-size:11px;letter-spacing:-.01em;
+  color:var(--pink-1);font-weight:600}
+.fsPop[data-fs="resale"] .fsApply{background:var(--pink-0)}
+.fsPop[data-fs="resale"] .fsResaleOpt{align-items:center;justify-content:flex-start;padding:9px;gap:10px}
+.fsResaleOpt .fsOptThumb{position:relative;width:50px;height:50px;flex:0 0 50px;border-radius:8px;
+  overflow:hidden;background:#fff;display:grid;place-items:center;color:var(--coral);font-weight:700}
+.fsResaleOpt .fsOptThumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.fsResaleOpt .fsOptThumb.imageError img{display:none}
+.fsResaleOpt .fsOptTx{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.fsResaleOpt .fsOptTx b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px}
+.fsResaleOpt .fsOptTx small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:9.5px;color:var(--pink-2)}
+.fsResaleOpt .fsOptTx small.platforms{color:var(--coral)}
+.fsResaleOpt.on .fsOptTx small{color:rgba(255,255,255,.66)}
+@media(max-width:820px){
+  .fsPop[data-fs="resale"] .fsCols{grid-template-columns:repeat(3,minmax(150px,1fr));overflow:auto}
+  .fsPop[data-fs="resale"] .fsCol:last-child{grid-column:1/-1;min-height:300px;border-top:1px solid var(--pink-3)}
+}
 .fsCol{min-height:0;display:flex;flex-direction:column;border-right:1px solid var(--pink-3)}
 .fsCol:last-child{border-right:none}
+/* 탭에서 못 쓰는 축(수명주기의 아이템명)은 칸째 접는다 — search.js fsPaintPop */
+.fsCol[hidden]{display:none}
+.fsCol:has(+ .fsCol[hidden]){border-right:none}
 .fsColH{padding:12px 14px;font-family:var(--num);font-size:9px;letter-spacing:.18em;
   color:var(--pink-2);border-bottom:1px solid var(--pink-3);flex:0 0 auto}
 .fsList{flex:1;min-height:0;overflow-y:auto;padding:6px}
 .fsList button{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
-  width:100%;padding:9px 11px;border-radius:8px;cursor:none;text-align:left;
+  width:100%;padding:9px 11px;border-radius:8px;text-align:left;
   font-size:13px;letter-spacing:-.02em;color:var(--pink-1);
   transition:background .16s,color .16s;
 }
@@ -286,15 +370,53 @@
 .fsList button.on{background:var(--pink-0);color:var(--paper)}
 .fsList button i{font-style:normal;font-size:10px;opacity:.5}
 .fsList .hint{padding:14px 12px;font-size:12px;color:var(--pink-2);line-height:1.7}
+/* ── 축별 필터 칩 (2026-09-09) ─────────────────────────────
+   네 칸은 이제 단계가 아니라 서로 독립된 필터다. 그래서 항목 하나하나가
+   '눌리는 칩'처럼 보여야 한다 — 켜지면 그대로 남고, 다시 누르면 빠진다.
+   눌린 것이 목록 안에서 바로 읽히도록 배경을 채우고 왼쪽에 굵은 선을 둔다. */
+.fsList button.fsOpt{position:relative}
+.fsList button.fsOpt .fsOptTx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fsList button.fsOpt.on{background:var(--pink-0);color:var(--paper)}
+.fsList button.fsOpt.on i{opacity:.75}
+.fsList button.fsOpt.on::after{
+  content:'';position:absolute;left:3px;top:8px;bottom:8px;width:2px;border-radius:2px;
+  background:var(--coral)}
+/* 그 조건까지 걸면 남는 상품이 0 인 것 — 지우지 않고 흐리게 둔다.
+   사라지면 "왜 없어졌지" 가 되고, 그대로 두면 "여긴 없구나" 가 된다. */
+.fsList button.fsOpt.zero{opacity:.4}
+.fsList button.fsOpt.zero.on{opacity:1}
+/* 서버에 후보를 다시 물어보는 동안 — 목록은 그대로 두고 살짝 죽인다.
+   비우면 눌린 칩까지 사라져서 방금 무엇을 눌렀는지 알 수가 없다. */
+.fsList.isLoading{opacity:.55;pointer-events:none;transition:opacity .18s}
+
+/* 칸 안에서 찾기 — 브랜드가 2,775개다. 스크롤로는 못 찾는다. */
+.fsColFind{flex:0 0 auto;padding:8px 8px 4px}
+.fsColFind input{
+  width:100%;padding:7px 10px;border:1px solid var(--pink-3);border-radius:8px;
+  background:transparent;font:inherit;font-size:12px;letter-spacing:-.02em;color:var(--pink-0)}
+.fsColFind input::placeholder{color:var(--pink-2)}
+.fsColFind input:focus{outline:none;border-color:var(--pink-1)}
+
+/* 지금 무엇을 보고 있는지 한 줄 — 진짜로 좁혀진 건지,
+   서버를 못 봐서 박아 둔 목록인지 여기서 사실대로 말한다. */
+.fsState{padding:9px 24px;font-size:11.5px;line-height:1.6;color:var(--pink-2);
+  border-bottom:1px solid var(--pink-3);background:rgba(10,10,10,.02)}
+.fsState:empty{display:none}
+.fsState.warn{color:var(--coral)}
+.fsState.load{opacity:.7}
+
+/* 검색칸 제안 — 이미 걸려 있는 말은 한눈에 보이게 */
+.fsSug .sg.picked .lb{color:var(--coral)}
+.fsSug .sg.picked .pt{color:var(--coral);opacity:.8}
 .fsPopFoot{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
   gap:18px;padding:16px 24px;border-top:1px solid var(--pink-3);background:#fff}
 .fsPicked{display:flex;flex-wrap:wrap;gap:7px;min-height:28px;align-items:center}
 .fsPicked .ph2{font-size:12px;color:var(--pink-2)}
 .fsActs{display:flex;gap:9px;flex:0 0 auto}
-.fsReset{padding:11px 16px;border-radius:999px;font-size:12.5px;cursor:none;
+.fsReset{padding:11px 16px;border-radius:999px;font-size:12.5px;
   color:var(--pink-1);background:rgba(10,10,10,.05)}
 .fsReset:hover{background:rgba(10,10,10,.1)}
-.fsApply{padding:11px 20px;border-radius:999px;font-size:12.5px;cursor:none;
+.fsApply{padding:11px 20px;border-radius:999px;font-size:12.5px;
   background:var(--coral);color:#fff;display:inline-flex;align-items:center;gap:8px;
   transition:transform .3s var(--ease),filter .3s}
 .fsApply u{text-decoration:none;transition:transform .3s var(--ease)}
@@ -304,4 +426,303 @@
   .fsCols{grid-template-columns:repeat(2,1fr)}
   .fsCol{border-bottom:1px solid var(--pink-3)}
   .fsPopFoot{flex-direction:column;align-items:stretch}
+}
+
+/* ── 조회 버튼 + 조회 중 모션 (2026-09-07) ──────────────────
+   엔터 말고 눌러서도 조회할 수 있게, 그리고 다녀오는 동안 눌린 줄 알게.
+   chatbar 의 결(둥근 알약 · 코랄 강조 · --ease)을 그대로 따른다. */
+.kwGoBtn{
+  width:30px;height:30px;flex:0 0 30px;padding:0;border:0;border-radius:50%;
+  display:grid;place-items:center;cursor:none;
+  background:var(--pink-0);color:var(--paper);
+  transition:background .3s var(--ease),transform .3s var(--ease),opacity .3s;
+}
+.kwGoBtn:hover{background:var(--coral)}
+.kwGoBtn:active{transform:scale(.92)}
+.kwGoBtn:disabled{cursor:default}
+.kwGoIc{font-size:14px;line-height:1;display:block}
+
+/* 조회 중 — 돋보기가 천천히 돈다.
+   빠르게 돌리면 '오류가 났나' 싶게 조급해 보인다. 1.1초로 느리게 둔다. */
+.fsBar.busy .kwGoBtn{background:var(--coral)}
+.fsBar.busy .kwGoIc{animation:kwSpin 1.1s linear infinite}
+@keyframes kwSpin{to{transform:rotate(360deg)}}
+
+/* 조회 중에는 테두리를 따라 한 줄기가 지나간다 — 진행 중임을 조용히 알린다.
+   막대 게이지를 넣으면 '몇 %'를 묻게 되는데, 얼마나 걸릴지 우리도 모른다. */
+.fsBar.busy{border-color:var(--coral)}
+.fsBar.busy::after{
+  content:'';position:absolute;left:16px;right:16px;bottom:-1px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--coral),transparent);
+  animation:kwSweep 1.4s var(--ease) infinite;
+}
+@keyframes kwSweep{
+  0%{transform:translateX(-40%);opacity:0}
+  35%{opacity:.9}
+  100%{transform:translateX(40%);opacity:0}
+}
+/* 조회 중엔 입력을 흐리게 — 지금은 기다리는 때라는 신호 */
+.fsBar.busy input{opacity:.5}
+
+/* 움직임을 줄여 달라고 한 사람에게는 돌리지 않는다. */
+@media (prefers-reduced-motion:reduce){
+  .fsBar.busy .kwGoIc{animation:none}
+  .fsBar.busy::after{animation:none;opacity:.6}
+}
+
+/* Discount modal specific styles */
+.fsPop.is-discount .fsOpt.has-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  text-align: left;
+  padding: 8px 12px;
+}
+.fsPop.is-discount .fsOpt.has-thumb img {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  object-fit: cover;
+  object-position: center top;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+.fsPop.is-discount .fsOpt.has-thumb .fsOptTx {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  line-height: 1.4;
+  word-break: keep-all;
+}
+/* ★ 2026-09-19 — 상품명 칸의 페이지 버튼을 걷어냈다. 끝까지 내리면 이어 받는다는
+   안내 한 줄만 남긴다. */
+.fsPop.is-discount .fsPageNav{display:flex;align-items:center;justify-content:center;
+  gap:7px;padding:11px 6px;font-size:11px;color:var(--pink-2);
+  border-top:1px solid var(--pink-3)}
+.fsPop { resize: both; }
+
+.fsPop.is-discount { width: 1100px; max-width: 96vw; }
+
+
+/* 할인률 상품 선택 — 기존 지표 카드의 폭·테두리·간격을 그대로 따른다. */
+.stockPicker{margin:0 0 12px;padding:10px 14px}
+.stockPicker .ph{margin-bottom:6px}
+/* 할인율 원형에 선택 상품 사진을 넣고, 찜 카드도 이 원형으로 바로 끌어다 놓는다. */
+.stockPickerGrid{display:grid;
+  grid-template-columns:minmax(175px,200px) minmax(0,1fr) minmax(0,.62fr);
+  align-items:start;gap:14px}
+.stockPickerRate{min-width:0;min-height:320px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;transform:translate(40px,-10px);--sc:var(--coral)}
+.stockPickerRateLabel{font-size:12px;color:var(--pink-2)}
+#stockDiscountSlot{width:100%;padding:8px;display:flex;justify-content:center;border-radius:50%;
+  transition:background .2s,box-shadow .2s}
+#stockDiscountSlot.dragover{background:#fff4f0;box-shadow:0 0 0 2px var(--coral)}
+.stockPickerRate .stockPickerDial,.stockPickerDialEmpty{width:min(100%,190px);height:auto;aspect-ratio:1}
+.stockPickerDial{appearance:none;padding:0;border:0;background:transparent;font:inherit;
+  position:relative;flex:0 0 auto;cursor:pointer}
+.stockPickerDial:focus-visible{outline:2px solid var(--coral);outline-offset:5px;border-radius:50%}
+.stockPickerDial svg{position:absolute;inset:0;z-index:2;width:100%;height:100%;
+  transform:rotate(-90deg);overflow:visible;pointer-events:none}
+.stockPickerDial .trk,.stockPickerDial .val{fill:none;stroke-width:8}
+.stockPickerDial .trk{stroke:rgba(10,10,10,.07)}
+.stockPickerDial .val{stroke:var(--sc,var(--coral));stroke-linecap:round}
+.stockDialPhoto{position:absolute;inset:18px;z-index:1;border-radius:50%;overflow:hidden;
+  background:linear-gradient(145deg,#f6f4f1,#e9e5df)}
+.stockDialPhoto img{width:100%;height:100%;display:block;object-fit:cover;object-position:center top}
+.stockPicker .stockPickerDial .num{position:absolute;inset:auto auto -9px 50%;z-index:3;
+  width:max-content;min-width:86px;transform:translateX(-50%);padding:8px 14px;
+  display:flex;flex-direction:row;align-items:baseline;justify-content:center;gap:4px;
+  border-radius:999px;background:#111;color:#fff;box-shadow:0 5px 13px rgba(0,0,0,.16)}
+.stockPicker .stockPickerDial .num b{font-family:var(--num);font-size:25px;font-weight:500;
+  line-height:1;color:#fff;letter-spacing:-.04em}
+.stockPicker .stockPickerDial .num small{font-size:7px;color:rgba(255,255,255,.72);letter-spacing:.12em}
+.stockPickerDialEmpty{appearance:none;padding:0;border:10px solid rgba(10,10,10,.07);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;
+  background:#fff;color:var(--pink-2);font:inherit;cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.stockPickerDialEmpty:hover,.stockPickerDialEmpty:focus-visible{border-color:var(--coral);color:var(--coral);
+  background:#fff8f5;outline:none}
+.stockPickerDialEmpty b{font-family:var(--num);font-size:36px;font-weight:500;line-height:1}
+.stockPickerDialEmpty small{font-size:10px}
+.stockPicker .dzWrap{min-width:0;display:flex;flex-direction:column;gap:8px}
+.stockPicker .dropZone{
+  width:100%;height:auto;aspect-ratio:1;max-height:296px;border:1px dashed var(--pink-3);border-radius:9px;
+  background:#faf9f7;cursor:pointer;overflow:hidden;position:relative;
+  display:flex;align-items:center;justify-content:center;
+}
+.stockPicker .dropZone:hover,.stockPicker .dropZone:focus-visible,
+.stockPicker .dropZone.dragover{border-color:var(--coral);background:#fff8f5;outline:none}
+.stockPicker .dropZone.has-item{border-style:solid;background:#fff}
+.stockPicker .dropZone img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;background:#fff}
+.stockPicker .dropZone img[hidden],.stockPicker [hidden]{display:none}
+.stockPicker .dzPlaceholder{width:100%;padding:0 12px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:7px;text-align:center;color:var(--pink-2);pointer-events:none}
+.stockPicker .dzPlaceholder b{font-size:13px;font-weight:600;color:var(--pink-1)}
+.stockPicker .dzPlaceholder small{font-size:11px}
+.stockPicker .dzPlaceholder .circlePlus{
+  width:36px;height:36px;margin:0 0 3px;border:1px solid var(--pink-3);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:24px;line-height:1;color:var(--coral);
+}
+.stockPicker .dzSelection{min-height:30px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.stockPicker .dzSelection>div:first-child{min-width:0;display:flex;flex-direction:column;gap:2px}
+.stockPicker .dzSelection b{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stockPicker .dzSelection span{font-size:10.5px;color:var(--pink-2)}
+.stockPicker .dzActions{display:flex;align-items:center;gap:6px;flex:none}
+.stockPicker .dzClearBtn,.stockPicker .dzSaveBtn{
+  position:static;flex:none;padding:5px 10px;font-size:11px;
+  color:var(--pink-2);background:#fff;cursor:pointer;border:1px solid var(--pink-3);border-radius:99px;
+}
+.stockPicker .dzClearBtn:hover,.stockPicker .dzSaveBtn:hover{border-color:var(--coral);color:var(--coral)}
+.stockPicker .dzSaveBtn.on{color:var(--coral);border-color:var(--coral);background:#fff8f5}
+.stockPicker .dzSaveBtn:disabled{cursor:default;opacity:.6}
+.stockPickerRate>.dzSaveBtn{min-width:132px;margin-top:5px;padding:7px 13px;background:#fff}
+.stockPicker .dzSaveError{font-size:11px;line-height:1.5;color:var(--coral)}
+.stockPickerSummary{min-width:0;min-height:320px;display:flex;align-items:center;padding:0 0 0 78px}
+.stockSummaryContent{min-width:0;width:100%}
+.stockPickerSummary .stockEyebrow{display:block;margin-bottom:8px;font-size:11px;color:var(--pink-2)}
+.stockPickerSummary h4{margin:0;font-size:20px;line-height:1.35;word-break:keep-all;overflow-wrap:anywhere;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.stockSummaryStatus{margin:8px 0 0;font-size:18px;font-weight:600}
+.stockSummaryStatus em{font-style:normal;color:var(--coral)}
+.stockSummaryPrices{margin:13px 0 0;font-size:12px;color:var(--pink-2);line-height:1.5}
+.stockSummaryPrices strong{color:var(--coral)}
+.stockSummaryMetrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 8px;
+  margin-top:18px;padding-top:16px;border-top:1px solid var(--pink-3)}
+.stockSummaryMetrics>div{min-width:0;display:flex;flex-direction:column;gap:4px}
+.stockSummaryMetrics b{font-family:var(--num);font-size:16px;font-weight:600;white-space:nowrap}
+.stockSummaryMetrics span{font-size:10px;color:var(--pink-2)}
+.stockSummaryAsOf{margin:15px 0 0;font-size:11px;line-height:1.55;color:var(--pink-2)}
+.stockSummaryEmpty{margin:0;font-size:13px;line-height:1.7;color:var(--pink-2)}
+/* ★ 2026-09-19 — 찜 목록 상자의 세로는 왼쪽 지표와 같은 320px 로 못박는다.
+   담긴 수가 늘어도 상자가 길어지지 않고, 넘치는 만큼은 안에서 스크롤한다. */
+.stockPicker .dzWishlist{height:320px;min-height:320px;max-height:320px;
+  width:100%;min-width:0;
+  border:1px solid var(--pink-3);border-radius:9px;
+  background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.stockPicker .wlHead{padding:11px 14px;font-size:13px;display:flex;justify-content:space-between;
+  align-items:center;gap:10px;border-bottom:1px solid var(--pink-3)}
+.stockPicker .wlHead span{font-size:11px}
+/* 한 줄에 3개 · 두 줄(6개)까지 보이고, 그 뒤로는 스크롤로 본다.
+   카드가 사진 한 장뿐이라 한 칸의 크기를 못박아 정사각형을 지킨다. */
+/* 한 줄에 4개 — 카드는 칸 폭에 맞춰 정사각형으로 늘어나고, 넘치면 스크롤한다. */
+/* ★ 2026-09-19 — 상자 높이가 고정이라 줄(row)이 눌려 사진이 납작해졌다.
+   줄 높이를 내용 그대로(max-content) 잡고 카드도 늘어나지 않게 해서,
+   넘치는 만큼은 눌리지 않고 스크롤되게 한다. */
+.stockPicker .wlBody{--wlGap:10px;
+  flex:1 1 auto;min-height:0;height:100%;
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-auto-rows:max-content;align-content:start;justify-items:stretch;
+  gap:var(--wlGap);padding:10px;
+  overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.stockPicker .wlBody>.wlItem{align-self:start}
+/* 사진만 정사각형이고, 글자는 그 아래에 붙는다 */
+.stockPicker .stockWishMessage{grid-column:1/-1;width:min(280px,72vw);
+  padding:16px 10px;font-size:12px;line-height:1.7;color:var(--pink-2)}
+.stockPicker .stockWishRetry{margin-top:8px;padding:5px 10px;border:1px solid var(--pink-3);
+  border-radius:99px;background:#fff;color:var(--pink-1);cursor:pointer}
+.stockPicker .wlItem{
+  width:100%;min-width:0;text-align:left;background:#fff;border:1px solid transparent;
+  font:inherit;cursor:pointer;display:block;padding:0;border-radius:7px;overflow:hidden;
+}
+.stockPicker .wlItem:hover{background:#faf9f7;border-color:var(--pink-3)}
+.stockPicker .wlItem.on{background:#fff8f5;border-color:var(--coral)}
+.stockPicker .wlItem.dragging{opacity:.42}
+.stockPicker .wlItem:focus-visible{outline:2px solid var(--coral)}
+/* 사진은 정사각형 — 칸이 넓어져도 비율이 흔들리지 않는다 */
+.stockPicker .wlPic{width:100%;height:auto;aspect-ratio:1;flex:none;position:relative;border-radius:7px;
+  background:#f4f3f1;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  font-size:9px;color:var(--pink-2)}
+.stockPicker .wlPic img{width:100%;height:100%;object-fit:cover;object-position:center top;border:0;border-radius:0}
+/* 찜 버튼 — 스타일 페이지 아이템 카드(.likeBtn)와 같은 모양으로 오른쪽 위에 둔다 */
+.stockPicker .wlHeart{position:absolute;right:6px;bottom:6px;top:auto;z-index:3;
+  width:24px;height:22px;padding:0;border:none;background:none;box-shadow:none;
+  border-radius:0;cursor:pointer;
+  display:grid;place-items:center;transition:transform .25s var(--ease)}
+.stockPicker .wlHeart:hover{transform:scale(1.1)}
+.stockPicker .wlHeart svg{width:21px;height:21px;display:block;fill:#fff;stroke:none;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.28));transition:fill .2s}
+.stockPicker .wlHeart.on svg{fill:#e8352b}
+/* 브랜드(윗줄) · 상품명(아랫줄) — 사진 왼쪽 위에 얹는다. 가격은 고르면 요약에서 본다. */
+/* 브랜드 · 상품명 — 사진을 가리지 않게 사진 바깥 아래에 둔다 */
+.stockPicker .wlTag{display:flex;flex-direction:column;gap:1px;
+  padding:6px 3px 2px;line-height:1.24;color:var(--pink-0);pointer-events:none}
+.stockPicker .wlTag b{font-size:9.5px;font-weight:700;letter-spacing:.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stockPicker .wlTag span{font-size:10.5px;overflow:hidden;display:-webkit-box;
+  -webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;word-break:keep-all}
+.stockPriceGrid{margin-top:12px;align-items:stretch}
+.stockPriceGrid .panelC{min-width:0}
+.stockPriceGrid .gHead em{font-style:normal;font-size:10px;color:var(--pink-2)}
+.stockPriceChart svg{display:block;width:100%;height:auto}
+.stockPriceGridLine{stroke:var(--pink-3);stroke-width:1}
+.stockPriceAxis{font-size:11px;fill:#83909f;font-family:var(--num)}
+.stockPriceGuide{fill:none;stroke-width:1.3;stroke-dasharray:6 5}
+.stockPriceGuide.high{stroke:#15964b}
+.stockPriceGuide.low{stroke:#ff6b4a}
+.stockPriceGuideLabel{font-size:11px;font-weight:600;font-family:var(--num);
+  paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+.stockPriceGuideLabel.high{fill:#15964b}
+.stockPriceGuideLabel.low{fill:#f05a49}
+.stockPriceLine{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.stockPriceLine.regular{stroke:#15964b}
+.stockPriceLine.sale{stroke:#ff6b4a}
+.stockPricePoint{fill:#fff;stroke:#ff6b4a;stroke-width:1.8}
+.stockPriceLegend{display:flex;gap:15px;justify-content:flex-end;margin:6px 2px 0;
+  font-size:11px;color:var(--pink-2)}
+.stockPriceLegend span{display:inline-flex;align-items:center;gap:6px}
+.stockPriceLegend i{display:block;width:14px;height:3px;border-radius:2px}
+.stockPriceLegend i.regular{background:#15964b}
+.stockPriceLegend i.sale{background:#ff6b4a}
+.stockCompareTable td{vertical-align:middle;padding-top:17px;padding-bottom:17px}
+.stockCompareTable td small{display:block;margin-top:5px;font-size:10px;color:var(--pink-2)}
+.stockCompareTable tr.selected td{background:#fffaf8}
+.stockCompareTable .bar{display:block;margin-top:8px;max-width:140px}
+.stockComparePanel .note{margin-top:18px}
+/* ★ 2026-09-19 — 표의 첫 칸·끝 칸이 패널 벽에 붙어 있었다. 안쪽 여백을 준다 */
+.stockComparePanel{padding-left:24px;padding-right:24px}
+.stockCompareTable th:first-child,.stockCompareTable td:first-child{padding-left:6px}
+.stockCompareTable th:last-child,.stockCompareTable td:last-child{padding-right:6px}
+.stockHistoryEmpty{padding:40px 12px;text-align:center;font-size:12px;line-height:1.7;color:var(--pink-2)}
+@media(max-width:820px){
+  .stockPriceGrid{grid-template-columns:1fr}
+}
+@media(max-width:1280px){
+  .stockPickerGrid{grid-template-columns:170px minmax(0,1fr)}
+  .stockPickerRate{min-height:290px;transform:translateX(26px)}
+  .stockPickerRate .stockPickerDial,.stockPickerDialEmpty{width:170px}
+  .stockPicker .dzWishlist{height:290px;min-height:290px;max-height:290px}
+  .stockPicker .dzWrap{grid-column:1/-1}
+  .stockPicker .dropZone{max-width:320px}
+  .stockPickerSummary{min-height:0;padding:4px 0 12px 64px}
+  .stockPicker .dzWishlist{grid-column:1/-1;height:320px}
+}
+@media(max-width:520px){
+  .stockPickerGrid{grid-template-columns:110px minmax(0,1fr);gap:12px}
+  .stockPickerRate{min-height:0;justify-content:flex-start;padding-top:28px;transform:translateX(14px)}
+  .stockPickerSummary{padding-left:16px}
+  .stockPickerRate .stockPickerDial,.stockPickerDialEmpty{width:104px}
+  .stockDialPhoto{inset:13px}
+  .stockPicker .stockPickerDial .num{min-width:66px;padding:6px 9px}
+  .stockPicker .stockPickerDial .num b{font-size:19px}
+  .stockPickerRate>.dzSaveBtn{min-width:104px;padding:6px 8px;font-size:10px}
+  .stockPicker .wlBody{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stockPicker .dzWishlist{height:320px}
+}
+
+/* ── 사전 팝업 (2026-10-02) ──
+   틀과 칸은 세부 검색 팝업(.fsPopBg/.fsPop/.fsCols/.fsCol/.fsList)을 그대로 쓴다.
+   다른 점은 칸이 7개(term_type 별)이고, 칸을 통틀어 용어를 하나만 고른다는 것이다. */
+.fsPop.dictPop{width:min(1120px,100%)}
+.dictPop .fsCols{--fsN:7;grid-template-columns:repeat(7,minmax(130px,1fr));overflow-x:auto}
+.dictPop .fsPopHead h3{color:var(--pink-0)}
+.dictCol{min-height:0;display:flex;flex-direction:column;border-right:1px solid var(--pink-3)}
+.dictCol:last-child{border-right:none}
+.dictPop .fsColH{display:flex;justify-content:space-between;align-items:center;gap:6px;
+  font-family:inherit;font-size:11px;letter-spacing:-.01em;color:var(--pink-1);font-weight:600}
+.dictPop .fsColH em{font-style:normal;font-family:var(--num);font-size:9px;letter-spacing:.06em;
+  color:var(--pink-2);font-weight:400}
+.dictPop .fsList button span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:820px){
+  .dictPop .fsCols{grid-template-columns:repeat(7,150px)}
 }

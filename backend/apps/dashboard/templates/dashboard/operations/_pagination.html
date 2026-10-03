@@ -1,0 +1,7 @@
+{% if page_obj.has_other_pages %}
+<nav class="op-pagination" aria-label="페이지">
+  {% if page_obj.has_previous %}<a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.previous_page_number }}">이전</a>{% endif %}
+  <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}<a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.next_page_number }}">다음</a>{% endif %}
+</nav>
+{% endif %}

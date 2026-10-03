@@ -1,0 +1,12 @@
+event: status
+data: {"stage": "lexicon"}
+
+event: status
+data: {"stage": "metric"}
+
+event: error
+data: {"ok": false, "reason": "NOT_IN_LEXICON", "message": "사전에 없는 말입니다.\n\nFEEDiT 는 스타일 · 소재 · 아이템 · 브랜드 네 가지로만 트렌드를 셉니다.\n사전에 없으면 언급량을 셀 수가 없어 답을 만들 수 없습니다.", "near_label": "많이 찾는 키워드", "near": [{"canonical": "니트", "facet": "material"}, {"canonical": "티셔츠", "facet": "item"}, {"canonical": "스니커즈", "facet": "item"}], "surface_guess": "회의했어요", "action": {"type": "lexicon_request", "label": "등록 요청"}, "generated_at": "2026-09-02T16:16:45+09:00", "intent": "metric.level", "question": "우리 랩실에서 회의했어요"}
+
+event: done
+data: {"ok": false, "reason": "NOT_IN_LEXICON"}
+

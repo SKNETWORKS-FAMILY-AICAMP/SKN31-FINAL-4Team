@@ -1,0 +1,195 @@
+{% extends "dashboard/base.html" %}
+{% load static humanize %}
+
+{% block title %}알림 · 실시간 공지 | FEEDIT Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dashboard/css/pages/normalization.css' %}">
+{% include "dashboard/service/_service_css.html" %}
+<style>
+    .nt-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+    @media (max-width: 1100px) { .nt-grid { grid-template-columns: 1fr; } }
+    .nt-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+    .nt-card h3 { margin: 0 0 4px; font-size: 15px; }
+    .nt-card > p.sub { margin: 0 0 14px; font-size: 12px; color: var(--tx2); line-height: 1.6; }
+    .nt-form { display: flex; flex-direction: column; gap: 12px; }
+    .nt-field { display: flex; flex-direction: column; gap: 6px; }
+    .nt-field > span { font-size: 12px; font-weight: 600; color: var(--tx2); display: flex; justify-content: space-between; }
+    .nt-field > span em { font-style: normal; font-weight: 400; color: var(--tx3); }
+    .nt-field input[type=text], .nt-field input[type=number], .nt-field textarea, .nt-field select {
+        width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px;
+        font: inherit; font-size: 13px; background: var(--card); color: var(--tx); }
+    .nt-field textarea { resize: vertical; min-height: 84px; line-height: 1.55; }
+    .nt-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .nt-targets { display: flex; gap: 8px; flex-wrap: wrap; }
+    .nt-targets label { display: flex; gap: 6px; align-items: center; padding: 7px 12px; border: 1px solid var(--line);
+        border-radius: 999px; font-size: 12.5px; cursor: pointer; }
+    .nt-targets label:has(input:checked) { border-color: var(--tx); }
+    .nt-targets b { font-weight: 600; color: var(--tx2); font-size: 11.5px; }
+    .nt-submit { align-self: flex-start; padding: 9px 18px; border-radius: 999px; border: 0; background: var(--tx);
+        color: var(--card); font-size: 13px; font-weight: 600; cursor: pointer; }
+    .nt-hide { display: none; }
+    /* 미리보기 — 사용자 화면의 알림 한 줄 · 상단 띠를 흉내 낸다 */
+    .nt-preview { margin-top: 4px; border: 1px dashed var(--line); border-radius: 12px; padding: 12px; background: #f1efea; }
+    .nt-preview > small { display: block; font-size: 10.5px; letter-spacing: .12em; color: #8a857c; margin-bottom: 8px; }
+    .nt-noti { display: flex; gap: 10px; background: #fff; border-radius: 10px; padding: 11px 12px; }
+    .nt-noti i { flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; background: #0a0a0a; color: #fff;
+        display: grid; place-items: center; font-style: normal; font-size: 13px; }
+    .nt-noti b { display: block; font-size: 13px; color: #0a0a0a; }
+    .nt-noti p { margin: 3px 0 0; font-size: 12px; line-height: 1.5; color: #555; white-space: pre-line; }
+    .nt-noti em { display: block; margin-top: 4px; font-style: normal; font-size: 10.5px; color: #999; }
+    .nt-tick { display: flex; align-items: center; gap: 10px; max-width: 520px; margin: 0 auto; padding: 7px 14px;
+        background: #0a0a0a; color: #fff; border-radius: 999px; font-size: 12.5px; overflow: hidden; white-space: nowrap; }
+    .nt-tick b { flex: 0 0 auto; font-size: 10.5px; letter-spacing: .14em; color: #ff6b4a; }
+    .nt-tick span { overflow: hidden; text-overflow: ellipsis; }
+    .nt-list { margin-top: 16px; border-top: 1px solid var(--line); }
+    .nt-item { display: flex; align-items: center; gap: 12px; padding: 12px 2px; border-bottom: 1px solid var(--line); }
+    .nt-item-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .nt-id { font-size: 11px; color: var(--tx3); }
+    .nt-empty { padding: 14px 0; }
+    .nt-live { color: var(--ok); font-weight: 600; }
+    .nt-off { color: var(--tx3); }
+</style>
+{% endblock %}
+
+{% block sub_sidebar %}
+{% include "dashboard/components/sidebar_service.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">FEEDIT ADMIN</p>
+        <h2 class="page-title">알림 · 실시간 공지</h2>
+        <p class="sub"><b>알림</b>은 받는 회원의 알림함(종)에 한 건씩 들어갑니다 — 사용자 앱 알림과 같은 양식입니다.
+            <b>실시간 공지</b>는 홈페이지 상단 가운데에 흘러가는 한 줄로, 로그인하지 않은 방문자도 봅니다.</p>
+    </div>
+</div>
+
+<div class="nt-grid">
+    <section class="nt-card">
+        <h3>알림 보내기</h3>
+        <p class="sub">전체 {{ count_all|intcomma }}명 · 성별 미입력 {{ count_no_gender|intcomma }}명.
+            '알림 전체 끄기'를 한 회원에게는 가지 않습니다. 같은 발송을 두 번 눌러도 한 사람에게 한 건입니다.</p>
+        <form method="post" action="{% url 'dashboard:notice_send' %}" class="nt-form" id="ntSend">
+            {% csrf_token %}
+            <label class="nt-field"><span>제목 <em><i data-count="title">0</i> / {{ title_max }}</em></span>
+                <input type="text" name="title" maxlength="{{ title_max }}" required value="{{ form.title|default:'' }}" placeholder="예) 10월 3일 새벽 2시 서버 점검 안내"></label>
+            <label class="nt-field"><span>본문 (선택 · 줄바꿈 그대로 보입니다) <em><i data-count="body">0</i> / {{ body_max }}</em></span>
+                <textarea name="body" maxlength="{{ body_max }}" placeholder="예) 02:00~02:30 동안 챗봇과 입혀보기가 잠시 멈춥니다.">{{ form.body|default:'' }}</textarea></label>
+            <label class="nt-field"><span>눌렀을 때 갈 화면</span>
+                <select name="link">
+                    {% for value, label in links %}<option value="{{ value }}" {% if form.link == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select></label>
+            <div class="nt-field"><span>받는 사람</span>
+                    <div class="nt-targets">
+                        {% for value, label in targets %}
+                        <label><input type="radio" name="target" value="{{ value }}" {% if form.target == value or not form.target and value == 'pick' %}checked{% endif %}>{{ label }}
+                            {% if value == 'all' %}<b>{{ count_all|intcomma }}</b>{% elif value == 'no_gender' %}<b>{{ count_no_gender|intcomma }}</b>{% endif %}</label>
+                        {% endfor %}
+                    </div>
+            </div>
+            <label class="nt-field" data-when="pick"><span>회원 번호 · 닉네임 (쉼표나 줄바꿈으로 구분)</span>
+                <textarea name="recipients" rows="2" placeholder="예) 12, 진, 34">{{ form.recipients|default:'' }}</textarea></label>
+            <label class="sv-check nt-hide" data-when="all"><input type="checkbox" name="confirm_all" value="1"> 전체 회원 {{ count_all|intcomma }}명에게 보냅니다</label>
+            <div class="nt-preview" aria-hidden="true">
+                <small>미리보기 — 알림함</small>
+                <div class="nt-noti"><i>✦</i><div><b data-pv="title">제목</b><p data-pv="body"></p><em>운영 공지 · 방금</em></div></div>
+            </div>
+            <button type="submit" class="nt-submit">알림 보내기</button>
+        </form>
+    </section>
+
+    <section class="nt-card">
+        <h3>실시간 공지 (상단 띠)</h3>
+        <p class="sub">올리면 1분 안에 열려 있는 모든 화면 상단 가운데에 흐릅니다. 동시에 최대 3개까지 차례로 보입니다.
+            방문자가 ×로 닫으면 그 공지는 그 사람에게 다시 뜨지 않습니다.</p>
+        <form method="post" action="{% url 'dashboard:ticker_create' %}" class="nt-form" id="ntTick">
+            {% csrf_token %}
+            <label class="nt-field"><span>공지 문구 <em><i data-count="message">0</i> / {{ ticker_max }}</em></span>
+                <input type="text" name="message" maxlength="{{ ticker_max }}" required value="{{ form.message|default:'' }}" placeholder="예) 오늘 밤 11시, 가을 트렌드 리포트가 새로 열립니다"></label>
+            <div class="nt-row">
+                <label class="nt-field"><span>눌렀을 때 갈 화면</span>
+                    <select name="link">
+                        {% for value, label in links %}<option value="{{ value }}" {% if form.ticker_link == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                    </select></label>
+                <label class="nt-field"><span>게시 시간 (시간 · 비우면 내릴 때까지)</span>
+                    <input type="number" name="hours" min="0" max="720" value="{{ form.hours|default:'' }}" placeholder="예) 24"></label>
+            </div>
+            <div class="nt-preview" aria-hidden="true">
+                <small>미리보기 — 상단 띠</small>
+                <div class="nt-tick"><b>NOTICE</b><span data-pv="message">공지 문구</span></div>
+            </div>
+            <button type="submit" class="nt-submit">공지 올리기</button>
+        </form>
+
+        <div class="nt-list">
+            {% for a in tickers %}
+            <div class="nt-item">
+                <div class="nt-item-main">
+                    <span class="mono nt-id">#{{ a.id }}</span>
+                    <div class="sv-text">{{ a.message }}</div>
+                    <span class="sv-meta"><span class="{% if a.live %}nt-live{% else %}nt-off{% endif %}">{% if a.live %}게시 중{% elif a.active %}기간 끝{% else %}내림{% endif %}</span>
+                        · {{ a.starts_at|date:"m-d H:i" }} ~ {% if a.ends_at %}{{ a.ends_at|date:"m-d H:i" }}{% else %}내릴 때까지{% endif %}
+                        {% if a.link %} · → {{ a.link }}{% endif %}{% if a.created_by %} · {{ a.created_by }}{% endif %}</span>
+                </div>
+                {% if a.active %}
+                <form method="post" action="{% url 'dashboard:ticker_end' a.id %}">{% csrf_token %}
+                    <button type="submit" class="sv-btn sv-rejected">내리기</button></form>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="nz-empty nt-empty">올린 공지가 없습니다.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<h3 style="margin:26px 0 10px;font-size:15px">보낸 알림</h3>
+<div class="nz-table-card">
+<table class="nz-table sv-table">
+    <colgroup><col style="width:130px"><col><col style="width:110px"><col style="width:110px"></colgroup>
+    <thead><tr><th>보낸 시각</th><th>제목 · 본문</th><th>받은 사람</th><th>읽음</th></tr></thead>
+    <tbody>
+    {% for h in history %}
+    <tr>
+        <td class="mono">{{ h.at|date:"Y-m-d H:i" }}</td>
+        <td><b>{{ h.title }}</b>{% if h.body %}<div class="sv-text">{{ h.body|linebreaksbr }}</div>{% endif %}{% if h.link %}<span class="sv-meta">→ {{ h.link }}</span>{% endif %}</td>
+        <td class="mono">{{ h.sent|intcomma }}명</td>
+        <td class="mono">{{ h.read|intcomma }}명</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" class="nz-empty">아직 보낸 알림이 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<script>
+(() => {
+  // 받는 사람에 따라 칸을 바꾸고, 쓰는 동안 글자 수와 미리보기를 맞춘다
+  const send = document.getElementById('ntSend');
+  const tick = document.getElementById('ntTick');
+  const sync = (form) => {
+    if (!form) return;
+    form.querySelectorAll('[data-count]').forEach((el) => {
+      const f = form.elements[el.dataset.count]; el.textContent = f ? f.value.length : 0;
+    });
+    form.querySelectorAll('[data-pv]').forEach((el) => {
+      const f = form.elements[el.dataset.pv]; const v = f ? f.value.trim() : '';
+      el.textContent = v || (el.dataset.pv === 'body' ? '' : el.dataset.pv === 'title' ? '제목' : '공지 문구');
+    });
+    const target = form.querySelector('input[name=target]:checked');
+    form.querySelectorAll('[data-when]').forEach((el) => {
+      el.classList.toggle('nt-hide', !target || target.value !== el.dataset.when);
+    });
+  };
+  [send, tick].forEach((form) => {
+    if (!form) return;
+    form.addEventListener('input', () => sync(form));
+    form.addEventListener('change', () => sync(form));
+    sync(form);
+  });
+})();
+</script>
+{% endblock %}

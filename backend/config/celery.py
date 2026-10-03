@@ -10,80 +10,35 @@ os.environ.setdefault(
     "config.settings",
 )
 
-
-app = Celery(
-    "feedit"
-)
-
+app = Celery("feedit")
 
 app.config_from_object(
     "django.conf:settings",
     namespace="CELERY",
 )
 
-
 app.autodiscover_tasks()
 
-
-# ============================================================
-# QUEUE / ROUTING
-# ============================================================
-
-app.conf.task_default_queue = (
-    "default"
-)
-
+# Existing service queues are preserved. The four current commerce collectors
+# enter through core.run_live_target -> collection.common.runner.run_target.
+app.conf.task_default_queue = "default"
 app.conf.task_routes = {
-    "core.run_live_target": {
-        "queue": "crawl_live",
-    },
-    "core.dispatch_due_targets": {
-        "queue": "crawl_live",
-    },
+    "core.run_live_target": {"queue": "crawl_live"},
+    "core.dispatch_due_targets": {"queue": "crawl_live"},
+    "core.collect_search_daily": {"queue": "analysis"},
+    "core.collect_search_weekly": {"queue": "analysis"},
+    "core.collect_search_volume_monthly": {"queue": "analysis"},
+    "core.rebuild_metrics": {"queue": "analysis"},
 }
 
+# Do not redefine beat_schedule here. settings.CELERY_BEAT_SCHEDULE is the
+# single source of truth, so config_from_object cannot be silently overwritten.
+if os.getenv("CELERY_CRAWL_DISPATCH", "1") == "0":
+    schedule = dict(app.conf.beat_schedule or {})
+    schedule.pop("dispatch-due-crawl-targets", None)
+    app.conf.beat_schedule = schedule
 
-app.conf.beat_schedule = {
-    "dispatch-due-crawl-targets": {
-        "task": "core.dispatch_due_targets",
-        "schedule": 60.0,
-    },
-}
-
-# ============================================================
-# SERIALIZER
-# ============================================================
-
-app.conf.task_serializer = (
-    "json"
-)
-
-app.conf.result_serializer = (
-    "json"
-)
-
-app.conf.accept_content = [
-    "json",
-]
-
-
-# ============================================================
-# TIMEZONE
-# ============================================================
-
-app.conf.timezone = (
-    "Asia/Seoul"
-)
-
-app.conf.enable_utc = True
-
-
-# ============================================================
-# DEBUG
-# ============================================================
 
 @app.task(bind=True)
 def debug_task(self):
-    print(
-        f"Request: {self.request!r}"
-    )
+    print(f"Request: {self.request!r}")

@@ -78,10 +78,9 @@
 .skip{color:var(--ink-3);transition:color .2s;letter-spacing:.14em}
 .skip:hover{color:#fff}
 
-/* 커서
-   본문 전체가 cursor:none 이라 이 두 개가 유일한 포인터다.
-   모달·팝업(z 50~120)보다 반드시 위에 있어야 한다. 아래에 깔리면
-   창이 열리는 순간 포인터가 통째로 사라져 아무것도 누를 수가 없다. */
+/* 커서 — 커스텀 점+링 커서는 껐다(intro/static/js/loader.js 에서 display:none).
+   기본 마우스 포인터를 쓰므로 이 두 규칙은 더 이상 쓰이지 않지만,
+   나중에 다시 켤 수도 있어 지우지 않고 남겨둔다. */
 .cur{
   position:fixed;top:0;left:0;z-index:999;pointer-events:none;
   width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;

@@ -31,6 +31,9 @@
         .main-content { flex: 1; min-width: 0; }
     </style>
 
+    {# 공통 인라인 레이아웃보다 뒤에서 breakpoint를 덮어써야 한다. #}
+    <link rel="stylesheet" href="{% static 'dashboard/css/responsive.css' %}">
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>

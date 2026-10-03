@@ -1,0 +1,176 @@
+/* 전 페이지 도움말 허브 — 기존 화면 위에 독립적으로 얹히는 레이어. */
+.assistHub{
+  position:fixed;right:clamp(18px,3vw,36px);bottom:clamp(18px,3vw,34px);z-index:120;
+  width:64px;height:64px;pointer-events:none;opacity:0;visibility:hidden;
+  transition:opacity .25s ease,visibility .25s ease;
+}
+body.mainmode .assistHub{opacity:1;visibility:visible}
+.assistHub button,.assistHint{font-family:var(--sans, Pretendard, sans-serif)}
+
+.assistToggle{
+  position:absolute;right:5px;bottom:.5px;z-index:4;width:50px;height:50px;border-radius:50%;
+  display:grid;place-items:center;border:0;background:#0d0d0d;color:#fff;pointer-events:auto;cursor:pointer;
+  box-shadow:0 13px 30px -13px rgba(0,0,0,.52);
+  transition:transform .32s cubic-bezier(.2,.8,.2,1),background .25s ease,box-shadow .25s ease;
+}
+.assistToggle svg{width:21px;height:21px}
+.assistToggle:hover{transform:translateY(-2px) scale(1.035);background:#1d1c1a}
+.assistHub.open .assistToggle{transform:rotate(5deg) scale(.95);background:#1d1c1a;box-shadow:0 12px 28px -14px rgba(0,0,0,.56)}
+
+.assistHint{
+  position:absolute;right:30px;bottom:76px;width:180px;box-sizing:border-box;padding:12px 15px 13px;
+  border:1px solid rgba(255,255,255,.48);border-radius:12px;background:rgba(30,29,27,.92);color:#fff;
+  box-shadow:0 14px 30px -16px rgba(0,0,0,.55);backdrop-filter:blur(12px);pointer-events:none;
+  transform:rotate(-6deg);transform-origin:right bottom;transition:opacity .18s ease,transform .25s ease;
+}
+.assistHint[hidden],.assistHub.open .assistHint{display:block;opacity:0;visibility:hidden;transform:rotate(-6deg) translateY(8px)}
+.assistHint b{display:block;font-size:13px;line-height:1.35;letter-spacing:-.02em}
+.assistHint span{display:block;margin-top:3px;font-size:11.5px;color:rgba(255,255,255,.76)}
+.assistHint i{position:absolute;right:9px;bottom:-27px;width:36px;height:26px;border-right:2px solid rgba(255,255,255,.9);border-bottom:2px solid rgba(255,255,255,.9);border-radius:0 0 18px 0;transform:rotate(18deg)}
+.assistHint i::after{content:"";position:absolute;right:-5px;bottom:-3px;width:8px;height:8px;border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-25deg)}
+
+.assistMenu{position:absolute;inset:0;pointer-events:none}
+.assistAction{
+  position:absolute;right:30px;bottom:6px;width:92px;min-height:33px;padding:0 5px;
+  display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid rgba(209,204,196,.82);border-radius:10px;
+  background:rgba(250,249,246,.82);color:#191816;box-shadow:0 11px 26px -17px rgba(0,0,0,.46);
+  backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);
+  opacity:0;visibility:hidden;pointer-events:none;cursor:pointer;transform-origin:right center;
+  transition:opacity .22s ease,visibility .22s ease,transform .38s cubic-bezier(.2,.9,.2,1),background .2s ease,color .2s ease;
+}
+.assistAction svg{width:13px;height:13px;flex:0 0 13px;fill:none;stroke:var(--coral,#ff6b4a);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.assistAction span{font-size:10.5px;font-weight:700;letter-spacing:-.035em;white-space:nowrap}
+.assistAction:nth-child(1) span,.assistAction:nth-child(3) span{transform:translateX(-2px)}
+.assistAction:nth-child(1){--x:-36px;--y:-78.5px;--r:8deg;transition-delay:0s}
+.assistAction:nth-child(2){--x:-42px;--y:-39.5px;--r:4deg;transition-delay:.025s}
+.assistAction:nth-child(3){--x:-46px;--y:-.5px;--r:1deg;transition-delay:.05s}
+.assistAction:nth-child(4){--x:-42px;--y:38.5px;--r:-4deg;transition-delay:.075s}
+.assistHub.open .assistAction{
+  opacity:1;visibility:visible;pointer-events:auto;transform:translate(var(--x),var(--y)) rotate(var(--r));
+}
+.assistAction:hover,.assistAction:focus-visible{background:#191816;color:#fff;outline:none;border-color:#191816}
+.assistAction:hover svg,.assistAction:focus-visible svg{stroke:#fff}
+
+/* 독립 온보딩 투어 — 알파 계정 안내와 섞지 않는다. */
+.guideTour{position:fixed;inset:0;z-index:9600}
+.guideScrim{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;cursor:default}
+.guideSpot{
+  position:fixed;border:2px solid rgba(255,255,255,.94);border-radius:999px;pointer-events:none;
+  box-shadow:0 0 0 9999px rgba(15,14,13,.72),0 0 0 6px rgba(255,255,255,.12),0 0 34px rgba(255,255,255,.7);
+  transition:left .34s cubic-bezier(.2,.8,.2,1),top .34s cubic-bezier(.2,.8,.2,1),width .34s cubic-bezier(.2,.8,.2,1),height .34s cubic-bezier(.2,.8,.2,1);
+}
+.guideSpot.salmalModalSpot{border-radius:24px}
+.guideSpot.trendGuideSpot{border-radius:22px}
+.guideCard{
+  position:fixed;z-index:2;width:min(430px,calc(100vw - 32px));box-sizing:border-box;padding:18px 20px 15px;
+  border:1px solid rgba(255,255,255,.28);border-radius:15px;background:rgba(29,28,26,.93);color:#fff;
+  max-height:calc(100vh - 32px);overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.46);backdrop-filter:blur(18px);
+}
+.guideCard::before{content:"";position:absolute;left:50%;top:-9px;width:17px;height:17px;background:#1d1c1a;border-left:1px solid rgba(255,255,255,.28);border-top:1px solid rgba(255,255,255,.28);transform:translateX(-50%) rotate(45deg)}
+.guideCard.above::before{top:auto;bottom:-9px;border:0;border-right:1px solid rgba(255,255,255,.28);border-bottom:1px solid rgba(255,255,255,.28)}
+.guideCard.sideTarget::before{left:-9px;top:50%;border:0;border-left:1px solid rgba(255,255,255,.28);border-bottom:1px solid rgba(255,255,255,.28);transform:translateY(-50%) rotate(45deg)}
+.guideCard.detached::before{display:none}
+.guidePhase{margin:0 0 10px 58px;font-family:var(--num,sans-serif);font-size:10px;font-weight:700;letter-spacing:.12em;color:#ff8063;text-transform:uppercase}
+.guideHead{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:12px}
+.guideIcon{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#ff8b68,#ff5b3c);font-family:var(--num,sans-serif);font-size:22px;font-weight:600;box-shadow:0 9px 24px -12px rgba(255,107,74,.9)}
+.guideHead h3{margin:0;font-size:18px;line-height:1.25;letter-spacing:-.04em;word-break:keep-all}
+.guideHead em{align-self:start;margin-top:3px;font-family:var(--num,sans-serif);font-style:normal;font-size:11px;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.32)}
+.guideCard>p{margin:11px 0 0;padding-left:58px;font-size:12.5px;line-height:1.65;color:rgba(255,255,255,.72);word-break:keep-all}
+.guideLine{height:1px;margin:18px 0 12px;background:rgba(255,255,255,.12)}
+.guideFoot{display:flex;align-items:center;gap:8px}
+.guideProgress{display:flex;align-items:center;gap:7px;margin-right:auto}
+.guideCount{font-family:var(--num,sans-serif);font-size:13px;color:rgba(255,255,255,.7)}
+.guideFoot button{border:0;font:inherit;cursor:pointer}
+.guidePrev{width:25px;height:25px;padding:0;border-radius:50%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.72);font-family:var(--num,sans-serif);font-size:14px;line-height:1;transition:background .18s,color .18s}
+.guidePrev:hover{background:rgba(255,255,255,.15);color:#fff}
+.guidePrev[hidden]{visibility:hidden;display:block}
+.guideSkip{padding:9px 12px;background:transparent;color:rgba(255,255,255,.62);font-size:13px}
+.guideNext{min-width:112px;padding:11px 19px;border-radius:999px;background:var(--coral,#ff6b4a);color:#fff;font-size:13px;font-weight:700}
+.guideNext i{margin-left:10px;font-style:normal}
+
+/* 트렌드 가이드: 기존 분석 화면을 그대로 강조하되 가이드 동안 API만 호출하지 않는다. */
+.guideCard.trendGuideCard{width:min(500px,calc(100vw - 32px));background:rgba(25,24,22,.92)}
+.guideCard.trendDetail{width:min(650px,calc(100vw - 32px))}
+.guidePreview{margin:15px 0 0;padding:13px;border:1px solid rgba(255,255,255,.13);border-radius:12px;background:rgba(255,255,255,.055)}
+.tgPreviewHead{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px;font-size:10px;letter-spacing:.08em;color:rgba(255,255,255,.64)}
+.tgPreviewHead span{font-weight:700;color:#fff}
+.tgPreviewHead em{font-style:normal;color:#ff9a82;letter-spacing:-.02em}
+.tgPreviewTitle{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.tgPreviewTitle>i{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border-radius:8px;background:#ff6b4a;color:#fff;font-style:normal;font-size:14px}
+.tgPreviewTitle div{min-width:0}
+.tgPreviewTitle b{display:block;font-size:14px;letter-spacing:-.035em}
+.tgPreviewTitle span{display:block;margin-top:3px;font-size:10.5px;line-height:1.45;color:rgba(255,255,255,.55);word-break:keep-all}
+.tgPreviewGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.tgPreviewGrid article{display:grid;grid-template-columns:25px minmax(0,1fr);gap:7px;padding:9px;border:1px solid rgba(255,255,255,.09);border-radius:9px;background:rgba(9,9,8,.25);opacity:.52;transition:opacity .2s,border-color .2s,background .2s}
+.tgPreviewGrid article.active{opacity:1;border-color:rgba(255,107,74,.75);background:rgba(255,107,74,.1);box-shadow:inset 2px 0 #ff6b4a}
+.tgPreviewGrid small{padding-top:1px;font-family:var(--num,sans-serif);font-size:9px;color:#ff8569}
+.tgPreviewGrid b{display:block;font-size:11px;line-height:1.3;letter-spacing:-.025em}
+.tgPreviewGrid p{margin:3px 0 0;font-size:9.5px;line-height:1.4;color:rgba(255,255,255,.58);word-break:keep-all}
+
+.guideCard.trendWalkthrough{width:min(410px,calc(100vw - 32px))}
+.guideCard.salmalWalkthrough{width:min(410px,calc(100vw - 32px))}
+
+/* 살!말? 가이드는 운영 리스트·모달과 다른 숨은 목업 페이지를 쓴다. */
+.smGuideStage{
+  position:fixed;inset:0;z-index:9000;overflow:auto;background:var(--paper,#f3f1ed);color:var(--pink-0,#111);
+  font-family:var(--sans,Pretendard,sans-serif);overscroll-behavior:contain;
+}
+.smGuideStage *{box-sizing:border-box}
+.smGuideStage .smGuidePage{min-height:100%;padding-top:16px;background:var(--paper,#f3f1ed)}
+.smGuideStage .smGuideGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.smGuideStage .smGuideGrid .voteCard{grid-column:auto;opacity:1;transform:none}
+.smGuideStage .modalOverlay{z-index:20;padding-right:min(420px,36vw)}
+.smGuideStage .modalBox{width:min(820px,calc(100vw - min(420px,36vw) - 32px));max-height:84vh;box-shadow:0 34px 100px -34px rgba(0,0,0,.58)}
+.smGuideStage .createBox{width:min(780px,calc(100vw - min(420px,36vw) - 32px));max-height:90vh}
+.smGuideStage .jobBadge{display:inline-flex;margin-left:6px;padding:3px 7px;border-radius:5px;background:var(--coral,#ff6b4a);color:#fff;font-size:9px;font-weight:700}
+.smGuideStage button,.smGuideStage input,.smGuideStage textarea,.smGuideStage select{pointer-events:none}
+
+@media(max-width:700px){
+  .smGuideStage .modalOverlay{padding:16px}
+  .smGuideStage .modalBox,.smGuideStage .createBox{width:min(680px,94vw);max-height:90vh}
+}
+@media(max-width:900px){
+  .smGuideStage .smGuideGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .smGuideStage .smGuideGrid{grid-template-columns:1fr}
+}
+
+@media(min-width:701px){
+  /* 펼쳤을 때 마지막 카드까지 화면 안에 머물도록, 원형 버튼을 원래 여백과 비슷한 높이에 둔다. */
+  .assistHub{right:clamp(8px,1.6vw,20px);bottom:clamp(40px,4.5vh,56px)}
+}
+
+@media(min-width:701px) and (max-height:680px){
+  /* 낮은 노트북 화면에서는 홈 입력창의 전송 버튼을 피해 왼쪽 아래로 물린다. */
+  .assistHub{right:4px;bottom:-22px}
+  .assistAction:nth-child(1){--x:-36px;--y:-133px;--r:8deg}
+  .assistAction:nth-child(2){--x:-42px;--y:-96px;--r:4deg}
+  .assistAction:nth-child(3){--x:-46px;--y:-59px;--r:1deg}
+  .assistAction:nth-child(4){--x:-42px;--y:-22px;--r:-4deg}
+}
+
+@media(max-width:700px){
+  .assistHub{right:6px;bottom:2px}
+  .assistToggle{width:50px;height:50px}
+  .assistAction{right:8px;width:92px;transform-origin:right bottom}
+  .assistAction:nth-child(1){--x:0;--y:-197.5px;--r:0deg}
+  .assistAction:nth-child(2){--x:0;--y:-157.5px;--r:0deg}
+  .assistAction:nth-child(3){--x:0;--y:-117.5px;--r:0deg}
+  .assistAction:nth-child(4){--x:0;--y:-77.5px;--r:0deg}
+  .assistHint{right:24px;bottom:72px}
+  .guideCard{padding:18px 17px 15px}
+  .guideHead{grid-template-columns:44px minmax(0,1fr);gap:11px}
+  .guideIcon{width:44px;height:44px;border-radius:11px;font-size:21px}
+  .guideHead em{display:none}
+  .guideHead h3{font-size:17px}
+  .guideCard>p{padding-left:0;font-size:12.5px}
+  .guidePhase{margin-left:0}
+  .tgPreviewGrid{grid-template-columns:1fr}
+  .tgPreviewGrid article:not(.active){display:none}
+  .tgPreviewHead{align-items:flex-start;flex-direction:column;gap:3px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .assistToggle,.assistAction,.assistHint,.guideSpot{transition:none}
+}

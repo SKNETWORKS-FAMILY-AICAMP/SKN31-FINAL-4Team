@@ -23,6 +23,7 @@ from .dictionary import (
     TermCandidateObservation,
     Person,
     DiscoveryExclusion,
+    Target,
 )
 
 from .commerce import *

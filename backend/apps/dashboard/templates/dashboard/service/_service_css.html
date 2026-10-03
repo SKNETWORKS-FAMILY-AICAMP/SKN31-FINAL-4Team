@@ -1,0 +1,26 @@
+<style>
+    /* 서비스 운영 화면 — 정규화 화면의 표 · 칩 문법 위에 처리 버튼만 더한다 */
+    .nz-chip { text-decoration: none; }
+    .nz-chip.on { border-color: var(--tx); color: var(--tx); }
+    .sv-table td { vertical-align: top; white-space: normal; }
+    .sv-who b { display: block; font-size: 12.5px; font-weight: 600; overflow-wrap: anywhere; }
+    .sv-status { display: block; margin-top: 6px; font-size: 11.5px; font-weight: 600; color: var(--tx2); }
+    .sv-status.sv-open, .sv-status.sv-pending { color: var(--warn); }
+    .sv-status.sv-done, .sv-status.sv-reviewed { color: var(--ok); }
+    .sv-status.sv-rejected, .sv-status.sv-dismissed { color: var(--tx3); }
+    .sv-text { font-size: 12.5px; line-height: 1.6; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
+    .sv-quote { border-left: 3px solid var(--line); padding-left: 8px; margin: 4px 0; color: var(--tx2); }
+    .sv-meta { display: block; font-size: 11px; color: var(--tx3); margin-top: 4px; }
+    .sv-hidden { color: var(--bad); }
+    .sv-reason { font-size: 12px; margin-top: 6px; }
+    .sv-form { display: flex; flex-direction: column; gap: 8px; }
+    .sv-form input[type=text] { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 12px; }
+    .sv-check { font-size: 11.5px; color: var(--tx2); display: flex; gap: 6px; align-items: center; }
+    .sv-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .sv-btn { padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--card);
+              font-size: 11.5px; cursor: pointer; color: var(--tx); }
+    .sv-btn:hover:not([disabled]) { border-color: var(--tx); }
+    .sv-btn[disabled] { opacity: .45; cursor: default; }
+    .sv-btn.sv-done, .sv-btn.sv-reviewed { border-color: rgba(31,158,110,.4); color: var(--ok); }
+    .sv-btn.sv-rejected, .sv-btn.sv-dismissed { color: var(--tx2); }
+</style>

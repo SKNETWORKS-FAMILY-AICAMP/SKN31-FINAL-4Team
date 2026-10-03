@@ -56,7 +56,6 @@
 .panel.brite h2{color:#0c1116}
 .panel.brite h2 em{color:var(--coral)}
 .panel.brite p{color:rgba(10,14,18,.66)}
-.panel.brite .tags span{color:rgba(10,14,18,.5);border-color:rgba(10,14,18,.16)}
 
 /* 폰 크기와 자리는 이 두 값으로 정한다 (캡션도 같은 값을 쓴다) */
 .collbg{--pw:clamp(240px,min(22vw,34vh),348px);--px:69%}
@@ -415,6 +414,10 @@
 .anzStage .zdark p{color:rgba(255,255,255,.55)}
 .anzStage .zdark .zchips u{background:rgba(255,255,255,.09);color:rgba(255,255,255,.72)}
 .anzStage .zf4{grid-template-columns:repeat(4,1fr)}
+/* TOP 4 카드 — 창 아래 남는 공간만큼 사진을 키운다(작은 창에서는 기존 높이 유지) */
+.anzStage .zf4 .zc img{height:clamp(60px,calc(46vh - 305px),130px)}
+/* 실상품명은 길이가 제각각이라 한 줄로 자른다 — 카드 높이가 흔들리면 안 된다 */
+.anzStage .zc b,.anzStage .zc span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 
 /* 찜한 키워드 — 오늘의 이슈 */
 .anzStage .zhero{display:grid;grid-template-columns:.58fr 1fr;gap:10px;align-items:center}

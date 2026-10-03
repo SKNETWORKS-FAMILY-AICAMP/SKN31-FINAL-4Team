@@ -1,0 +1,83 @@
+# Django API + 경량 Celery 작업 의존성. 전체 분석 환경은 루트 requirements.txt 참조.
+# API는 사용자 데이터 읽기/쓰기를 수행하며, worker/beat도 이 의존성을 공유합니다.
+# 버전 변경 시 루트 선언 및 실행 환경과의 일치 여부를 검증하세요.
+
+# ── 뼈대 ──
+Django==6.1
+gunicorn==26.2.0
+whitenoise==6.8.2
+python-dotenv==1.2.3
+qrcode==8.2
+
+# ── RDS(PostgreSQL) ──
+#   psycopg-binary 를 같이 넣으면 서버에서 컴파일을 안 한다(gcc·libpq 불필요).
+psycopg==3.3.4
+psycopg-binary==3.3.4
+
+# ── Django 가 끌고 오는 것 (값을 고정해 둔다) ──
+asgiref==3.12.1
+sqlparse==0.6.0
+tzdata==2026.3
+typing_extensions==4.16.0
+
+# ── boto3 (import 만 해도 필요하다) ──
+#   config/urls.py → apps.core.views.normalization → services.normalization 이
+#   맨 위에서 boto3 를 import 한다. 관리자 화면 하나 때문인데, URLconf 에
+#   걸려 있어서 **API 요청 하나를 받으려 해도 이게 없으면 터진다.**
+#   (2026-09-09 실측: 빼고 띄웠더니 reverse('api:facets') 에서
+#    ModuleNotFoundError: No module named 'boto3')
+boto3==1.43.83
+botocore==1.43.83
+jmespath==1.1.0
+s3transfer==0.19.2
+urllib3==2.7.0
+
+# ── celery (import 만 해도 필요하다) ──
+#   config/__init__.py 가 `from .celery import app` 을 한다.
+#   (2026-09-09 실측: 빼고 띄웠더니 ModuleNotFoundError: No module named 'celery')
+celery==5.6.3
+redis==8.1.0
+amqp==5.3.1
+billiard==4.2.4
+kombu==5.6.2
+vine==5.1.0
+click==8.5.0
+click-didyoumean==0.3.1
+click-plugins==1.1.1.2
+click-repl==0.3.0
+prompt_toolkit==3.0.53
+wcwidth==0.8.3
+python-dateutil==2.9.0.post0
+six==1.17.0
+
+# ── SKN31-FINAL-4Team/backend 최신 스키마 동기화 (2026-09-16) ──
+#   DictionaryTerm.embedding 이 pgvector 의 VectorField 라 import 에 필요하다.
+#   apps/api/crawl_views.py · dashboard 가 DRF 와 humanize 를 쓴다.
+pgvector==0.5.0
+numpy
+djangorestframework==3.18.1
+
+# ★ 2026-09-20 텍스트 신호 파이프라인(celery-worker) — 유튜브 API · OpenAI API 호출.
+#   torch · CUDA · OCR · Playwright 는 넣지 않는다(이 서버는 크롤링하지 않는다).
+requests==2.34.2
+certifi==2026.7.22
+charset-normalizer==3.5.1
+idna==3.19
+
+# ★ 2026-09-21 검색 신호 수집(celery-worker) — core.collect_search_daily/weekly 가 쓴다.
+#   이게 없으면 beat 는 태스크를 띄우지만 워커가 ModuleNotFoundError 로 즉시 죽는다.
+#   그리고 그 실패는 화면에 아무 티도 안 난다 — 지표가 그냥 안 늘 뿐이다.
+#
+#   pandas 를 2.x 로 묶는 이유: pytrends 마지막 릴리스가 4.9.2(2023-04)인데
+#   의존성이 'pandas>=0.25' 로 상한이 없다. 그대로 두면 pip 가 pandas 3.x 를
+#   깔고, 3.0 에서 걷어낸 API 를 pytrends 가 부르다 런타임에 터진다.
+#   (lxml 은 pytrends 가 직접 요구한다.)
+pytrends==4.9.2
+pandas>=2.2.2,<3
+lxml
+
+# ※ 네이버 검색광고·구글 키워드플래너(google-ads)는 여기 없다 — 일부러 뺐다.
+#   그쪽은 절대 검색량 앵커라 상대→절대 환산(processors/normalizer.py)이 붙고,
+#   CSV 를 거치는 2단계 파이프라인이라 로컬에서 사람이 돌린다.
+#     python collection/search_volume/main.py --source naver
+#     python manage.py load_search_metrics --dir .../output/processed/<타임스탬프>

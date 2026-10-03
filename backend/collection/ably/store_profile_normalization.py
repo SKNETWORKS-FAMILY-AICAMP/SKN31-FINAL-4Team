@@ -50,7 +50,7 @@ def build_brand_source_candidates(payload: dict[str, Any]) -> list[dict[str, Any
             market_sno = market_data.get("market_sno")
             market_name = market_data.get("market_name")
 
-            if brand_name:
+            if brand_sno or brand_name:
                 source_brand_id = brand_sno or f"NAME:{brand_name}"
                 candidate_kind = "BRAND"
                 name = brand_name

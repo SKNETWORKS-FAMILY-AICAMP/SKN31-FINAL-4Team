@@ -2,912 +2,347 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
+from typing import Any
 
 from celery import shared_task
-from django.conf import settings
-from django.db import transaction
+from django.db import close_old_connections, transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from apps.core.models import CrawlTarget, RawDocument, Source
-from apps.core.services import (
-    create_crawl_run,
-    create_raw_document,
-    mark_crawl_run_failed,
-    mark_crawl_run_success,
-    mark_target_crawled,
-)
-from apps.core.services.registry import get_pipeline_class
+from apps.core.models import CrawlRun, CrawlTarget
 
 
 logger = logging.getLogger(__name__)
 
+DISPATCH_BATCH_SIZE = 2
 
-# 한 번의 dispatcher 실행에서 너무 많은 타깃을
-# 동시에 queue에 넣지 않도록 제한.
-DISPATCH_BATCH_SIZE = 100
+LIVE_MAX_RETRIES = 2
+LIVE_RETRY_COUNTDOWN = (300, 900)
+
+
+def live_retry_countdown(retries: int) -> int:
+    return LIVE_RETRY_COUNTDOWN[
+        min(retries, len(LIVE_RETRY_COUNTDOWN) - 1)
+    ]
 
 
 @shared_task(
-    name="core.analyze_product_sources",
+    name="core.celery_smoke_test",
 )
-def analyze_product_sources(
-    *,
-    product_source_ids: list[int],
-    force: bool = False,
-):
-    """Run the current enrichment pipeline for explicitly selected products."""
-    from analysis.product_enrichment import ProductEnrichmentPipeline
-    from apps.core.models import ProductSource
-
-    ids = sorted({int(value) for value in product_source_ids})
-    queryset = (
-        ProductSource.objects
-        .filter(id__in=ids)
-        .select_related(
-            "source",
-            "source_brand__brand",
-            "source_category__category",
-        )
-        .order_by("id")
-    )
-    pipelines: dict[str, ProductEnrichmentPipeline] = {}
-    results: list[dict] = []
-
-    for product_source in queryset:
-        source_code = str(product_source.source.code or "").upper()
-        attributes = (
-            product_source.attributes
-            if isinstance(product_source.attributes, dict)
-            else {}
-        )
-        existing = attributes.get("feedit_analysis")
-        if (
-            not force
-            and isinstance(existing, dict)
-            and (existing.get("version") or 0) >= 3
-        ):
-            results.append({
-                "product_source_id": product_source.id,
-                "source": source_code,
-                "status": "SKIPPED_ALREADY_ANALYZED",
-            })
-            continue
-
-        try:
-            pipeline = pipelines.get(source_code)
-            if pipeline is None:
-                pipeline = ProductEnrichmentPipeline(source_code=source_code)
-                pipelines[source_code] = pipeline
-            output = pipeline.run_one(
-                product_source,
-                save_json=True,
-                persist_known=True,
-                persist_unknown=True,
-                cnv_candidates_only=True,
-            )
-            results.append({
-                "product_source_id": product_source.id,
-                "source": source_code,
-                "status": "DONE",
-                "output": output,
-            })
-        except Exception as exc:
-            logger.exception(
-                "Product enrichment failed. product_source_id=%s",
-                product_source.id,
-            )
-            results.append({
-                "product_source_id": product_source.id,
-                "source": source_code,
-                "status": "FAILED",
-                "error_type": exc.__class__.__name__,
-                "error": str(exc),
-            })
-
+def celery_smoke_test(
+    message: str = "FEEDIT DATA CRAWLER",
+) -> dict[str, Any]:
     return {
-        "summary": {
-            "requested": len(ids),
-            "selected": len(results),
-            "processed": sum(row["status"] == "DONE" for row in results),
-            "skipped": sum(
-                row["status"] == "SKIPPED_ALREADY_ANALYZED"
-                for row in results
-            ),
-            "failed": sum(row["status"] == "FAILED" for row in results),
-        },
-        "results": results,
+        "ok": True,
+        "message": message,
     }
-
-
-def _enqueue_product_analysis(product_source_ids) -> str | None:
-    ids = sorted({int(value) for value in product_source_ids or []})
-    if not ids:
-        return None
-    try:
-        return analyze_product_sources.delay(product_source_ids=ids).id
-    except Exception:
-        logger.exception(
-            "Failed to enqueue ProductSource analysis. product_source_ids=%s",
-            ids,
-        )
-        return None
-
-
-def _ingest_discovered_product_raws(*, crawl_run, platform_data) -> dict:
-    """Create and ingest independently uploaded 1-hop PRODUCT raws."""
-    product_source_ids: list[int] = []
-    raw_document_ids: list[int] = []
-    errors: list[dict] = []
-
-    for item in (platform_data or {}).get("product_raws") or []:
-        source_code = str(item.get("source") or "").upper()
-        try:
-            source = Source.objects.get(code__iexact=source_code)
-            s3 = item.get("s3") or {}
-            child = create_raw_document(
-                crawl_run=crawl_run,
-                source=source,
-                document_type="PRODUCT",
-                external_id=item.get("source_entity_id"),
-                source_url=item.get("source_url"),
-                s3_bucket=s3["bucket"],
-                s3_key=s3["key"],
-                http_status=item.get("http_status"),
-                content_type=item.get("content_type"),
-                collected_at=item.get("collected_at"),
-            )
-            raw_document_ids.append(child.id)
-
-            if source_code == "MUSINSA":
-                from apps.core.services.source_ingestion import (
-                    ingest_musinsa_raw_document,
-                )
-                ingested = ingest_musinsa_raw_document(
-                    raw_document_id=child.id,
-                )
-            elif source_code == "MUSINSA_USED":
-                from collection.musinsa_used_v2.ingestion import (
-                    ingest_musinsa_used_v2_raw_document,
-                )
-                ingested = ingest_musinsa_used_v2_raw_document(
-                    raw_document_id=child.id,
-                )
-            else:
-                raise ValueError(f"Unsupported child source: {source_code}")
-
-            if ingested.get("failed"):
-                errors.extend(
-                    ingested.get("errors")
-                    or [{
-                        "source": source_code,
-                        "goods_no": item.get("source_entity_id"),
-                        "endpoint": "PRODUCT_INGESTION",
-                        "error_type": "IngestionFailed",
-                        "error_reason": "PRODUCT ingestion returned failed rows",
-                    }]
-                )
-            product_source_ids.extend(
-                ingested.get("product_source_ids") or []
-            )
-        except Exception as exc:
-            errors.append({
-                "source": source_code,
-                "goods_no": item.get("source_entity_id"),
-                "endpoint": "PRODUCT_INGESTION",
-                "error_type": exc.__class__.__name__,
-                "error_reason": str(exc),
-            })
-
-    relation_result = None
-    relations = (platform_data or {}).get("relations") or []
-    if relations:
-        from collection.musinsa_used_v2.ingestion import (
-            persist_resale_of_relations,
-        )
-        relation_result = persist_resale_of_relations(relations)
-
-    return {
-        "raw_document_ids": raw_document_ids,
-        "product_source_ids": sorted(set(product_source_ids)),
-        "errors": errors,
-        "relations": relation_result,
-    }
-
-
-# ============================================================
-# LIVE TARGET EXECUTOR
-# ============================================================
 
 
 @shared_task(
     bind=True,
     name="core.run_live_target",
+    max_retries=LIVE_MAX_RETRIES,
 )
 def run_live_target(
     self,
     target_id: int,
-):
+) -> dict[str, Any]:
     """
-    CrawlTarget 하나를 실제로 실행한다.
+    CrawlTarget 하나를 실행한다.
 
-    흐름:
-        CrawlTarget
-        -> CrawlRun 생성
-        -> 플랫폼 Pipeline 실행
-        -> S3 RAW 저장
-        -> RawDocument 생성
-        -> 플랫폼별 후처리
-        -> CrawlRun 성공/실패 처리
-        -> CrawlTarget last_crawled_at 갱신
+    실제 수집/RAW 저장/RawDocument 생성/STEP01/STEP02는
+    collection.common.runner.run_target()이 담당한다.
+
+    Celery task의 책임:
+    - DB connection 정리
+    - runner 호출
+    - 실패 재시도
+    - 최종 실패 로그
     """
+    close_old_connections()
 
-    target = (
-        CrawlTarget.objects
-        .select_related("source")
-        .get(id=target_id)
-    )
-
-    # ========================================================
-    # 0. CRAWL RUN
-    # ========================================================
-
-    crawl_run = create_crawl_run(
-        target=target,
-        celery_task_id=self.request.id,
+    logger.info(
+        "Celery crawl start. target_id=%s task_id=%s",
+        target_id,
+        self.request.id,
     )
 
     try:
-        params = dict(target.params or {})
+        # The API imports this task module during Django admin startup. Load the
+        # collector only when a crawl runs; the API image has no crawl deps.
+        from collection.common.runner import run_target
 
-        source_code_for_pipeline = (
-            target.source.code
-            or ""
-        ).strip().lower()
-
-        if (
-            source_code_for_pipeline == "ably"
-            and (target.target_type or "").upper() in {"STORE", "STORE_PROFILE"}
-        ):
-            from collection.ably.store_profile_pipeline import (
-                AblyStoreProfilePipeline,
-            )
-
-            pipeline_class = AblyStoreProfilePipeline
-
-        elif source_code_for_pipeline == "musinsa_used":
-            from collection.musinsa_used_v2.filter_pipeline import (
-                MusinsaUsedFilterPipeline,
-            )
-
-            pipeline_class = (
-                MusinsaUsedFilterPipeline
-            )
-
-        else:
-            pipeline_class = get_pipeline_class(
-                target.source.code
-            )
-
-        pipeline = pipeline_class(
-            bucket=settings.AWS_STORAGE_BUCKET_NAME,
-            region_name=settings.AWS_REGION,
+        result = run_target(
+            target_id=target_id,
         )
 
-        if (
-            source_code_for_pipeline == "musinsa_used"
-            and target.collection_mode
-            == CrawlTarget.CollectionMode.LIVE
-        ):
-            params.setdefault(
-                "live",
-                True,
-            )
-
-        result = pipeline.run_target(
-            target_type=target.target_type,
-            target_url=target.target_url,
-            params=params,
+        logger.info(
+            "Celery crawl success. target_id=%s task_id=%s",
+            target_id,
+            self.request.id,
         )
 
-        create_raw_document(
-            crawl_run=crawl_run,
-            document_type=result["entity_type"],
-            external_id=result["source_entity_id"],
-            source_url=result.get("source_url"),
-            s3_bucket=result["s3"]["bucket"],
-            s3_key=result["s3"]["key"],
-            content_hash=result.get(
-                "content_hash"
-            ),
-            http_status=result.get(
-                "http_status"
-            ),
-            content_type=result.get(
-                "content_type"
-            ),
-            collected_at=result.get(
-                "collected_at"
-            ),
-        )
-        raw_document = (
-            RawDocument.objects
-            .select_related(
-                "source",
-                "crawl_run",
-            )
-            .get(
-                s3_bucket=result["s3"]["bucket"],
-                s3_key=result["s3"]["key"],
-            )
-        )
-
-        source_code = target.source.code.upper()
-        entity_type = result["entity_type"].upper()
-
-        source_ingestion_result = None
-        product_analysis_task_id = None
-        profile_id = None
-        video_result = None
-
-
-        if (
-            source_code == "MUSINSA"
-            and entity_type in {"RANKING", "PRODUCT"}
-        ):
-            from apps.core.services.source_ingestion import (
-                ingest_musinsa_raw_document,
-            )
-
-            source_ingestion_result = (
-                ingest_musinsa_raw_document(
-                    raw_document_id=raw_document.id,
-                )
-            )
-
-            logger.info(
-                "MUSINSA source ingestion completed. "
-                "target_id=%s raw_document_id=%s result=%s",
-                target.id,
-                raw_document.id,
-                source_ingestion_result,
-            )
-
-        # ----------------------------------------------------
-        # ZIGZAG CNV_CATEGORY / RANKING -> Source Ingestion
-        #
-        # RawDocument
-        # -> BrandSource
-        # -> CategorySource
-        # -> ProductSource
-        # -> ProductSourceSnapshot
-        # ----------------------------------------------------
-        if (
-            source_code == "ZIGZAG"
-            and entity_type in {"CNV_CATEGORY", "RANKING"}
-        ):
-            from apps.core.services.source_ingestion import (
-                ingest_zigzag_raw_document,
-            )
-
-            source_ingestion_result = (
-                ingest_zigzag_raw_document(
-                    raw_document_id=raw_document.id,
-                )
-            )
-
-            logger.info(
-                "ZIGZAG source ingestion completed. "
-                "target_id=%s raw_document_id=%s result=%s",
-                target.id,
-                raw_document.id,
-                source_ingestion_result,
-            )
-
-        # ----------------------------------------------------
-        # ABLY / MUSINSA_USED -> Source Ingestion
-        # ----------------------------------------------------
-        if source_code == "ABLY" and entity_type == "RANKING":
-            from apps.core.services.source_ingestion import (
-                ingest_ably_raw_document,
-            )
-
-            source_ingestion_result = ingest_ably_raw_document(
-                raw_document_id=raw_document.id,
-            )
-
-        if source_code == "ABLY" and entity_type == "STORE_PROFILE":
-            from apps.core.services.source_ingestion import (
-                ingest_ably_store_profile_raw_document,
-            )
-
-            source_ingestion_result = ingest_ably_store_profile_raw_document(
-                raw_document_id=raw_document.id,
-            )
-        # ----------------------------------------------------
-        # MUSINSA_USED V2
-        # RawDocument -> BrandSource -> CategorySource
-        # -> ProductSource(RESALE) -> ResaleSnapshot
-        # ----------------------------------------------------
-        if (
-            source_code == "MUSINSA_USED"
-            and entity_type in {"RANKING", "PRODUCT"}
-        ):
-            from collection.musinsa_used_v2.ingestion import (
-                ingest_musinsa_used_v2_raw_document,
-            )
-
-            source_ingestion_result = (
-                ingest_musinsa_used_v2_raw_document(
-                    raw_document_id=raw_document.id,
-                )
-            )
-
-            failed = int(
-                source_ingestion_result.get("failed")
-                or 0
-            )
-
-            if failed and entity_type == "PRODUCT":
-                errors = (
-                    source_ingestion_result.get("errors")
-                    or []
-                )
-
-                raise RuntimeError(
-                    "MUSINSA_USED V2 ingestion failed: "
-                    f"failed={failed}, "
-                    f"first_error="
-                    f"{errors[0] if errors else None}"
-                )
-
-            logger.info(
-                "MUSINSA_USED V2 ingestion completed. "
-                "target_id=%s raw_document_id=%s result=%s",
-                target.id,
-                raw_document.id,
-                source_ingestion_result,
-            )
-
-        review_ingestion_result = (
-            source_ingestion_result.get("reviews")
-            if source_ingestion_result else None
-        )
-
-        discovered_product_result = None
-        if source_code == "MUSINSA_USED":
-            discovered_product_result = _ingest_discovered_product_raws(
-                crawl_run=crawl_run,
-                platform_data=result.get("platform_data") or {},
-            )
-            if source_ingestion_result is None:
-                source_ingestion_result = {}
-            source_ingestion_result["discovered_products"] = (
-                discovered_product_result
-            )
-            source_ingestion_result.setdefault("product_source_ids", [])
-            source_ingestion_result["product_source_ids"].extend(
-                discovered_product_result.get("product_source_ids") or []
-            )
-            result["failure_count"] = (
-                int(result.get("failure_count") or 0)
-                + len(discovered_product_result.get("errors") or [])
-            )
-
-        if (
-            source_code in {"ABLY", "MUSINSA_USED"}
-            and source_ingestion_result
-            and source_ingestion_result.get("product_source_ids")
-        ):
-            product_analysis_task_id = _enqueue_product_analysis(
-                source_ingestion_result.get("product_source_ids") or []
-            )
-        # ----------------------------------------------------
-        # KREAM PRODUCT -> Source Ingestion
-        #
-        # RawDocument
-        # -> BrandSource
-        # -> CategorySource
-        # -> ProductSource(RESALE)
-        # -> ProductSourceSnapshot
-        # -> ResaleSnapshot
-        # ----------------------------------------------------
-        if (
-            source_code == "KREAM"
-            and entity_type in {
-                "PRODUCT",
-                "DISCOVERY",
-            }
-        ):
-            from apps.core.services.kream_normalization import (
-                normalize_kream_raw_document,
-            )
-
-            source_ingestion_result = (
-                normalize_kream_raw_document(
-                    raw_document_id=raw_document.id,
-                )
-            )
-
-            failed = int(
-                source_ingestion_result.get(
-                    "failed"
-                )
-                or 0
-            )
-
-            if failed:
-                errors = (
-                    source_ingestion_result.get(
-                        "errors"
-                    )
-                    or []
-                )
-
-                raise RuntimeError(
-                    "KREAM ingestion failed: "
-                    f"failed={failed}, "
-                    f"first_error="
-                    f"{errors[0] if errors else None}"
-                )
-
-            logger.info(
-                "KREAM source ingestion completed. "
-                "target_id=%s "
-                "raw_document_id=%s "
-                "entity_type=%s "
-                "result=%s",
-                target.id,
-                raw_document.id,
-                entity_type,
-                source_ingestion_result,
-            )
-        # ----------------------------------------------------
-        # YOUTUBE CREATOR -> Profile + Videos
-        # ----------------------------------------------------
-        if (
-            source_code == "YOUTUBE"
-            and entity_type == "CREATOR"
-        ):
-            platform_data = (
-                result.get("platform_data")
-                or {}
-            )
-
-            # 구버전 payload는 profile dict 자체가
-            # platform_data로 들어온다.
-            profile_data = (
-                platform_data.get("profile")
-                or (
-                    platform_data
-                    if platform_data.get("channel_id")
-                    else None
-                )
-            )
-
-            videos = (
-                platform_data.get("videos")
-                or []
-            )
-
-            if profile_data:
-                from apps.core.services.content import (
-                    upsert_youtube_content_items,
-                    upsert_youtube_content_profile,
-                )
-
-                profile = (
-                    upsert_youtube_content_profile(
-                        source=target.source,
-                        data=profile_data,
-                    )
-                )
-
-                profile_id = profile.id
-
-                if videos:
-                    video_result = (
-                        upsert_youtube_content_items(
-                            source=target.source,
-                            videos=videos,
-                            profile=profile,
-                            observed_at=(
-                                platform_data.get(
-                                    "collected_at"
-                                )
-                            ),
-                        )
-                    )
-
-                    if video_result["failure_count"]:
-                        logger.warning(
-                            "YouTube 영상 적재 일부 실패. "
-                            "target_id=%s failed=%s",
-                            target.id,
-                            video_result["failure_count"],
-                        )
-
-        # ====================================================
-        # 4. RUN SUCCESS
-        # ====================================================
-
-        mark_crawl_run_success(
-            crawl_run,
-            discovered_count=result.get(
-                "discovered_count",
-                0,
-            ),
-            success_count=result.get(
-                "success_count",
-                0,
-            ),
-            failure_count=result.get(
-                "failure_count",
-                0,
-            ),
-        )
-        mark_target_crawled(
-            target
-        )
-
-        # ====================================================
-        # 5. RESULT
-        # ====================================================
-
-        return {
-            "target_id": target.id,
-            "target_name": target.name,
-            "target_type": target.target_type,
-            "source": target.source.code,
-            "crawl_run_id": crawl_run.id,
-            "raw_document_id": raw_document.id,
-            "entity_type": result[
-                "entity_type"
-            ],
-            "source_entity_id": result[
-                "source_entity_id"
-            ],
-            "s3_bucket": result["s3"][
-                "bucket"
-            ],
-            "s3_key": result["s3"]["key"],
-            "verified": result["s3"].get(
-                "verified",
-                False,
-            ),
-            "discovered_count": result.get(
-                "discovered_count",
-                0,
-            ),
-            "success_count": result.get(
-                "success_count",
-                0,
-            ),
-            "failure_count": result.get(
-                "failure_count",
-                0,
-            ),
-            "source_ingestion": source_ingestion_result,
-            "review_ingestion": review_ingestion_result,
-            "product_analysis_task_id": product_analysis_task_id,
-            "content_profile_id": profile_id,
-            "content_item_count": (
-                video_result["success_count"]
-                if video_result
-                else 0
-            ),
-            "content_item_failed": (
-                video_result["failure_count"]
-                if video_result
-                else 0
-            ),
-            # RAW collection counts are separate from DB ingestion counts.
-            "raw_review_count": int(
-                (
-                    (result.get("platform_data") or {})
-                    .get("review_summary", {})
-                    .get("item_count")
-                )
-                or 0
-            ),
-            "raw_review_failed": int(
-                (
-                    (result.get("platform_data") or {})
-                    .get("review_summary", {})
-                    .get("failed_product_count")
-                )
-                or 0
-            ),
-            "raw_review_summary": (
-                (result.get("platform_data") or {}).get("review_summary")
-            ),
-        }
+        return result
 
     except Exception as exc:
-        # ====================================================
-        # RUN FAILED
-        # ====================================================
+        retries = self.request.retries or 0
+        will_retry = retries < LIVE_MAX_RETRIES
 
         logger.exception(
-            "CrawlTarget failed. "
-            "target_id=%s source=%s",
-            target.id,
-            target.source.code,
+            "CrawlTarget failed. target_id=%s retry=%s/%s",
+            target_id,
+            retries,
+            LIVE_MAX_RETRIES,
         )
 
-        mark_crawl_run_failed(
-            crawl_run,
-            error=exc,
-            error_code=exc.__class__.__name__,
-        )
+        if will_retry:
+            raise self.retry(
+                exc=exc,
+                countdown=live_retry_countdown(retries),
+            )
 
         raise
 
-
-# ============================================================
-# CELERY ENQUEUE
-# ============================================================
+    finally:
+        close_old_connections()
 
 
 def _enqueue_live_target(
     target_id: int,
-):
+) -> None:
     """
-    DB transaction commit 이후 호출된다.
+    transaction commit 이후 Celery broker에 등록한다.
 
-    Celery Broker 등록에 실패하면 next_crawl_at을
-    현재 시각으로 되돌려 다음 dispatcher 실행에서
-    다시 잡힐 수 있게 한다.
+    broker 등록에 실패하면 next_crawl_at을 현재 시각으로 복구하여
+    다음 dispatcher에서 다시 잡힐 수 있게 한다.
     """
-
     try:
-        run_live_target.delay(
-            target_id
-        )
+        run_live_target.delay(target_id)
 
     except Exception:
         logger.exception(
-            "Failed to enqueue CrawlTarget. "
-            "target_id=%s",
+            "Failed to enqueue CrawlTarget. target_id=%s",
             target_id,
         )
 
-        # 이미 next_crawl_at이 미래로 갱신된 상태이므로,
-        # Broker 등록 실패 시 다시 실행 대상이 되게 복구.
         CrawlTarget.objects.filter(
             id=target_id,
             is_active=True,
         ).update(
-            next_crawl_at=timezone.now()
+            next_crawl_at=timezone.now(),
         )
-
-
-# ============================================================
-# LIVE TARGET DISPATCHER
-# ============================================================
 
 
 @shared_task(
     name="core.dispatch_due_targets",
 )
-def dispatch_due_targets():
+def dispatch_due_targets(
+    batch_size: int = DISPATCH_BATCH_SIZE,
+) -> dict[str, Any]:
     """
-    실행 시간이 도래한 LIVE CrawlTarget을 조회하여
-    Celery queue에 등록한다.
+    실행 시각이 도래한 LIVE CrawlTarget을 Celery queue에 등록한다.
 
-    실행 조건:
-        - is_active=True
-        - collection_mode=LIVE
-        - next_crawl_at IS NULL
-          또는
-        - next_crawl_at <= 현재 시각
+    조건:
+    - is_active=True
+    - collection_mode=LIVE
+    - next_crawl_at IS NULL 또는 next_crawl_at <= now
 
-    동시성 처리:
-        select_for_update(skip_locked=True)
-
-    Queue 등록:
-        transaction.on_commit()
-
-    즉 여러 dispatcher가 동시에 실행되더라도
-    같은 CrawlTarget을 중복 dispatch하는 것을
-    최대한 방지한다.
+    중복 dispatch 방지:
+    - select_for_update(skip_locked=True)
+    - RUNNING CrawlRun 확인
+    - transaction.on_commit 이후 broker enqueue
     """
+    close_old_connections()
 
     now = timezone.now()
-
     dispatched = 0
-    target_ids = []
+    target_ids: list[int] = []
+    skipped_running: list[int] = []
 
-    # ========================================================
-    # 1. DUE TARGET LOCK
-    # ========================================================
-
-    with transaction.atomic():
-        targets = list(
-            CrawlTarget.objects
-            .select_for_update(
-                skip_locked=True
-            )
-            .select_related("source")
-            .filter(
-                source__status=Source.Status.ACTIVE,
-                is_active=True,
-                collection_mode=(
-                    CrawlTarget.CollectionMode.LIVE
-                ),
-            )
-            .filter(
-                Q(
-                    next_crawl_at__isnull=True
+    try:
+        with transaction.atomic():
+            targets = list(
+                CrawlTarget.objects
+                .select_for_update(skip_locked=True)
+                .select_related("source")
+                .filter(
+                    is_active=True,
+                    collection_mode=CrawlTarget.CollectionMode.LIVE,
                 )
-                | Q(
-                    next_crawl_at__lte=now
+                .filter(
+                    Q(next_crawl_at__isnull=True)
+                    | Q(next_crawl_at__lte=now)
                 )
+                .order_by(
+                    "priority",
+                    "id",
+                )[:batch_size]
             )
-            .order_by(
-                "priority",
-                "id",
-            )[
-                :DISPATCH_BATCH_SIZE
-            ]
-        )
 
-        # ====================================================
-        # 2. SCHEDULE NEXT RUN
-        # ====================================================
-
-        for target in targets:
-            interval = (
-                target.interval_minutes
-                or (
-                    target
-                    .source
-                    .crawl_interval_minutes
+            for target in targets:
+                is_running = (
+                    CrawlRun.objects
+                    .filter(
+                        crawl_target=target,
+                        status="RUNNING",
+                    )
+                    .exists()
                 )
-                or 1440
-            )
 
-            next_crawl_at = (
-                now
-                + timedelta(
-                    minutes=interval
+                if is_running:
+                    skipped_running.append(target.id)
+                    continue
+
+                interval = (
+                    target.interval_minutes
+                    or target.source.crawl_interval_minutes
+                    or 1440
                 )
-            )
 
-            target.next_crawl_at = (
-                next_crawl_at
-            )
+                target.next_crawl_at = (
+                    now
+                    + timedelta(minutes=interval)
+                )
+                target.save(
+                    update_fields=["next_crawl_at"],
+                )
 
-            target.save(
-                update_fields=[
-                    "next_crawl_at",
-                ]
-            )
-
-            # ================================================
-            # 3. QUEUE AFTER DB COMMIT
-            #
-            # DB transaction이 성공적으로 commit된 다음에만
-            # Celery Broker에 task를 등록한다.
-            #
-            # lambda closure 문제를 피하기 위해
-            # target_id를 default argument로 고정.
-            # ================================================
-
-            transaction.on_commit(
-                lambda target_id=target.id: (
-                    _enqueue_live_target(
-                        target_id
+                transaction.on_commit(
+                    lambda target_id=target.id: (
+                        _enqueue_live_target(target_id)
                     )
                 )
-            )
 
-            target_ids.append(
-                target.id
-            )
+                target_ids.append(target.id)
+                dispatched += 1
 
-            dispatched += 1
+        result = {
+            "checked_at": now.isoformat(),
+            "dispatched": dispatched,
+            "target_ids": target_ids,
+            "skipped_running": skipped_running,
+        }
+
+        logger.info(
+            "Dispatcher finished. dispatched=%s skipped_running=%s",
+            dispatched,
+            len(skipped_running),
+        )
+
+        return result
+
+    finally:
+        close_old_connections()
+
+
+@shared_task(
+    name="core.collect_search_daily",
+    soft_time_limit=60 * 110,
+    time_limit=60 * 120,
+)
+def collect_search_daily():
+    from io import StringIO
+
+    from django.core.management import call_command
+
+    out = StringIO()
+
+    call_command(
+        "collect_search_signals",
+        mode="daily",
+        stdout=out,
+    )
+
+    return out.getvalue()[-2000:]
+
+
+@shared_task(
+    name="core.collect_search_weekly",
+    soft_time_limit=60 * 110,
+    time_limit=60 * 120,
+)
+def collect_search_weekly():
+    from io import StringIO
+
+    from django.core.management import call_command
+
+    out = StringIO()
+
+    call_command(
+        "collect_search_signals",
+        mode="weekly",
+        stdout=out,
+    )
+
+    return out.getvalue()[-2000:]
+
+
+@shared_task(
+    name="core.check_data_freshness",
+)
+def check_data_freshness():
+    from apps.core.services.ops_alerts import (
+        check_freshness_and_alert,
+    )
+
+    result = check_freshness_and_alert()
+
+    logger.info(
+        "Data freshness check: %s",
+        result,
+    )
+
+    return result
+
+
+@shared_task(
+    name="core.rebuild_metrics",
+    soft_time_limit=60 * 50,
+    time_limit=60 * 60,
+)
+def rebuild_metrics(
+    days: int = 35,
+):
+    from datetime import date, timedelta
+
+    from analysis.text_signals.metrics import (
+        rebuild_text_metrics,
+    )
+
+    days = max(
+        1,
+        min(int(days), 400),
+    )
+
+    until = date.today()
+
+    result = rebuild_text_metrics(
+        since=until - timedelta(days=days),
+        until=until,
+    )
+
+    logger.info(
+        "Metrics rebuild. days=%s result=%s",
+        days,
+        result,
+    )
+
     return {
-        "dispatched": dispatched,
-        "target_ids": target_ids,
+        "days": days,
+        **(result or {}),
     }
+
+
+@shared_task(
+    name="core.collect_search_volume_monthly",
+    soft_time_limit=60 * 110,
+    time_limit=60 * 120,
+)
+def collect_search_volume_monthly():
+    """네이버 검색광고 + Google Keyword Planner 월간 절대 검색량 적재."""
+    from io import StringIO
+    from django.core.management import call_command
+
+    out = StringIO()
+    call_command("collect_search_volume", source="all", stdout=out)
+    return out.getvalue()[-4000:]

@@ -1,59 +1,22 @@
+"""Run a registered STORE_PROFILE target through the shared Django runner."""
 from __future__ import annotations
-
 import argparse
 import json
-import os
-from pathlib import Path
-
-from dotenv import load_dotenv
-
-from .constants import BRAND_DEPARTMENT_CATEGORIES, COMPONENT_LIST_API_URL
-from .store_profile_collector import AblyStoreProfileCollector
-from .store_profile_pipeline import AblyStoreProfilePipeline
-
-
-load_dotenv(Path(__file__).resolve().parents[3] / ".env")
-
-
-def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description="ABLY 브랜드관 랭킹을 S3 RAW로 수집")
-    parser.add_argument(
-        "--category-snos",
-        nargs="+",
-        type=int,
-        choices=list(BRAND_DEPARTMENT_CATEGORIES),
-        default=None,
-    )
-    parser.add_argument("--max-requests", type=int, default=None)
-    parser.add_argument("--bucket", default=os.getenv("AWS_STORAGE_BUCKET_NAME"))
-    parser.add_argument("--region", default=os.getenv("AWS_REGION", "ap-northeast-2"))
-    return parser.parse_args(argv)
 
 
 def main(argv=None):
-    args = parse_args(argv)
-    if not args.bucket:
-        raise SystemExit("AWS_STORAGE_BUCKET_NAME 또는 --bucket이 필요합니다.")
-
-    def collector_factory():
-        kwargs = {}
-        if args.max_requests is not None:
-            kwargs["max_requests"] = args.max_requests
-        return AblyStoreProfileCollector(**kwargs)
-
-    pipeline = AblyStoreProfilePipeline(
-        bucket=args.bucket,
-        region_name=args.region,
-        collector_factory=collector_factory,
-    )
-    result = pipeline.run_target(
-        target_type="STORE_PROFILE",
-        target_url=COMPONENT_LIST_API_URL,
-        params={"category_snos": args.category_snos},
-    )
-    print(json.dumps(result, ensure_ascii=False, indent=2))
-    if result.get("failure_count") and args.max_requests is None:
-        raise SystemExit(2)
+    parser = argparse.ArgumentParser(description="Run an ABLY STORE_PROFILE CrawlTarget")
+    parser.add_argument("--target-id", type=int, required=True)
+    args = parser.parse_args(argv)
+    import django
+    django.setup()
+    from apps.core.models import CrawlTarget
+    from collection.common.runner import run_target
+    target = CrawlTarget.objects.select_related("source").get(pk=args.target_id)
+    if target.source.code.upper() != "ABLY" or target.target_type.upper() not in {"STORE", "STORE_PROFILE"}:
+        raise ValueError("An ABLY STORE_PROFILE CrawlTarget is required")
+    result = run_target(target.id)
+    print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
     return result
 
 
