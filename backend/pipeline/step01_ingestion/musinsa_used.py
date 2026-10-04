@@ -13,9 +13,11 @@ from apps.core.models import (
     BrandSource,
     CategorySource,
     ProductSource,
+    ProductSourceRelation,
     ProductSourceSnapshot,
     RawDocument,
     ResaleSnapshot,
+    Source,
 )
 
 from .common import base_cleaning, extract_payload, get_s3_client, load_raw_json
@@ -364,6 +366,22 @@ class MusinsaUsedIngestion:
                     "error_type": exc.__class__.__name__,
                     "error_message": str(exc),
                 })
+
+        # 상품을 먼저 적재해야 관계의 양 끝(유즈드 매물 · 무신사 원상품)을 찾을 수 있다.
+        try:
+            relation_stats = persist_product_source_relations(
+                _list(payload.get("relations"))
+            )
+        except Exception as exc:
+            relation_stats = {"created": 0, "existing": 0, "skipped": 0}
+            stats["errors"].append({
+                "stage": "relations",
+                "error_type": exc.__class__.__name__,
+                "error_message": str(exc),
+            })
+        stats["relation_created"] = relation_stats["created"]
+        stats["relation_existing"] = relation_stats["existing"]
+        stats["relation_skipped"] = relation_stats["skipped"]
 
         return stats
 
@@ -821,3 +839,115 @@ class MusinsaUsedIngestion:
             values,
             observed_at,
         )
+
+
+def _source_code_key(value: Any) -> str:
+    # Source.code 는 'musinsa_used' · 'musinsa-used' · 'MUSINSA' 처럼 표기가 섞여 있다.
+    return str(value or "").strip().lower().replace("-", "_")
+
+
+@transaction.atomic
+def persist_product_source_relations(relations: list[dict]) -> dict:
+    """RAW 의 relations(유즈드 매물 → 무신사 원상품)를 ProductSourceRelation 에 적재한다.
+
+    표준 상품(Product) 매핑과는 별개로, 플랫폼 상품끼리의 근거 관계만 남긴다.
+    양 끝 ProductSource 가 아직 적재되지 않았으면 건너뛴다 — 무신사 원상품은
+    무신사 수집이 따로 적재하므로, 다음 RAW 재처리 때 다시 연결된다.
+    이미 있는 관계는 그대로 두므로 같은 RAW 를 여러 번 돌려도 된다.
+    """
+    valid_types = set(ProductSourceRelation.RelationType.values)
+    skipped: list[dict] = []
+    normalized = []
+    lookup_keys: set[tuple[str, str]] = set()
+
+    for relation in relations or []:
+        if not isinstance(relation, dict):
+            skipped.append({"relation": relation, "skip_reason": "INVALID_RELATION"})
+            continue
+        relation_type = (
+            relation.get("relation_type")
+            or ProductSourceRelation.RelationType.RESALE_OF
+        )
+        if relation_type not in valid_types:
+            skipped.append({**relation, "skip_reason": "INVALID_RELATION_TYPE"})
+            continue
+        from_key = (
+            _source_code_key(relation.get("from_source")),
+            str(relation.get("from_source_product_id") or "").strip(),
+        )
+        to_key = (
+            _source_code_key(relation.get("to_source")),
+            str(relation.get("to_source_product_id") or "").strip(),
+        )
+        if not all((*from_key, *to_key)) or from_key == to_key:
+            skipped.append({**relation, "skip_reason": "MISSING_SOURCE_KEY"})
+            continue
+        normalized.append((relation, from_key, to_key, relation_type))
+        lookup_keys.update((from_key, to_key))
+
+    if not normalized:
+        return {"created": 0, "existing": 0, "skipped": len(skipped),
+                "skipped_relations": skipped}
+
+    source_codes = {code for code, _ in lookup_keys}
+    source_ids = {
+        source.pk: _source_code_key(source.code)
+        for source in Source.objects.all()
+        if _source_code_key(source.code) in source_codes
+    }
+    product_sources = (
+        ProductSource.objects
+        .filter(
+            source_id__in=source_ids.keys(),
+            source_product_id__in={pid for _, pid in lookup_keys},
+        )
+        .only("id", "source_id", "source_product_id")
+    )
+    by_key = {
+        (source_ids[ps.source_id], str(ps.source_product_id)): ps.pk
+        for ps in product_sources
+    }
+
+    requested: dict[tuple[int, int, str], dict] = {}
+    for relation, from_key, to_key, relation_type in normalized:
+        from_id = by_key.get(from_key)
+        to_id = by_key.get(to_key)
+        if from_id is None or to_id is None:
+            skipped.append({**relation, "skip_reason": "PRODUCT_SOURCE_NOT_FOUND"})
+            continue
+        requested.setdefault((from_id, to_id, relation_type), relation)
+
+    involved_ids = {pk for from_id, to_id, _ in requested for pk in (from_id, to_id)}
+    existing = set(
+        ProductSourceRelation.objects
+        .filter(
+            from_product_source_id__in=involved_ids,
+            to_product_source_id__in=involved_ids,
+        )
+        .values_list("from_product_source_id", "to_product_source_id", "relation_type")
+    ) if involved_ids else set()
+
+    missing = [key for key in requested if key not in existing]
+    ProductSourceRelation.objects.bulk_create(
+        [
+            ProductSourceRelation(
+                from_product_source_id=from_id,
+                to_product_source_id=to_id,
+                relation_type=relation_type,
+                evidence_source=(
+                    requested[(from_id, to_id, relation_type)].get("evidence_source")
+                    or "MUSINSA_RELATED_GOODS"
+                )[:100],
+            )
+            for from_id, to_id, relation_type in missing
+        ],
+        batch_size=1000,
+        ignore_conflicts=True,
+    )
+
+    return {
+        "created": len(missing),
+        "existing": len(requested) - len(missing),
+        "skipped": len(skipped),
+        "skipped_relations": skipped,
+    }

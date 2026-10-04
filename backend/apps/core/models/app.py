@@ -271,6 +271,48 @@ class UserSavedItem(models.Model):
         verbose_name="콘텐츠",
     )
 
+    # ── 가격 하락 알림(1번)이 쓰는 기준값 ──────────────────────────
+    # 찜한 순간의 가격을 여기에 박아 둔다. 스냅샷 시계열만으로는
+    # '언제 대비 내렸는지'가 사람마다 달라 판정이 흔들린다.
+    saved_price = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="찜 시점 가격",
+    )
+
+    # 그 가격을 읽은 판매처. 한 상품에 판매처가 여럿이면 비교 대상을 고정한다.
+    saved_price_source = models.ForeignKey(
+        "core.ProductSource",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="saved_price_items",
+        verbose_name="가격 기준 판매처",
+    )
+
+    saved_price_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="찜 시점 가격 관측일시",
+    )
+
+    # 마지막으로 알린 가격. 같은 하락을 며칠 내리 알리지 않기 위해 남긴다.
+    notified_price = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="마지막 알림 가격",
+    )
+
+    notified_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="마지막 알림 시각",
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="저장일시",

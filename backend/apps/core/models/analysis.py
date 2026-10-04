@@ -44,6 +44,25 @@ class TextDocument(models.Model):
         verbose_name="콘텐츠",
     )
 
+    product_source = models.ForeignKey(
+        "core.ProductSource",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="text_documents",
+        verbose_name="소스 상품",
+        help_text="커머스 리뷰가 귀속되는 실제 플랫폼 상품",
+    )
+
+    analysis_run = models.ForeignKey(
+        "core.AnalysisPipelineRun",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="documents",
+        verbose_name="분석 실행",
+    )
+
     document_type = models.CharField(
         max_length=30,
         choices=DocumentType.choices,
@@ -75,6 +94,23 @@ class TextDocument(models.Model):
         db_index=True,
         verbose_name="원문 작성일시",
         help_text="수집일이 아니라 댓글·리뷰가 실제 작성된 시각",
+    )
+
+    source_payload_hash = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="원문 해시",
+        help_text="원문이 바뀐 경우에만 재분석하기 위한 SHA-256",
+    )
+
+    analysis_version = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        db_index=True,
+        verbose_name="분석 버전",
     )
 
     analysis_metadata = models.JSONField(
@@ -128,6 +164,25 @@ class TextDocument(models.Model):
                 fields=["-created_at"],
                 name="idx_text_doc_created",
             ),
+            models.Index(
+                fields=["product_source", "document_type"],
+                name="idx_text_doc_product",
+            ),
+            models.Index(
+                fields=["source", "analysis_version", "analysis_status"],
+                name="idx_text_doc_anl_ver",
+            ),
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source", "document_type", "external_id"],
+                condition=(
+                    models.Q(external_id__isnull=False)
+                    & ~models.Q(external_id="")
+                ),
+                name="uq_text_doc_source_type_external",
+            ),
         ]
 
     def __str__(self):
@@ -160,6 +215,9 @@ class TextTermMention(models.Model):
         TARGET = "TARGET", "주요 대상"
         CONTEXT = "CONTEXT", "문맥 언급"
         COMPARISON = "COMPARISON", "비교 대상"
+        # 텍스트 신호 파이프라인(analysis/text_signals)이 댓글·리뷰 언급에 쓴다.
+        COMMENT = "COMMENT", "유튜브 댓글"
+        REVIEW = "REVIEW", "커머스 리뷰"
 
     document = models.ForeignKey(
         "TextDocument",
@@ -613,8 +671,8 @@ class TermAssocDaily(models.Model):
     Lift / PMI를 계산한다.
     """
     class Basis(models.TextChoices):
-        TEXT = "TEXT", "Text"
-        SEARCH = "SEARCH", "Search"
+        TEXT = "TEXT", "언급 동시출현"
+        SEARCH = "SEARCH", "검색 동시질의"
 
     source_term = models.ForeignKey(
         "core.DictionaryTerm",
@@ -680,12 +738,12 @@ class TermAssocDaily(models.Model):
         verbose_name="지표 버전",
     )
     
+    # 0065_term_assoc_basis 와 같은 정의다. 길이·인덱스를 바꾸면 운영 DB 변경이 따라온다.
     basis = models.CharField(
-        max_length=20,
+        max_length=10,
         choices=Basis.choices,
         default=Basis.TEXT,
-        db_index=True,
-        verbose_name="연관 분석 기준",
+        verbose_name="연관 근거",
     )
 
     metrics = models.JSONField(
@@ -740,6 +798,10 @@ class TermAssocDaily(models.Model):
                 fields=["source_term", "association_rank"],
                 name="idx_assoc_src_rank",
             ),
+            models.Index(
+                fields=["source_term", "basis", "-metric_date"],
+                name="idx_assoc_src_basis",
+            ),
         ]
 
     def __str__(self):
@@ -790,6 +852,28 @@ class TermSearchMetricMonthly(models.Model):
     data_type = models.CharField(
         max_length=50,
         default="monthly_absolute",
+    )
+
+    # ★ 2026-09-21 — 네이버 검색광고(N1·N4)가 같은 응답으로 주는 값들.
+    #   PC/모바일 분리는 데이터랩 device 컷을 따로 받지 않아도 되게 해 준다.
+    pc_volume = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="PC 검색량",
+    )
+
+    mobile_volume = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="모바일 검색량",
+    )
+
+    competition = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        verbose_name="광고 경쟁도",
+        help_text="네이버 검색광고 기준 높음/중간/낮음. '시장 포화도'가 아니라 광고 경쟁 강도다.",
     )
 
     metric_version = models.CharField(

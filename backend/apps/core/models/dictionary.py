@@ -1669,6 +1669,15 @@ class Brand(models.Model):
         null=True,
     )
 
+    # 관리자 화면의 '표준 브랜드로 승격'이 BrandSource 스타일을 그대로 넘겨받는다.
+    # 운영 DB 의 dictionary.brand_styles 를 그대로 쓴다.
+    styles = models.ManyToManyField(
+        Style,
+        blank=True,
+        related_name="brands",
+        help_text="FEEDIT 표준 스타일",
+    )
+
     terms = models.ManyToManyField(
         DictionaryTerm,
         blank=True,
@@ -1676,7 +1685,7 @@ class Brand(models.Model):
         verbose_name="연관 키워드",
         help_text="브랜드를 설명하는 FEEDIT Dictionary Term",
     )
-    
+
     is_verified = models.BooleanField(
         default=False,
         db_index=True,
