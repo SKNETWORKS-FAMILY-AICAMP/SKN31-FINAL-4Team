@@ -59,6 +59,7 @@ class AuthApiTests(TestCase):
         self.assertEqual(self.post("/api/auth/login", {"username": "feedit01", "password": "wrong"}).status_code, 401)
         r = self.post("/api/auth/login", {"username": "feedit01", "password": "Secret!234"})
         self.assertEqual(r.status_code, 200, r.content)
+        self.csrf = r.json()["data"]["csrf_token"]   # 로그인하면 Django 가 CSRF 토큰을 새로 바꾼다
         me = self.c.get("/api/auth/me").json()["data"]
         self.assertTrue(me["authenticated"])
         self.assertEqual(me["user"]["nickname"], "피딧")
