@@ -220,37 +220,29 @@ __marimo__/
 # 챗봇 배포 묶음 (tools_make_bundle.sh 가 만든다 — 커밋하지 않는다)
 feedit-chat-bundle.tar.gz
 
-# ── macOS 찌꺼기 ──────────────────────────────────────────
-#   Finder 가 폴더를 볼 때마다 새로 쓴다. 아이콘 위치·정렬 순서라
-#   저장소에 있을 이유가 없는데, 추적되면 pull 때마다 막힌다.
-#   (2026-09-09: 7개가 추적 중이라 git pull 이 두 번 중지됐다)
+# macOS
 .DS_Store
 ._*
 _to_delete/
 
-# ★ 2026-09-21 — .env 백업/임시본도 반드시 무시한다.
-#   ".env" 패턴은 정확히 .env 만 잡는다. .env.bak-20260921 같은 이름은
-#   그냥 커밋 대상이 되어 키가 통째로 깃허브에 올라간다.
+# .env files — 환경 변수 파일
 .env.bak-*
 .env.example.bak-*
 .env.*.bak
 *.tmp
 _sv_env_values.tmp
 
-# Claude 작업 산출물 — 보안 점검 보고서/조치 가이드가 들어간다.
-# 취약점 내용이 그대로 적힌 문서라 절대 공개 저장소로 나가면 안 된다.
+# Claude
 Claude outputs/
 
-# Monorepo generated dependencies / reports (2026-09-22)
+# Monorepo generated dependencies / reports 
 **/node_modules/
 **/dist/
-/outputs/
 
-# 챗봇 vendor 의 로컬 데이터 (SQLite 지표 DB · 키 파일) — 저장소에 넣지 않는다
+# 챗봇 vendor 의 로컬 데이터 (SQLite 지표 DB · 키 파일)
 ChatBot/vendor/data/
 
-# 로컬 전용 — 배포 사이트와 무관 (2026-09-28)
-#   exports/              서비스 테스트·제출용 내보내기 자료
+# 로컬 전용 — 배포 사이트와 무관
 /exports/
 
 # Environment backups and local generated caches
