@@ -324,6 +324,21 @@ await t('백엔드가 죽으면 값 없음이 아니라 오류로 말한다', as
   delete process.env.BACKEND_API_URL;
 });
 
+await t('리세일 중계 시간 초과는 한국어로 원인과 재시도를 안내한다', async () => {
+  process.env.BACKEND_API_URL = 'http://x/api';
+  globalThis.fetch = async () => {
+    const error = new Error('This operation was aborted');
+    error.name = 'AbortError';
+    throw error;
+  };
+  const { viaBackend } = await import('../api/_lib/db.js');
+  const result = await viaBackend('/resale?brand=test', 25000);
+  assert.equal(result.status, 'error');
+  assert.match(result.reason, /25초 안에 응답하지 않았습니다/);
+  assert.doesNotMatch(result.reason, /aborted/);
+  delete process.env.BACKEND_API_URL;
+});
+
 await t('BACKEND_API_URL 이 없으면 예전처럼 pg 로 간다', async () => {
   delete process.env.BACKEND_API_URL;
   const before = fake.CALLS.length;

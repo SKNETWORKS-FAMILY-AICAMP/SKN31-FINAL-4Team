@@ -135,17 +135,16 @@ export function backendToken() {
   return (process.env.BACKEND_API_TOKEN || '').trim();
 }
 
-export async function viaBackend(path) {
+export async function viaBackend(path, timeoutMs = 8000) {
   const base = backendBase();
   if (!base) return null;                 // 설정 안 됨 → 부르는 쪽이 pg 로 간다
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), timeoutMs);
   try {
-    const c = new AbortController();
-    const t = setTimeout(() => c.abort(), 8000);
     const headers = {};
     const tok = backendToken();
     if (tok) headers['X-FEEDiT-Token'] = tok;
     const r = await fetch(base + path, { signal: c.signal, headers });
-    clearTimeout(t);
     if (!r.ok) {
       /* 401 은 거의 항상 "두 토큰이 다르다" 이다. 상태 숫자만 보고
          원인을 짐작하게 두지 않고, 어디를 보라고 적어 준다. */
@@ -164,8 +163,12 @@ export async function viaBackend(path) {
   } catch (e) {
     return {
       status: 'error',
-      reason: `백엔드에 닿지 못했습니다: ${String(e.message || e).slice(0, 140)}`,
+      reason: e && e.name === 'AbortError'
+        ? `백엔드가 ${Math.round(timeoutMs / 1000)}초 안에 응답하지 않았습니다. 잠시 뒤 다시 시도해 주세요.`
+        : `백엔드에 닿지 못했습니다: ${String(e.message || e).slice(0, 140)}`,
       data: null,
     };
+  } finally {
+    clearTimeout(t);
   }
 }

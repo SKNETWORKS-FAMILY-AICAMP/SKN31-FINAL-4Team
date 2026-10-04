@@ -1925,6 +1925,28 @@ document.addEventListener('click', e=>{
   if(kw){ cpAsk(kw.dataset.kw, cpKeyFor(kw.dataset.kw)); return; }
   const md=e.target.closest('#cpThread [data-mode]');
   if(md){ smSwitch(md.dataset.mode==='salmal'); return; }
+  const play=e.target.closest('#cpThread [data-chat-video-play]');
+  if(play){
+    const card=play.closest('.chatVideo'), screen=card?.querySelector('.chatVideoScreen');
+    const id=card?.dataset.videoId;
+    if(screen && /^[A-Za-z0-9_-]{11}$/.test(id || '')){
+      const frame=document.createElement('iframe');
+      frame.src='https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&rel=0';
+      frame.title=(card.querySelector('.chatVideoCopy strong')?.textContent || 'YouTube 영상')+' 재생';
+      frame.setAttribute('allow','accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen');
+      frame.setAttribute('allowfullscreen','');
+      frame.setAttribute('referrerpolicy','strict-origin-when-cross-origin');
+      screen.replaceChildren(frame);
+    }
+    return;
+  }
+  const fullscreen=e.target.closest('#cpThread [data-chat-video-fullscreen]');
+  if(fullscreen){
+    const card=fullscreen.closest('.chatVideo');
+    const request=card?.requestFullscreen || card?.webkitRequestFullscreen;
+    if(request) Promise.resolve(request.call(card)).catch(()=>{});
+    return;
+  }
   const hr=e.target.closest('#cpThread [data-href]');
   if(hr){ window.open(hr.dataset.href, '_blank', 'noopener'); return; }
   const rq=e.target.closest('#cpThread [data-lexreq]');

@@ -24,6 +24,7 @@ import { planChatUse } from '../../../account/static/js/account_api.js';
 import { planApplyChat, planEnforced } from '../../../account/static/js/plan.js';
 /* 질문 유형별 리포트 템플릿 그림 (2026-10-02) — 진단·판정·원인·비교·순위·연관·관측 부족 */
 import { TEMPLATE_BLOCKS, TEMPLATE_LABEL } from './chat_templates.js';
+import { chatVideoHTML, youtubeVideoId } from './chat_video.js';
 export { storyHTML, tickerRange } from './chat_templates.js';
 
 /* ★ 배포된 곳에서는 같은 도메인의 /api 를 쓴다.
@@ -343,6 +344,7 @@ const BLOCK = {
     let title = String(o.title || '').replace(/\s+/g, ' ').trim();
     if(!title || title === url || /^https?:\/\//.test(title)) title = host || url;
     if(title.length > 46) title = title.slice(0, 45).trim() + '…';
+    if(youtubeVideoId(url)) return chatVideoHTML({url, title, source:'YOUTUBE · ' + String(i + 1).padStart(2, '0')});
     return '<div class="row" data-href="' + esc(url) + '">' +
       '<span class="n">' + String(i + 1).padStart(2, '0') + '</span>' +
       '<span class="k">' + esc(title) + '</span>' +

@@ -286,5 +286,16 @@ for (const [id, name, brand] of [['resale', '리세일', '엄브로'], ['life', 
   });
 }
 
+await t('수명주기 검색은 리세일 개별 상품 API를 호출하거나 상품 후보를 표시하지 않는다', async () => {
+  D.trRender('life');
+  asked = [];
+  const input = document.getElementById('fsInput');
+  input.value = '더플백';
+  input.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  await wait(280);
+  assert.ok(!asked.some(u => u.includes('/api/resale/products?')));
+  assert.equal(document.querySelectorAll('#fsSug .resaleProduct').length, 0);
+});
+
 console.log(`\n${pass}개 통과 · ${fail}개 실패`);
 process.exit(fail ? 1 : 0);

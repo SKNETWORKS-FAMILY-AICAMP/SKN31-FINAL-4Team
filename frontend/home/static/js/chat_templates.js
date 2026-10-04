@@ -20,6 +20,8 @@
    ★ 클래스는 전부 chat_report.css 의 '리포트 템플릿' 블록에 있다.
    ══════════════════════════════════════════════════════ */
 
+import { chatVideoHTML, youtubeVideoId } from './chat_video.js';
+
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 const num = v => (v === null || v === undefined || v === '' || !Number.isFinite(Number(v))) ? null : Number(v);
@@ -274,6 +276,10 @@ function timeline(b){
     (marks ? '<ol class="tlMarks">' + marks + '</ol>' : '');
 
   const cards = (b.evidence || []).slice(0, 3).map((e, i) => {
+    if(youtubeVideoId(e.url)) return '<div class="tlCard tlCard--video">' +
+      '<span class="tlCardNo">' + String(i + 1).padStart(2, '0') + '</span>' +
+      chatVideoHTML({url:e.url, title:e.body, source:[e.src, e.kind].filter(Boolean).join(' · '),
+        meta:[e.at ? mmdd(e.at) : '', e.tone || ''].filter(Boolean).join(' · ')}) + '</div>';
     const tag = e.url ? 'a' : 'div';
     const href = e.url ? ' href="' + esc(e.url) + '" target="_blank" rel="noopener"' : '';
     return '<' + tag + ' class="tlCard"' + href + '>' +

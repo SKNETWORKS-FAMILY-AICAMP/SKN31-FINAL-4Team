@@ -100,7 +100,9 @@ const toRows = (r) =>
 export default async function handler(req, res) {
   // Django 가 설정돼 있으면 그쪽이 먼저다 (RDS 를 열지 않아도 된다).
   const qs = req.url.includes('?') ? '?' + req.url.split('?')[1] : '';
-  const relayed = await viaBackend('/facets' + qs);
+  /* 리세일 세부 검색에서도 같은 후보 집계를 쓴다. 8초 제한은 큰 상품 표에서
+     서버 응답보다 먼저 끝나므로 함수 실행 한도 안에서 기다린다. */
+  const relayed = await viaBackend('/facets' + qs, 25000);
   if (relayed) {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');

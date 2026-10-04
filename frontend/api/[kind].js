@@ -63,7 +63,10 @@ export default async function handler(req, res) {
     : resaleProducts
       ? '/resale/products'
       : `/${kind}`;
-  const relayed = await viaBackend(backendPath + (q ? `?${q}` : ''));
+  /* 리세일 집계와 상품 후보는 스냅샷을 많이 훑는다. 기본 8초는 정상 집계도
+     끊어 버려 화면에 "This operation was aborted"가 나타났다. */
+  const relayed = await viaBackend(backendPath + (q ? `?${q}` : ''),
+    kind === 'resale' ? 25000 : 8000);
   if (!relayed) {
     return failed(
       res,

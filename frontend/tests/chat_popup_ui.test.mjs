@@ -63,11 +63,51 @@ const wait = (ms = 0) => new Promise(r => setTimeout(r, ms));
 
 await import(`${F}/main.js`);
 const CP = await import(`${F}/home/static/js/chat_popup.js`);
+const CHAT_API = await import(`${F}/home/static/js/chat_api.js`);
+const { youtubeVideoId } = await import(`${F}/home/static/js/chat_video.js`);
 const P  = await import(`${F}/account/static/js/profile.js`);
 P.AUTH.in = true;                        /* 로그인 관문을 지난 상태로 둔다 */
 
 const thread = () => document.querySelector('#cpThread');
 const click = (el) => el.dispatchEvent(new dom.window.MouseEvent('click', {bubbles:true}));
+
+await t('챗봇 원인 템플릿의 영상 근거를 썸네일·인앱 재생·전체화면·YouTube 링크로 표시한다', () => {
+  const video='https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+  const html=CHAT_API.reportHTML({blocks:[{type:'generative_report',slot:'full',template:'why',title:'원인',modules:[{
+    id:'why',kind:'evidence',presentation:'hero',span:12,block:{type:'timeline',term:'플리스 재킷',window:2,
+      points:[{d:'2026-10-02',m:2},{d:'2026-10-03',m:4}],spikes:[],
+      evidence:[{src:'유튜브',kind:'영상',body:'착장 영상',url:video,at:'2026-10-03'}]}}]}]});
+  thread().innerHTML=html;
+  const card=thread().querySelector('.tlCard--video .chatVideo');
+  assert.ok(card,'영상 근거 카드가 없다');
+  assert.match(card.querySelector('img').src,/i\.ytimg\.com\/vi\/dQw4w9WgXcQ\/hqdefault\.jpg/);
+  assert.equal(card.querySelector('iframe'),null,'클릭 전에 외부 플레이어를 로드했다');
+  assert.equal(card.querySelector('.chatVideoActions a').href,video);
+  let fullscreenCalled=false;
+  card.requestFullscreen=()=>{ fullscreenCalled=true; return Promise.resolve(); };
+  click(card.querySelector('[data-chat-video-fullscreen]'));
+  assert.ok(fullscreenCalled,'전체화면 버튼이 동작하지 않는다');
+  click(card.querySelector('[data-chat-video-play]'));
+  const frame=card.querySelector('iframe');
+  assert.ok(frame,'화면 안에서 플레이어가 열리지 않았다');
+  assert.match(frame.src,/youtube-nocookie\.com\/embed\/dQw4w9WgXcQ\?autoplay=1/);
+  assert.ok(frame.hasAttribute('allowfullscreen'));
+  assert.equal(card.querySelector('.chatVideoActions a').href,video,'원본 이동 링크가 유지되어야 한다');
+});
+
+await t('링크 템플릿은 유효한 영상만 플레이어로 바꾸고 매거진 링크는 유지한다', () => {
+  const html=CHAT_API.reportHTML({blocks:[{type:'links',slot:'full',items:[
+    {url:'https://youtu.be/dQw4w9WgXcQ',title:'영상 추천'},
+    {url:'https://magazine.example.com/story',title:'웹매거진'},
+    {url:'https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ',title:'가짜 영상'},
+  ]}]});
+  thread().innerHTML=html;
+  assert.equal(thread().querySelectorAll('.chatVideo').length,1);
+  assert.equal(thread().querySelectorAll('.rank .row[data-href]').length,2);
+  assert.match(thread().textContent,/웹매거진/);
+  assert.equal(youtubeVideoId('https://youtu.be/x'),null);
+  assert.equal(youtubeVideoId('https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ'),null);
+});
 
 await t('사진 관찰값이 다음 요청의 history에 그대로 남는다', () => {
   const visual = {

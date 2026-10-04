@@ -22,6 +22,8 @@ for dir in "$web"/*/static/js; do
   mkdir -p "$stage/app/$feature/static"
   cp -R "$dir" "$stage/app/$feature/static/js"
 done
+# 앱 진입점에서 동적으로 읽는 트렌드 데모 데이터도 복사한다.
+cp -R "$web/trend/static/demo" "$stage/app/trend/static/demo"
 # Keep chat_api's relative imports rooted in the original feature layout.
 printf '%s\n' 'export * from "./app/home/static/js/chat_api.js";' > "$stage/chat_api.js"
 printf '%s\n' '{"type":"module"}' > "$stage/package.json"

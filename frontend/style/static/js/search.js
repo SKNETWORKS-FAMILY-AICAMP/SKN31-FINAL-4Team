@@ -449,8 +449,8 @@ function fsProductRowHTML(o,k){
       '<small>'+fsEsc([o.brand,o.model_code,o.code].filter(Boolean).join(' · ')||'상품 정보 없음')+'</small>'+
       (platform?'<small class="platforms">'+fsEsc(platform)+'</small>':'')+'</span></button>';
 }
-/* 검색창 후보 = 연관어(브랜드 우선) + 그 말에 걸린 상품들.
-   할인률·리세일·수명주기가 같은 모양을 쓴다. */
+/* 검색창 후보 = 연관어(브랜드 우선) + 상품들.
+   수명주기는 상품 단위 지표가 아니므로 사전 용어만 보여 준다. */
 function fsSugTerms(q){
   const n=fsNorm(q); if(!n)return [];
   const brands=FIDX.filter(o=>o.f==='브랜드'&&o.key.indexOf(n)>=0)
@@ -493,6 +493,13 @@ function fsLoadResaleSug(){
   clearTimeout(fsResaleT);
   if(fsResaleAbort){ fsResaleAbort.abort(); fsResaleAbort=null; }
   if(!q){ fsShowHistOrHide(); return; }
+  if(FS.id==='life'){
+    /* 수명주기의 아이템명 제한을 UI와 요청 양쪽에서 지킨다.
+       리세일 상품 검색 결과를 합치면 상품명이 다시 후보로 나타난다. */
+    ++fsResaleSeq;
+    fsPaintSug();
+    return;
+  }
   const my=++fsResaleSeq, terms=fsSugTerms(q);
   fsPaintSugAll(terms,[],'loading',q);
   fsResaleT=setTimeout(async()=>{
