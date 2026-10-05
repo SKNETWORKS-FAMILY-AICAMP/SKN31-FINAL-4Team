@@ -26,7 +26,7 @@
 | :---: | :---: | :---: | :---: | :---: |
 | <a href="https://github.com/ujneg18-source"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="유진영 GitHub" /></a> | <a href="https://github.com/hellene0708-cyber"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="고현아 GitHub" /></a> | <a href="https://github.com/bongrybong"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="김봉남 GitHub" /></a> | <a href="https://github.com/Jinxxxok"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="안혁진 GitHub" /></a> | <a href="https://github.com/sxoxyn"><img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="전서연 GitHub" /></a> |
 | <img src="outputs/images/jy.png" width="120" height="120" alt="유진영 프로필 이미지" /> | <img src="outputs/images/ha.png" width="120" height="120" alt="고현아 프로필 이미지" /> | <img src="outputs/images/bn.png" width="120" height="120" alt="김봉남 프로필 이미지" /> | <img src="outputs/images/hj.png" width="120" height="120" alt="안혁진 프로필 이미지" /> | <img src="outputs/images/sy.png" width="120" height="120" alt="전서연 프로필 이미지" /> |
-| <b>PM · 총괄</b> | <b>DB · Backend</b> | <b>Backend</b> | <b>Frontend · AI Agent</b> | <b>Frontend · AI Agent</b> |
+| <b>PM · 총괄</b> | <b>DB · Backend</b> | <b>DB · Backend</b> | <b>Frontend · AI Agent</b> | <b>Frontend · AI Agent</b> |
 
 ---
 
