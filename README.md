@@ -76,7 +76,7 @@ FEEDiT은 데이터를 수집해 지표로 만들고, 그 결과를 챗봇·살!
 브라우저는 Vercel에서 웹 화면을 받고, 서버 요청은 EC2의 nginx를 거쳐 Django API 또는 챗봇으로 전달됩니다.
 Django는 RDS의 서비스 데이터를 읽고 쓰며, 챗봇은 데이터 도구와 외부 모델 API를 조합해 응답합니다.
 
-<p align="center"><img src="outputs/images/시스템_아키텍처.png" width="900" alt="FEEDiT 시스템 아키텍처" /></p>
+<p align="center"><img src="outputs/images/시스템_아키텍처.png" width="900" alt="FEEDiT 시스템 아키텍처" /></p>
 
 - **Vercel**: 정적 화면 제공과 서버리스 함수의 API 중계
 - **Django API**: 인증, 프로필, 지표, 투표, 관리자 기능
@@ -88,7 +88,7 @@ Django는 RDS의 서비스 데이터를 읽고 쓰며, 챗봇은 데이터 도�
 일반 모드는 질문의 의도를 파악한 뒤 필요한 데이터 도구와 에이전트를 선택합니다.
 트렌드·상품·스타일 정보를 모아 숫자와 근거를 확인하고, 결론과 다음 행동을 답변으로 조립합니다.
 
-<p align="center"><img src="outputs/images/챗봇_일반모드_아키텍처.png" width="900" alt="FEEDiT 일반 모드 챗봇 아키텍처" /></p>
+<p align="center"><img src="outputs/images/챗봇_일반모드_아키텍처.png" width="900" alt="FEEDiT 일반 모드 챗봇 아키텍처" /></p>
 
 - **질문 라우팅**: 질문 유형과 필요한 도구 선택
 - **정보 수집**: 트렌드 지표, 상품, 스타일, 취향 데이터 조회
@@ -99,7 +99,7 @@ Django는 RDS의 서비스 데이터를 읽고 쓰며, 챗봇은 데이터 도�
 살!말? 모드는 상품과 취향 정보를 받아 다섯 신호를 병렬 수집합니다.
 살말지수는 코드로 계산하고, 챗봇은 점수의 이유와 부족한 근거를 설명합니다.
 
-<p align="center"><img src="outputs/images/챗봇_살말모드_아키텍처.png" width="900" alt="FEEDiT 살!말? 모드 챗봇 아키텍처" /></p>
+<p align="center"><img src="outputs/images/챗봇_살말모드_아키텍처.png" width="900" alt="FEEDiT 살!말? 모드 챗봇 아키텍처" /></p>
 
 - **입력**: 상품 이름·링크·사진과 사용자의 승인된 취향 정보
 - **계산**: 취향·행동·트렌드·가격·투표의 가중 평균
