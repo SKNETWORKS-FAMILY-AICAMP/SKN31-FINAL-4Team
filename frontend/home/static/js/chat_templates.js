@@ -20,7 +20,7 @@
    ★ 클래스는 전부 chat_report.css 의 '리포트 템플릿' 블록에 있다.
    ══════════════════════════════════════════════════════ */
 
-import { chatVideoHTML, youtubeVideoId } from './chat_video.js';
+import { chatVideoHTML, groupVideoEvidence, videoKindLabel } from './chat_video.js';
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
@@ -275,11 +275,13 @@ function timeline(b){
     '<path ' + sv('tlSpike') + ' d="' + groups.spike.join(' ') + '"/>' + leads, over.join('')) +
     (marks ? '<ol class="tlMarks">' + marks + '</ol>' : '');
 
-  const cards = (b.evidence || []).slice(0, 3).map((e, i) => {
-    if(youtubeVideoId(e.url)) return '<div class="tlCard tlCard--video">' +
-      '<span class="tlCardNo">' + String(i + 1).padStart(2, '0') + '</span>' +
-      chatVideoHTML({url:e.url, title:e.body, source:[e.src, e.kind].filter(Boolean).join(' · '),
-        meta:[e.at ? mmdd(e.at) : '', e.tone || ''].filter(Boolean).join(' · ')}) + '</div>';
+  /* 같은 영상에서 나온 설명·댓글은 카드 하나로 묶는다 — 썸네일이 겹쳐 반복되지 않게. */
+  const evMeta = e => [e.at ? mmdd(e.at) : '', e.tone || ''].filter(Boolean).join(' · ');
+  const cards = groupVideoEvidence(b.evidence).slice(0, 3).map((g, i) => {
+    const e = g.items[0];
+    if(g.video) return '<div class="tlCard tlCard--video">' +
+      chatVideoHTML({url:e.url, no:String(i + 1).padStart(2, '0'), source:e.src || 'YOUTUBE',
+        notes:g.items.map(x => ({ label:videoKindLabel(x.kind), text:x.body, meta:evMeta(x) }))}) + '</div>';
     const tag = e.url ? 'a' : 'div';
     const href = e.url ? ' href="' + esc(e.url) + '" target="_blank" rel="noopener"' : '';
     return '<' + tag + ' class="tlCard"' + href + '>' +

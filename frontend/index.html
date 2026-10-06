@@ -212,6 +212,16 @@
           <button type="button" class="notiSetLink" id="notiSetLink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>알림 설정</button>
         </div>
       </span>
+      <!-- 전체 가이드 — 알림 오른쪽. 모든 페이지 가이드를 한 흐름으로 연다 (app_shell/static/js/assistant_hub.js startGuideTour).
+           로그인 전에도 보인다. 오른쪽 아래 도움말 허브의 '가이드라인'은 지금 화면만 설명한다. -->
+      <button type="button" class="tourBtn" id="tourBtn" aria-label="전체 가이드 열기" aria-haspopup="dialog" title="전체 가이드">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.5 15.3 12 11.5l8.5 3.8L12 19.1Z"/>
+          <path d="M3.5 15.3v2.3l8.5 3.8 8.5-3.8v-2.3M12 19.1v2.3"/>
+          <g class="tourStick"><path d="M12 15.2V8.6"/><circle cx="12" cy="6" r="2.6" fill="currentColor"/></g>
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -487,29 +497,9 @@
   <!-- 팝업은 뷰 밖에 둔다. 뷰에 남는 transform 이 position:fixed 기준을 바꾸기 때문. -->
 <div class="toast" id="toast"></div>
 
-<!-- ===== 전역 도움말 허브 — 모든 메인 화면에서 챗봇·분석·스타일·가이드로 연결 ===== -->
+<!-- ===== 오른쪽 하단 챗봇 버튼 — 모든 메인 화면에서 챗봇 팝업을 바로 연다 ===== -->
 <div class="assistHub" id="assistHub">
-  <div class="assistHint" id="assistHint" role="status">
-    <b>가이드가 필요하신가요?</b>
-    <span>여기를 눌러보세요!</span>
-    <i aria-hidden="true"></i>
-  </div>
-  <div class="assistMenu" id="assistMenu" aria-hidden="true">
-    <button type="button" class="assistAction" data-assist="chat">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14v10H9l-4 3v-13Z"/></svg><span>챗봇</span>
-    </button>
-    <button type="button" class="assistAction" data-assist="trend">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 16 4-4 3 2 6-7"/><path d="M14 7h4v4"/></svg><span>트렌드 분석</span>
-    </button>
-    <button type="button" class="assistAction" data-assist="style">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.5a3 3 0 1 1 4 2.83V11l6 4v2H5v-2l7-4"/></svg><span>스타일</span>
-    </button>
-    <button type="button" class="assistAction" data-assist="guide">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.5 6 5-2 5 2 5-2v14l-5 2-5-2-5 2V6Z"/><path d="M9.5 4v14M14.5 6v14"/></svg><span>가이드라인</span>
-    </button>
-  </div>
-  <button class="chatFab assistToggle" id="chatFab" type="button"
-          aria-label="FEEDiT 도움말 메뉴 열기" aria-controls="assistMenu" aria-expanded="false">
+  <button class="chatFab assistToggle" id="chatFab" type="button" aria-label="챗봇 열기">
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M4 5.5C4 4.67157 4.67157 4 5.5 4H18.5C19.3284 4 20 4.67157 20 5.5V15.5C20 16.3284 19.3284 17 18.5 17H9L5 20.5V17H5.5C4.67157 17 4 16.3284 4 15.5V5.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
     </svg>

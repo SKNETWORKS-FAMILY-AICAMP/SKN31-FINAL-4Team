@@ -1223,8 +1223,9 @@ export function trRender(id){
      선별 노출한다. 큐레이션 카드는 실제 VOTES 데이터(투표율·마감·매치
      점수)를 그대로 쓰고, 게시자 페르소나만 표시용으로 얹었다. */
   if(id==='myfeed'){
-    const won=n=>n.toLocaleString('ko-KR')+'원';
-    const hoursTx=h=>h>=24?Math.round(h/24)+'일':h+'시간';
+    /* 가격 · 마감이 비어 있는 카드도 있다 — 살!말? 본 화면(vote_app.js fmtWon · fmtHours)과 같은 말로 쓴다 */
+    const won=n=>Number.isFinite(n)?n.toLocaleString('ko-KR')+'원':'가격 정보 없음';
+    const hoursTx=h=>Number.isFinite(h)?(h>=24?Math.round(h/24)+'일':h+'시간'):'기간 정보 없음';
     /* 카드 구조와 상품 정보는 살!말? 본 화면과 같은 JSON 값을 쓴다.
        매칭 이유와 태그만 카드 바깥의 내 취향 전용 정보로 덧붙인다. */
     const salCard=p=>

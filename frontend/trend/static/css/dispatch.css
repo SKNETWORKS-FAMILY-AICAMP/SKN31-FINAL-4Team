@@ -233,7 +233,9 @@
 .resalePlatforms>.gHead p{font-size:11px;color:var(--pink-2)}
 .resaleTop{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:10px;margin:16px 0}
 .resaleTop .resalePlatforms{margin:0;display:flex;flex-direction:column;grid-column:span 2;min-width:0}
-.resalePlatformGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));flex:1;gap:10px}
+/* 플랫폼 카드는 개수(2~3장)와 상관없이 한 줄에 둔다. 오른쪽 '현재 매물과 최근 거래'가 없으면 줄 전체를 쓴다 */
+.resaleTop:not(:has(.resaleSpread)) .resalePlatforms{grid-column:1/-1}
+.resalePlatformGrid{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);flex:1;gap:10px}
 .resalePlatformCard{min-width:0}
 .resalePlatformCard.empty>b{font-size:17px;color:var(--pink-2);font-weight:500}
 .resalePlatformCard.empty p{color:var(--pink-2)}
@@ -241,7 +243,7 @@
 .resaleSpread>.gHead{margin-bottom:10px}
 .resaleSpread>.gHead h3{font-size:15px;font-weight:600;letter-spacing:-.025em}
 .resaleSpread>.svSpread{flex:1}
-@media(max-width:900px){.resaleTop{grid-template-columns:minmax(0,1fr)}.resaleTop .resalePlatforms{grid-column:auto}.resalePlatformGrid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:900px){.resaleTop{grid-template-columns:minmax(0,1fr)}.resaleTop .resalePlatforms{grid-column:auto}.resalePlatformGrid{grid-auto-flow:row;grid-template-columns:minmax(0,1fr)}}
 .resalePlatformCard{min-width:0;padding:17px 18px;background:#fff;border:1px solid var(--pink-3);border-radius:10px}
 .resalePlatformCard>div{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .resalePlatformCard>div span{font-size:12px;font-weight:600}

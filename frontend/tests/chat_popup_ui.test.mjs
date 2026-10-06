@@ -95,6 +95,47 @@ await t('챗봇 원인 템플릿의 영상 근거를 썸네일·인앱 재생·�
   assert.equal(card.querySelector('.chatVideoActions a').href,video,'원본 이동 링크가 유지되어야 한다');
 });
 
+await t('같은 영상의 설명·댓글은 썸네일 하나에 묶고, 재생하면 카드 폭으로 펼친다', () => {
+  const v='https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+  const other='https://youtu.be/aaaaaaaaaaa';
+  const html=CHAT_API.reportHTML({blocks:[{type:'generative_report',slot:'full',template:'why',title:'원인',modules:[{
+    id:'why',kind:'evidence',presentation:'hero',span:12,block:{type:'timeline',term:'플리스 재킷',window:2,
+      points:[{d:'2026-10-02',m:2},{d:'2026-10-03',m:4}],spikes:[],
+      evidence:[
+        {src:'커뮤니티',kind:'POST',body:'가볍고 따뜻해요',url:'https://community.example.com/p/1',at:'2026-09-27'},
+        {src:'유튜브',kind:'COMMENT',body:'셔츠랑 둘 다 샀어요',url:v+'&lc=abc',at:'2026-09-28'},
+        {src:'유튜브',kind:'DESCRIPTION',body:'가을 필수 아우터',url:v,at:'2026-09-28'},
+        {src:'유튜브',kind:'COMMENT',body:'셔츠랑 둘 다 샀어요',url:v,at:'2026-09-28'},
+        {src:'유튜브',kind:'DESCRIPTION',body:'다른 영상',url:other,at:'2026-09-29'},
+      ]}}]}]});
+  thread().innerHTML=html;
+  const videos=[...thread().querySelectorAll('.chatVideo')];
+  assert.equal(videos.length,2,'같은 영상은 카드 하나여야 한다');
+  assert.equal(thread().querySelectorAll('.tlCard').length,3,'근거 묶음은 세 개여야 한다');
+  const first=videos[0];
+  assert.equal(first.dataset.videoId,'dQw4w9WgXcQ');
+  assert.equal(first.querySelectorAll('img').length,1);
+  const notes=[...first.querySelectorAll('.chatVideoNotes li')];
+  assert.equal(notes.length,2,'중복 문장은 한 번만 남겨야 한다');
+  assert.deepEqual(notes.map(li=>li.querySelector('.chatVideoTag').textContent),['설명','댓글'],'설명이 댓글보다 먼저 와야 한다');
+  assert.match(first.querySelector('.chatVideoCount').textContent,/근거 2건/);
+  assert.equal(first.querySelector('.chatVideoNo').textContent,'02','번호는 묶은 뒤 순서를 따라야 한다');
+  click(first.querySelector('[data-chat-video-play]'));
+  assert.ok(first.classList.contains('isPlaying'),'재생하면 카드가 펼쳐져야 한다');
+  assert.match(first.querySelector('iframe').title,/가을 필수 아우터/);
+});
+
+await t('링크 템플릿에서 같은 영상이 두 번 오면 한 번만 그린다', () => {
+  const html=CHAT_API.reportHTML({blocks:[{type:'links',slot:'full',items:[
+    {url:'https://youtu.be/dQw4w9WgXcQ',title:'영상 추천'},
+    {url:'https://www.youtube.com/watch?v=dQw4w9WgXcQ',title:'같은 영상'},
+    {url:'https://magazine.example.com/story',title:'웹매거진'},
+  ]}]});
+  thread().innerHTML=html;
+  assert.equal(thread().querySelectorAll('.chatVideo').length,1);
+  assert.equal(thread().querySelector('.rank .row .n').textContent,'02','중복을 뺀 뒤 번호를 다시 매겨야 한다');
+});
+
 await t('링크 템플릿은 유효한 영상만 플레이어로 바꾸고 매거진 링크는 유지한다', () => {
   const html=CHAT_API.reportHTML({blocks:[{type:'links',slot:'full',items:[
     {url:'https://youtu.be/dQw4w9WgXcQ',title:'영상 추천'},

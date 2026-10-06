@@ -1932,11 +1932,12 @@ document.addEventListener('click', e=>{
     if(screen && /^[A-Za-z0-9_-]{11}$/.test(id || '')){
       const frame=document.createElement('iframe');
       frame.src='https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&rel=0';
-      frame.title=(card.querySelector('.chatVideoCopy strong')?.textContent || 'YouTube 영상')+' 재생';
+      frame.title=(card.dataset.title || 'YouTube 영상')+' 재생';
       frame.setAttribute('allow','accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen');
       frame.setAttribute('allowfullscreen','');
       frame.setAttribute('referrerpolicy','strict-origin-when-cross-origin');
       screen.replaceChildren(frame);
+      card.classList.add('isPlaying');   /* 작은 썸네일 자리에서 재생하지 않고 카드 폭으로 펼친다 */
     }
     return;
   }

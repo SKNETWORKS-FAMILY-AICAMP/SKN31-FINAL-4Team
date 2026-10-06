@@ -59,7 +59,8 @@
 /* Google 가입 모드에서 버튼·구분선을 숨긴다.
    위의 display 지정이 기본 [hidden] 규칙을 이기므로 따로 못 박는다. */
 .acct .googleBtn[hidden],
-.acct .divider[hidden]{display:none}
+.acct .divider[hidden],
+.acct .cField[hidden]{display:none}   /* 소셜 가입에서 숨기는 이메일 인증 칸 */
 /* Google · 카카오 버튼은 한 줄에 반씩 — 아주 좁은 화면에서만 위아래로 */
 .acct .socialRow{display:flex;gap:10px}
 .acct .socialRow .googleBtn{flex:1;min-width:0;white-space:nowrap;padding:0 14px;gap:8px;font-size:13px}

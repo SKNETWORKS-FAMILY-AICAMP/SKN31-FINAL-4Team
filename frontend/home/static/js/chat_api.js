@@ -338,13 +338,17 @@ const BLOCK = {
 
   /* 출처. 제목이 없거나 주소 그대로면 호스트만 남긴다 —
      본문에 주소가 통째로 붙어 나오던 것을 여기로 옮겼다 (서버 mdclean.py). */
-  links: b => '<div class="rank" style="margin-top:14px">' + (b.items || []).map((o, i) => {
+  links: b => '<div class="rank" style="margin-top:14px">' + (b.items || []).filter((o, i, all) => {
+    /* 같은 영상이 두 번 오면 처음 것만 — 같은 썸네일이 연달아 뜨지 않게 */
+    const id = youtubeVideoId(o?.url);
+    return !id || all.findIndex(x => youtubeVideoId(x?.url) === id) === i;
+  }).map((o, i) => {
     let host = '', url = String(o.url || '');
     try{ host = new URL(url).hostname.replace(/^www\./, '') }catch(e){}
     let title = String(o.title || '').replace(/\s+/g, ' ').trim();
     if(!title || title === url || /^https?:\/\//.test(title)) title = host || url;
     if(title.length > 46) title = title.slice(0, 45).trim() + '…';
-    if(youtubeVideoId(url)) return chatVideoHTML({url, title, source:'YOUTUBE · ' + String(i + 1).padStart(2, '0')});
+    if(youtubeVideoId(url)) return chatVideoHTML({url, title, no:String(i + 1).padStart(2, '0'), source:'YOUTUBE'});
     return '<div class="row" data-href="' + esc(url) + '">' +
       '<span class="n">' + String(i + 1).padStart(2, '0') + '</span>' +
       '<span class="k">' + esc(title) + '</span>' +

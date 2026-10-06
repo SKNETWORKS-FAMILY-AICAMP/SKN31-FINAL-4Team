@@ -2,22 +2,29 @@
  * 운영 카드·VOTES·회원·API와 분리된 정적 DOM만 만든다.
  * 기존 클래스를 재사용해 디자인만 같고, 저장 동작은 전혀 없다. */
 
+import { RANK_ON, rkClamp, rkRingHTML } from '../../../account/static/js/rank.js';
+
 const ROOT_ID='salmalGuideDemo';
 const IMAGE='https://image.msscdn.net/images/goods_img/20260804/6987937/6987937_17866909077012_500.jpg';
 
+/* 마지막 값은 예시 작성자의 레벨(0=Lv.1 … 4=Lv.Max). 운영 댓글처럼 프로필 둘레에 레벨 띠를 그린다. */
 const comments=[
-  ['도윤','Student','9월 18일','브이넥이 과하게 깊지 않아 맨살에도 부담 없고 셔츠 위에 겹쳐 입기도 좋아 보여요.'],
-  ['현우','Creator','9월 17일','3만 원대라 기본색 하나와 포인트색 하나를 같이 골라도 부담이 덜하겠어요.'],
-  ['준서','MD','9월 17일','두께가 얇은 니트라 재킷 안에 입어도 팔이 끼지 않을 것 같아요.'],
-  ['시우','Student','9월 17일','여섯 가지 색이 있어서 이미 가진 하의에 맞춰 고르기 좋아 보여요.'],
-  ['태현','Buyer','9월 17일','크루넥보다 목선이 열려 있어 체격이 있는 사람도 답답해 보이지 않겠어요.'],
-  ['건우','Basic','9월 17일','가격이 합리적이라 기본 브라운으로 오래 입어보고 싶어요.'],
-  ['재윤','Stylist','9월 16일','가격은 괜찮지만 얇은 니트는 보풀과 늘어남을 더 확인해볼 것 같아요.'],
-  ['성민','Basic','9월 16일','브이넥 깊이와 어깨 핏이 애매하면 이너 없이 입기 어려울 수 있어요.'],
+  ['도윤','Student','9월 18일','브이넥이 과하게 깊지 않아 맨살에도 부담 없고 셔츠 위에 겹쳐 입기도 좋아 보여요.',1],
+  ['현우','Creator','9월 17일','3만 원대라 기본색 하나와 포인트색 하나를 같이 골라도 부담이 덜하겠어요.',3],
+  ['준서','MD','9월 17일','두께가 얇은 니트라 재킷 안에 입어도 팔이 끼지 않을 것 같아요.',2],
+  ['시우','Student','9월 17일','여섯 가지 색이 있어서 이미 가진 하의에 맞춰 고르기 좋아 보여요.',0],
+  ['태현','Buyer','9월 17일','크루넥보다 목선이 열려 있어 체격이 있는 사람도 답답해 보이지 않겠어요.',4],
+  ['건우','Basic','9월 17일','가격이 합리적이라 기본 브라운으로 오래 입어보고 싶어요.',0],
+  ['재윤','Stylist','9월 16일','가격은 괜찮지만 얇은 니트는 보풀과 늘어남을 더 확인해볼 것 같아요.',2],
+  ['성민','Basic','9월 16일','브이넥 깊이와 어깨 핏이 애매하면 이너 없이 입기 어려울 수 있어요.',1],
 ];
 
-function commentHTML([name,job,time,text]){
-  return '<div class="cItem"><div class="cAvatar"><span>'+name[0]+'</span></div><div class="cBody">'+
+/* 아바타 마크업은 운영 상세 화면(vote_app.js renderComments)과 같다. */
+function commentHTML([name,job,time,text,level]){
+  const rk=rkClamp(level);
+  const avatar='<div class="cAvatar'+(RANK_ON?' rkAv rk'+(rk+1):'')+'">'+rkRingHTML(rk)+
+    (RANK_ON&&rk>=3?'<b class="rkGloss"></b>':'')+'<span>'+name[0]+'</span></div>';
+  return '<div class="cItem">'+avatar+'<div class="cBody">'+
     '<div class="cHead"><b>'+name+'</b><span class="jobBadge">'+job+'</span><span class="cTime">'+time+'</span><button class="cMenuBtn" type="button" tabindex="-1">⋯</button></div>'+
     '<div class="cText">'+text+'</div></div></div>';
 }
