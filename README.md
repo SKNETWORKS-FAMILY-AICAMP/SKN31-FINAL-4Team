@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="outputs/images/main.png" alt="FEEDiT 메인 커버" />
+  <img src="outputs/images/main.png" width="66%" alt="FEEDiT 메인 커버" />
 
 [서비스 바로가기](https://fee-di-t-frontend.vercel.app/)
 </div>
