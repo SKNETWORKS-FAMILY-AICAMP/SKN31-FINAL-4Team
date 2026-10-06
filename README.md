@@ -1,7 +1,7 @@
 <div align="center">
   <img src="outputs/images/main.png" width="66%" alt="FEEDiT 메인 커버" />
 
-[서비스 바로가기](https://fee-di-t-frontend.vercel.app/)
+### [FEEDiT 바로가기](https://fee-di-t-frontend.vercel.app/)
 </div>
 
 ---
@@ -60,7 +60,7 @@ FEEDiT은 데이터를 수집해 지표로 만들고, 그 결과를 챗봇·살!
 
 <p align="center"><img src="outputs/images/구현_화면.gif" width="900" alt="FEEDiT 구현 화면: 홈, 내 피드, 언급량·트렌드 온도, 살!말?, 스타일, AI 챗봇, 가상 피팅" /></p>
 
-화면별 구성과 동작은 [화면설계서](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%ED%99%94%EB%A9%B4%EC%84%A4%EA%B3%84%EC%84%9C_31%EA%B8%B0_4%ED%8C%80)를 참고하세요.
+화면별 구성과 동작은 [화면설계서](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%ED%99%94%EB%A9%B4%EC%84%A4%EA%B3%84%EC%84%9C_31%EA%B8%B0_4%ED%8C%80), 시연영상은 [Customer](https://drive.google.com/file/d/1oZZp8p9AkjXIiL5F7PG7ipVZNTQNnmJN/view?usp=sharing) · [MD](https://drive.google.com/file/d/1djqKHTSF9wv4i88TzCt6hl_H0WvmMXY6/view?usp=sharing)를 참고하세요.
 
 ## 5. 기술 스택
 
