@@ -11,12 +11,13 @@
 1. [팀 소개](#1-팀-소개)
 2. [프로젝트 소개](#2-프로젝트-소개)
 3. [핵심 기능](#3-핵심-기능)
-4. [기술 스택](#4-기술-스택)
-5. [디렉터리 구조](#5-디렉터리-구조)
-6. [아키텍처](#6-아키텍처)
-7. [데이터와 지표](#7-데이터와-지표)
-8. [로컬 실행](#8-로컬-실행)
-9. [문서](#9-문서)
+4. [구현 화면](#4-구현-화면)
+5. [기술 스택](#5-기술-스택)
+6. [디렉터리 구조](#6-디렉터리-구조)
+7. [아키텍처](#7-아키텍처)
+8. [데이터와 지표](#8-데이터와-지표)
+9. [로컬 실행](#9-로컬-실행)
+10. [문서](#10-문서)
 
 ---
 
@@ -53,7 +54,15 @@ FEEDiT은 데이터를 수집해 지표로 만들고, 그 결과를 챗봇·살!
 | **가상 피팅** | 상품 이미지를 FEEDiT 모델에 적용해 착용 모습을 미리 봅니다. |
 | **내 피드** | 취향과 활동을 반영한 브리핑·추천을 확인합니다. |
 
-## 4. 기술 스택
+## 4. 구현 화면
+
+홈 → 내 피드 → 언급량·트렌드 온도 → 살!말? → 스타일 → AI 챗봇 → 가상 피팅 순서로 주요 화면을 보여줍니다.
+
+<p align="center"><img src="outputs/images/구현_화면.gif" width="900" alt="FEEDiT 구현 화면: 홈, 내 피드, 언급량·트렌드 온도, 살!말?, 스타일, AI 챗봇, 가상 피팅" /></p>
+
+화면별 구성과 동작은 [화면설계서](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%ED%99%94%EB%A9%B4%EC%84%A4%EA%B3%84%EC%84%9C_31%EA%B8%B0_4%ED%8C%80)를 참고하세요.
+
+## 5. 기술 스택
 
 | 구분 | 주요 기술 | 역할 |
 | --- | --- | --- |
@@ -75,7 +84,7 @@ FEEDiT은 데이터를 수집해 지표로 만들고, 그 결과를 챗봇·살!
 운영 요청은 Vercel에서 EC2의 Django API 또는 챗봇 서버로 전달됩니다.
 서비스 구성과 구현 내용은 [시스템 구성도](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%EC%8B%9C%EC%8A%A4%ED%85%9C_%EA%B5%AC%EC%84%B1%EB%8F%84_31%EA%B8%B0_4%ED%8C%80.docx)와 [웹 애플리케이션 문서](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%EA%B0%9C%EB%B0%9C%EB%90%9C_LLM_%EC%97%B0%EB%8F%99_%EC%9B%B9_%EC%95%A0%ED%94%8C%EB%A6%AC%EC%BC%80%EC%9D%B4%EC%85%98_%EB%AC%B8%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx)를 참고하세요.
 
-## 5. 디렉터리 구조
+## 6. 디렉터리 구조
 
 주요 서비스 폴더만 펼쳐 표시했습니다. 빌드 결과와 가상환경은 제외했습니다.
 
@@ -105,9 +114,9 @@ SKN31-FINAL-4Team/
 └── .env.example                     # 환경변수 예시
 ~~~
 
-## 6. 아키텍처
+## 7. 아키텍처
 
-### 6.1 시스템 아키텍처
+### 7.1 시스템 아키텍처
 
 브라우저는 Vercel에서 웹 화면을 받고, 서버 요청은 EC2의 nginx를 거쳐 Django API 또는 챗봇으로 전달됩니다.
 Django는 RDS의 서비스 데이터를 읽고 쓰며, 챗봇은 데이터 도구와 외부 모델 API를 조합해 응답합니다.
@@ -119,7 +128,7 @@ Django는 RDS의 서비스 데이터를 읽고 쓰며, 챗봇은 데이터 도�
 - **챗봇 서버**: 대화 처리, 도구 호출, 이미지 처리, 스트리밍 응답
 - **RDS·S3**: 서비스 데이터와 수집 원본·이미지 객체 저장
 
-### 6.2 챗봇 · 일반 모드
+### 7.2 챗봇 · 일반 모드
 
 일반 모드는 질문의 의도를 파악한 뒤 필요한 데이터 도구와 에이전트를 선택합니다.
 트렌드·상품·스타일 정보를 모아 숫자와 근거를 확인하고, 결론과 다음 행동을 답변으로 조립합니다.
@@ -130,7 +139,7 @@ Django는 RDS의 서비스 데이터를 읽고 쓰며, 챗봇은 데이터 도�
 - **정보 수집**: 트렌드 지표, 상품, 스타일, 취향 데이터 조회
 - **검증·조립**: 숫자 대조 후 근거와 출처를 포함한 답변 생성
 
-### 6.3 챗봇 · 살!말? 모드
+### 7.3 챗봇 · 살!말? 모드
 
 살!말? 모드는 상품과 취향 정보를 받아 다섯 신호를 병렬 수집합니다.
 살말지수는 코드로 계산하고, 챗봇은 점수의 이유와 부족한 근거를 설명합니다.
@@ -141,9 +150,9 @@ Django는 RDS의 서비스 데이터를 읽고 쓰며, 챗봇은 데이터 도�
 - **계산**: 취향·행동·트렌드·가격·투표의 가중 평균
 - **응답**: 살/말 조언, 검증 근거, 신뢰도, 다음 행동
 
-## 7. 데이터와 지표
+## 8. 데이터와 지표
 
-### 7.1 데이터가 흐르는 방식
+### 8.1 데이터가 흐르는 방식
 
 | 단계 | 내용 |
 | --- | --- |
@@ -155,7 +164,7 @@ Django는 RDS의 서비스 데이터를 읽고 쓰며, 챗봇은 데이터 도�
 상품·브랜드·카테고리 같은 기준 정보는 Master로, 가격·랭킹·조회수처럼 변하는 값은 Snapshot으로 관리합니다.
 수집 원본은 S3에 보관해 분석 결과를 원본 데이터와 연결할 수 있도록 했습니다.
 
-### 7.2 여섯 가지 트렌드 지표
+### 8.2 여섯 가지 트렌드 지표
 
 | 지표 | 확인할 수 있는 것 |
 | --- | --- |
@@ -169,7 +178,7 @@ Django는 RDS의 서비스 데이터를 읽고 쓰며, 챗봇은 데이터 도�
 수치가 없는 항목을 임의의 0으로 채우지 않습니다.
 관측이 부족하거나 추정된 값은 화면과 챗봇에서 구분해 표시합니다.
 
-### 7.3 살말지수 계산 원칙
+### 8.3 살말지수 계산 원칙
 
 | 신호 | 기준 가중치 | 살펴보는 내용 |
 | --- | ---: | --- |
@@ -186,12 +195,12 @@ Django는 RDS의 서비스 데이터를 읽고 쓰며, 챗봇은 데이터 도�
 
 관련 산출물은 [수집 데이터 보고서](outputs/%5B%EB%8D%B0%EC%9D%B4%ED%84%B0_%EC%88%98%EC%A7%91_%EB%B0%8F_%EC%A0%80%EC%9E%A5%5D%EC%88%98%EC%A7%91_%EB%8D%B0%EC%9D%B4%ED%84%B0_%EB%B3%B4%EA%B3%A0%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx)와 [데이터 전처리 결과서](outputs/%5B%EB%8D%B0%EC%9D%B4%ED%84%B0_%EC%88%98%EC%A7%91_%EB%B0%8F_%EC%A0%80%EC%9E%A5%5D%EB%8D%B0%EC%9D%B4%ED%84%B0_%EC%A0%84%EC%B2%98%EB%A6%AC_%EA%B2%B0%EA%B3%BC%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx)를 참고하세요.
 
-## 8. 로컬 실행
+## 9. 로컬 실행
 
 개발 기준은 Python 3.13과 Node.js 20 계열입니다.
 아래 명령 블록은 각각 저장소 루트에서 시작합니다. 데이터 기능에는 별도의 RDS 접근 권한과 환경변수가 필요합니다.
 
-### 8.1 환경 준비
+### 9.1 환경 준비
 
 ~~~bash
 cp .env.example .env
@@ -199,7 +208,7 @@ cp .env.example .env
 
 환경값은 팀의 관리 절차에 따라 채웁니다. 비밀값을 저장소에 커밋하지 않습니다.
 
-### 8.2 프론트엔드
+### 9.2 프론트엔드
 
 ~~~bash
 cd frontend
@@ -210,7 +219,7 @@ npm run dev
 
 개발 화면은 http://localhost:5173 에서 열립니다.
 
-### 8.3 Django API
+### 9.3 Django API
 
 ~~~bash
 python3.13 -m venv .venv
@@ -223,7 +232,7 @@ python manage.py runserver 8000
 API 기본 주소는 http://localhost:8000 입니다.
 DB와 Redis는 이 명령으로 자동 실행되지 않습니다.
 
-### 8.4 챗봇
+### 9.4 챗봇
 
 ~~~bash
 source .venv/bin/activate
@@ -236,7 +245,7 @@ python server.py
 챗봇 기본 포트는 8770입니다. LLM 사용에는 공급자 접근 권한과 API 키가 필요합니다.
 구현 및 검증 내용은 [웹 애플리케이션 문서](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%EA%B0%9C%EB%B0%9C%EB%90%9C_LLM_%EC%97%B0%EB%8F%99_%EC%9B%B9_%EC%95%A0%ED%94%8C%EB%A6%AC%EC%BC%80%EC%9D%B4%EC%85%98_%EB%AC%B8%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx)와 [서비스 테스트 보고서](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%EC%84%9C%EB%B9%84%EC%8A%A4_%ED%85%8C%EC%8A%A4%ED%8A%B8_%EA%B3%84%ED%9A%8D_%EB%B0%8F_%EA%B2%B0%EA%B3%BC_%EB%B3%B4%EA%B3%A0%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx)를 참고하세요.
 
-## 9. 문서
+## 10. 문서
 
 최종 산출물은 저장소의 outputs 폴더에 있습니다.
 
@@ -245,6 +254,6 @@ python server.py
 | **기획** | [프로젝트 기획서](outputs/%5B%EA%B8%B0%ED%9A%8D%5D%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8_%EA%B8%B0%ED%9A%8D%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx) · [요구사항정의서](outputs/%5B%EA%B8%B0%ED%9A%8D%5D%EC%9A%94%EA%B5%AC%EC%82%AC%ED%95%AD%EC%A0%95%EC%9D%98%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.xlsx) |
 | **데이터 수집·저장** | [수집 데이터 보고서](outputs/%5B%EB%8D%B0%EC%9D%B4%ED%84%B0_%EC%88%98%EC%A7%91_%EB%B0%8F_%EC%A0%80%EC%9E%A5%5D%EC%88%98%EC%A7%91_%EB%8D%B0%EC%9D%B4%ED%84%B0_%EB%B3%B4%EA%B3%A0%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx) · [데이터 전처리 결과서](outputs/%5B%EB%8D%B0%EC%9D%B4%ED%84%B0_%EC%88%98%EC%A7%91_%EB%B0%8F_%EC%A0%80%EC%9E%A5%5D%EB%8D%B0%EC%9D%B4%ED%84%B0_%EC%A0%84%EC%B2%98%EB%A6%AC_%EA%B2%B0%EA%B3%BC%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx) · [DB 스토리지 설계서](outputs/%5B%EB%8D%B0%EC%9D%B4%ED%84%B0_%EC%88%98%EC%A7%91_%EB%B0%8F_%EC%A0%80%EC%9E%A5%5DDB_%EC%8A%A4%ED%86%A0%EB%A6%AC%EC%A7%80%20%EC%84%A4%EA%B3%84%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx) |
 | **모델링·평가** | [AI 시스템 아키텍처](outputs/%5B%EB%AA%A8%EB%8D%B8%EB%A7%81_%EB%B0%8F_%ED%8F%89%EA%B0%80%5DAI_%EC%8B%9C%EC%8A%A4%ED%85%9C_%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98%28%EB%A9%80%ED%8B%B0_%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8_%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98%2931%EA%B8%B0_4%ED%8C%80.docx) · [학습한 ML·DL 모델](outputs/%5B%EB%AA%A8%EB%8D%B8%EB%A7%81_%EB%B0%8F_%ED%8F%89%EA%B0%80%5D%ED%95%99%EC%8A%B5%ED%95%9C_ML_DL_%EB%AA%A8%EB%8D%B8_31%EA%B8%B0_4%ED%8C%80.docx) · [벡터DB·GraphDB 구축 결과서](outputs/%5B%EB%AA%A8%EB%8D%B8%EB%A7%81_%EB%B0%8F_%ED%8F%89%EA%B0%80%5D%EB%B2%A1%ED%84%B0DB_GraphDB_%EA%B5%AC%EC%B6%95_%EA%B2%B0%EA%B3%BC%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx) |
-| **모델·배포** | [웹 애플리케이션 문서](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%EA%B0%9C%EB%B0%9C%EB%90%9C_LLM_%EC%97%B0%EB%8F%99_%EC%9B%B9_%EC%95%A0%ED%94%8C%EB%A6%AC%EC%BC%80%EC%9D%B4%EC%85%98_%EB%AC%B8%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx) · [시스템 구성도](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%EC%8B%9C%EC%8A%A4%ED%85%9C_%EA%B5%AC%EC%84%B1%EB%8F%84_31%EA%B8%B0_4%ED%8C%80.docx) · [서비스 테스트 보고서](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%EC%84%9C%EB%B9%84%EC%8A%A4_%ED%85%8C%EC%8A%A4%ED%8A%B8_%EA%B3%84%ED%9A%8D_%EB%B0%8F_%EA%B2%B0%EA%B3%BC_%EB%B3%B4%EA%B3%A0%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx) |
+| **모델·배포** | [웹 애플리케이션 문서](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%EA%B0%9C%EB%B0%9C%EB%90%9C_LLM_%EC%97%B0%EB%8F%99_%EC%9B%B9_%EC%95%A0%ED%94%8C%EB%A6%AC%EC%BC%80%EC%9D%B4%EC%85%98_%EB%AC%B8%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx) · [시스템 구성도](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%EC%8B%9C%EC%8A%A4%ED%85%9C_%EA%B5%AC%EC%84%B1%EB%8F%84_31%EA%B8%B0_4%ED%8C%80.docx) · [서비스 테스트 보고서](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%EC%84%9C%EB%B9%84%EC%8A%A4_%ED%85%8C%EC%8A%A4%ED%8A%B8_%EA%B3%84%ED%9A%8D_%EB%B0%8F_%EA%B2%B0%EA%B3%BC_%EB%B3%B4%EA%B3%A0%EC%84%9C_31%EA%B8%B0_4%ED%8C%80.docx) · [화면설계서](outputs/%5B%EB%AA%A8%EB%8D%B8_%EB%B0%B0%ED%8F%AC%5D%ED%99%94%EB%A9%B4%EC%84%A4%EA%B3%84%EC%84%9C_31%EA%B8%B0_4%ED%8C%80) |
 
 <div align="center"><sub>SK네트웍스 Family AI 31기 · 4팀</sub></div>
